@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Auto-Fill Form</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: 'Outfit', sans-serif;
+        width: 380px;
+        background: radial-gradient(circle at top left, #1e1b4b 0%, #0f172a 100%);
+        color: #f8fafc;
+        padding: 16px;
+        overflow-x: hidden;
+      }
+
+      .card {
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 18px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+        border-b: 1px solid rgba(255, 255, 255, 0.05);
+        padding-bottom: 12px;
+      }
+
+      .header-icon {
+        font-size: 24px;
+        background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .header h3 {
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        background: linear-gradient(to right, #ffffff, #94a3b8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      /* Drag and Drop Zone */
+      .drop-zone {
+        border: 2px dashed rgba(99, 102, 241, 0.4);
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 12px;
+        padding: 24px 16px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .drop-zone:hover, .drop-zone.dragover {
+        border-color: #6366f1;
+        background: rgba(99, 102, 241, 0.08);
+        box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+        transform: translateY(-2px);
+      }
+
+      .drop-zone-icon {
+        font-size: 32px;
+        color: #818cf8;
+        transition: transform 0.3s;
+      }
+
+      .drop-zone:hover .drop-zone-icon {
+        transform: scale(1.1);
+      }
+
+      .drop-zone-text {
+        font-size: 14px;
+        font-weight: 500;
+        color: #e2e8f0;
+      }
+
+      .drop-zone-hint {
+        font-size: 11px;
+        color: #64748b;
+      }
+
+      #jsonFile {
+        display: none;
+      }
+
+      /* Preview Area */
+      .preview-area {
+        display: none;
+        margin-top: 16px;
+        animation: fadeIn 0.4s ease-out forwards;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 9999px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      .badge-bank {
+        background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        color: #e0e7ff;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 6px 12px;
+        font-size: 13px;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        margin-bottom: 14px;
+      }
+
+      .info-label {
+        color: #64748b;
+        font-weight: 500;
+      }
+
+      .info-value {
+        color: #cbd5e1;
+        font-weight: 600;
+        word-break: break-all;
+      }
+
+      /* Horizontally Scrollable Images Carousel */
+      .images-section {
+        margin-top: 12px;
+        margin-bottom: 16px;
+      }
+
+      .images-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .images-count {
+        color: #6366f1;
+      }
+
+      .images-carousel {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 8px;
+        scroll-behavior: smooth;
+      }
+
+      .images-carousel::-webkit-scrollbar {
+        height: 6px;
+      }
+
+      .images-carousel::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 3px;
+      }
+
+      .images-carousel::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 3px;
+      }
+
+      .images-carousel::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .thumb-wrapper {
+        position: relative;
+        flex: 0 0 64px;
+        height: 64px;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: #0f172a;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+      }
+
+      .thumb-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      /* Buttons & Status */
+      .btn-container {
+        display: flex;
+        gap: 8px;
+        margin-top: 16px;
+      }
+
+      button {
+        font-family: 'Outfit', sans-serif;
+        padding: 10px 12px;
+        border: none;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+      }
+
+      #fillBtn {
+        flex: 1.5;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+      }
+
+      #fillBtn:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+      }
+
+      #fillBtn:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      #fillBtn:disabled {
+        background: #334155;
+        color: #64748b;
+        box-shadow: none;
+        cursor: not-allowed;
+      }
+
+      .pulsing {
+        animation: pulseglow 1.5s infinite;
+      }
+
+      @keyframes pulseglow {
+        0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+        70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+      }
+
+      #extractBtn {
+        flex: 1.5;
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+      }
+
+      #extractBtn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
+      }
+
+      #extractBtn:active {
+        transform: translateY(0);
+      }
+
+      #clearBtn {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.05);
+        color: #94a3b8;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      #clearBtn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: #f1f5f9;
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+
+      #status {
+        margin-top: 14px;
+        font-size: 12px;
+        font-weight: 500;
+        text-align: center;
+        padding: 8px 12px;
+        border-radius: 8px;
+        display: none;
+      }
+
+      .status-info {
+        display: block;
+        background: rgba(99, 102, 241, 0.1);
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        color: #c7d2fe;
+      }
+
+      .status-success {
+        display: block;
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        color: #a7f3d0;
+      }
+
+      .status-error {
+        display: block;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        color: #fca5a5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="header">
+        <span class="header-icon">⚡</span>
+        <h3>Smart Form Auto-Fill</h3>
+      </div>
+
+      <!-- Drop Zone -->
+      <div class="drop-zone" id="dropZone">
+        <span class="drop-zone-icon">📥</span>
+        <span class="drop-zone-text">Drop JSON File Here</span>
+        <span class="drop-zone-hint">or click to browse from files</span>
+        <input type="file" id="jsonFile" accept=".json" />
+      </div>
+
+      <!-- Preview Details (initially hidden) -->
+      <div class="preview-area" id="previewArea">
+        <div id="bankBadge" class="badge badge-bank">Detected Bank</div>
+        
+        <div class="info-grid">
+          <span class="info-label">Applicant:</span>
+          <span class="info-value" id="applicantName">--</span>
+          
+          <span class="info-label">File/Ref No:</span>
+          <span class="info-value" id="refNumber">--</span>
+          
+          <span class="info-label">Report Date:</span>
+          <span class="info-value" id="reportDate">--</span>
+        </div>
+
+        <!-- Extracting Images display -->
+        <div class="images-section" id="imagesSection">
+          <div class="images-title">
+            <span>Extracted Images</span>
+            <span class="images-count" id="imagesCount">0 found</span>
+          </div>
+          <div class="images-carousel" id="imagesCarousel">
+            <!-- Thumbnails injected dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="btn-container">
+        <button id="clearBtn">Reset</button>
+        <button id="extractBtn">Extract Form</button>
+        <button id="fillBtn" disabled>Auto-Fill</button>
+      </div>
+
+      <!-- Status Alerts -->
+      <div id="status"></div>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>

@@ -1,0 +1,39 @@
+{
+  "timestamp": "2026-06-12T19:15:13.492Z",
+  "body": {
+    "siteVisitVideo": [],
+    "_id": "6a2a991fce822aae97526cea",
+    "status": "Work in Progress",
+    "AttachDocuments": [],
+    "atsDocuments": [],
+    "createdBy": "683070c765ba61b559c1ecc1",
+    "bankName": "HomeFirst",
+    "city": "",
+    "approvalStatus": "Accepted",
+    "isReportSubmitted": false,
+    "refNo": "N/A",
+    "dateOfReport": null,
+    "dateOfVisit": null,
+    "vendorName": "",
+    "clContractNo": "",
+    "latitude": "",
+    "longitude": "",
+    "imageUrls": [],
+    "valuationRemarks": [],
+    "timeline": [
+      {
+        "status": "Work in Progress",
+        "updatedAt": "2026-06-11T18:41:06.089Z",
+        "updatedBy": "683070c765ba61b559c1ecc1",
+        "note": "Assigned to user 6a2a4ed58ddfdbd661279b46",
+        "_id": "6a2b0142a2257c5f154a6875"
+      }
+    ],
+    "documents": [],
+    "createdAt": "2026-06-11T11:16:47.309Z",
+    "updatedAt": "2026-06-11T11:16:47.325Z",
+    "__v": 0,
+    "assignedTo": "6a2a4ed58ddfdbd661279b46",
+    "route": "/bank/home-first/edit/6a2a991fce822aae97526cea"
+  }
+}

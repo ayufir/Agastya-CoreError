@@ -1,0 +1,213 @@
+@import "tailwindcss";
+
+* {
+
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    width: 100%;
+}
+
+@media print {
+    .image-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 10px !important;
+  }
+   .image-grid > div {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+
+
+    body * {
+        visibility: hidden;
+    }
+
+    #print-section,
+    #print-section * {
+        visibility: visible;
+    }
+
+    #print-section {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        max-width: 100%;
+        padding-bottom: 10%;
+        /* leave space for footer */
+        box-sizing: border-box;
+    }
+
+    #drag {
+        display: none;
+    }
+
+
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+    }
+
+    th,
+    td {
+        border: 1px solid #000 !important;
+        padding: 4px !important;
+        font-size: 12px !important;
+    }
+
+
+    @page {
+        size: A4 portrait;
+        margin: 1mm;
+    }
+
+
+    header,
+    footer,
+    nav,
+    .no-print {
+        display: none !important;
+    }
+
+    .print-footer {
+        visibility: visible;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 10mm;
+        text-align: center;
+        font-size: 12px;
+        border-top: 1px solid #000;
+        padding-top: 4px;
+        background: white;
+        opacity: 100%;
+    }
+
+
+    body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
+
+
+
+
+/* 🆕 Custom Modal Close Button Styling */
+.custom-preview-modal .ant-modal-close {
+    top: 10px !important;
+    right: 10px !important;
+    background-color: #fff !important;
+    border: 1px solid #d9d9d9 !important;
+    border-radius: 50% !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050;
+}
+
+.custom-preview-modal .ant-modal-close:hover {
+    background-color: #f0f0f0 !important;
+}
+
+
+.ant-upload-drag {
+    background: #fafafa;
+    border: 1px dashed #d9d9d9;
+    border-radius: 4px;
+    padding: 20px;
+}
+
+
+/* Only targets the list inside the Upload component */
+.custom-upload-list-row .ant-upload-list-picture {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.custom-upload-list-row .ant-upload-list-item {
+    width: 200px;
+    height: 100px;
+    object-fit: cover;
+    margin: 0;
+}
+
+
+
+.custom-upload .ant-upload {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    width: auto;
+    height: auto;
+}
+
+
+
+@media print {
+
+  body {
+    background: white;
+  }
+
+  #reportTable {
+    width: 100%;
+    zoom: 90%;
+  }
+
+  table {
+    page-break-inside: avoid;
+  }
+
+  tr {
+    page-break-inside: avoid;
+  }
+
+  .section-header {
+    background: #e8d9c7 !important;
+    color: #c00000 !important;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .report-table td,
+  .report-table th {
+    border: 1px solid #000 !important;
+    padding: 6px;
+    font-size: 12px;
+  }
+
+  .aditya-print-section table,
+  .aditya-print-section tbody {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  .aditya-print-section tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+}
+
+
+/* ///////////////////////////////// */
+
+

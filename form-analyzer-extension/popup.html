@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form Field Intelligence</title>
+  <link rel="stylesheet" href="popup.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="logo-area">
+        <div class="logo-glow"></div>
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+        <span class="logo-text">Form<span class="text-accent">Insight</span></span>
+      </div>
+      <div class="status-indicator">
+        <span class="status-pulse" id="statusPulse"></span>
+        <span class="status-label" id="statusLabel">Scanning...</span>
+      </div>
+    </header>
+
+    <!-- Stat Dashboard Cards -->
+    <section class="dashboard-stats">
+      <div class="stat-card">
+        <span class="stat-value" id="statTotal">0</span>
+        <span class="stat-name">Total Fields</span>
+      </div>
+      <div class="stat-card stat-visible">
+        <span class="stat-value" id="statVisible">0</span>
+        <span class="stat-name">Visible</span>
+      </div>
+      <div class="stat-card stat-hidden">
+        <span class="stat-value" id="statHidden">0</span>
+        <span class="stat-name">Hidden</span>
+      </div>
+    </section>
+
+    <!-- Tabs Navigation -->
+    <nav class="tab-navigation">
+      <button class="tab-btn active" data-tab="tab-fields">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 6h16M4 12h16M4 18h7" />
+        </svg>
+        Fields List
+      </button>
+      <button class="tab-btn" data-tab="tab-monitor">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+        </svg>
+        Live Monitor
+        <span class="badge" id="monitorBadge" style="display: none;">0</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-export">
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+        </svg>
+        Export Schema
+      </button>
+    </nav>
+
+    <!-- Tab Contents Container -->
+    <main class="tab-contents">
+      
+      <!-- TAB: Fields List -->
+      <div class="tab-pane active" id="tab-fields">
+        <div class="filter-bar">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="visible">Visible</button>
+          <button class="filter-btn" data-filter="hidden">Hidden</button>
+          
+          <button class="rescan-action-btn" id="btnRescan" title="Rescan fields on page">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+            </svg>
+            Rescan
+          </button>
+        </div>
+        
+        <div class="list-wrapper scrollbar-custom" id="fieldsListContainer">
+          <div class="empty-state">
+            <p>No fields detected. Make sure you are on a webpage with a form.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Live Monitor -->
+      <div class="tab-pane" id="tab-monitor">
+        <div class="monitor-control-panel">
+          <div class="monitor-info">
+            <h4>Live Mutation Tracker</h4>
+            <p>Tracks if hidden inputs become visible upon clicks/actions.</p>
+          </div>
+          <button class="toggle-monitor-btn btn-stopped" id="btnToggleMonitor">
+            <span class="btn-dot"></span>
+            <span class="btn-text">Start Tracker</span>
+          </button>
+        </div>
+
+        <div class="monitor-actions-bar" id="monitorActionsBar" style="display: none; justify-content: space-between; gap: 8px; margin-bottom: 10px;">
+          <button class="monitor-export-btn" id="btnExportTrackedUnique" title="Export only unique tracked fields">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 4px; vertical-align: middle;">
+              <path d="M12 2H2v10h10V2zM12 12H2v10h10V12zM22 2h-10v10h10V2zM22 12h-10v10h10V12z"/>
+            </svg>
+            Export Unique
+          </button>
+          <button class="monitor-export-btn" id="btnExportTrackedAll" title="Export all logged transition events">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 4px; vertical-align: middle;">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+            </svg>
+            Export All Events (Logs)
+          </button>
+        </div>
+
+        <div class="monitor-logs scrollbar-custom" id="monitorLogsContainer">
+          <div class="empty-state-logs">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <p>Tracker is offline. Click <strong>Start Tracker</strong> above, then interact with forms on the web page to observe dynamic fields opening up.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: Export Schema -->
+      <div class="tab-pane" id="tab-export">
+        <div class="export-card-wrapper">
+          <div class="export-preview-header">
+            <h3>Schema JSON Preview</h3>
+            <span class="preview-badge">JSON Format</span>
+          </div>
+          <div class="code-preview-block scrollbar-custom">
+            <pre><code id="jsonPreviewCode">// Run a page scan to load JSON schema preview...</code></pre>
+          </div>
+          <div class="export-actions">
+            <button class="action-btn secondary" id="btnCopyJson">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              Copy Schema
+            </button>
+            <button class="action-btn primary" id="btnDownloadJson">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+              </svg>
+              Download JSON File
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+    
+    <!-- Footer -->
+    <footer class="app-footer">
+      <span>Works on Chrome & Edge</span>
+      <span class="separator">•</span>
+      <span>Isolated Sandboxed Scanner</span>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
