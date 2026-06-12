@@ -3,7 +3,7 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL
   ? `${import.meta.env.VITE_API_URL}/api/hrms`
-  : "http://localhost:5000/api/hrms";
+  : "https://agastya-coreerror-api.onrender.com/api/hrms";
 
 // Setup Axios headers helper
 const getAuthConfig = (token) => ({

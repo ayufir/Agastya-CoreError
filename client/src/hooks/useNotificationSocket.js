@@ -3,7 +3,8 @@ import { useDispatch } from "react-redux";
 import { fetchNotifications } from "../redux/features/notification/notificationThunk";
 import { io } from "socket.io-client";
 
-const socket = io(import.meta.env.VITE_API_URL);
+const socketUrl = import.meta.env.VITE_API_URL || "https://agastya-coreerror-api.onrender.com";
+const socket = io(socketUrl);
 
 const useNotificationSocket = () => {
   const dispatch = useDispatch();
