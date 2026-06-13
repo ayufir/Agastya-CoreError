@@ -36,6 +36,10 @@ const authSlice = createSlice({
       .addCase(loginThunk.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
+        state.token = action.payload.token;
+        if (action.payload.token) {
+          localStorage.setItem("token", action.payload.token);
+        }
       })
       .addCase(loginThunk.rejected, (state, action) => {
         state.loading = false;
@@ -46,6 +50,7 @@ const authSlice = createSlice({
         state.token = null;
         state.loading = false;
         state.error = null;
+        localStorage.removeItem("token");
       })
 
       .addCase(fetchFieldOfficers.pending, (state) => {
