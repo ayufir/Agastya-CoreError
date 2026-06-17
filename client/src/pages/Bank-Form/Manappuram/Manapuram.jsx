@@ -44,6 +44,7 @@ const Manapuram = () => {
     const finalData = {
       ...ManipuramData,
       ...ManipuramTwo,
+      isReportSubmitted: true,
     };
 
     try {

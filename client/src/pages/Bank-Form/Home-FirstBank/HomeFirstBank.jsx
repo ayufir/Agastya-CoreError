@@ -456,7 +456,7 @@ const HomeFirstBank = () => {
     try {
       if (isFieldOfficer) {
         if (id) {
-          const finalPayload = { ...isEdit, ...extractedData, city: savedCity };
+          const finalPayload = { ...isEdit, ...extractedData, city: savedCity, isReportSubmitted: false };
           const response = await dispatch(updateDetails({ id, ...finalPayload })).unwrap();
           if (response) {
             setIsEdit(response);
@@ -525,10 +525,11 @@ const HomeFirstBank = () => {
       console.log("FINAL PAYLOAD BEFORE UPDATE:", finalPayload);
 
       if (isFieldOfficer) {
+        const payload = { ...finalPayload, isReportSubmitted: true };
         if (id) {
-          await dispatch(updateDetails({ id, ...finalPayload })).unwrap();
+          await dispatch(updateDetails({ id, ...payload })).unwrap();
         } else {
-          await dispatch(createHFBanks(finalPayload)).unwrap();
+          await dispatch(createHFBanks(payload)).unwrap();
         }
         toast.success("Form submitted successfully");
         navigate("/");

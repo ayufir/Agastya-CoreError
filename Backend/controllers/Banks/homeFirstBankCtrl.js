@@ -128,16 +128,20 @@ exports.updateValuationReportById = async (req, res) => {
     // Add timeline entry if user is a field officer
     if (req.user.role === "FieldOfficer") {
       if (!updateQuery.$set) updateQuery.$set = {};
-      updateQuery.$set["isReportSubmitted"] = true;
+      
+      const isSubmitting = req.body.isReportSubmitted === true || req.body.isSubmit === true;
+      updateQuery.$set["isReportSubmitted"] = isSubmitting;
       updateQuery.$set["status"] = "Work in Progress";
 
-      if (!updateQuery.$push) updateQuery.$push = {};
-      updateQuery.$push["timeline"] = {
-        status: "submitted-by-fo",
-        updatedAt: new Date(),
-        updatedBy: req.user._id,
-        note: "Updated by field officer",
-      };
+      if (isSubmitting) {
+        if (!updateQuery.$push) updateQuery.$push = {};
+        updateQuery.$push["timeline"] = {
+          status: "submitted-by-fo",
+          updatedAt: new Date(),
+          updatedBy: req.user._id,
+          note: "Submitted by field officer",
+        };
+      }
     }
 
 

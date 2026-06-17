@@ -535,6 +535,7 @@ export default function BajajHousingForm() {
                 selfieImages: sanitizeImgArr(form.selfieImages),
                 otherImages: sanitizeImgArr(form.otherImages),
                 AttachDocuments: form.AttachDocuments.filter((d) => d?.url?.startsWith("http") || d?.url?.startsWith("data:")),
+                isReportSubmitted: true,
 
 
                 // dynamic field add

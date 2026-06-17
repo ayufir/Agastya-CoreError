@@ -173,7 +173,7 @@ exports.updateReport = async (req, res) => {
 
     // Field Officer auto-submit
     if (req.user?.role === "FieldOfficer") {
-      flatSet.isReportSubmitted = true;
+      flatSet.isReportSubmitted = req.body.isReportSubmitted === true || req.body.isSubmit === true;
     }
 
     const updateQuery = {};

@@ -63,7 +63,7 @@ const AditiyaFrom = () => {
 
     try {
       if (id) {
-        await dispatch(updateDetails({ id, data: finalData })).unwrap();
+        await dispatch(updateDetails({ id, data: { ...finalData, isReportSubmitted: true } })).unwrap();
         toast.success("Data updated successfully!");
         navigate("/");
       } else {

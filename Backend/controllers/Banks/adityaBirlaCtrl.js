@@ -85,7 +85,7 @@ exports.updateReport = async (req, res) => {
 
     // Field officer logic
     if (req.user?.role === "FieldOfficer") {
-      flatSet.isReportSubmitted = true;
+      flatSet.isReportSubmitted = req.body.isReportSubmitted === true || req.body.isSubmit === true;
     }
 
     const updateQuery = {};
