@@ -103,16 +103,21 @@ const LNTAssignmentDetails = ({
     }
 
     if (merged) {
-      const parsedDate = merged.dateOfReport
-        ? moment(merged.dateOfReport, moment.ISO_8601, true).isValid()
-          ? moment(merged.dateOfReport)
-          : moment(merged.dateOfReport, "DD.MM.YYYY")
-        : (currentValues.dateOfReport || null);
-      const parsedVisitDate = merged.dateOfVisit
-        ? moment(merged.dateOfVisit, moment.ISO_8601, true).isValid()
-          ? moment(merged.dateOfVisit)
-          : moment(merged.dateOfVisit, "DD.MM.YYYY")
-        : (currentValues.dateOfVisit || null);
+      const getValidMoment = (val) => {
+        if (!val || val === "N/A" || val === "undefined" || val === "null" || val === "") return null;
+        let m = moment(val, moment.ISO_8601, true);
+        if (m.isValid()) return m;
+        m = moment(val, "DD.MM.YYYY", true);
+        if (m.isValid()) return m;
+        m = moment(val, "YYYY-MM-DD", true);
+        if (m.isValid()) return m;
+        m = moment(val);
+        if (m.isValid()) return m;
+        return null;
+      };
+
+      const parsedDate = getValidMoment(merged.dateOfReport) || currentValues.dateOfReport || null;
+      const parsedVisitDate = getValidMoment(merged.dateOfVisit) || currentValues.dateOfVisit || null;
 
       const safeVal = (key, fallback = "") => {
         if (merged[key] !== undefined && merged[key] !== null && merged[key] !== "") {

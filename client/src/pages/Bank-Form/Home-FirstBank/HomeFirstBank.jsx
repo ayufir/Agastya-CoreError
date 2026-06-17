@@ -125,6 +125,112 @@ const HomeFirstBank = () => {
     }
   };
 
+  const mapExtractedDataToHFSchema = (extracted, prev = {}) => {
+    if (!extracted || Object.keys(extracted).length === 0) return {};
+
+    const p = extracted.property || {};
+    const addr = p.address || {};
+    const bankDet = p.bank_specific_details || {};
+    const accom = p.accommodation_details || {};
+    const propDet = p.property_details || {};
+    const loc = p.location_details || {};
+    const struct = p.structural_engineering || {};
+    const legal = p.legal_and_compliance || {};
+    const infra = p.infrastructure_details || {};
+
+    const mapped = {
+      // Basic Details / Visit Details (Section 3)
+      customerName: extracted.customerName || p.applicant_name || p.owner_name || prev.customerName || "",
+      customerNo: extracted.customerNo || extracted.contactNumber || p.contact_number || p["Mobile No."] || prev.customerNo || "",
+      propertyOwnerName: extracted.propertyOwnerName || p.owner_name || prev.propertyOwnerName || "",
+      personMetDuringVisit: extracted.personMetDuringVisit || p.contact_person || prev.personMetDuringVisit || "N/A",
+      personContactNo: extracted.personContactNo || extracted.contactNumber || p.contact_number || prev.personContactNo || "N/A",
+      addressLegal: extracted.addressLegal || extracted.propertyAddress || addr.full_address || prev.addressLegal || "",
+      addressSite: extracted.addressSite || extracted.propertyAddress || addr.full_address || prev.addressSite || "",
+      nearbyLandmark: extracted.nearbyLandmark || extracted.landmark || loc.landmark || prev.nearbyLandmark || "",
+      latitude: extracted.latitude || p.latitude || prev.latitude || "",
+      longitude: extracted.longitude || p.longitude || prev.longitude || "",
+      refNo: extracted.refNo || extracted.registration_number || extracted.fileNo || bankDet.file_no || bankDet.lan_no || prev.refNo || "N/A",
+      dateOfReport: extracted.dateOfReport || extracted.reportDate || p.dateOfReport || prev.dateOfReport || null,
+      dateOfVisit: extracted.dateOfVisit || extracted.visitDate || p.dateOfVisit || prev.dateOfVisit || null,
+
+      // Property Overview (Section 2)
+      unitType: extracted.unitType || p.property_type || accom.type_of_structure || prev.unitType || "OPEN PLOT",
+      zone: extracted.zone || extracted.usageOfProperty || p.property_use || prev.zone || "Residential",
+      usageOfProperty: extracted.usageOfProperty || extracted.actualUsage || p.property_use || prev.usageOfProperty || "Residential",
+
+      // Locality (Section 4)
+      nearestCityTown: extracted.nearestCityTown || extracted.city || loc.main_locality || loc.city || prev.nearestCityTown || "",
+      locationCategory: extracted.locationCategory || extracted.propertyJurisdiction || loc.property_falling_within || prev.locationCategory || "MC",
+      localityDevelopment: extracted.localityDevelopment || extracted.microLocation || loc.micro_location || prev.localityDevelopment || "Under Developed",
+      approachRoadType: extracted.approachRoadType || extracted.physicalApproach || loc.physical_approach || prev.approachRoadType || "Mud Road",
+      approachRoadWidth: extracted.approachRoadWidth || extracted.widthApproachRoad || loc.width_approach_road || prev.approachRoadWidth || "15ft",
+      distanceFromCityCentre: extracted.distanceFromCityCentre || extracted.distanceCityCentre || loc.distance_city_centre || prev.distanceFromCityCentre || "",
+      distanceFromRailwayStation: extracted.distanceFromRailwayStation || extracted.distanceRailwayStation || loc.distance_railway_station || prev.distanceFromRailwayStation || "",
+      distanceFromBusStand: extracted.distanceFromBusStand || extracted.distanceBusStop || extracted.busStop || loc.distance_bus_stop || prev.distanceFromBusStand || "",
+      distanceFromHospital: extracted.distanceFromHospital || extracted.distanceHospital || extracted.hospital || loc.distance_hospital || prev.distanceFromHospital || "",
+      occupancyPercentage: extracted.occupancyPercentage || extracted.occupancyLevel || loc.occupancy_level || prev.occupancyPercentage || "",
+      habitationPercentage: extracted.habitationPercentage || prev.habitationPercentage || "",
+      nallahRiverHighTension: extracted.nallahRiverHighTension || extracted.adverseFactors || loc.adverse_factors || prev.nallahRiverHighTension || "NA",
+      electricityAvailability: extracted.electricityAvailability || extracted.electricityAvailable || infra.electricity_available || prev.electricityAvailability || "YES",
+      waterAvailability: extracted.waterAvailability || extracted.waterSupply || infra.water_supply || prev.waterAvailability || "YES",
+      drainageAvailability: extracted.drainageAvailability || extracted.sewerLineConnected || infra.sewer_line_connected || prev.drainageAvailability || "YES",
+
+      // NDMA Guidelines (Section 6)
+      seismicZone: extracted.seismicZone || struct.seismic_zone || prev.seismicZone || "II",
+      cycloneZone: extracted.cycloneZone || prev.cycloneZone || "NO",
+      landslideProneZone: extracted.landslideProneZone || prev.landslideProneZone || "No",
+      floodZone: extracted.floodZone || struct.flood_prone_area || prev.floodZone || "NO",
+      crZone: extracted.crZone || prev.crZone || "NO",
+      demolitionRisk: extracted.demolitionRisk || extracted.riskOfDemolition || legal.risk_of_demolition || prev.demolitionRisk || "LOW",
+      demolitionRiskDetails: extracted.demolitionRiskDetails || prev.demolitionRiskDetails || "NA",
+      followsNDMAGuidelines: extracted.followsNDMAGuidelines || prev.followsNDMAGuidelines || "YES",
+
+      // Boundaries & Dimensions (Section 7)
+      directions: {
+        North: {
+          document: extracted.northDocument || extracted.northPlan || p.boundaries?.north_as_per_deed || prev?.directions?.North?.document || "",
+          actual: extracted.northActual || p.boundaries?.north_actual || prev?.directions?.North?.actual || "",
+          plan: extracted.northPlan || extracted.northDocument || p.boundaries?.north_as_per_deed || prev?.directions?.North?.plan || "",
+        },
+        South: {
+          document: extracted.southDocument || extracted.southPlan || p.boundaries?.south_as_per_deed || prev?.directions?.South?.document || "",
+          actual: extracted.southActual || p.boundaries?.south_actual || prev?.directions?.South?.actual || "",
+          plan: extracted.southPlan || extracted.southDocument || p.boundaries?.south_as_per_deed || prev?.directions?.South?.plan || "",
+        },
+        East: {
+          document: extracted.eastDocument || extracted.eastPlan || p.boundaries?.east_as_per_deed || prev?.directions?.East?.document || "",
+          actual: extracted.eastActual || p.boundaries?.east_actual || prev?.directions?.East?.actual || "",
+          plan: extracted.eastPlan || extracted.eastDocument || p.boundaries?.east_as_per_deed || prev?.directions?.East?.plan || "",
+        },
+        West: {
+          document: extracted.westDocument || extracted.westPlan || p.boundaries?.west_as_per_deed || prev?.directions?.West?.document || "",
+          actual: extracted.westActual || p.boundaries?.west_actual || prev?.directions?.West?.actual || "",
+          plan: extracted.westPlan || extracted.westDocument || p.boundaries?.west_as_per_deed || prev?.directions?.West?.plan || "",
+        },
+      },
+      boundariesMatching: extracted.boundariesMatching || prev.boundariesMatching || "",
+      propertyDemarcated: extracted.propertyDemarcated || propDet.property_demarcated || prev.propertyDemarcated || "",
+      boundaryRemarks: extracted.boundaryRemarks || prev.boundaryRemarks || "",
+      marketability: extracted.marketability || accom.marketability || prev.marketability || "",
+      landArea: extracted.landArea || extracted.plotArea || prev.landArea || "",
+      linearDimension: extracted.linearDimension || extracted.plotDimensions || prev.linearDimension || "",
+      plotArea: Number(extracted.plotArea) || Number(extracted.landArea) || prev.plotArea || 0,
+
+      // Structural Details (Section 8)
+      typeOfStructure: extracted.typeOfStructure || p.property_sub_type || accom.type_of_structure || prev.typeOfStructure || "",
+      typeOfRoof: extracted.typeOfRoof || struct.roof_type || prev.typeOfRoof || "",
+      noOfFloorsPermissible: extracted.noOfFloorsPermissible || prev.noOfFloorsPermissible || "NA",
+      noOfFloorsActual: Number(extracted.noOfFloorsActual) || Number(extracted.totalNoOfFloors) || prev.noOfFloorsActual || 0,
+      noOfUnitFlatOnEachFloor: extracted.noOfUnitFlatOnEachFloor || prev.noOfUnitFlatOnEachFloor || "NA",
+      qualityOfConstruction: extracted.qualityOfConstruction || extracted.constructionQuality || accom.quality_of_construction || prev.qualityOfConstruction || "",
+      approxAgeOfProperty: Number(extracted.approxAgeOfProperty) || Number(extracted.ageOfProperty) || Number(extracted.propertyAge) || Number(accom.age_of_property) || prev.approxAgeOfProperty || 0,
+      residualAge: Number(extracted.residualAge) || Number(accom.residual_age) || prev.residualAge || 0,
+    };
+
+    return mapped;
+  };
+
   useEffect(() => {
     if (id) fetchEditData(id);
   }, [id]);
@@ -136,9 +242,11 @@ const HomeFirstBank = () => {
       console.log("Auto data received:", extractedData);
       
       setIsEdit((prev) => {
+        const schemaMapped = mapExtractedDataToHFSchema(extractedData, prev);
         const updated = {
           ...prev,
           ...extractedData,
+          ...schemaMapped,
           imageUrls: extractedData.imageUrls
             ? [...(prev?.imageUrls || []), ...extractedData.imageUrls]
             : prev?.imageUrls,

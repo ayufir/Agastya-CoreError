@@ -990,8 +990,9 @@ const AdvancedAutoFillForm = ({
       formData.append("siteVisitPhotosList", JSON.stringify(uploadedPhotoUrls));
       formData.append("siteVisitVideoList",  JSON.stringify(uploadedVideoUrls));
 
+      const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/advanced-autofill`,
+        `${apiBaseUrl}/api/advanced-autofill`,
         {
           method:      "POST",
           body:        formData,

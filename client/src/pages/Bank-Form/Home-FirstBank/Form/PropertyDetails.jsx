@@ -64,20 +64,24 @@
           residualAge: accom.residual_age || extractedData.residualAge,
           directions: {
             North: {
-              document: bounds.north_as_per_deed || extractedData.northDocument,
-              actual: bounds.north_actual || extractedData.northActual,
+              document: bounds.north_as_per_deed || extractedData.northDocument || "",
+              actual: bounds.north_actual || extractedData.northActual || "",
+              plan: bounds.north_as_per_deed || extractedData.northPlan || extractedData.northDocument || "",
             },
             South: {
-              document: bounds.south_as_per_deed || extractedData.southDocument,
-              actual: bounds.south_actual || extractedData.southActual,
+              document: bounds.south_as_per_deed || extractedData.southDocument || "",
+              actual: bounds.south_actual || extractedData.southActual || "",
+              plan: bounds.south_as_per_deed || extractedData.southPlan || extractedData.southDocument || "",
             },
             East: {
-              document: bounds.east_as_per_deed || extractedData.eastDocument,
-              actual: bounds.east_actual || extractedData.eastActual,
+              document: bounds.east_as_per_deed || extractedData.eastDocument || "",
+              actual: bounds.east_actual || extractedData.eastActual || "",
+              plan: bounds.east_as_per_deed || extractedData.eastPlan || extractedData.eastDocument || "",
             },
             West: {
-              document: bounds.west_as_per_deed || extractedData.westDocument,
-              actual: bounds.west_actual || extractedData.westActual,
+              document: bounds.west_as_per_deed || extractedData.westDocument || "",
+              actual: bounds.west_actual || extractedData.westActual || "",
+              plan: bounds.west_as_per_deed || extractedData.westPlan || extractedData.westDocument || "",
             },
           }
         };
