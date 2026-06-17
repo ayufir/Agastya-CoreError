@@ -15,6 +15,18 @@ import BellWithNotifications from "./BellWithNotifications";
 const Header = () => {
   const [activeTab, setActiveTab] = useState("Home");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [logoClickCount, setLogoClickCount] = useState(0);
+
+  const handleLogoClick = () => {
+    setLogoClickCount((prev) => {
+      const next = prev + 1;
+      if (next === 5) {
+        alert("This application is developed by Ayush Shrivastava");
+        return 0;
+      }
+      return next;
+    });
+  };
 
   const navLinks = [
     { name: "Home", href: "#", icon: <Home size={16} /> },
@@ -32,7 +44,7 @@ const Header = () => {
         <div className='flex justify-between h-16 '>
           {/* Logo + Desktop Nav */}
           <div className='flex items-center'>
-            <div className='text-center'>
+            <div className='text-center cursor-pointer select-none' onClick={handleLogoClick}>
               <h1 className='text-[#C40C0C] font-extrabold text-2xl leading-tight'>
                 Unique
                 <span className='text-gray-800 text-lg'> Engineering</span>
