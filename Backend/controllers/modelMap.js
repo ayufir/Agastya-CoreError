@@ -146,18 +146,26 @@ Object.defineProperty(modelMap, "bankRegistry", {
   enumerable: false,
 });
 
-// Dynamic injection of atsDocuments and siteVisitVideo fields to all bank models to allow saving and retrieval
+// Dynamic injection of fields to all bank models to allow saving and retrieval
 Object.values(modelMap).forEach((Model) => {
   if (Model && Model.schema) {
     if (!Model.schema.paths.atsDocuments) {
-      Model.schema.add({
-        atsDocuments: { type: [Object], default: [] }
-      });
+      Model.schema.add({ atsDocuments: { type: [Object], default: [] } });
     }
     if (!Model.schema.paths.siteVisitVideo) {
-      Model.schema.add({
-        siteVisitVideo: { type: [Object], default: [] }
-      });
+      Model.schema.add({ siteVisitVideo: { type: [Object], default: [] } });
+    }
+    if (!Model.schema.paths.gpsFiles) {
+      Model.schema.add({ gpsFiles: { type: [Object], default: [] } });
+    }
+    if (!Model.schema.paths.emailFiles) {
+      Model.schema.add({ emailFiles: { type: [Object], default: [] } });
+    }
+    if (!Model.schema.paths.fieldFormFiles) {
+      Model.schema.add({ fieldFormFiles: { type: [Object], default: [] } });
+    }
+    if (!Model.schema.paths.additionalFiles) {
+      Model.schema.add({ additionalFiles: { type: [Object], default: [] } });
     }
   }
 });
@@ -165,14 +173,22 @@ Object.values(modelMap).forEach((Model) => {
 bankRegistry.forEach(({ model: Model }) => {
   if (Model && Model.schema) {
     if (!Model.schema.paths.atsDocuments) {
-      Model.schema.add({
-        atsDocuments: { type: [Object], default: [] }
-      });
+      Model.schema.add({ atsDocuments: { type: [Object], default: [] } });
     }
     if (!Model.schema.paths.siteVisitVideo) {
-      Model.schema.add({
-        siteVisitVideo: { type: [Object], default: [] }
-      });
+      Model.schema.add({ siteVisitVideo: { type: [Object], default: [] } });
+    }
+    if (!Model.schema.paths.gpsFiles) {
+      Model.schema.add({ gpsFiles: { type: [Object], default: [] } });
+    }
+    if (!Model.schema.paths.emailFiles) {
+      Model.schema.add({ emailFiles: { type: [Object], default: [] } });
+    }
+    if (!Model.schema.paths.fieldFormFiles) {
+      Model.schema.add({ fieldFormFiles: { type: [Object], default: [] } });
+    }
+    if (!Model.schema.paths.additionalFiles) {
+      Model.schema.add({ additionalFiles: { type: [Object], default: [] } });
     }
   }
 });

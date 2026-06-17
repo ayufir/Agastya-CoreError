@@ -1,7 +1,41 @@
 const { GoogleGenAI } = require("@google/genai");
 const imagekit = require("../config/imagekit");
+const axios = require("axios");
+const modelMap = require("./modelMap");
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+const downloadFileAsBuffer = async (url) => {
+  try {
+    const response = await axios.get(url, { responseType: "arraybuffer" });
+    const buffer = Buffer.from(response.data);
+    
+    const parsedUrl = new URL(url);
+    const pathname = parsedUrl.pathname;
+    let originalname = pathname.substring(pathname.lastIndexOf("/") + 1) || "file";
+    originalname = decodeURIComponent(originalname);
+
+    let mimetype = response.headers["content-type"] || "application/octet-stream";
+    if (originalname.toLowerCase().endsWith(".pdf")) {
+      mimetype = "application/pdf";
+    } else if (originalname.toLowerCase().endsWith(".png")) {
+      mimetype = "image/png";
+    } else if (originalname.toLowerCase().endsWith(".jpg") || originalname.toLowerCase().endsWith(".jpeg")) {
+      mimetype = "image/jpeg";
+    } else if (originalname.toLowerCase().endsWith(".mp4")) {
+      mimetype = "video/mp4";
+    }
+    
+    return {
+      buffer,
+      originalname,
+      mimetype,
+    };
+  } catch (error) {
+    console.error(`Error downloading file from url ${url}:`, error.message);
+    return null;
+  }
+};
 
 const CATEGORY_LABELS = {
   gpsFiles:        "GPS / site photos / map screenshots with lat-long",
@@ -937,8 +971,10 @@ const advancedAutofill = async (req, res) => {
       });
     }
 
-    // ── 1. Collect files by category ────────────────────────────────────────
-    const filesByCategory = {
+    const { caseId } = req.body || {};
+
+    // ── 1. Collect NEW files from request ────────────────────────────────────
+    const newFilesByCategory = {
       gpsFiles:        req.files?.gpsFiles        || [],
       atsFiles:        req.files?.atsFiles         || [],
       emailFiles:      req.files?.emailFiles       || [],
@@ -946,10 +982,224 @@ const advancedAutofill = async (req, res) => {
       additionalFiles: req.files?.additionalFiles  || [],
     };
 
-    const siteVisitPhotos = req.files?.siteVisitPhotos || [];
-    const siteVisitVideo = req.files?.siteVisitVideo || [];
+    const newSiteVisitPhotos = req.files?.siteVisitPhotos || [];
+    const newSiteVisitVideo = req.files?.siteVisitVideo || [];
 
-    // Total excludes siteVisitPhotos and siteVisitVideo (those are only for media fields, not AI text extraction)
+    // ── 2. Upload new site visit photos to ImageKit in parallel ─────────────
+    let siteVisitPhotoUrls = [];
+    if (newSiteVisitPhotos.length > 0) {
+      console.log(`📸 Uploading ${newSiteVisitPhotos.length} site visit photos to ImageKit...`);
+      const uploadResults = await Promise.all(
+        newSiteVisitPhotos.map((file) => uploadToImageKit(file, "site-visit-photos"))
+      );
+      siteVisitPhotoUrls = uploadResults.filter(Boolean); // Remove nulls (failed uploads)
+      console.log(`✅ ImageKit: ${siteVisitPhotoUrls.length}/${newSiteVisitPhotos.length} photos uploaded.`);
+    }
+
+    // ── Upload new atsFiles to ImageKit in parallel ─────────────────────────
+    let atsDocumentUrls = [];
+    if (newFilesByCategory.atsFiles && newFilesByCategory.atsFiles.length > 0) {
+      console.log(`📄 Uploading ${newFilesByCategory.atsFiles.length} ATS documents to ImageKit...`);
+      const uploadResults = await Promise.all(
+        newFilesByCategory.atsFiles.map((file) => uploadToImageKit(file, "ats-documents"))
+      );
+      atsDocumentUrls = uploadResults.filter(Boolean);
+      console.log(`✅ ImageKit: ${atsDocumentUrls.length}/${newFilesByCategory.atsFiles.length} ATS documents uploaded.`);
+    }
+
+    // ── Upload new siteVisitVideo to ImageKit in parallel ───────────────────
+    let siteVisitVideoUrls = [];
+    if (newSiteVisitVideo.length > 0) {
+      console.log(`🎥 Uploading ${newSiteVisitVideo.length} site visit videos to ImageKit...`);
+      const uploadResults = await Promise.all(
+        newSiteVisitVideo.map((file) => uploadToImageKit(file, "site-visit-videos"))
+      );
+      siteVisitVideoUrls = uploadResults.filter(Boolean);
+      console.log(`✅ ImageKit: ${siteVisitVideoUrls.length}/${newSiteVisitVideo.length} site visit videos uploaded.`);
+    }
+
+    // ── Upload new gpsFiles to ImageKit in parallel ─────────────────────────
+    let gpsDocumentUrls = [];
+    if (newFilesByCategory.gpsFiles && newFilesByCategory.gpsFiles.length > 0) {
+      console.log(`📍 Uploading ${newFilesByCategory.gpsFiles.length} GPS documents to ImageKit...`);
+      const uploadResults = await Promise.all(
+        newFilesByCategory.gpsFiles.map((file) => uploadToImageKit(file, "gps-documents"))
+      );
+      gpsDocumentUrls = uploadResults.filter(Boolean);
+      console.log(`✅ ImageKit: ${gpsDocumentUrls.length}/${newFilesByCategory.gpsFiles.length} GPS documents uploaded.`);
+    }
+
+    // ── Upload new emailFiles to ImageKit in parallel ───────────────────────
+    let emailDocumentUrls = [];
+    if (newFilesByCategory.emailFiles && newFilesByCategory.emailFiles.length > 0) {
+      console.log(`📧 Uploading ${newFilesByCategory.emailFiles.length} email documents to ImageKit...`);
+      const uploadResults = await Promise.all(
+        newFilesByCategory.emailFiles.map((file) => uploadToImageKit(file, "email-documents"))
+      );
+      emailDocumentUrls = uploadResults.filter(Boolean);
+      console.log(`✅ ImageKit: ${emailDocumentUrls.length}/${newFilesByCategory.emailFiles.length} email documents uploaded.`);
+    }
+
+    // ── Upload new fieldFormFiles to ImageKit in parallel ───────────────────
+    let fieldFormDocumentUrls = [];
+    if (newFilesByCategory.fieldFormFiles && newFilesByCategory.fieldFormFiles.length > 0) {
+      console.log(`📋 Uploading ${newFilesByCategory.fieldFormFiles.length} field forms to ImageKit...`);
+      const uploadResults = await Promise.all(
+        newFilesByCategory.fieldFormFiles.map((file) => uploadToImageKit(file, "field-forms"))
+      );
+      fieldFormDocumentUrls = uploadResults.filter(Boolean);
+      console.log(`✅ ImageKit: ${fieldFormDocumentUrls.length}/${newFilesByCategory.fieldFormFiles.length} field forms uploaded.`);
+    }
+
+    // ── Upload new additionalFiles to ImageKit in parallel ──────────────────
+    let additionalDocumentUrls = [];
+    if (newFilesByCategory.additionalFiles && newFilesByCategory.additionalFiles.length > 0) {
+      console.log(`🗂️ Uploading ${newFilesByCategory.additionalFiles.length} additional files to ImageKit...`);
+      const uploadResults = await Promise.all(
+        newFilesByCategory.additionalFiles.map((file) => uploadToImageKit(file, "additional-files"))
+      );
+      additionalDocumentUrls = uploadResults.filter(Boolean);
+      console.log(`✅ ImageKit: ${additionalDocumentUrls.length}/${newFilesByCategory.additionalFiles.length} additional files uploaded.`);
+    }
+
+    // ── Fetch existing documents from database and merge for Gemini ─────────
+    const filesByCategory = {
+      gpsFiles:        [...newFilesByCategory.gpsFiles],
+      atsFiles:        [...newFilesByCategory.atsFiles],
+      emailFiles:      [...newFilesByCategory.emailFiles],
+      fieldFormFiles:  [...newFilesByCategory.fieldFormFiles],
+      additionalFiles: [...newFilesByCategory.additionalFiles],
+    };
+    let siteVisitPhotos = [...newSiteVisitPhotos];
+    let siteVisitVideo = [...newSiteVisitVideo];
+
+    let dbGpsUrls = [];
+    let dbAtsUrls = [];
+    let dbEmailUrls = [];
+    let dbFieldFormUrls = [];
+    let dbAdditionalUrls = [];
+    let dbPhotoUrls = [];
+    let dbVideoUrls = [];
+
+    const getUrl = (doc) => {
+      if (!doc) return null;
+      if (typeof doc === "string") return doc;
+      return doc.url || null;
+    };
+
+    const getName = (doc, index) => {
+      if (!doc) return `file_${index}`;
+      if (typeof doc === "string") {
+        try {
+          const u = new URL(doc);
+          return u.pathname.substring(u.pathname.lastIndexOf("/") + 1) || `file_${index}`;
+        } catch (e) {
+          return `file_${index}`;
+        }
+      }
+      return doc.name || `file_${index}`;
+    };
+
+    const getFileId = (doc) => {
+      if (!doc) return null;
+      if (typeof doc === "string") return doc;
+      return doc.fileId || doc.url || null;
+    };
+
+    const normalizeDbDocs = (dbDocs) => {
+      if (!Array.isArray(dbDocs)) return [];
+      return dbDocs.map((doc, idx) => ({
+        url: getUrl(doc),
+        fileId: getFileId(doc),
+        name: getName(doc, idx),
+      })).filter(d => d.url);
+    };
+
+    const downloadDbFiles = async (dbDocs) => {
+      const files = [];
+      if (Array.isArray(dbDocs)) {
+        for (let i = 0; i < dbDocs.length; i++) {
+          const doc = dbDocs[i];
+          const url = getUrl(doc);
+          if (url) {
+            console.log(`[Advanced AI] Downloading DB file: ${url}`);
+            const downloaded = await downloadFileAsBuffer(url);
+            if (downloaded) {
+              files.push(downloaded);
+            }
+          }
+        }
+      }
+      return files;
+    };
+
+    if (caseId) {
+      console.log(`[Advanced AI] Fetching case ID: ${caseId}`);
+      const bankRegistry = modelMap.bankRegistry || Object.values(modelMap);
+      let matchedCase = null;
+      for (const bankConfig of bankRegistry) {
+        const Model = bankConfig.model || bankConfig;
+        if (Model && Model.findById) {
+          const exists = await Model.findById(caseId);
+          if (exists) {
+            matchedCase = exists;
+            break;
+          }
+        }
+      }
+
+      if (matchedCase) {
+        console.log(`[Advanced AI] Case found in database. Merging document references...`);
+
+        dbGpsUrls = normalizeDbDocs(matchedCase.gpsFiles);
+        dbAtsUrls = normalizeDbDocs(matchedCase.atsDocuments);
+        dbEmailUrls = normalizeDbDocs(matchedCase.emailFiles);
+        dbFieldFormUrls = normalizeDbDocs(matchedCase.fieldFormFiles);
+        dbAdditionalUrls = normalizeDbDocs(matchedCase.additionalFiles);
+        dbPhotoUrls = normalizeDbDocs([
+          ...(matchedCase.sitePhotographs || []),
+          ...(matchedCase.otherImages || []),
+          ...(matchedCase.imageUrls || []),
+        ]);
+        dbVideoUrls = normalizeDbDocs(matchedCase.siteVisitVideo);
+
+        // Download existing files and append to list for Gemini
+        const dbGps = await downloadDbFiles(matchedCase.gpsFiles);
+        filesByCategory.gpsFiles.push(...dbGps);
+
+        const dbAts = await downloadDbFiles(matchedCase.atsDocuments);
+        filesByCategory.atsFiles.push(...dbAts);
+
+        const dbEmail = await downloadDbFiles(matchedCase.emailFiles);
+        filesByCategory.emailFiles.push(...dbEmail);
+
+        const dbFieldForm = await downloadDbFiles(matchedCase.fieldFormFiles);
+        filesByCategory.fieldFormFiles.push(...dbFieldForm);
+
+        const dbAdditional = await downloadDbFiles(matchedCase.additionalFiles);
+        filesByCategory.additionalFiles.push(...dbAdditional);
+
+        const dbPhotos = await downloadDbFiles([
+          ...(matchedCase.sitePhotographs || []),
+          ...(matchedCase.otherImages || []),
+          ...(matchedCase.imageUrls || []),
+        ]);
+        siteVisitPhotos.push(...dbPhotos);
+
+        const dbVideo = await downloadDbFiles(matchedCase.siteVisitVideo);
+        siteVisitVideo.push(...dbVideo);
+      }
+    }
+
+    const mergedSiteVisitPhotoUrls = [...siteVisitPhotoUrls, ...dbPhotoUrls];
+    const mergedAtsDocumentUrls = [...atsDocumentUrls, ...dbAtsUrls];
+    const mergedSiteVisitVideoUrls = [...siteVisitVideoUrls, ...dbVideoUrls];
+    const mergedGpsDocumentUrls = [...gpsDocumentUrls, ...dbGpsUrls];
+    const mergedEmailDocumentUrls = [...emailDocumentUrls, ...dbEmailUrls];
+    const mergedFieldFormDocumentUrls = [...fieldFormDocumentUrls, ...dbFieldFormUrls];
+    const mergedAdditionalDocumentUrls = [...additionalDocumentUrls, ...dbAdditionalUrls];
+
+    // Total includes siteVisitPhotos and siteVisitVideo (those are only for media fields, not AI text extraction)
     const totalFiles = Object.values(filesByCategory).reduce(
       (sum, files) => sum + files.length,
       0
@@ -960,39 +1210,6 @@ const advancedAutofill = async (req, res) => {
         success: false,
         message: "No files uploaded for advanced autofill.",
       });
-    }
-
-    // ── 2. Upload site visit photos to ImageKit in parallel ─────────────────
-    let siteVisitPhotoUrls = [];
-    if (siteVisitPhotos.length > 0) {
-      console.log(`📸 Uploading ${siteVisitPhotos.length} site visit photos to ImageKit...`);
-      const uploadResults = await Promise.all(
-        siteVisitPhotos.map((file) => uploadToImageKit(file, "site-visit-photos"))
-      );
-      siteVisitPhotoUrls = uploadResults.filter(Boolean); // Remove nulls (failed uploads)
-      console.log(`✅ ImageKit: ${siteVisitPhotoUrls.length}/${siteVisitPhotos.length} photos uploaded.`);
-    }
-
-    // ── Upload atsFiles to ImageKit in parallel ─────────────────────────────
-    let atsDocumentUrls = [];
-    if (filesByCategory.atsFiles && filesByCategory.atsFiles.length > 0) {
-      console.log(`📄 Uploading ${filesByCategory.atsFiles.length} ATS documents to ImageKit...`);
-      const uploadResults = await Promise.all(
-        filesByCategory.atsFiles.map((file) => uploadToImageKit(file, "ats-documents"))
-      );
-      atsDocumentUrls = uploadResults.filter(Boolean);
-      console.log(`✅ ImageKit: ${atsDocumentUrls.length}/${filesByCategory.atsFiles.length} ATS documents uploaded.`);
-    }
-
-    // ── Upload siteVisitVideo to ImageKit in parallel ───────────────────────
-    let siteVisitVideoUrls = [];
-    if (siteVisitVideo.length > 0) {
-      console.log(`🎥 Uploading ${siteVisitVideo.length} site visit videos to ImageKit...`);
-      const uploadResults = await Promise.all(
-        siteVisitVideo.map((file) => uploadToImageKit(file, "site-visit-videos"))
-      );
-      siteVisitVideoUrls = uploadResults.filter(Boolean);
-      console.log(`✅ ImageKit: ${siteVisitVideoUrls.length}/${siteVisitVideo.length} site visit videos uploaded.`);
     }
 
     // ── 3. Build Gemini content parts ────────────────────────────────────────
@@ -1086,9 +1303,9 @@ const advancedAutofill = async (req, res) => {
           siteVisitPhotos: siteVisitPhotos.map(f => f.originalname),
           siteVisitVideo: siteVisitVideo.map(f => f.originalname),
         },
-        atsDocumentUrls,
-        siteVisitPhotoUrls,
-        siteVisitVideoUrls,
+        atsDocumentUrls: mergedAtsDocumentUrls,
+        siteVisitPhotoUrls: mergedSiteVisitPhotoUrls,
+        siteVisitVideoUrls: mergedSiteVisitVideoUrls,
       }, null, 2)
     );
 
@@ -1096,9 +1313,13 @@ const advancedAutofill = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: flatPayload,
-      siteVisitPhotoUrls, // Array of { url, fileId, name, mimeType } — for photo field injection
-      atsDocumentUrls, // Array of { url, fileId, name, mimeType } — for document field injection
-      siteVisitVideoUrls, // Array of { url, fileId, name, mimeType } — for video field injection
+      siteVisitPhotoUrls: mergedSiteVisitPhotoUrls, // Array of { url, fileId, name, mimeType } — for photo field injection
+      atsDocumentUrls: mergedAtsDocumentUrls, // Array of { url, fileId, name, mimeType } — for document field injection
+      siteVisitVideoUrls: mergedSiteVisitVideoUrls, // Array of { url, fileId, name, mimeType } — for video field injection
+      gpsDocumentUrls: mergedGpsDocumentUrls, // Array of { url, fileId, name, mimeType }
+      emailDocumentUrls: mergedEmailDocumentUrls, // Array of { url, fileId, name, mimeType }
+      fieldFormDocumentUrls: mergedFieldFormDocumentUrls, // Array of { url, fileId, name, mimeType }
+      additionalDocumentUrls: mergedAdditionalDocumentUrls, // Array of { url, fileId, name, mimeType }
       sourceSummary: {
         gpsFiles:        filesByCategory.gpsFiles.length,
         atsFiles:        filesByCategory.atsFiles.length,
@@ -1106,9 +1327,9 @@ const advancedAutofill = async (req, res) => {
         fieldFormFiles:  filesByCategory.fieldFormFiles.length,
         additionalFiles: filesByCategory.additionalFiles.length,
         siteVisitPhotos: siteVisitPhotos.length,
-        siteVisitUploaded: siteVisitPhotoUrls.length,
+        siteVisitUploaded: mergedSiteVisitPhotoUrls.length,
         siteVisitVideo:   siteVisitVideo.length,
-        siteVisitVideoUploaded: siteVisitVideoUrls.length,
+        siteVisitVideoUploaded: mergedSiteVisitVideoUrls.length,
       },
       auditNotes:   normalized.audit_notes   || [],
       photoAnalysis: normalized.photo_analysis || [],
@@ -1122,6 +1343,7 @@ const advancedAutofill = async (req, res) => {
     });
   }
 };
+
 
 module.exports = {
   advancedAutofill,

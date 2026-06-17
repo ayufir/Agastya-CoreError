@@ -376,6 +376,8 @@ import {
   getDisplayContact,
   getDisplayCustomerName,
 } from "../../../utils/dashboardRecord";
+import socket from "../../../config/socket";
+import axiosInstance from "../../../config/axios";
 
 const STATUS_TYPES = [
   { title: "New Cases", value: "NEW_CASES", icon: PlusCircle },
@@ -435,6 +437,52 @@ const FieldOfficerDashboard = () => {
     }
   }, [dispatch, user?._id]);
 
+  const [caseMap, setCaseMap] = useState({});
+  const [caseLoading, setCaseLoading] = useState(false);
+
+  // Real-time update subscription for Field Officer dashboard
+  useEffect(() => {
+    const handleNewNotification = () => {
+      if (user?._id) {
+        dispatch(fetchCases(user._id));
+        dispatch(allCaseUserById());
+      }
+    };
+    socket.on("newNotification", handleNewNotification);
+    return () => {
+      socket.off("newNotification", handleNewNotification);
+    };
+  }, [dispatch, user?._id]);
+
+  // Load details for query notes
+  useEffect(() => {
+    const fetchQueryCaseDetails = async () => {
+      if (!allCase || allCase.length === 0) return;
+      try {
+        setCaseLoading(true);
+        const isValidObjectId = (id) => /^[0-9a-fA-F]{24}$/.test(id);
+        const caseIds = [...new Set(allCase.map((note) => note.caseId).filter(Boolean))];
+        const validCaseIds = caseIds.filter(isValidObjectId);
+
+        const caseResponses = await Promise.all(
+          validCaseIds.map((id) => axiosInstance.get(`/case/${id}`))
+        );
+
+        const caseDataMap = {};
+        caseResponses.forEach((res, idx) => {
+          caseDataMap[validCaseIds[idx]] = res.data;
+        });
+        setCaseMap(caseDataMap);
+      } catch (error) {
+        console.error("Error fetching query case details:", error.message);
+      } finally {
+        setCaseLoading(false);
+      }
+    };
+
+    fetchQueryCaseDetails();
+  }, [allCase]);
+
   const bankOptions = [
     ...new Set(foCases?.map((caseItem) => caseItem.bankName).filter(Boolean)),
   ];
@@ -464,18 +512,38 @@ const FieldOfficerDashboard = () => {
     return dayjs(dateString).isSame(dayjs(), "day");
   };
 
+  const getCaseStatus = (caseId) => {
+    const caseInFo = foCases?.find((c) => c._id === caseId);
+    if (caseInFo) return caseInFo.status;
+    return caseMap[caseId]?.status;
+  };
+
   const filterCases = () => {
     let filtered = foCases;
 
     if (selectedStatus !== "TOTAL_ASSIGNED") {
       if (selectedStatus === "QUERY_RAISED") {
-        return allCase?.filter((c) => c.addedBy === user._id);
+        // allCase already contains only this user's notes (filtered on backend)
+        // Only show regular query notes (not call_not_attended) where case is still "Query Raised"
+        return allCase?.filter((c) => {
+          if (c.type === "call_not_attended") return false;
+          const status = getCaseStatus(String(c.caseId));
+          return status === "Query Raised";
+        });
       }
       if (selectedStatus === "NEW_CASES") {
-        filtered = filtered?.filter((caseItem) => caseItem.approvalStatus === "Pending");
+        filtered = filtered?.filter(
+          (caseItem) =>
+            !caseItem.isReportSubmitted &&
+            caseItem.status !== "Query Raised" &&
+            !caseItem.queryResolved
+        );
       } else if (selectedStatus === "PENDING") {
         filtered = filtered?.filter(
-          (caseItem) => caseItem.approvalStatus !== "Pending" && !caseItem.isReportSubmitted
+          (caseItem) =>
+            caseItem.queryResolved === true &&
+            !caseItem.isReportSubmitted &&
+            caseItem.status !== "Query Raised"
         );
       } else if (selectedStatus === "COMPLETED") {
         filtered = filtered?.filter((caseItem) => caseItem.isReportSubmitted === true);
@@ -520,10 +588,24 @@ const FieldOfficerDashboard = () => {
 
   const summaryCounts = {
     TOTAL_ASSIGNED: foCases?.length || 0,
-    NEW_CASES: foCases?.filter((c) => c.approvalStatus === "Pending").length || 0,
-    PENDING: foCases?.filter((c) => c.approvalStatus !== "Pending" && !c.isReportSubmitted).length || 0,
+    NEW_CASES: foCases?.filter(
+      (c) =>
+        !c.isReportSubmitted &&
+        c.status !== "Query Raised" &&
+        !c.queryResolved
+    ).length || 0,
+    PENDING: foCases?.filter(
+      (c) =>
+        c.queryResolved === true &&
+        !c.isReportSubmitted &&
+        c.status !== "Query Raised"
+    ).length || 0,
     COMPLETED: foCases?.filter((c) => c.isReportSubmitted === true).length || 0,
-    QUERY_RAISED: allCase?.filter((c) => c.addedBy === user._id).length || 0,
+    QUERY_RAISED: allCase?.filter((c) => {
+      if (c.type === "call_not_attended") return false;
+      const status = getCaseStatus(String(c.caseId));
+      return status === "Query Raised";
+    }).length || 0,
   };
 
   const defaultColumns = [
@@ -734,18 +816,85 @@ const FieldOfficerDashboard = () => {
     },
   ];
 
+  const handleResolveAndEdit = async (caseId, caseData) => {
+    if (!caseId || !caseData) return;
+    try {
+      // First, set case status back to "Work in Progress"
+      await axiosInstance.put("/case/status", {
+        caseId,
+        status: "Work in Progress",
+        note: "Query resolved by Field Officer.",
+        bankName: caseData.bankName
+      });
+      
+      toast.success("Query resolved! Case moved to Pending list.");
+      
+      // Update state immediately
+      if (user?._id) {
+        dispatch(fetchCases(user._id));
+        dispatch(allCaseUserById());
+      }
+    } catch (err) {
+      console.error("Error resolving query:", err.message);
+      toast.error("Failed to resolve query");
+    }
+  };
+
   const queryColumns = [
     {
-      title: "Case ID",
-      dataIndex: "caseId",
-      key: "caseId",
-      render: (text) => <span className="font-semibold text-slate-800">{text}</span>,
+      title: "Bank Name",
+      dataIndex: "bankName",
+      key: "bankName",
+      render: (_, record) => caseMap[record.caseId]?.bankName || "N/A",
+      sorter: (a, b) => {
+        const aBank = caseMap[a.caseId]?.bankName || "";
+        const bBank = caseMap[b.caseId]?.bankName || "";
+        return aBank.localeCompare(bBank);
+      },
+    },
+    {
+      title: "Customer Name",
+      dataIndex: "customerName",
+      key: "customerName",
+      render: (_, record) => {
+        const caseData = caseMap[record.caseId];
+        return caseData ? getDisplayCustomerName(caseData) : "N/A";
+      },
+      sorter: (a, b) => {
+        const aName = caseMap[a.caseId] ? getDisplayCustomerName(caseMap[a.caseId]) : "";
+        const bName = caseMap[b.caseId] ? getDisplayCustomerName(caseMap[b.caseId]) : "";
+        return aName.localeCompare(bName);
+      },
     },
     {
       title: "Message",
       dataIndex: "message",
       key: "message",
       render: (text) => <span className="text-slate-600 font-medium">{text}</span>,
+    },
+    {
+      title: "Date",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      render: (date) => dayjs(date).format("DD/MM/YYYY hh:mm A"),
+      sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (_, record) => {
+        const caseData = caseMap[record.caseId];
+        return (
+          <Button
+            type="primary"
+            onClick={() => handleResolveAndEdit(record.caseId, caseData)}
+            disabled={!caseData}
+            className="bg-indigo-600 hover:bg-indigo-750 border-none font-semibold text-xs rounded-xl"
+          >
+            Resolve & Edit
+          </Button>
+        );
+      },
     },
   ];
 
@@ -1033,6 +1182,9 @@ const FieldOfficerDashboard = () => {
               bordered={false}
               className="custom-premium-table"
               rowClassName={(record) => {
+                if (selectedStatus === "QUERY_RAISED") {
+                  return "hover:bg-slate-50/50 transition-colors border-l-4 border-l-rose-500";
+                }
                 const daysElapsed = dayjs().diff(dayjs(record.createdAt), 'day');
                 const isDelayed = daysElapsed >= 3 && !record.isReportSubmitted;
                 const isPending = record.approvalStatus === "Pending";
@@ -1076,6 +1228,11 @@ const FieldOfficerDashboard = () => {
               const hasDocs = docs.length > 0;
 
               if (selectedStatus === "QUERY_RAISED") {
+                const cData = caseMap[caseItem.caseId];
+                const custName = cData ? getDisplayCustomerName(cData) : "N/A";
+                const bName = cData ? cData.bankName : "N/A";
+                const dateFormatted = dayjs(caseItem.createdAt).format("DD/MM/YYYY hh:mm A");
+
                 return (
                   <div 
                     key={caseItem._id || caseItem.caseId}
@@ -1083,18 +1240,31 @@ const FieldOfficerDashboard = () => {
                   >
                     <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-rose-500" />
                     <div className="flex justify-between items-start mb-2">
-                      <span className="text-xs font-bold text-slate-400 uppercase">Case ID</span>
+                      <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-bold bg-slate-900 text-white rounded-lg uppercase">
+                        {bName}
+                      </span>
                       <span className="text-xs font-bold px-2 py-0.5 bg-rose-50 text-rose-600 rounded-lg border border-rose-100">
                         Query
                       </span>
                     </div>
-                    <div className="text-sm font-bold text-slate-800 mb-2 truncate">
-                      {caseItem.caseId || "N/A"}
+                    <div className="text-sm font-bold text-slate-800 mb-1">
+                      {custName}
                     </div>
-                    <div className="text-xs text-slate-600 bg-slate-50 rounded-xl p-3 border border-slate-100 min-h-[4rem]">
+                    <div className="text-[10px] text-slate-400 mb-2">
+                      {dateFormatted}
+                    </div>
+                    <div className="text-xs text-slate-600 bg-slate-50 rounded-xl p-3 border border-slate-100 min-h-[3rem] mb-3">
                       <span className="font-bold text-slate-400 block mb-1 text-[10px] uppercase">Message:</span>
                       {caseItem.message || "No detailed query message provided."}
                     </div>
+                    <Button
+                      type="primary"
+                      onClick={() => handleResolveAndEdit(caseItem.caseId, cData)}
+                      disabled={!cData}
+                      className="bg-indigo-600 hover:bg-indigo-750 border-none font-semibold text-xs rounded-xl w-full"
+                    >
+                      Resolve & Edit
+                    </Button>
                   </div>
                 );
               }
@@ -1295,9 +1465,14 @@ const FieldOfficerDashboard = () => {
       >
         <div className="py-4">
           {selectedCaseId && (
-            <CaseNotes
+          <CaseNotes
               caseId={selectedCaseId}
-              onSuccess={() => setIsModalOpen(false)}
+              onSuccess={() => {
+                setIsModalOpen(false);
+                // Re-fetch cases so getCaseStatus reflects new "Query Raised" status
+                dispatch(fetchCases(user._id));
+                dispatch(allCaseUserById());
+              }}
             />
           )}
         </div>

@@ -34,6 +34,11 @@ export const getDisplayCustomerName = (record) =>
     "propertyInfo.applicantName",
     "summary.applicantName",
     "header.contactedPerson",
+    "personName",
+    "applicantDetails.applicantName",
+    "applicantNames",
+    "contactPersonName",
+    "contactedPerson",
   ]);
 
 export const getDisplayAddress = (record) =>

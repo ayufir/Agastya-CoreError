@@ -116,6 +116,11 @@ const homeTrenchSchema = new mongoose.Schema({
     type: [Object],
     default: [],
   },
+  gpsFiles: { type: [Object], default: [] },
+  emailFiles: { type: [Object], default: [] },
+  fieldFormFiles: { type: [Object], default: [] },
+  additionalFiles: { type: [Object], default: [] },
+  siteVisitVideo: { type: [Object], default: [] },
   assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   timeline: [

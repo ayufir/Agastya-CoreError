@@ -4,6 +4,7 @@ import {
   getAllIciciBanks,
   getIciciBankById,
   updateIciciBank,
+  submitIciciBank,
 } from "./iciciBankThunk";
 
 const initialState = {
@@ -81,6 +82,27 @@ const iciciBankSlice = createSlice({
         );
       })
       .addCase(updateIciciBank.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      
+      //Submit
+      .addCase(submitIciciBank.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(submitIciciBank.fulfilled, (state, action) => {
+        state.loading = false;
+        if (action.payload?.data) {
+          state.data = state.data.map((item) =>
+            item._id === action.payload.data._id ? action.payload.data : item
+          );
+          if (state.singleData && state.singleData._id === action.payload.data._id) {
+            state.singleData = action.payload.data;
+          }
+        }
+      })
+      .addCase(submitIciciBank.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

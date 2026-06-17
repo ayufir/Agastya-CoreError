@@ -93,6 +93,11 @@ const getCaseDisplayCustomerName = (record) =>
     "propertyInfo.applicantName",
     "summary.applicantName",
     "header.contactedPerson",
+    "personName",
+    "applicantDetails.applicantName",
+    "applicantNames",
+    "contactPersonName",
+    "contactedPerson",
   ]);
 
 const getCaseDisplayAddress = (record) =>
@@ -648,24 +653,50 @@ exports.updateCaseStatus = async (req, res) => {
   }
 
   try {
-    const updated = await Model.findByIdAndUpdate(
-      caseId,
-      {
-        status,
-        $push: {
-          timeline: {
-            status,
-            updatedAt: new Date(),
-            updatedBy: req.user._id,
-            note,
-          },
+    const updatePayload = {
+      $set: { status },
+      $push: {
+        timeline: {
+          status,
+          updatedAt: new Date(),
+          updatedBy: req.user._id,
+          note,
         },
       },
+    };
+
+    if (status === "Work in Progress") {
+      updatePayload.$set.isReportSubmitted = false;
+      updatePayload.$set.queryResolved = true;
+    }
+
+    const updated = await Model.findByIdAndUpdate(
+      caseId,
+      updatePayload,
       { new: true }
     );
 
     if (!updated) {
       return res.status(404).json({ message: "Case not found." });
+    }
+
+    // Create notification and emit socket event on status changes
+    try {
+      const Notification = require("../../model/Notification");
+      const notif = await Notification.create({
+        userId: req.user._id,
+        caseId,
+        message: `Status of case for ${updated.customerName || updated.applicantName || "customer"} updated to ${status}`,
+        bankName: bankName,
+      });
+
+      if (req.io) {
+        req.io.emit("newNotification", notif);
+      } else if (global.io) {
+        global.io.emit("newNotification", notif);
+      }
+    } catch (notifErr) {
+      console.error("Failed to create notification on status update:", notifErr.message);
     }
 
     res.json(updated);
@@ -898,7 +929,7 @@ exports.getFinalSubmittedCases = async (req, res) => {
   try {
     const finalCases = await fetchCasesAcrossBanks({
       user,
-      baseQuery: { status: "FinalSubmitted" },
+      baseQuery: { status: { $in: ["FinalSubmitted", "Submitted"] } },
       populate: "assignedTo createdBy",
     });
 

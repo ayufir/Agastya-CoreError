@@ -201,6 +201,7 @@ const IciciBankSchema = new mongoose.Schema({
       "Work in Progress",
       "Work in Progress",
       "FinalSubmitted",
+      "Submitted",
     ],
     default: "Pending",
   },
@@ -447,6 +448,12 @@ const IciciBankSchema = new mongoose.Schema({
   sketchPhoto: { type: mongoose.Schema.Types.Mixed },
   leakageCracksPhoto: { type: mongoose.Schema.Types.Mixed },
   images: { type: mongoose.Schema.Types.Mixed },
+  atsDocuments: { type: [mongoose.Schema.Types.Mixed], default: [] },
+  siteVisitVideo: { type: [mongoose.Schema.Types.Mixed], default: [] },
+  gpsFiles: { type: [mongoose.Schema.Types.Mixed], default: [] },
+  emailFiles: { type: [mongoose.Schema.Types.Mixed], default: [] },
+  fieldFormFiles: { type: [mongoose.Schema.Types.Mixed], default: [] },
+  additionalFiles: { type: [mongoose.Schema.Types.Mixed], default: [] },
 
   // Floor and Area Details
   floorDetails: { type: mongoose.Schema.Types.Mixed },

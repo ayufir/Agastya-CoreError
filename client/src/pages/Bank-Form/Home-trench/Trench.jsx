@@ -354,8 +354,13 @@ const Trench = () => {
                     <AdvancedAutoFillForm
                       bankName="Home First Tranche"
                       setFormData={handleAutoFill}
-                      atsDocuments={atsDocuments || []}
+                      atsDocuments={atsDocuments && atsDocuments.length > 0 ? atsDocuments : (docUrls || [])}
                       imageUrls={uploadedUrls || []}
+                      siteVisitVideo={reportData?.siteVisitVideo || []}
+                      gpsFiles={reportData?.gpsFiles || []}
+                      emailFiles={reportData?.emailFiles || []}
+                      fieldFormFiles={reportData?.fieldFormFiles || []}
+                      additionalFiles={reportData?.additionalFiles || []}
                       fetchData={fetchReport}
                     />
                   </div>

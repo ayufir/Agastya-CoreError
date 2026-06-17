@@ -5,12 +5,14 @@ const {
   getNotesByCase,
   allCaseByUserId,
   allNotes,
+  uploadNoteImage,
 } = require("../controllers/noteCtrl");
 const { protect } = require("../middleware/authMiddleware.js");
 
 const router = express.Router();
 
-router.post("/", protect, addNote);
+// uploadNoteImage multer middleware runs before addNote so req.file is available
+router.post("/", protect, uploadNoteImage, addNote);
 
 router.get("/all", protect, allCaseByUserId);
 router.get("/get", protect, allNotes);

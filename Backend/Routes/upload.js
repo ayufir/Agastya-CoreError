@@ -279,6 +279,113 @@ router.post("/remove-ats-document", async (req, res) => {
   }
 });
 
+router.post("/upload-category-document", async (req, res) => {
+  const { caseId, fieldName, document } = req.body;
+
+  if (!caseId || !fieldName || !document) {
+    return res.status(400).json({
+      error: "caseId, fieldName, and document are required.",
+    });
+  }
+
+  try {
+    const bankRegistry = modelMap.bankRegistry || Object.values(modelMap);
+    let updatedCase = null;
+
+    // Search and update case in database across all bank models
+    for (const bankConfig of bankRegistry) {
+      const Model = bankConfig.model || bankConfig;
+      if (Model && Model.findById) {
+        const exists = await Model.findById(caseId);
+        if (exists) {
+          updatedCase = await Model.findByIdAndUpdate(
+            caseId,
+            { $push: { [fieldName]: document } },
+            { new: true }
+          );
+
+          if (updatedCase) {
+            console.log(`Successfully pushed to ${fieldName} for case ${caseId} in model ${Model.modelName}`);
+            break;
+          }
+        }
+      }
+    }
+
+    if (!updatedCase) {
+      return res.status(404).json({ error: "Case not found." });
+    }
+
+    return res.json({
+      message: `${fieldName} successfully added.`,
+      updatedCase,
+      success: true,
+    });
+  } catch (err) {
+    console.error(`Error uploading to ${fieldName}:`, err.message);
+    return res.status(500).json({ error: `Server error while adding to ${fieldName}.` });
+  }
+});
+
+router.post("/remove-category-document", async (req, res) => {
+  const { caseId, fieldName, document } = req.body;
+
+  if (!caseId || !fieldName || !document) {
+    return res.status(400).json({
+      error: "caseId, fieldName, and document are required.",
+    });
+  }
+
+  try {
+    const fileId = document.fileId || "";
+    const assetUrl = document.url || "";
+
+    if (fileId) {
+      try {
+        await imagekit.deleteFile(fileId);
+        console.log(`Successfully deleted file ${fileId} from ImageKit`);
+      } catch (ikErr) {
+        console.warn(`Failed to delete file ${fileId} from ImageKit:`, ikErr.message);
+      }
+    }
+
+    const bankRegistry = modelMap.bankRegistry || Object.values(modelMap);
+    let updatedCase = null;
+
+    const pullQuery = fileId 
+      ? { [fieldName]: { fileId: fileId } }
+      : { [fieldName]: { url: assetUrl } };
+
+    for (const bankConfig of bankRegistry) {
+      const Model = bankConfig.model || bankConfig;
+      if (Model && Model.findById) {
+        updatedCase = await Model.findByIdAndUpdate(
+          caseId,
+          { $pull: pullQuery },
+          { new: true }
+        );
+        if (updatedCase) {
+          console.log(`Successfully pulled from ${fieldName} in case ${caseId} in model ${Model.modelName}`);
+          break;
+        }
+      }
+    }
+
+    if (!updatedCase) {
+      return res.status(404).json({ error: "Case not found." });
+    }
+
+    return res.json({
+      message: `${fieldName} successfully removed.`,
+      updatedCase,
+      success: true,
+    });
+  } catch (err) {
+    console.error(`Error removing from ${fieldName}:`, err.message);
+    return res.status(500).json({ error: `Server error while removing from ${fieldName}.` });
+  }
+});
+
 router.delete("/:filename", (req, res) => {
   const filename = req.params.filename;
   const filePath = path.join(__dirname, "..", "uploads", filename);

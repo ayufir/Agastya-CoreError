@@ -15,6 +15,8 @@ import SummaryCard from "./Admin/SummaryCard";
 import { fetchFieldOfficers } from "../../redux/features/auth/authThunks";
 import { fetchNotifications } from "../../redux/features/notification/notificationThunk";
 import axiosInstance from "../../config/axios";
+import socket from "../../config/socket";
+import { getDisplayCustomerName } from "../../utils/dashboardRecord";
 
 const { Option } = Select;
 
@@ -60,17 +62,7 @@ const normalizeAllCaseRecord = (record, index) => {
     key: record._id || index,
     bankName:
       readValue(record, ["bankName", "bank", "bankDetails.bankName"]) || "N/A",
-    customerName:
-      readValue(record, [
-        "customerName",
-        "visitedPersonName",
-        "applicantName",
-        "applicantsName",
-        "clientName",
-        "basicDetails.nameOfClient",
-        "propertyInfo.applicantName",
-        "summary.applicantName",
-      ]) || "N/A",
+    customerName: getDisplayCustomerName(record),
     city:
       readValue(record, [
         "city",
@@ -293,6 +285,16 @@ const Dashboard = () => {
     fetchAllCases();
   }, [fetchAllCases]);
 
+  useEffect(() => {
+    const handleNewNotification = () => {
+      fetchAllCases();
+    };
+    socket.on("newNotification", handleNewNotification);
+    return () => {
+      socket.off("newNotification", handleNewNotification);
+    };
+  }, [fetchAllCases]);
+
   const monthFiltered = useMemo(() => {
     return allCasesData.filter((item) => {
       if (!selectedMonth) return true;
@@ -361,7 +363,10 @@ const Dashboard = () => {
         return (
           s.includes("working") ||
           s.includes("assigned") ||
-          s.includes("progress")
+          s.includes("progress") ||
+          s.includes("visited") ||
+          s.includes("reported") ||
+          s.includes("reviewed")
         );
       }).length,
 
@@ -389,6 +394,9 @@ const Dashboard = () => {
           s.includes("working") ||
           s.includes("assigned") ||
           s.includes("progress") ||
+          s.includes("visited") ||
+          s.includes("reported") ||
+          s.includes("reviewed") ||
           s.includes("final") ||
           s.includes("submitted") ||
           s.includes("done") ||

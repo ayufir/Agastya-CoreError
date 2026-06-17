@@ -180,6 +180,12 @@ const BajajHousingSchema = new mongoose.Schema(
 
         // ── ATTACHED DOCUMENTS ────────────────────────────────────────────────
         AttachDocuments: { type: [Object], default: [] },
+        atsDocuments: { type: [Object], default: [] },
+        gpsFiles: { type: [Object], default: [] },
+        emailFiles: { type: [Object], default: [] },
+        fieldFormFiles: { type: [Object], default: [] },
+        additionalFiles: { type: [Object], default: [] },
+        siteVisitVideo: { type: [Object], default: [] },
     },
     { timestamps: true }
 );

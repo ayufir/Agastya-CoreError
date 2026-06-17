@@ -61,13 +61,23 @@ export const fetchNotes = createAsyncThunk(
 
 export const addNote = createAsyncThunk(
   "notes/addNote",
-  async ({ caseId, message }, thunkAPI) => {
-    const res = await axios.post("/notes", { caseId, message });
+  async ({ caseId, message, type, image }, thunkAPI) => {
+    // Build FormData so we can optionally attach a photo
+    const formData = new FormData();
+    formData.append("caseId", caseId);
+    formData.append("message", message);
+    if (type) formData.append("type", type);
+    if (image) formData.append("image", image); // File object
 
-    // After successful addNote, fetch latest notes
+    const res = await axios.post("/notes", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    // Refresh both: notes for this case AND the full user note list
     await thunkAPI.dispatch(fetchNotes(caseId));
+    await thunkAPI.dispatch(allCaseUserById());
 
-    return res.data; // returning newly added note is optional
+    return res.data;
   }
 );
 

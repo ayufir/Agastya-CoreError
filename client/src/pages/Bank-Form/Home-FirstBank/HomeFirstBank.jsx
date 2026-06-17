@@ -157,7 +157,10 @@ const HomeFirstBank = () => {
           const finalPayload = { ...updated, city: savedCity };
           dispatch(updateDetails({ id, ...finalPayload }))
             .unwrap()
-            .then(() => {
+            .then((res) => {
+              if (res) {
+                setIsEdit(res);
+              }
               toast.success("AI extracted data saved successfully!");
             })
             .catch((err) => {
@@ -204,6 +207,10 @@ const HomeFirstBank = () => {
               }
               imageUrls={isEdit?.imageUrls || []}
               siteVisitVideo={isEdit?.siteVisitVideo || []}
+              gpsFiles={isEdit?.gpsFiles || []}
+              emailFiles={isEdit?.emailFiles || []}
+              fieldFormFiles={isEdit?.fieldFormFiles || []}
+              additionalFiles={isEdit?.additionalFiles || []}
               fetchData={() => fetchEditData(id)}
             />
           </div>
@@ -414,6 +421,19 @@ const HomeFirstBank = () => {
         />
       ),
     },
+    ...(id ? [{
+      id: 17,
+      label: "📋 Field Officer Uploads",
+      component: (
+        <HomeFirstPortalSections
+          mode="fieldUploads"
+          isEdit={isEdit}
+          sectionId={17}
+          registerSectionSubmitter={registerSectionSubmitter}
+          fetchData={() => fetchEditData(id)}
+        />
+      ),
+    }] : []),
   ];
 
   const sections = allSections;
@@ -437,7 +457,10 @@ const HomeFirstBank = () => {
       if (isFieldOfficer) {
         if (id) {
           const finalPayload = { ...isEdit, ...extractedData, city: savedCity };
-          await dispatch(updateDetails({ id, ...finalPayload })).unwrap();
+          const response = await dispatch(updateDetails({ id, ...finalPayload })).unwrap();
+          if (response) {
+            setIsEdit(response);
+          }
           toast.success("Details saved successfully");
         } else {
           toast.success("Progress saved locally");
@@ -458,8 +481,12 @@ const HomeFirstBank = () => {
       if (id) {
         const latestSections = { [`step${activeSection}`]: sectionData };
         const finalData = buildFinalData(latestSections);
-        const finalPayload = { ...finalData, status: "Work in Progress", city: savedCity };
-        await dispatch(updateDetails({ id, ...finalPayload })).unwrap();
+        const status = isEdit?.assignedTo ? "Work in Progress" : "Pending";
+        const finalPayload = { ...finalData, status, city: savedCity };
+        const response = await dispatch(updateDetails({ id, ...finalPayload })).unwrap();
+        if (response) {
+          setIsEdit(response);
+        }
       }
 
       const nextId = activeSection + 1;
@@ -487,11 +514,13 @@ const HomeFirstBank = () => {
       let finalPayload = { ...finalData, city: savedCity };
 
       if (createdDate) finalPayload = { ...finalData, createdAt: createdDate };
-      if (finalSubmit === "final") {
+      if (!id) {
+        finalPayload.status = "Pending";
+      } else if (finalSubmit === "final") {
         finalPayload.status = "FinalSubmitted";
       } else {
-        finalPayload.status = "Work in Progress";
-      };
+        finalPayload.status = isEdit?.assignedTo ? "Work in Progress" : "Pending";
+      }
 
       console.log("FINAL PAYLOAD BEFORE UPDATE:", finalPayload);
 
@@ -695,6 +724,10 @@ const HomeFirstBank = () => {
                   }
                   imageUrls={isEdit?.imageUrls || []}
                   siteVisitVideo={isEdit?.siteVisitVideo || []}
+                  gpsFiles={isEdit?.gpsFiles || []}
+                  emailFiles={isEdit?.emailFiles || []}
+                  fieldFormFiles={isEdit?.fieldFormFiles || []}
+                  additionalFiles={isEdit?.additionalFiles || []}
                   fetchData={() => fetchEditData(id)}
                 />
               </div>

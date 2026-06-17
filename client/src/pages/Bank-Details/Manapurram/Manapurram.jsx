@@ -1636,6 +1636,13 @@ export default function ManappuramForm() {
                     <AdvancedAutoFillForm
                         bankName="Manappuram"
                         setFormData={handleAutoFill}
+                        atsDocuments={form?.atsDocuments && form.atsDocuments.length > 0 ? form.atsDocuments : (form?.AttachDocuments || [])}
+                        imageUrls={form?.imageUrls || []}
+                        siteVisitVideo={form?.siteVisitVideo || []}
+                        gpsFiles={form?.gpsFiles || []}
+                        emailFiles={form?.emailFiles || []}
+                        fieldFormFiles={form?.fieldFormFiles || []}
+                        additionalFiles={form?.additionalFiles || []}
                     />
                     {autoFilledFields.length > 0 && (
                         <div className="mt-3 text-xs text-slate-600">

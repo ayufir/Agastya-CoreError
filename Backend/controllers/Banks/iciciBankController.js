@@ -142,6 +142,21 @@ exports.submitIciciBank = async (req, res) => {
       return res.status(404).json({ message: "Report not found" });
     }
 
+    // Notification (non-blocking)
+    try {
+      const Notification = require("../../model/Notification");
+      const notif = await Notification.create({
+        userId: req.user?._id,
+        caseId: id,
+        message: `ICICI Bank report submitted for ${updated.customerName || updated.applicantName || "N/A"}`,
+        bankName: "ICICI Bank",
+      });
+      if (req.io) req.io.emit("newNotification", notif);
+      else if (global.io) global.io.emit("newNotification", notif);
+    } catch (_) {
+      /* notification failure should not break update */
+    }
+
     res.status(200).json({
       message: "Report submitted successfully",
       data: updated,

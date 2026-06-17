@@ -1,6 +1,6 @@
 // IciciBank.jsx
 import React, { useEffect, useState } from "react";
-import { Spin } from "antd";
+import { Spin, Button } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -244,6 +244,7 @@ const IciciBank = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const user = useSelector((state) => state.auth.user);
+  const isFieldOfficer = user?.role === "FieldOfficer";
 
   useEffect(() => {
     if (id) {
@@ -273,15 +274,61 @@ const IciciBank = () => {
 
   const handleAutoFill = createAutoFillAdapter(
     ICICI_MAPPING,
-    (mappedData, rawExtractedData) => {
+    async (mappedData, rawExtractedData) => {
       setExtractedData(mappedData);
+      
+      let updatedData;
       setFormData((prev) => {
-        const next = { ...prev, ...mappedData };
+        const next = {
+          ...prev,
+          ...mappedData,
+          sitePhotographs: mappedData.sitePhotographs
+            ? [...(prev?.sitePhotographs || []), ...mappedData.sitePhotographs]
+            : prev?.sitePhotographs,
+          siteVisitVideo: mappedData.siteVisitVideo
+            ? [...(prev?.siteVisitVideo || []), ...mappedData.siteVisitVideo]
+            : prev?.siteVisitVideo,
+          atsDocuments: mappedData.atsDocuments
+            ? [...(prev?.atsDocuments || []), ...mappedData.atsDocuments]
+            : prev?.atsDocuments,
+        };
+        updatedData = next;
         writeDraft(id, next);
         return next;
       });
-      setEditData((prev) => ({ ...prev, ...mappedData }));
-      toast.success("AI Data Extracted and Mapped Successfully!");
+
+      setEditData((prev) => {
+        const next = {
+          ...prev,
+          ...mappedData,
+          sitePhotographs: mappedData.sitePhotographs
+            ? [...(prev?.sitePhotographs || []), ...mappedData.sitePhotographs]
+            : prev?.sitePhotographs,
+          siteVisitVideo: mappedData.siteVisitVideo
+            ? [...(prev?.siteVisitVideo || []), ...mappedData.siteVisitVideo]
+            : prev?.siteVisitVideo,
+          atsDocuments: mappedData.atsDocuments
+            ? [...(prev?.atsDocuments || []), ...mappedData.atsDocuments]
+            : prev?.atsDocuments,
+        };
+        return next;
+      });
+
+      // Auto-save to the backend database immediately if editing an existing case
+      if (id) {
+        try {
+          const payloadWithFiles = await prepareFormDataForServer(updatedData);
+          const updated = sanitizeForSave(payloadWithFiles);
+          await dispatch(updateIciciBank({ id, formData: updated })).unwrap();
+          await fetchEditData();
+          toast.success("AI extracted data saved to database successfully!");
+        } catch (saveErr) {
+          console.error("Auto-save after AI failed:", saveErr);
+          toast.error("Failed to auto-save AI data to database");
+        }
+      } else {
+        toast.success("AI Data Extracted and Mapped Successfully!");
+      }
     }
   );
 
@@ -429,8 +476,9 @@ const IciciBank = () => {
         await fetchEditData();
       } else {
         const response = await dispatch(createIciciBank(updated)).unwrap();
-        // If it's a new report, we might want to navigate to the edit URL with the new ID, 
-        // but for now keeping it as original logic
+        if (response?._id) {
+          navigate(`/bank/icici/edit/${response._id}`);
+        }
       }
       toast.success("Data saved successfully");
 
@@ -454,9 +502,9 @@ const IciciBank = () => {
       ...data,
       bankName: "Icici",
       route: "icici",
-      isReportSubmitted: false,
-      approvalStatus: "Pending",
-      status: formData?.status === "FinalSubmitted" ? "FinalSubmitted" : "Pending",
+      isReportSubmitted: true,
+      approvalStatus: "Submitted",
+      status: formData?.status === "FinalSubmitted" ? "FinalSubmitted" : "Submitted",
     });
 
     try {
@@ -464,12 +512,20 @@ const IciciBank = () => {
         await dispatch(submitIciciBank({ id, formData: submitData })).unwrap();
         writeDraft(id, submitData);
         toast.success("Report submitted successfully");
-        navigate(`/bank/icici/${id}`);
+        if (isFieldOfficer) {
+          navigate("/field/dashboard");
+        } else {
+          navigate(`/bank/icici/${id}`);
+        }
       } else {
         const response = await dispatch(createIciciBank(submitData)).unwrap();
         writeDraft(response._id, submitData);
         toast.success("Report created and submitted successfully");
-        navigate(`/bank/icici/${response._id}`);
+        if (isFieldOfficer) {
+          navigate("/field/dashboard");
+        } else {
+          navigate(`/bank/icici/${response._id}`);
+        }
       }
     } catch (err) {
       console.error("Submission failed:", err);
@@ -613,183 +669,284 @@ const IciciBank = () => {
       </div>
 
       <div className="max-w-[1550px] mx-auto px-4 mt-6">
-        {/* TOP COMPACT NAV (MOBILE ONLY) & GRID NAV (DESKTOP ONLY) */}
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 md:p-6 mb-6">
-          {/* Mobile view step header */}
-          <div className="block md:hidden">
-            {/* Progress Bar */}
-            <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden mb-3">
-              <div 
-                className="bg-[#b21b12] h-full transition-all duration-300"
-                style={{ width: `${((activeIndex + 1) / cardList.length) * 100}%` }}
-              ></div>
+        {isFieldOfficer ? (
+          <div className="mt-4">
+            <div className="mb-6">
+              <AdvancedAutoFillForm
+                bankName="ICICI"
+                setFormData={handleAutoFill}
+                imageUrls={editData?.sitePhotographs || editData?.imageUrls || []}
+                atsDocuments={editData?.atsDocuments && editData.atsDocuments.length > 0 ? editData.atsDocuments : (editData?.AttachDocuments || [])}
+                siteVisitVideo={editData?.siteVisitVideo || []}
+                gpsFiles={editData?.gpsFiles || []}
+                emailFiles={editData?.emailFiles || []}
+                fieldFormFiles={editData?.fieldFormFiles || []}
+                additionalFiles={editData?.additionalFiles || []}
+                fetchData={fetchEditData}
+              />
             </div>
-            
-            {/* Active Step Selector Card */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="text-[#b21b12] [&>svg]:w-[28px] [&>svg]:h-[28px] flex-shrink-0">
-                  {activeItem?.icon}
-                </div>
-                <div>
-                  <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">
-                    Step {activeIndex + 1} of {cardList.length}
-                  </span>
-                  <span className="text-[14px] font-bold text-[#0b1d3a] leading-tight block">
-                    {activeItem?.label}
-                  </span>
-                </div>
-              </div>
-              
-              <button
-                type="button"
-                onClick={() => setShowMobileSteps((v) => !v)}
-                className="bg-red-50 hover:bg-red-100 text-[#a50000] px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1 transition-colors border border-red-100"
+
+            <div className="flex flex-col sm:flex-row justify-end gap-4 bg-white border border-gray-200 rounded-xl shadow-sm p-4 mb-10">
+              <Button
+                type="default"
+                onClick={async () => {
+                  setSaving(true);
+                  try {
+                    const payloadWithFiles = await prepareFormDataForServer(formData);
+                    const updated = sanitizeForSave(payloadWithFiles);
+                    setFormData(updated);
+                    setEditData(updated);
+                    writeDraft(id, updated);
+                    if (id) {
+                      await dispatch(updateIciciBank({ id, formData: updated })).unwrap();
+                      await fetchEditData();
+                    }
+                    toast.success("Draft saved successfully");
+                  } catch (err) {
+                    console.error("Save failed:", err);
+                    toast.error("Failed to save draft");
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+                loading={saving}
+                style={{
+                  height: "40px",
+                  paddingLeft: "24px",
+                  paddingRight: "24px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  borderRadius: "8px",
+                }}
               >
-                {showMobileSteps ? "Hide Steps ▴" : "Show Steps ▾"}
-              </button>
+                Save Draft
+              </Button>
+              <Button
+                type="primary"
+                onClick={async () => {
+                  setSaving(true);
+                  try {
+                    const payloadWithFiles = await prepareFormDataForServer(formData);
+                    const updated = sanitizeForSave(payloadWithFiles);
+                    setFormData(updated);
+                    setEditData(updated);
+                    writeDraft(id, updated);
+                    
+                    if (id) {
+                      await dispatch(updateIciciBank({ id, formData: updated })).unwrap();
+                    }
+                    
+                    await handleSubmit(updated);
+                  } catch (err) {
+                    console.error("Submission failed:", err);
+                    toast.error("Failed to submit report");
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+                loading={saving}
+                style={{
+                  backgroundColor: "#235097",
+                  borderColor: "#285194",
+                  height: "40px",
+                  paddingLeft: "24px",
+                  paddingRight: "24px",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  borderRadius: "8px",
+                }}
+              >
+                Submit Report
+              </Button>
             </div>
-            
-            {/* Collapsible Steps List */}
-            {showMobileSteps && (
-              <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-1 gap-1.5 max-h-[280px] overflow-y-auto">
-                {cardList.map((card, idx) => {
+          </div>
+        ) : (
+          <>
+            {/* TOP COMPACT NAV (MOBILE ONLY) & GRID NAV (DESKTOP ONLY) */}
+            <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 md:p-6 mb-6">
+              {/* Mobile view step header */}
+              <div className="block md:hidden">
+                {/* Progress Bar */}
+                <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden mb-3">
+                  <div 
+                    className="bg-[#b21b12] h-full transition-all duration-300"
+                    style={{ width: `${((activeIndex + 1) / cardList.length) * 100}%` }}
+                  ></div>
+                </div>
+                
+                {/* Active Step Selector Card */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="text-[#b21b12] [&>svg]:w-[28px] [&>svg]:h-[28px] flex-shrink-0">
+                      {activeItem?.icon}
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">
+                        Step {activeIndex + 1} of {cardList.length}
+                      </span>
+                      <span className="text-[14px] font-bold text-[#0b1d3a] leading-tight block">
+                        {activeItem?.label}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setShowMobileSteps((v) => !v)}
+                    className="bg-red-50 hover:bg-red-100 text-[#a50000] px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1 transition-colors border border-red-100"
+                  >
+                    {showMobileSteps ? "Hide Steps ▴" : "Show Steps ▾"}
+                  </button>
+                </div>
+                
+                {/* Collapsible Steps List */}
+                {showMobileSteps && (
+                  <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-1 gap-1.5 max-h-[280px] overflow-y-auto">
+                    {cardList.map((card, idx) => {
+                      const isActive = activeCard === card.key;
+                      const isDone = idx < activeIndex;
+                      return (
+                        <button
+                          key={card.key}
+                          type="button"
+                          onClick={() => {
+                            setActiveCard(card.key);
+                            setShowMobileSteps(false);
+                          }}
+                          className={`
+                            flex items-center justify-between p-2.5 rounded border text-left transition-all
+                            ${isActive 
+                              ? "border-[#a50000] bg-red-50/10 font-semibold" 
+                              : "border-gray-50 bg-gray-50/30 hover:bg-gray-50"
+                            }
+                          `}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`[&>svg]:w-[20px] [&>svg]:h-[20px] ${isActive ? "text-[#b21b12]" : "text-[#0b1d3a]"}`}>
+                              {card.icon}
+                            </div>
+                            <span className={`text-[13px] ${isActive ? "text-[#9b0000] font-bold" : "text-[#0b1d3a] font-medium"}`}>
+                              {idx + 1}. {card.label}
+                            </span>
+                          </div>
+                          <div className="relative w-4 h-4 flex-shrink-0 text-right">
+                            {isDone ? (
+                              <span className="text-[#67c915] text-[12px] font-bold">✓</span>
+                            ) : isActive ? (
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#b21b12] inline-block"></span>
+                            ) : (
+                              <span className="text-[#f59e0b] text-[12px]">△</span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Desktop step cards */}
+              <div className="hidden md:grid md:grid-cols-9 gap-3 w-full">
+                {cardList.map((card) => {
                   const isActive = activeCard === card.key;
-                  const isDone = idx < activeIndex;
+                  const currentIndex = cardList.findIndex((c) => c.key === card.key);
+                  const isDone = currentIndex < activeIndex;
+
                   return (
                     <button
                       key={card.key}
                       type="button"
-                      onClick={() => {
-                        setActiveCard(card.key);
-                        setShowMobileSteps(false);
-                      }}
+                      onClick={() => setActiveCard(card.key)}
                       className={`
-                        flex items-center justify-between p-2.5 rounded border text-left transition-all
-                        ${isActive 
-                          ? "border-[#a50000] bg-red-50/10 font-semibold" 
-                          : "border-gray-50 bg-gray-50/30 hover:bg-gray-50"
-                        }
+                        relative border rounded-[4px] bg-white cursor-pointer transition-all duration-200
+                        flex flex-col items-center justify-center h-[122px] px-1
+                        ${isActive ? "border-[#a50000] bg-red-50/5" : "border-[#c9c9c9] hover:bg-slate-50"}
                       `}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className={`[&>svg]:w-[20px] [&>svg]:h-[20px] ${isActive ? "text-[#b21b12]" : "text-[#0b1d3a]"}`}>
-                          {card.icon}
-                        </div>
-                        <span className={`text-[13px] ${isActive ? "text-[#9b0000] font-bold" : "text-[#0b1d3a] font-medium"}`}>
-                          {idx + 1}. {card.label}
-                        </span>
+                      <CardStatusIcon done={isDone} />
+
+                      <div
+                        className={`
+                          [&>svg]:w-[44px] [&>svg]:h-[44px] flex-shrink-0
+                          ${isActive ? "text-[#b21b12]" : "text-[#0b1d3a]"}
+                        `}
+                      >
+                        {card.icon}
                       </div>
-                      <div className="relative w-4 h-4 flex-shrink-0 text-right">
-                        {isDone ? (
-                          <span className="text-[#67c915] text-[12px] font-bold">✓</span>
-                        ) : isActive ? (
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#b21b12] inline-block"></span>
-                        ) : (
-                          <span className="text-[#f59e0b] text-[12px]">△</span>
-                        )}
+
+                      <div
+                        className={`
+                          text-[13px] leading-tight text-center px-1 flex-1 break-words mt-1
+                          ${isActive ? "text-[#9b0000] font-semibold" : "text-[#00133a] font-medium"}
+                        `}
+                      >
+                        {card.label}
                       </div>
                     </button>
                   );
                 })}
               </div>
-            )}
-          </div>
-
-          {/* Desktop step cards */}
-          <div className="hidden md:grid md:grid-cols-9 gap-3 w-full">
-            {cardList.map((card) => {
-              const isActive = activeCard === card.key;
-              const currentIndex = cardList.findIndex((c) => c.key === card.key);
-              const isDone = currentIndex < activeIndex;
-
-              return (
-                <button
-                  key={card.key}
-                  type="button"
-                  onClick={() => setActiveCard(card.key)}
-                  className={`
-                    relative border rounded-[4px] bg-white cursor-pointer transition-all duration-200
-                    flex flex-col items-center justify-center h-[122px] px-1
-                    ${isActive ? "border-[#a50000] bg-red-50/5" : "border-[#c9c9c9] hover:bg-slate-50"}
-                  `}
-                >
-                  <CardStatusIcon done={isDone} />
-
-                  <div
-                    className={`
-                      [&>svg]:w-[44px] [&>svg]:h-[44px] flex-shrink-0
-                      ${isActive ? "text-[#b21b12]" : "text-[#0b1d3a]"}
-                    `}
-                  >
-                    {card.icon}
-                  </div>
-
-                  <div
-                    className={`
-                      text-[13px] leading-tight text-center px-1 flex-1 break-words mt-1
-                      ${isActive ? "text-[#9b0000] font-semibold" : "text-[#00133a] font-medium"}
-                    `}
-                  >
-                    {card.label}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* FORM CARD CONTAINER */}
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-6 md:p-8 mb-10">
-          <div className="mb-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-200 pb-4 mb-6 gap-4">
-              <div className="flex items-center gap-3">
-                <div className="text-[#0b1d3a] [&>svg]:w-[32px] [&>svg]:h-[32px] flex-shrink-0">
-                  {activeItem?.icon}
-                </div>
-                <div>
-                  <h2 className="text-xl md:text-2xl font-bold text-[#9b0000]">
-                    {activeItem?.label}
-                  </h2>
-                  <p className="text-xs md:text-sm text-gray-500">Fill in the details below</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 self-end sm:self-auto">
-                <button
-                  onClick={() => {
-                    if (window.confirm("Are you sure you want to clear the entire form? All unsaved data will be lost.")) {
-                      localStorage.removeItem(`icici-bank-draft:${id || "new"}`);
-                      setFormData({});
-                      setEditData({});
-                      window.location.reload();
-                    }
-                  }}
-                  className="bg-red-50 text-[#C40C0C] border border-red-200 px-3 py-1.5 rounded-md hover:bg-red-100 transition-all text-xs font-bold shadow-sm"
-                >
-                  Clear Form
-                </button>
-                <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full font-semibold">
-                  Step {activeIndex + 1} of {cardList.length}
-                </span>
-              </div>
             </div>
 
-            <div className={`mb-6 border border-blue-200 rounded-lg p-4 bg-blue-50/50 ${activeCard !== "propertyDetails" ? "hidden" : ""}`}>
-              <div className="mb-4">
-                <AutoFillForm setFormData={handleAutoFill} />
-              </div>
-              <AdvancedAutoFillForm
-                bankName="ICICI"
-                setFormData={handleAutoFill}
-                imageUrls={editData?.sitePhotographs || editData?.imageUrls || []}
-                fetchData={fetchEditData}
-              />
-            </div>
+            {/* FORM CARD CONTAINER */}
+            <div className="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-6 md:p-8 mb-10">
+              <div className="mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-gray-200 pb-4 mb-6 gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="text-[#0b1d3a] [&>svg]:w-[32px] [&>svg]:h-[32px] flex-shrink-0">
+                      {activeItem?.icon}
+                    </div>
+                    <div>
+                      <h2 className="text-xl md:text-2xl font-bold text-[#9b0000]">
+                        {activeItem?.label}
+                      </h2>
+                      <p className="text-xs md:text-sm text-gray-500">Fill in the details below</p>
+                    </div>
+                  </div>
 
-            {renderForm()}
-          </div>
-        </div>
+                  <div className="flex items-center gap-3 self-end sm:self-auto">
+                    <button
+                      onClick={() => {
+                        if (window.confirm("Are you sure you want to clear the entire form? All unsaved data will be lost.")) {
+                          localStorage.removeItem(`icici-bank-draft:${id || "new"}`);
+                          setFormData({});
+                          setEditData({});
+                          window.location.reload();
+                        }
+                      }}
+                      className="bg-red-50 text-[#C40C0C] border border-red-200 px-3 py-1.5 rounded-md hover:bg-red-100 transition-all text-xs font-bold shadow-sm"
+                    >
+                      Clear Form
+                    </button>
+                    <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full font-semibold">
+                      Step {activeIndex + 1} of {cardList.length}
+                    </span>
+                  </div>
+                </div>
+
+                <div className={`mb-6 border border-blue-200 rounded-lg p-4 bg-blue-50/50 ${activeCard !== "propertyDetails" ? "hidden" : ""}`}>
+                  <div className="mb-4">
+                    <AutoFillForm setFormData={handleAutoFill} />
+                  </div>
+                  <AdvancedAutoFillForm
+                    bankName="ICICI"
+                    setFormData={handleAutoFill}
+                    imageUrls={editData?.sitePhotographs || editData?.imageUrls || []}
+                    atsDocuments={editData?.atsDocuments && editData.atsDocuments.length > 0 ? editData.atsDocuments : (editData?.AttachDocuments || [])}
+                    siteVisitVideo={editData?.siteVisitVideo || []}
+                    gpsFiles={editData?.gpsFiles || []}
+                    emailFiles={editData?.emailFiles || []}
+                    fieldFormFiles={editData?.fieldFormFiles || []}
+                    additionalFiles={editData?.additionalFiles || []}
+                    fetchData={fetchEditData}
+                  />
+                </div>
+
+                {renderForm()}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

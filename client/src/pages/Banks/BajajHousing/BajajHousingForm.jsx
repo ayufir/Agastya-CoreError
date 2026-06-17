@@ -665,6 +665,13 @@ export default function BajajHousingForm() {
                 <AdvancedAutoFillForm
                     bankName="Bajaj Housing"
                     setFormData={handleAutoFill}
+                    atsDocuments={form?.atsDocuments && form.atsDocuments.length > 0 ? form.atsDocuments : (form?.AttachDocuments || [])}
+                    imageUrls={form?.otherImages || []}
+                    siteVisitVideo={form?.siteVisitVideo || []}
+                    gpsFiles={form?.gpsFiles || []}
+                    emailFiles={form?.emailFiles || []}
+                    fieldFormFiles={form?.fieldFormFiles || []}
+                    additionalFiles={form?.additionalFiles || []}
                 />
             </div>
 

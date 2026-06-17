@@ -20,6 +20,17 @@ const noteSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  // "note" = regular note/query, "call_not_attended" = quick call log
+  type: {
+    type: String,
+    enum: ["note", "call_not_attended"],
+    default: "note",
+  },
+  // Optional photo attached to a note
+  image: {
+    url: { type: String, default: null },
+    fileId: { type: String, default: null },
+  },
   createdAt: {
     type: Date,
     default: Date.now,

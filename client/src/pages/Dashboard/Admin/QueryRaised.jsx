@@ -3,6 +3,8 @@ import axiosInstance from "../../../config/axios";
 import DataTable from "react-data-table-component";
 import { useSelector } from "react-redux";
 import { getDisplayCity } from "../../../utils/dashboardRecord";
+import socket from "../../../config/socket";
+import toast from "react-hot-toast";
 
 const isSameMonth = (date, monthValue) => {
   if (!date || !monthValue) return true;
@@ -56,6 +58,16 @@ const QueryRaised = ({ selectedMonth }) => {
 
   useEffect(() => {
     fetchNotes();
+
+    const handleNewNotification = () => {
+      fetchNotes();
+    };
+
+    socket.on("newNotification", handleNewNotification);
+
+    return () => {
+      socket.off("newNotification", handleNewNotification);
+    };
   }, []);
 
   const columns = [
@@ -93,7 +105,51 @@ const QueryRaised = ({ selectedMonth }) => {
         }),
       sortable: true,
     },
+    {
+      name: "Action",
+      cell: (row) => {
+        const caseData = caseMap[row.caseId];
+        return (
+          <button
+            onClick={() => handleResolveQuery(row.caseId, caseData?.bankName)}
+            disabled={!caseData}
+            style={{
+              padding: "4px 8px",
+              backgroundColor: "#10b981",
+              color: "#fff",
+              border: "none",
+              borderRadius: "4px",
+              fontSize: "12px",
+              fontWeight: "600",
+              cursor: "pointer",
+              opacity: caseData ? 1 : 0.5
+            }}
+          >
+            Resolve Query
+          </button>
+        );
+      },
+    },
   ];
+
+  const handleResolveQuery = async (caseId, bankName) => {
+    if (!caseId || !bankName) return;
+    try {
+      if (window.confirm("Are you sure you want to resolve this query and set the status back to Work in Progress?")) {
+        await axiosInstance.put("/case/status", {
+          caseId,
+          status: "Work in Progress",
+          note: "Query resolved by admin.",
+          bankName
+        });
+        toast.success("Query resolved and status changed to Work in Progress.");
+        fetchNotes();
+      }
+    } catch (error) {
+      console.error("Error resolving query:", error.message);
+      toast.error("Failed to resolve query.");
+    }
+  };
 
   const filteredNotes = useMemo(() => {
     const selectedZones = String(selectedZone || "")
@@ -103,6 +159,10 @@ const QueryRaised = ({ selectedMonth }) => {
 
     return notes.filter((note) => {
       const caseData = caseMap[note.caseId];
+
+      if (caseData && caseData.status !== "Query Raised") {
+        return false;
+      }
 
       const noteDate =
         note.createdAt ||

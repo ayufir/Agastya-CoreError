@@ -83,7 +83,7 @@ const PROPERTY_TYPE_OPTIONS = [
 ];
 
 // ─── File chip ────────────────────────────────────────────────────────────────
-const FileChip = ({ file, onRemove }) => {
+const FileChip = ({ file, onRemove, showDelete = true }) => {
   const isPdf = file.name?.toLowerCase().endsWith(".pdf");
   return (
     <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-150/70 bg-white/95 px-3 py-2 text-xs shadow-sm hover:border-slate-300 hover:shadow-md transition-all duration-200 group">
@@ -93,14 +93,16 @@ const FileChip = ({ file, onRemove }) => {
         </div>
         <span className="truncate text-slate-700 font-semibold leading-none">{file.name}</span>
       </div>
-      <button
-        type="button"
-        onClick={onRemove}
-        className="shrink-0 p-1.5 rounded-lg bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors duration-150 cursor-pointer border-none flex items-center justify-center"
-        title="Remove File"
-      >
-        <Trash2 className="w-3.5 h-3.5" />
-      </button>
+      {showDelete && onRemove && (
+        <button
+          type="button"
+          onClick={onRemove}
+          className="shrink-0 p-1.5 rounded-lg bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors duration-150 cursor-pointer border-none flex items-center justify-center"
+          title="Remove File"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      )}
     </div>
   );
 };
@@ -172,11 +174,11 @@ const ACCENT_STYLES = {
 };
 
 // ─── Upload card ──────────────────────────────────────────────────────────────
-const UploadCard = ({ title, helper, files, onAddFiles, onRemoveFile, accent = "blue", accept = "image/*,.pdf", icon }) => {
+const UploadCard = ({ title, helper, files, onAddFiles, onRemoveFile, accent = "blue", accept = "image/*,.pdf", icon, loading = false, allowDelete = true, isFieldOfficer = false }) => {
   const styles = ACCENT_STYLES[accent] || ACCENT_STYLES.blue;
 
   return (
-    <div className={`rounded-2xl border ${styles.border} ${styles.bg} ${styles.shadow} p-5 transition-all duration-300 hover:scale-[1.015]`}>
+    <div className={`rounded-2xl border ${isFieldOfficer ? "border-slate-200 bg-white shadow-sm" : `${styles.border} ${styles.bg} ${styles.shadow}`} p-5 transition-all duration-300 hover:scale-[1.015]`}>
       <div className="mb-4">
         <div className="text-sm font-extrabold text-slate-800 flex items-center gap-2">
           <span className="p-1.5 rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center">
@@ -187,17 +189,19 @@ const UploadCard = ({ title, helper, files, onAddFiles, onRemoveFile, accent = "
         <div className="mt-2 text-[11px] text-slate-500 font-semibold leading-relaxed">{helper}</div>
       </div>
       <label
-        className={`flex flex-col items-center justify-center cursor-pointer rounded-xl border-2 border-dashed ${styles.dashed} bg-white/65 hover:bg-white/95 px-4 py-5 text-center transition-all duration-200`}
+        className={`flex flex-col items-center justify-center cursor-pointer rounded-xl border-2 border-dashed ${isFieldOfficer ? "border-slate-200 bg-slate-55/40 hover:bg-slate-50" : `${styles.dashed} bg-white/65 hover:bg-white/95`} px-4 py-5 text-center transition-all duration-200`}
       >
-        <CloudUpload className="w-7 h-7 text-slate-450 mb-2 transition-colors duration-250 animate-bounce" style={{ animationDuration: '3s' }} />
+        <CloudUpload className={`w-7 h-7 text-slate-450 mb-2 transition-colors duration-250 ${isFieldOfficer ? "" : "animate-bounce"}`} style={isFieldOfficer ? {} : { animationDuration: '3s' }} />
         <span className="text-[11px] font-extrabold text-slate-600 mb-0.5">Drag & drop or browse</span>
         <span className="text-[9px] font-semibold text-slate-400 mb-3">Supports images, PDF up to 20MB</span>
-        <span className={`rounded-lg ${styles.btn} px-4 py-1.5 text-[11px] font-bold text-white shadow-sm transition-all duration-200 hover:scale-[1.02] cursor-pointer`}>
-          Browse Files
+        <span className={`rounded-lg ${isFieldOfficer ? "bg-slate-800 hover:bg-slate-900 text-white shadow-sm" : styles.btn} px-4 py-1.5 text-[11px] font-bold shadow-sm transition-all duration-200 hover:scale-[1.02] cursor-pointer flex items-center gap-1.5`}>
+          {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+          {loading ? "Uploading..." : "Browse Files"}
         </span>
         <input
           type="file"
           multiple
+          disabled={loading}
           accept={accept}
           className="hidden"
           onChange={(event) => {
@@ -212,6 +216,7 @@ const UploadCard = ({ title, helper, files, onAddFiles, onRemoveFile, accent = "
             <FileChip
               key={`${file.name}-${file.lastModified}-${index}`}
               file={file}
+              showDelete={allowDelete}
               onRemove={() => onRemoveFile(index)}
             />
           ))}
@@ -221,6 +226,30 @@ const UploadCard = ({ title, helper, files, onAddFiles, onRemoveFile, accent = "
   );
 };
 
+// Helper to normalize documents (either string URLs or objects) to uniform { url, name, fileId } objects
+const normalizeDocumentsList = (docs) => {
+  if (!Array.isArray(docs)) return [];
+  return docs.map((doc) => {
+    if (typeof doc === "string") {
+      let name = "Document";
+      try {
+        const urlObj = new URL(doc);
+        const pathname = urlObj.pathname;
+        name = pathname.substring(pathname.lastIndexOf("/") + 1) || "Document";
+      } catch (e) {
+        const parts = doc.split("/");
+        name = parts[parts.length - 1] || "Document";
+      }
+      return { url: doc, name, fileId: doc };
+    }
+    return {
+      url: doc?.url || "",
+      fileId: doc?.fileId || doc?.url || "",
+      name: doc?.name || "Document",
+    };
+  });
+};
+
 // ─── Main component ──────────────────────────────────────────────────────────
 const AdvancedAutoFillForm = ({ 
   setFormData, 
@@ -228,10 +257,14 @@ const AdvancedAutoFillForm = ({
   atsDocuments: propAtsDocuments = [],
   imageUrls: propImageUrls = [],
   siteVisitVideo: propSiteVisitVideo = [],
+  gpsFiles: propGpsFiles = [],
+  emailFiles: propEmailFiles = [],
+  fieldFormFiles: propFieldFormFiles = [],
+  additionalFiles: propAdditionalFiles = [],
   fetchData
 }) => {
   const user = useSelector((state) => state.auth.user);
-  const isFieldOfficer = user?.role === "FieldOfficer";
+  const isFieldOfficer = user?.role?.toLowerCase() === "fieldofficer";
   const { id: caseId } = useParams();
 
   const [atsDocsList, setAtsDocsList] = useState([]);
@@ -247,9 +280,15 @@ const AdvancedAutoFillForm = ({
   const [sourceSummary, setSourceSummary]         = useState(null);
   const [uploadedPhotoUrls, setUploadedPhotoUrls] = useState([]);
   const [uploadedVideoUrls, setUploadedVideoUrls] = useState([]);
+  const [uploadedGpsUrls, setUploadedGpsUrls] = useState([]);
+  const [uploadedEmailUrls, setUploadedEmailUrls] = useState([]);
+  const [uploadedFieldFormUrls, setUploadedFieldFormUrls] = useState([]);
+  const [uploadedAdditionalUrls, setUploadedAdditionalUrls] = useState([]);
+
+  const [uploadingCategory, setUploadingCategory] = useState({});
 
   useEffect(() => {
-    setAtsDocsList(propAtsDocuments || []);
+    setAtsDocsList(normalizeDocumentsList(propAtsDocuments));
   }, [propAtsDocuments]);
 
   useEffect(() => {
@@ -260,22 +299,359 @@ const AdvancedAutoFillForm = ({
     setUploadedVideoUrls(propSiteVisitVideo || []);
   }, [propSiteVisitVideo]);
 
-  // Fetch as fallback if caseId exists but no documents in prop
   useEffect(() => {
-    if (caseId && (!propAtsDocuments || propAtsDocuments.length === 0)) {
+    setUploadedGpsUrls(propGpsFiles || []);
+  }, [propGpsFiles]);
+
+  useEffect(() => {
+    setUploadedEmailUrls(propEmailFiles || []);
+  }, [propEmailFiles]);
+
+  useEffect(() => {
+    setUploadedFieldFormUrls(propFieldFormFiles || []);
+  }, [propFieldFormFiles]);
+
+  useEffect(() => {
+    setUploadedAdditionalUrls(propAdditionalFiles || []);
+  }, [propAdditionalFiles]);
+
+  // Fetch as fallback if caseId exists
+  useEffect(() => {
+    if (caseId) {
       fetch(`${import.meta.env.VITE_API_URL}/api/case/${caseId}`)
         .then((res) => res.json())
         .then((resData) => {
-          if (resData && Array.isArray(resData.atsDocuments)) {
-            setAtsDocsList(resData.atsDocuments);
-          }
-          if (resData && Array.isArray(resData.siteVisitVideo)) {
-            setUploadedVideoUrls(resData.siteVisitVideo);
+          if (resData) {
+            if (!propAtsDocuments || propAtsDocuments.length === 0) {
+              const rawAts = resData.atsDocuments && resData.atsDocuments.length > 0
+                ? resData.atsDocuments
+                : (resData.AttachDocuments || []);
+              setAtsDocsList(normalizeDocumentsList(rawAts));
+            }
+            if ((!propSiteVisitVideo || propSiteVisitVideo.length === 0) && Array.isArray(resData.siteVisitVideo)) {
+              setUploadedVideoUrls(resData.siteVisitVideo);
+            }
+            if ((!propGpsFiles || propGpsFiles.length === 0) && Array.isArray(resData.gpsFiles)) {
+              setUploadedGpsUrls(resData.gpsFiles);
+            }
+            if ((!propEmailFiles || propEmailFiles.length === 0) && Array.isArray(resData.emailFiles)) {
+              setUploadedEmailUrls(resData.emailFiles);
+            }
+            if ((!propFieldFormFiles || propFieldFormFiles.length === 0) && Array.isArray(resData.fieldFormFiles)) {
+              setUploadedFieldFormUrls(resData.fieldFormFiles);
+            }
+            if ((!propAdditionalFiles || propAdditionalFiles.length === 0) && Array.isArray(resData.additionalFiles)) {
+              setUploadedAdditionalUrls(resData.additionalFiles);
+            }
           }
         })
         .catch((err) => console.error("Error fetching case details:", err));
     }
-  }, [caseId, propAtsDocuments]);
+  }, [caseId, propAtsDocuments?.length, propSiteVisitVideo?.length, propGpsFiles?.length, propEmailFiles?.length, propFieldFormFiles?.length, propAdditionalFiles?.length]);
+
+  const handleGenericFileUpload = async (categoryKey, incomingFiles) => {
+    const files = Array.from(incomingFiles || []);
+    if (!files.length) return;
+
+    setUploadingCategory((prev) => ({ ...prev, [categoryKey]: true }));
+    const formData = new FormData();
+    files.forEach((file) => formData.append("files", file));
+
+    try {
+      const uploadRes = await fetch(`${import.meta.env.VITE_API_URL}/api/uploads`, {
+        method: "POST",
+        body: formData,
+      });
+      const uploadData = await uploadRes.json();
+
+      if (!uploadData.success || !uploadData.urls?.length) {
+        throw new Error(uploadData.message || "Failed to upload files");
+      }
+
+      const newDocs = uploadData.urls.map((item) => ({
+        url: item.url,
+        fileId: item.fileId,
+        name: item.name,
+      }));
+
+      if (caseId) {
+        let fieldName = categoryKey;
+        if (categoryKey === "siteVisitPhotos") {
+          const normBank = selectedBank.toLowerCase();
+          if (normBank.includes("icici")) {
+            fieldName = "sitePhotographs";
+          } else if (normBank.includes("bajaj")) {
+            fieldName = "otherImages";
+          } else {
+            fieldName = "imageUrls";
+          }
+        }
+
+        // ── Optimistic update: show files immediately while DB saves ──────────
+        if (categoryKey === "gpsFiles") {
+          setUploadedGpsUrls((prev) => [...prev, ...newDocs]);
+        } else if (categoryKey === "emailFiles") {
+          setUploadedEmailUrls((prev) => [...prev, ...newDocs]);
+        } else if (categoryKey === "fieldFormFiles") {
+          setUploadedFieldFormUrls((prev) => [...prev, ...newDocs]);
+        } else if (categoryKey === "additionalFiles") {
+          setUploadedAdditionalUrls((prev) => [...prev, ...newDocs]);
+        } else if (categoryKey === "siteVisitVideo") {
+          setUploadedVideoUrls((prev) => [...prev, ...newDocs]);
+        } else if (categoryKey === "siteVisitPhotos") {
+          setUploadedPhotoUrls((prev) => [...prev, ...newDocs]);
+        }
+
+        let lastUpdatedCase = null;
+        for (const doc of newDocs) {
+          const res = await fetch(`${import.meta.env.VITE_API_URL}/api/uploads/upload-category-document`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ caseId, fieldName, document: doc }),
+          });
+          const resData = await res.json();
+          if (resData.success && resData.updatedCase) {
+            lastUpdatedCase = resData.updatedCase;
+          }
+        }
+
+        if (lastUpdatedCase) {
+          if (fetchData) {
+            await fetchData();
+          } else {
+            setFormData((prev) => ({
+              ...(prev || {}),
+              ...lastUpdatedCase,
+            }));
+          }
+          // Sync from DB to ensure state exactly matches saved data
+          if (categoryKey === "gpsFiles") {
+            setUploadedGpsUrls(lastUpdatedCase.gpsFiles || []);
+          } else if (categoryKey === "emailFiles") {
+            setUploadedEmailUrls(lastUpdatedCase.emailFiles || []);
+          } else if (categoryKey === "fieldFormFiles") {
+            setUploadedFieldFormUrls(lastUpdatedCase.fieldFormFiles || []);
+          } else if (categoryKey === "additionalFiles") {
+            setUploadedAdditionalUrls(lastUpdatedCase.additionalFiles || []);
+          } else if (categoryKey === "siteVisitVideo") {
+            setUploadedVideoUrls(lastUpdatedCase.siteVisitVideo || []);
+          } else if (categoryKey === "siteVisitPhotos") {
+            setUploadedPhotoUrls(lastUpdatedCase[fieldName] || []);
+          }
+          message.success("Files uploaded and saved successfully!");
+        } else {
+          message.success("Files uploaded successfully!");
+        }
+      } else {
+        if (categoryKey === "gpsFiles") {
+          setUploadedGpsUrls((prev) => [...prev, ...newDocs]);
+          setFormData((prev) => ({ ...(prev || {}), gpsFiles: [...(prev?.gpsFiles || []), ...newDocs] }));
+        } else if (categoryKey === "emailFiles") {
+          setUploadedEmailUrls((prev) => [...prev, ...newDocs]);
+          setFormData((prev) => ({ ...(prev || {}), emailFiles: [...(prev?.emailFiles || []), ...newDocs] }));
+        } else if (categoryKey === "fieldFormFiles") {
+          setUploadedFieldFormUrls((prev) => [...prev, ...newDocs]);
+          setFormData((prev) => ({ ...(prev || {}), fieldFormFiles: [...(prev?.fieldFormFiles || []), ...newDocs] }));
+        } else if (categoryKey === "additionalFiles") {
+          setUploadedAdditionalUrls((prev) => [...prev, ...newDocs]);
+          setFormData((prev) => ({ ...(prev || {}), additionalFiles: [...(prev?.additionalFiles || []), ...newDocs] }));
+        } else if (categoryKey === "siteVisitVideo") {
+          setUploadedVideoUrls((prev) => [...prev, ...newDocs]);
+          setFormData((prev) => ({ ...(prev || {}), siteVisitVideo: [...(prev?.siteVisitVideo || []), ...newDocs] }));
+        } else if (categoryKey === "siteVisitPhotos") {
+          setUploadedPhotoUrls((prev) => [...prev, ...newDocs]);
+          const normBank = selectedBank.toLowerCase();
+          const fieldName = normBank.includes("icici") ? "sitePhotographs" : normBank.includes("bajaj") ? "otherImages" : "imageUrls";
+          setFormData((prev) => ({ ...(prev || {}), [fieldName]: [...(prev?.[fieldName] || []), ...newDocs] }));
+        }
+        message.success("Files added!");
+      }
+    } catch (err) {
+      console.error(`Error uploading files for ${categoryKey}:`, err);
+      message.error(err.message || `Failed to upload files.`);
+    } finally {
+      setUploadingCategory((prev) => ({ ...prev, [categoryKey]: false }));
+    }
+  };
+
+  const handleGenericFileRemove = async (categoryKey, docToRemove) => {
+    try {
+      if (caseId) {
+        let fieldName = categoryKey;
+        if (categoryKey === "siteVisitPhotos") {
+          const normBank = selectedBank.toLowerCase();
+          if (normBank.includes("icici")) {
+            fieldName = "sitePhotographs";
+          } else if (normBank.includes("bajaj")) {
+            fieldName = "otherImages";
+          } else {
+            fieldName = "imageUrls";
+          }
+        }
+
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/uploads/remove-category-document`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ caseId, fieldName, document: docToRemove }),
+        });
+        const resData = await res.json();
+        if (!resData.success) {
+          throw new Error(resData.error || "Failed to remove document");
+        }
+
+        if (resData.updatedCase) {
+          if (fetchData) {
+            await fetchData();
+          } else {
+            setFormData((prev) => ({
+              ...(prev || {}),
+              ...resData.updatedCase,
+            }));
+          }
+          if (categoryKey === "gpsFiles") {
+            setUploadedGpsUrls(resData.updatedCase.gpsFiles || []);
+          } else if (categoryKey === "emailFiles") {
+            setUploadedEmailUrls(resData.updatedCase.emailFiles || []);
+          } else if (categoryKey === "fieldFormFiles") {
+            setUploadedFieldFormUrls(resData.updatedCase.fieldFormFiles || []);
+          } else if (categoryKey === "additionalFiles") {
+            setUploadedAdditionalUrls(resData.updatedCase.additionalFiles || []);
+          } else if (categoryKey === "siteVisitVideo") {
+            setUploadedVideoUrls(resData.updatedCase.siteVisitVideo || []);
+          } else if (categoryKey === "siteVisitPhotos") {
+            setUploadedPhotoUrls(resData.updatedCase[fieldName] || []);
+          }
+        }
+        message.success("File removed successfully!");
+      } else {
+        if (docToRemove.fileId) {
+          await fetch(`${import.meta.env.VITE_API_URL}/api/remove/delete-file`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ filePath: docToRemove.fileId }),
+          });
+        }
+
+        if (categoryKey === "gpsFiles") {
+          const updated = uploadedGpsUrls.filter((f) => f.fileId !== docToRemove.fileId && f.url !== docToRemove.url);
+          setUploadedGpsUrls(updated);
+          setFormData((prev) => ({ ...(prev || {}), gpsFiles: updated }));
+        } else if (categoryKey === "emailFiles") {
+          const updated = uploadedEmailUrls.filter((f) => f.fileId !== docToRemove.fileId && f.url !== docToRemove.url);
+          setUploadedEmailUrls(updated);
+          setFormData((prev) => ({ ...(prev || {}), emailFiles: updated }));
+        } else if (categoryKey === "fieldFormFiles") {
+          const updated = uploadedFieldFormUrls.filter((f) => f.fileId !== docToRemove.fileId && f.url !== docToRemove.url);
+          setUploadedFieldFormUrls(updated);
+          setFormData((prev) => ({ ...(prev || {}), fieldFormFiles: updated }));
+        } else if (categoryKey === "additionalFiles") {
+          const updated = uploadedAdditionalUrls.filter((f) => f.fileId !== docToRemove.fileId && f.url !== docToRemove.url);
+          setUploadedAdditionalUrls(updated);
+          setFormData((prev) => ({ ...(prev || {}), additionalFiles: updated }));
+        } else if (categoryKey === "siteVisitVideo") {
+          const updated = uploadedVideoUrls.filter((f) => f.fileId !== docToRemove.fileId && f.url !== docToRemove.url);
+          setUploadedVideoUrls(updated);
+          setFormData((prev) => ({ ...(prev || {}), siteVisitVideo: updated }));
+        } else if (categoryKey === "siteVisitPhotos") {
+          const updated = uploadedPhotoUrls.filter((f) => f.fileId !== docToRemove.fileId && f.url !== docToRemove.url);
+          setUploadedPhotoUrls(updated);
+          const normBank = selectedBank.toLowerCase();
+          const fieldName = normBank.includes("icici") ? "sitePhotographs" : normBank.includes("bajaj") ? "otherImages" : "imageUrls";
+          setFormData((prev) => ({ ...(prev || {}), [fieldName]: updated }));
+        }
+        message.success("File removed.");
+      }
+    } catch (err) {
+      console.error(`Error removing file for ${categoryKey}:`, err);
+      message.error(err.message || `Failed to remove file.`);
+    }
+  };
+
+  const handleDeleteUploadedFile = async (categoryKey, fileToDelete) => {
+    try {
+      if (caseId) {
+        let fieldName = categoryKey;
+        if (categoryKey === "siteVisitPhotos") {
+          const normBank = selectedBank.toLowerCase();
+          if (normBank.includes("icici")) {
+            fieldName = "sitePhotographs";
+          } else if (normBank.includes("bajaj")) {
+            fieldName = "otherImages";
+          } else {
+            fieldName = "imageUrls";
+          }
+        }
+
+        let bankRoute = "icici";
+        const normBank = selectedBank.toLowerCase();
+        if (normBank.includes("first")) {
+          if (normBank.includes("tranche")) {
+            bankRoute = "home-first-trench";
+          } else {
+            bankRoute = "home-first";
+          }
+        } else if (normBank.includes("aditya")) {
+          bankRoute = "aditya";
+        } else if (normBank.includes("manappuram")) {
+          bankRoute = "manappuram";
+        } else if (normBank.includes("bajaj")) {
+          bankRoute = "bajaj";
+        }
+
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/case/remove-image/${caseId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            imageUrl: fileToDelete,
+            route: `/bank/${bankRoute}`,
+            fieldName,
+          }),
+        });
+
+        const resData = await res.json();
+        if (!res.ok) {
+          throw new Error(resData.message || "Failed to remove file from server");
+        }
+
+        message.success("File deleted successfully!");
+        if (fetchData) {
+          await fetchData();
+        }
+      }
+    } catch (err) {
+      console.error("File delete error:", err);
+      message.error(err.message || "Failed to delete file.");
+    }
+  };
+
+  const handleVideoDelete = async (videoToDelete) => {
+    try {
+      if (caseId) {
+        await handleDeleteUploadedFile("siteVisitVideo", videoToDelete);
+      } else {
+        if (videoToDelete.fileId) {
+          await fetch(`${import.meta.env.VITE_API_URL}/api/remove/delete-file`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ filePath: videoToDelete.fileId }),
+          });
+        }
+        message.success("Video removed.");
+      }
+
+      const updatedList = uploadedVideoUrls.filter(
+        (video) => video.fileId !== videoToDelete.fileId && video.url !== videoToDelete.url
+      );
+      setUploadedVideoUrls(updatedList);
+
+      if (!caseId) {
+        setFormData((prev) => ({ ...(prev || {}), siteVisitVideo: updatedList }));
+      }
+    } catch (err) {
+      console.error("Video delete error:", err);
+      message.error(err.message || "Failed to remove video.");
+    }
+  };
 
   const handleAtsUpload = async (incomingFiles) => {
     const files = Array.from(incomingFiles || []);
@@ -320,18 +696,26 @@ const AdvancedAutoFillForm = ({
         }
 
         if (lastUpdatedCase) {
-          setFormData((prev) => ({
-            ...(prev || {}),
-            ...lastUpdatedCase,
-          }));
+          if (fetchData) {
+            await fetchData();
+          } else {
+            setFormData((prev) => ({
+              ...(prev || {}),
+              ...lastUpdatedCase,
+            }));
+          }
           const addr = lastUpdatedCase.addressLegal || lastUpdatedCase.address || lastUpdatedCase.propertyAddress || "";
           const addrMsg = addr ? ` Autodetected address: "${addr}"` : "";
           message.success(`Property paper uploaded and saved successfully!${addrMsg}`);
         } else {
-          setFormData((prev) => ({
-            ...(prev || {}),
-            atsDocuments: updatedList,
-          }));
+          if (fetchData) {
+            await fetchData();
+          } else {
+            setFormData((prev) => ({
+              ...(prev || {}),
+              atsDocuments: updatedList,
+            }));
+          }
           message.success("Property paper uploaded and saved successfully!");
         }
       } else {
@@ -381,10 +765,12 @@ const AdvancedAutoFillForm = ({
       const updatedList = atsDocsList.filter((doc) => doc.fileId !== docToDelete.fileId);
       setAtsDocsList(updatedList);
 
-      setFormData((prev) => ({
-        ...(prev || {}),
-        atsDocuments: updatedList,
-      }));
+      if (!caseId) {
+        setFormData((prev) => ({
+          ...(prev || {}),
+          atsDocuments: updatedList,
+        }));
+      }
 
       setFilesByCategory((prev) => ({
         ...prev,
@@ -446,7 +832,7 @@ const AdvancedAutoFillForm = ({
         fieldName = "otherImages";
       }
 
-      if (typeof setFormData === "function") {
+      if (!caseId && typeof setFormData === "function") {
         setFormData({ [fieldName]: updatedList });
       }
     } catch (err) {
@@ -455,104 +841,25 @@ const AdvancedAutoFillForm = ({
     }
   };
 
-  const totalDocFiles = useMemo(
-    () => Object.values(filesByCategory).reduce((sum, files) => sum + files.length, 0),
-    [filesByCategory]
-  );
-  const totalFiles = totalDocFiles + siteVisitPhotos.length + siteVisitVideo.length;
-
-  const handleAddFiles = (categoryKey, incomingFileList) => {
-    const nextFiles = Array.from(incomingFileList || []);
-    if (!nextFiles.length) return;
-    setFilesByCategory((prev) => ({
-      ...prev,
-      [categoryKey]: [...prev[categoryKey], ...nextFiles],
-    }));
-  };
-
-  const handleRemoveFile = (categoryKey, indexToRemove) => {
-    setFilesByCategory((prev) => ({
-      ...prev,
-      [categoryKey]: prev[categoryKey].filter((_, index) => index !== indexToRemove),
-    }));
-  };
-
-  const handleAddSiteVisitPhotos = (incomingFileList) => {
-    const nextFiles = Array.from(incomingFileList || []);
-    if (!nextFiles.length) return;
-    setSiteVisitPhotos((prev) => [...prev, ...nextFiles]);
-  };
-
-  const handleRemoveSiteVisitPhoto = (indexToRemove) => {
-    setSiteVisitPhotos((prev) => prev.filter((_, index) => index !== indexToRemove));
-  };
-
-  const handleAddSiteVisitVideo = (incomingFileList) => {
-    const nextFiles = Array.from(incomingFileList || []);
-    if (!nextFiles.length) return;
-    setSiteVisitVideo((prev) => [...prev, ...nextFiles]);
-  };
-
-  const handleRemoveSiteVisitVideo = (indexToRemove) => {
-    setSiteVisitVideo((prev) => prev.filter((_, index) => index !== indexToRemove));
-  };
-
-  const handleVideoDelete = async (videoToDelete) => {
-    try {
-      if (caseId) {
-        const normBank = selectedBank.toLowerCase();
-        let bankUrlPart = "first-bank";
-        if (normBank.includes("icici")) {
-          bankUrlPart = "icici-bank";
-        } else if (normBank.includes("tranche")) {
-          bankUrlPart = "home-trench-reports";
-        }
-
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/${bankUrlPart}/remove-image/${caseId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            imageUrl: videoToDelete, 
-            fieldName: "siteVisitVideo" 
-          }),
-        });
-        const resData = await res.json();
-        if (!resData.success && !res.ok) {
-          throw new Error(resData.message || "Failed to remove video from server");
-        }
-
-        if (fetchData) {
-          await fetchData();
-        }
-
-        message.success("Site video removed successfully!");
-      } else {
-        if (videoToDelete.fileId) {
-          await fetch(`${import.meta.env.VITE_API_URL}/api/remove/delete-file`, {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ filePath: videoToDelete.fileId }),
-          });
-        }
-        message.success("Site video removed.");
-      }
-
-      const updatedList = uploadedVideoUrls.filter(
-        (video) => video.fileId !== videoToDelete.fileId && video.url !== videoToDelete.url
-      );
-      setUploadedVideoUrls(updatedList);
-
-      if (typeof setFormData === "function") {
-        setFormData((prev) => ({
-          ...(prev || {}),
-          siteVisitVideo: updatedList
-        }));
-      }
-    } catch (err) {
-      console.error("Video delete error:", err);
-      message.error(err.message || "Failed to remove site video.");
-    }
-  };
+  const totalFiles = useMemo(() => {
+    return (
+      uploadedGpsUrls.length +
+      atsDocsList.length +
+      uploadedEmailUrls.length +
+      uploadedFieldFormUrls.length +
+      uploadedAdditionalUrls.length +
+      uploadedPhotoUrls.length +
+      uploadedVideoUrls.length
+    );
+  }, [
+    uploadedGpsUrls.length,
+    atsDocsList.length,
+    uploadedEmailUrls.length,
+    uploadedFieldFormUrls.length,
+    uploadedAdditionalUrls.length,
+    uploadedPhotoUrls.length,
+    uploadedVideoUrls.length,
+  ]);
 
   const handleClearAll = () => {
     setFilesByCategory(EMPTY_FILES);
@@ -564,12 +871,40 @@ const AdvancedAutoFillForm = ({
     setSourceSummary(null);
     setUploadedPhotoUrls([]);
     setUploadedVideoUrls([]);
+    setUploadedGpsUrls([]);
+    setUploadedEmailUrls([]);
+    setUploadedFieldFormUrls([]);
+    setUploadedAdditionalUrls([]);
     setAtsDocsList([]);
-    setFormData((prev) => ({
-      ...(prev || {}),
-      atsDocuments: [],
-      siteVisitVideo: [],
-    }));
+    
+    if (caseId) {
+      const normBank = selectedBank.toLowerCase();
+      const photoField = normBank.includes("icici") ? "sitePhotographs" : normBank.includes("bajaj") ? "otherImages" : "imageUrls";
+
+      setFormData((prev) => ({
+        ...(prev || {}),
+        atsDocuments: [],
+        siteVisitVideo: [],
+        gpsFiles: [],
+        emailFiles: [],
+        fieldFormFiles: [],
+        additionalFiles: [],
+        [photoField]: [],
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...(prev || {}),
+        atsDocuments: [],
+        siteVisitVideo: [],
+        gpsFiles: [],
+        emailFiles: [],
+        fieldFormFiles: [],
+        additionalFiles: [],
+        imageUrls: [],
+        sitePhotographs: [],
+        otherImages: [],
+      }));
+    }
     message.info("Advanced AI uploads cleared.");
   };
 
@@ -590,17 +925,9 @@ const AdvancedAutoFillForm = ({
       formData.append("bankName",         selectedBank);
       formData.append("propertyTypeHint", propertyTypeHint);
       formData.append("additionalNotes",  additionalNotes);
-
-      // Append document files by category
-      Object.entries(filesByCategory).forEach(([categoryKey, files]) => {
-        files.forEach((file) => formData.append(categoryKey, file));
-      });
-
-      // Append site visit photos separately — these go to ImageKit
-      siteVisitPhotos.forEach((file) => formData.append("siteVisitPhotos", file));
-
-      // Append site visit video separately
-      siteVisitVideo.forEach((file) => formData.append("siteVisitVideo", file));
+      if (caseId) {
+        formData.append("caseId", caseId);
+      }
 
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/api/advanced-autofill`,
@@ -686,6 +1013,30 @@ const AdvancedAutoFillForm = ({
         finalData.siteVisitVideo = videoUrls;
       }
 
+      const gpsUrls = payload.gpsDocumentUrls || [];
+      if (gpsUrls.length > 0) {
+        finalData.gpsFiles = gpsUrls;
+        setUploadedGpsUrls(gpsUrls);
+      }
+
+      const emailUrls = payload.emailDocumentUrls || [];
+      if (emailUrls.length > 0) {
+        finalData.emailFiles = emailUrls;
+        setUploadedEmailUrls(emailUrls);
+      }
+
+      const fieldFormUrls = payload.fieldFormDocumentUrls || [];
+      if (fieldFormUrls.length > 0) {
+        finalData.fieldFormFiles = fieldFormUrls;
+        setUploadedFieldFormUrls(fieldFormUrls);
+      }
+
+      const additionalUrls = payload.additionalDocumentUrls || [];
+      if (additionalUrls.length > 0) {
+        finalData.additionalFiles = additionalUrls;
+        setUploadedAdditionalUrls(additionalUrls);
+      }
+
       setFormData(finalData);
       setUploadedPhotoUrls(photoUrls);
       setUploadedVideoUrls(videoUrls);
@@ -721,10 +1072,14 @@ const AdvancedAutoFillForm = ({
   };
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-indigo-50/20 via-white to-blue-50/15 p-6 shadow-md relative overflow-hidden backdrop-blur-md">
+    <div className={`rounded-3xl border border-slate-200 ${isFieldOfficer ? "bg-white p-6 shadow-sm" : "bg-gradient-to-br from-indigo-50/20 via-white to-blue-50/15 p-6 shadow-md relative overflow-hidden backdrop-blur-md"}`}>
       {/* Decorative background glow elements */}
-      <div className="absolute -top-12 -right-12 w-48 h-48 bg-indigo-300/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-blue-300/10 rounded-full blur-3xl pointer-events-none" />
+      {!isFieldOfficer && (
+        <>
+          <div className="absolute -top-12 -right-12 w-48 h-48 bg-indigo-300/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-blue-300/10 rounded-full blur-3xl pointer-events-none" />
+        </>
+      )}
 
       {/* Premium Loading Overlay */}
       {loading && (
@@ -765,19 +1120,23 @@ const AdvancedAutoFillForm = ({
       {/* Header Panel */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-150/70 pb-5">
         <div className="flex items-start gap-3">
-          <div className="p-2.5 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-2xl text-white shadow-md shadow-indigo-100/50 flex items-center justify-center shrink-0">
-            <Sparkles className="w-5 h-5 animate-pulse" />
+          <div className={`p-2.5 bg-gradient-to-tr ${isFieldOfficer ? "from-slate-400 to-slate-500" : "from-indigo-500 to-purple-600"} rounded-2xl text-white shadow-md flex items-center justify-center shrink-0`}>
+            {isFieldOfficer ? <FolderPlus className="w-5 h-5" /> : <Sparkles className="w-5 h-5 animate-pulse" />}
           </div>
           <div>
             <div className="text-base font-extrabold text-slate-900 tracking-tight flex items-center gap-2 flex-wrap">
-              <span>AI Advanced Auto Fill</span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-white border border-slate-200 text-slate-700 shadow-sm">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                {user?.role === "SuperAdmin" ? "Super Admin" : user?.role || "Guest"} Mode
-              </span>
+              <span>{isFieldOfficer ? "Case Documents & Media" : "AI Advanced Auto Fill"}</span>
+              {!isFieldOfficer && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-white border border-slate-200 text-slate-700 shadow-sm">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  {user?.role === "SuperAdmin" ? "Super Admin Mode" : `${user?.role || "Guest"} Mode`}
+                </span>
+              )}
             </div>
             <div className="mt-1 text-xs text-slate-500 font-semibold leading-relaxed">
-              Upload site media and property documents to auto-populate files using intelligent Gemini extraction.
+              {isFieldOfficer 
+                ? "Upload property documents, screenshots, site visit form and site visit photographs."
+                : "Upload site media and property documents to auto-populate files using intelligent Gemini extraction."}
             </div>
           </div>
         </div>
@@ -830,36 +1189,42 @@ const AdvancedAutoFillForm = ({
         <UploadCard
           title="GPS / Map Screenshots"
           helper="Google Maps screenshot, GPS app screenshot showing coordinates"
-          files={filesByCategory.gpsFiles}
-          onAddFiles={(incoming) => handleAddFiles("gpsFiles", incoming)}
-          onRemoveFile={(index) => handleRemoveFile("gpsFiles", index)}
+          files={uploadedGpsUrls}
+          onAddFiles={(incoming) => handleGenericFileUpload("gpsFiles", incoming)}
+          onRemoveFile={(index) => handleGenericFileRemove("gpsFiles", uploadedGpsUrls[index])}
           accent="purple"
+          loading={uploadingCategory["gpsFiles"]}
           icon={<MapPin className="w-4 h-4 text-purple-600" />}
+          isFieldOfficer={isFieldOfficer}
         />
 
-        {/* Card 2: ATS / Sale Deed / Legal Docs (Show for Admin/SuperAdmin) */}
-        {!isFieldOfficer && (
-          <UploadCard
-            title="ATS / Sale Deed / Legal Docs"
-            helper="Sale deed, gift deed, registry, allotment letter, patta legal papers"
-            files={filesByCategory.atsFiles}
-            onAddFiles={handleAtsUpload}
-            onRemoveFile={handleAtsDelete}
-            accent="amber"
-            icon={<FileText className="w-4 h-4 text-amber-600" />}
-          />
-        )}
+        {/* Card 2: ATS / Sale Deed / Legal Docs (Show for Admin/SuperAdmin/FO) */}
+        <UploadCard
+          title="ATS / Sale Deed / Legal Docs"
+          helper="Sale deed, gift deed, registry, allotment letter, patta legal papers"
+          files={atsDocsList}
+          onAddFiles={handleAtsUpload}
+          onRemoveFile={handleAtsDelete}
+          accent="amber"
+          loading={uploadingAts}
+          icon={<FileText className="w-4 h-4 text-amber-600" />}
+          allowDelete={!isFieldOfficer}
+          isFieldOfficer={isFieldOfficer}
+        />
 
-        {/* Card 3: Email / MIS Screenshot (Show for Admin/SuperAdmin) */}
+        {/* Card 3: Email / MIS Screenshot (Show for Admin/SuperAdmin only) */}
         {!isFieldOfficer && (
           <UploadCard
             title="Email / MIS Screenshot"
             helper="Bank email detailing file/LAN/BRQ numbers, applicant and branch details"
-            files={filesByCategory.emailFiles}
-            onAddFiles={(incoming) => handleAddFiles("emailFiles", incoming)}
-            onRemoveFile={(index) => handleRemoveFile("emailFiles", index)}
+            files={uploadedEmailUrls}
+            onAddFiles={(incoming) => handleGenericFileUpload("emailFiles", incoming)}
+            onRemoveFile={(index) => handleGenericFileRemove("emailFiles", uploadedEmailUrls[index])}
             accent="indigo"
+            loading={uploadingCategory["emailFiles"]}
             icon={<Mail className="w-4 h-4 text-indigo-650" />}
+            allowDelete={!isFieldOfficer}
+            isFieldOfficer={isFieldOfficer}
           />
         )}
 
@@ -867,23 +1232,28 @@ const AdvancedAutoFillForm = ({
         <UploadCard
           title="Field Visit Form"
           helper="Handwritten site visit form or standard valuation format sheet"
-          files={filesByCategory.fieldFormFiles}
-          onAddFiles={(incoming) => handleAddFiles("fieldFormFiles", incoming)}
-          onRemoveFile={(index) => handleRemoveFile("fieldFormFiles", index)}
+          files={uploadedFieldFormUrls}
+          onAddFiles={(incoming) => handleGenericFileUpload("fieldFormFiles", incoming)}
+          onRemoveFile={(index) => handleGenericFileRemove("fieldFormFiles", uploadedFieldFormUrls[index])}
           accent="blue"
+          loading={uploadingCategory["fieldFormFiles"]}
           icon={<ClipboardList className="w-4 h-4 text-blue-650" />}
+          isFieldOfficer={isFieldOfficer}
         />
 
-        {/* Card 5: Additional Photos / Docs (Show for Admin/SuperAdmin) */}
+        {/* Card 5: Additional Photos / Docs (Show for Admin/SuperAdmin only) */}
         {!isFieldOfficer && (
           <UploadCard
             title="Additional Photos / Docs"
             helper="Extra site proof, supporting legal screenshots, or structural layouts"
-            files={filesByCategory.additionalFiles}
-            onAddFiles={(incoming) => handleAddFiles("additionalFiles", incoming)}
-            onRemoveFile={(index) => handleRemoveFile("additionalFiles", index)}
+            files={uploadedAdditionalUrls}
+            onAddFiles={(incoming) => handleGenericFileUpload("additionalFiles", incoming)}
+            onRemoveFile={(index) => handleGenericFileRemove("additionalFiles", uploadedAdditionalUrls[index])}
             accent="slate"
+            loading={uploadingCategory["additionalFiles"]}
             icon={<FolderPlus className="w-4 h-4 text-slate-600" />}
+            allowDelete={!isFieldOfficer}
+            isFieldOfficer={isFieldOfficer}
           />
         )}
 
@@ -891,87 +1261,264 @@ const AdvancedAutoFillForm = ({
         <UploadCard
           title="Site Visit Photos"
           helper="Site engineer captures. Autofills photo grids across report steps"
-          files={siteVisitPhotos}
-          onAddFiles={handleAddSiteVisitPhotos}
-          onRemoveFile={handleRemoveSiteVisitPhoto}
+          files={uploadedPhotoUrls}
+          onAddFiles={(incoming) => handleGenericFileUpload("siteVisitPhotos", incoming)}
+          onRemoveFile={(index) => handleGenericFileRemove("siteVisitPhotos", uploadedPhotoUrls[index])}
           accent="emerald"
+          loading={uploadingCategory["siteVisitPhotos"]}
           icon={<Camera className="w-4 h-4 text-emerald-650" />}
+          isFieldOfficer={isFieldOfficer}
         />
 
-        {/* Card 7: Site Visit Video */}
-        <UploadCard
-          title="Site Visit Video"
-          helper="Property site video sequence. Persisted to ImageKit video repository"
-          files={siteVisitVideo}
-          onAddFiles={handleAddSiteVisitVideo}
-          onRemoveFile={handleRemoveSiteVisitVideo}
-          accent="rose"
-          accept="video/*"
-          icon={<Video className="w-4 h-4 text-rose-650" />}
-        />
+        {/* Card 7: Site Visit Video (Show for Admin/SuperAdmin only) */}
+        {!isFieldOfficer && (
+          <UploadCard
+            title="Site Visit Video"
+            helper="Property site video sequence. Persisted to ImageKit video repository"
+            files={uploadedVideoUrls}
+            onAddFiles={(incoming) => handleGenericFileUpload("siteVisitVideo", incoming)}
+            onRemoveFile={(index) => handleGenericFileRemove("siteVisitVideo", uploadedVideoUrls[index])}
+            accent="rose"
+            accept="video/*"
+            loading={uploadingCategory["siteVisitVideo"]}
+            icon={<Video className="w-4 h-4 text-rose-650" />}
+            isFieldOfficer={isFieldOfficer}
+          />
+        )}
       </div>
+
+      {/* ── Field Officer: Uploaded Documents Preview Panel ─────────────────── */}
+      {isFieldOfficer && (() => {
+        const totalFoFiles = uploadedGpsUrls.length + atsDocsList.length + uploadedFieldFormUrls.length + uploadedPhotoUrls.length;
+        return (
+          <div className="mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            {/* Panel Header - always visible */}
+            <div className="flex items-center gap-2.5 px-5 py-3.5 border-b border-slate-100 bg-slate-50/60">
+              <div className="p-1.5 bg-emerald-50 rounded-xl text-emerald-600 flex items-center justify-center">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="text-sm font-extrabold text-slate-800">Uploaded Documents</div>
+                <div className="text-[10px] text-slate-500 font-semibold">
+                  {totalFoFiles > 0 ? `${totalFoFiles} file(s) saved to this case` : "No files uploaded yet — upload files above"}
+                </div>
+              </div>
+              {totalFoFiles > 0 && (
+                <span className="ml-auto px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                  {totalFoFiles} Files
+                </span>
+              )}
+            </div>
+
+            <div className="p-5 space-y-5">
+              {/* Empty State */}
+              {totalFoFiles === 0 && (
+                <div className="flex flex-col items-center justify-center py-8 text-slate-400">
+                  <CloudUpload className="w-10 h-10 mb-2 text-slate-200" />
+                  <div className="text-sm font-semibold text-slate-400">No files uploaded yet</div>
+                  <div className="text-[11px] text-slate-350 mt-1 text-center max-w-xs">Upload GPS screenshots, property papers, field visit form or site photos using the cards above.</div>
+                </div>
+              )}
+
+              {/* GPS Files */}
+              {uploadedGpsUrls.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-[11px] font-extrabold text-purple-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span>GPS / Map Screenshots ({uploadedGpsUrls.length})</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {uploadedGpsUrls.map((doc, index) => (
+                      <div key={index} className="flex items-center justify-between gap-3 rounded-xl border border-purple-100 bg-purple-50/30 px-3 py-2.5">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
+                            <MapPin className="w-4 h-4" />
+                          </div>
+                          <span className="truncate text-xs font-bold text-slate-700">{doc.name || `gps_${index + 1}`}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <a href={doc.url} target="_blank" rel="noopener noreferrer"
+                            className="text-[10px] text-indigo-600 hover:underline font-bold flex items-center gap-0.5 border-none cursor-pointer">
+                            View <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                          <button type="button" onClick={() => handleGenericFileRemove("gpsFiles", doc)}
+                            className="rounded-lg p-1.5 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 border border-slate-200 transition-colors cursor-pointer" title="Delete file">
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ATS / Property Papers */}
+              {atsDocsList.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-[11px] font-extrabold text-amber-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5" />
+                    <span>Property Papers / ATS ({atsDocsList.length})</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {atsDocsList.map((doc, index) => (
+                      <div key={index} className="flex items-center justify-between gap-3 rounded-xl border border-amber-100 bg-amber-50/30 px-3 py-2.5">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+                            <FileText className="w-4 h-4" />
+                          </div>
+                          <span className="truncate text-xs font-bold text-slate-700">{doc.name || `doc_${index + 1}`}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <a href={doc.url} target="_blank" rel="noopener noreferrer"
+                            className="text-[10px] text-indigo-600 hover:underline font-bold flex items-center gap-0.5 border-none cursor-pointer">
+                            View <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                          <button type="button" onClick={() => handleAtsDelete(doc)}
+                            className="rounded-lg p-1.5 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 border border-slate-200 transition-colors cursor-pointer" title="Delete file">
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Field Visit Form */}
+              {uploadedFieldFormUrls.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-[11px] font-extrabold text-blue-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <ClipboardList className="w-3.5 h-3.5" />
+                    <span>Field Visit Form ({uploadedFieldFormUrls.length})</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {uploadedFieldFormUrls.map((doc, index) => (
+                      <div key={index} className="flex items-center justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50/30 px-3 py-2.5">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                            <ClipboardList className="w-4 h-4" />
+                          </div>
+                          <span className="truncate text-xs font-bold text-slate-700">{doc.name || `form_${index + 1}`}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <a href={doc.url} target="_blank" rel="noopener noreferrer"
+                            className="text-[10px] text-indigo-600 hover:underline font-bold flex items-center gap-0.5 border-none cursor-pointer">
+                            View <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                          <button type="button" onClick={() => handleGenericFileRemove("fieldFormFiles", doc)}
+                            className="rounded-lg p-1.5 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 border border-slate-200 transition-colors cursor-pointer" title="Delete file">
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Site Visit Photos */}
+              {uploadedPhotoUrls.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-[11px] font-extrabold text-emerald-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <Camera className="w-3.5 h-3.5" />
+                    <span>Site Visit Photos ({uploadedPhotoUrls.length})</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {uploadedPhotoUrls.map((photo, index) => (
+                      <div key={index} className="group relative rounded-xl border border-emerald-100 bg-white p-1.5 shadow-sm transition-all hover:border-emerald-300 hover:shadow-md">
+                        <div className="relative aspect-square w-full overflow-hidden rounded-lg border border-slate-100 bg-slate-50">
+                          <img src={photo.url} alt={photo.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                          <a href={photo.url} target="_blank" rel="noopener noreferrer"
+                            className="absolute inset-0 bg-slate-950/45 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-extrabold rounded-lg gap-1 border-none cursor-pointer">
+                            <Eye className="w-3.5 h-3.5" /> View
+                          </a>
+                        </div>
+                        <div className="mt-1.5 text-[10px] font-bold text-slate-600 truncate px-0.5" title={photo.name}>{photo.name}</div>
+                        <button type="button" onClick={() => handlePhotoDelete(photo)}
+                          className="mt-1 w-full rounded-lg bg-red-50 hover:bg-red-100 text-red-500 py-1 text-[10px] font-bold cursor-pointer border-none flex items-center justify-center gap-1">
+                          <Trash2 className="w-2.5 h-2.5" /> Delete
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Footer action bar */}
-      <div className="mt-6 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-2xl border border-slate-200/60 bg-white/70 backdrop-blur-sm p-4.5 shadow-sm">
-        <div className="space-y-2">
-          <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5" />
-            <span>Files Loaded & Pending AI Extraction</span>
-          </div>
-          <div className="flex flex-wrap gap-2 items-center">
-            <span className="px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 border border-purple-100/50 text-[10px] font-extrabold flex items-center gap-1 shadow-sm">
-              <MapPin className="w-3 h-3" /> GPS: {filesByCategory.gpsFiles.length}
-            </span>
-            {!isFieldOfficer && (
-              <>
-                <span className="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-100/50 text-[10px] font-extrabold flex items-center gap-1 shadow-sm">
-                  <FileText className="w-3 h-3" /> ATS: {filesByCategory.atsFiles.length}
-                </span>
-                <span className="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100/50 text-[10px] font-extrabold flex items-center gap-1 shadow-sm">
-                  <Mail className="w-3 h-3" /> Email: {filesByCategory.emailFiles.length}
-                </span>
-              </>
-            )}
-            <span className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-100/50 text-[10px] font-extrabold flex items-center gap-1 shadow-sm">
-              <ClipboardList className="w-3 h-3" /> Form: {filesByCategory.fieldFormFiles.length}
-            </span>
-            {!isFieldOfficer && (
-              <span className="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-700 border border-slate-100/50 text-[10px] font-extrabold flex items-center gap-1 shadow-sm">
-                <FolderPlus className="w-3 h-3" /> Extra: {filesByCategory.additionalFiles.length}
+      {!isFieldOfficer && (
+        <div className="mt-6 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-2xl border border-slate-200/60 bg-white/70 backdrop-blur-sm p-4.5 shadow-sm">
+          <div className="space-y-2">
+            <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+              <Clock className="w-3.5 h-3.5" />
+              <span>Files Loaded & Pending AI Extraction</span>
+            </div>
+            <div className="flex flex-wrap gap-2 items-center">
+              <span className="px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 border border-purple-100/50 text-[10px] font-extrabold flex items-center gap-1 shadow-sm">
+                <MapPin className="w-3 h-3" /> GPS: {uploadedGpsUrls.length}
               </span>
-            )}
-            <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100/50 text-[10px] font-extrabold flex items-center gap-1 shadow-sm">
-              <Camera className="w-3 h-3" /> Photo: {siteVisitPhotos.length}
-            </span>
-            <span className="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 border border-rose-100/50 text-[10px] font-extrabold flex items-center gap-1 shadow-sm">
-              <Video className="w-3 h-3" /> Video: {siteVisitVideo.length}
-            </span>
+              <span className="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-100/50 text-[10px] font-extrabold flex items-center gap-1 shadow-sm">
+                <FileText className="w-3 h-3" /> ATS: {atsDocsList.length}
+              </span>
+              {!isFieldOfficer && (
+                <span className="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-100/50 text-[10px] font-extrabold flex items-center gap-1 shadow-sm">
+                  <Mail className="w-3 h-3" /> Email: {uploadedEmailUrls.length}
+                </span>
+              )}
+              <span className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-100/50 text-[10px] font-extrabold flex items-center gap-1 shadow-sm">
+                <ClipboardList className="w-3 h-3" /> Form: {uploadedFieldFormUrls.length}
+              </span>
+              {!isFieldOfficer && (
+                <span className="px-2.5 py-1 rounded-lg bg-slate-50 text-slate-700 border border-slate-100/50 text-[10px] font-extrabold flex items-center gap-1 shadow-sm">
+                  <FolderPlus className="w-3 h-3" /> Extra: {uploadedAdditionalUrls.length}
+                </span>
+              )}
+              <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100/50 text-[10px] font-extrabold flex items-center gap-1 shadow-sm">
+                <Camera className="w-3 h-3" /> Photo: {uploadedPhotoUrls.length}
+              </span>
+              {!isFieldOfficer && (
+                <span className="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 border border-rose-100/50 text-[10px] font-extrabold flex items-center gap-1 shadow-sm">
+                  <Video className="w-3 h-3" /> Video: {uploadedVideoUrls.length}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-2.5 shrink-0 self-end md:self-auto">
+            <Button
+              type="default"
+              onClick={handleClearAll}
+              className="hover:border-slate-350 hover:text-slate-800 text-xs font-bold text-slate-650 rounded-xl px-4 h-10 flex items-center transition-all bg-white border-slate-200 cursor-pointer shadow-sm"
+              disabled={loading}
+            >
+              Clear All
+            </Button>
+            <Button
+              type="primary"
+              onClick={handleGenerate}
+              loading={loading}
+              className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:via-purple-700 hover:to-indigo-700 border-none text-xs font-bold rounded-xl px-6 h-10 flex items-center transition-all shadow-md shadow-indigo-150 cursor-pointer text-white"
+            >
+              <Sparkles className="w-3.5 h-3.5 mr-1.5 animate-pulse" />
+              Process With Advanced AI
+            </Button>
           </div>
         </div>
-
-        <div className="flex gap-2.5 shrink-0 self-end md:self-auto">
-          <Button
-            type="default"
-            onClick={handleClearAll}
-            className="hover:border-slate-350 hover:text-slate-800 text-xs font-bold text-slate-650 rounded-xl px-4 h-10 flex items-center transition-all bg-white border-slate-200 cursor-pointer shadow-sm"
-            disabled={loading}
-          >
-            Clear All
-          </Button>
-          <Button
-            type="primary"
-            onClick={handleGenerate}
-            loading={loading}
-            className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:via-purple-700 hover:to-indigo-700 border-none text-xs font-bold rounded-xl px-6 h-10 flex items-center transition-all shadow-md shadow-indigo-150 cursor-pointer text-white"
-          >
-            <Sparkles className="w-3.5 h-3.5 mr-1.5 animate-pulse" />
-            Process With Advanced AI
-          </Button>
-        </div>
-      </div>
+      )}
 
       {/* Results panel */}
-      {(sourceSummary || auditNotes.length > 0 || uploadedPhotoUrls.length > 0 || (!isFieldOfficer && atsDocsList.length > 0)) && (
+      {!isFieldOfficer && (sourceSummary || 
+        auditNotes.length > 0 || 
+        uploadedPhotoUrls.length > 0 || 
+        uploadedVideoUrls.length > 0 || 
+        atsDocsList.length > 0 || 
+        uploadedGpsUrls.length > 0 || 
+        uploadedEmailUrls.length > 0 || 
+        uploadedFieldFormUrls.length > 0 || 
+        uploadedAdditionalUrls.length > 0) && (
         <div className="mt-6 rounded-3xl border border-slate-200 bg-white/95 p-5.5 shadow-md space-y-5.5 relative overflow-hidden">
           <div className="border-b border-slate-150 pb-3.5 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -985,8 +1532,8 @@ const AdvancedAutoFillForm = ({
             </span>
           </div>
 
-          {/* Uploaded ATS Documents / Property Papers (Show for Admin/SuperAdmin) */}
-          {!isFieldOfficer && atsDocsList.length > 0 && (
+          {/* Uploaded ATS Documents / Property Papers */}
+          {atsDocsList.length > 0 && (
             <div className="space-y-2.5">
               <div className="text-[11px] font-extrabold text-amber-700 uppercase tracking-wider flex items-center gap-1.5">
                 <FileText className="w-3.5 h-3.5" />
@@ -1010,20 +1557,116 @@ const AdvancedAutoFillForm = ({
                           href={doc.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[10px] text-indigo-600 hover:text-indigo-800 hover:underline font-bold flex items-center gap-0.5 mt-0.5 cursor-pointer border-none"
+                          className="text-[10px] text-indigo-650 hover:text-indigo-850 hover:underline font-bold flex items-center gap-0.5 mt-0.5 cursor-pointer border-none"
                         >
                           View File <ExternalLink className="w-2.5 h-2.5" />
                         </a>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleAtsDelete(doc)}
-                      className="rounded-lg p-1.5 bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-650 transition-colors duration-155 cursor-pointer shrink-0 border-none flex items-center justify-center"
-                      title="Delete document"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {!isFieldOfficer && (
+                      <button
+                        type="button"
+                        onClick={() => handleAtsDelete(doc)}
+                        className="rounded-lg p-1.5 bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-650 transition-colors duration-155 cursor-pointer shrink-0 border-none flex items-center justify-center"
+                        title="Delete document"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Uploaded Email Screenshots (Show for Admin/SuperAdmin only) */}
+          {!isFieldOfficer && uploadedEmailUrls.length > 0 && (
+            <div className="space-y-2.5">
+              <div className="text-[11px] font-extrabold text-indigo-700 uppercase tracking-wider flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5" />
+                <span>Email Screenshots ({uploadedEmailUrls.length})</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {uploadedEmailUrls.map((doc, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-slate-150/70 bg-gradient-to-br from-white to-indigo-50/10 p-3 shadow-sm transition-all hover:border-indigo-300 hover:shadow-md duration-200 group"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-650 text-sm font-extrabold">
+                        <Mail className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="truncate text-xs font-bold text-slate-800" title={doc.name || `email_${index + 1}`}>
+                          {doc.name || `email_${index + 1}`}
+                        </div>
+                        <a
+                          href={doc.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[10px] text-indigo-650 hover:text-indigo-850 hover:underline font-bold flex items-center gap-0.5 mt-0.5 cursor-pointer border-none"
+                        >
+                          View File <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
+                      </div>
+                    </div>
+                    {!isFieldOfficer && (
+                      <button
+                        type="button"
+                        onClick={() => handleGenericFileRemove("emailFiles", uploadedEmailUrls[index])}
+                        className="rounded-lg p-1.5 bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-650 transition-colors duration-155 cursor-pointer shrink-0 border-none flex items-center justify-center"
+                        title="Delete email file"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Uploaded Additional Files (Show for Admin/SuperAdmin only) */}
+          {!isFieldOfficer && uploadedAdditionalUrls.length > 0 && (
+            <div className="space-y-2.5">
+              <div className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                <FolderPlus className="w-3.5 h-3.5" />
+                <span>Additional Files ({uploadedAdditionalUrls.length})</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {uploadedAdditionalUrls.map((doc, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-slate-150/70 bg-gradient-to-br from-white to-slate-50/10 p-3 shadow-sm transition-all hover:border-slate-300 hover:shadow-md duration-200 group"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-slate-600 text-sm font-extrabold">
+                        <FolderPlus className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="truncate text-xs font-bold text-slate-800" title={doc.name || `additional_${index + 1}`}>
+                          {doc.name || `additional_${index + 1}`}
+                        </div>
+                        <a
+                          href={doc.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[10px] text-indigo-650 hover:text-indigo-850 hover:underline font-bold flex items-center gap-0.5 mt-0.5 cursor-pointer border-none"
+                        >
+                          View File <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
+                      </div>
+                    </div>
+                    {!isFieldOfficer && (
+                      <button
+                        type="button"
+                        onClick={() => handleGenericFileRemove("additionalFiles", uploadedAdditionalUrls[index])}
+                        className="rounded-lg p-1.5 bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-650 transition-colors duration-155 cursor-pointer shrink-0 border-none flex items-center justify-center"
+                        title="Delete additional file"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -1098,8 +1741,8 @@ const AdvancedAutoFillForm = ({
             </div>
           )}
 
-          {/* Uploaded ImageKit video URLs */}
-          {uploadedVideoUrls.length > 0 && (
+          {/* Uploaded ImageKit video URLs (Show for Admin/SuperAdmin only) */}
+          {!isFieldOfficer && uploadedVideoUrls.length > 0 && (
             <div className="space-y-2.5">
               <div className="text-[11px] font-extrabold text-rose-700 uppercase tracking-wider flex items-center gap-1.5">
                 <Video className="w-3.5 h-3.5" />
@@ -1123,7 +1766,7 @@ const AdvancedAutoFillForm = ({
                           href={video.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[10px] text-indigo-600 hover:text-indigo-850 hover:underline font-bold flex items-center gap-0.5 mt-0.5 cursor-pointer border-none"
+                          className="text-[10px] text-indigo-650 hover:text-indigo-850 hover:underline font-bold flex items-center gap-0.5 mt-0.5 cursor-pointer border-none"
                         >
                           Play Video <ExternalLink className="w-2.5 h-2.5" />
                         </a>
