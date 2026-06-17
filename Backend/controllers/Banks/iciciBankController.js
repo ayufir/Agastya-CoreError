@@ -137,7 +137,25 @@ exports.submitIciciBank = async (req, res) => {
       updateData.assignedTo = req.user._id;
     }
 
-    const updated = await IciciBank.findByIdAndUpdate(id, updateData, {
+    const updateQuery = { $set: updateData };
+
+    if (req.user?.role === "FieldOfficer") {
+      updateData.status = "Work in Progress";
+      updateData.approvalStatus = "Submitted";
+      
+      const timelineEntry = {
+        status: "submitted-by-fo",
+        updatedAt: new Date(),
+        updatedBy: req.user._id,
+        note: "Submitted by field officer"
+      };
+
+      // Remove timeline from updateData so it doesn't conflict with $push
+      delete updateData.timeline;
+      updateQuery.$push = { timeline: timelineEntry };
+    }
+
+    const updated = await IciciBank.findByIdAndUpdate(id, updateQuery, {
       new: true,
       runValidators: false,
     });

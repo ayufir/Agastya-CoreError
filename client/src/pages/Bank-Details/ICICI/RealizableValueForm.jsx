@@ -63,7 +63,7 @@ const buildUnitRows = (selectedFloors, floorDetails, areaData, valuationOn, exis
   return rows;
 };
 
-const RealizableValueForm = ({ data, editData, extractedData, onSave, onSaveAndNext, saving }) => {
+const RealizableValueForm = ({ data, editData, extractedData, onSave, onSaveAndNext, saving, stateRef }) => {
   const source = data || editData || {};
   const plotAreaFromProperty = String(source.plotAreaSqft || "").trim();
   const selectedFloorKeys = Array.isArray(source.selectedFloors) ? source.selectedFloors : [];
@@ -294,6 +294,46 @@ const RealizableValueForm = ({ data, editData, extractedData, onSave, onSaveAndN
     unConstArea,
     unConstApproved,
   });
+
+  useEffect(() => {
+    if (stateRef) {
+      stateRef.current = buildPayload();
+    }
+  }, [
+    methodology,
+    landRows,
+    amenityRows,
+    scArea,
+    scApproved,
+    buildingUsage,
+    govRows,
+    saleLandRows,
+    saleValuationOn,
+    saleUnitRows,
+    saleBuildingUsage,
+    saleGovRows,
+    saleConstArea,
+    saleConstApproved,
+    valuationOn,
+    ebBuiltUpArea,
+    ebAvgRent,
+    ebMonthlyRent,
+    ebAnnualRent,
+    ebSecDeposit,
+    ebInterestPct,
+    ebMaintPct,
+    ebTaxes,
+    ebCapRate,
+    iaArea,
+    iaApproved,
+    unitRows,
+    unMaintPct,
+    unTaxes,
+    unCapRate,
+    unConstArea,
+    unConstApproved,
+    stateRef
+  ]);
 
   const handleSaveAction = (next = false) => {
     if (showFloorUnitError || saleComparisonBlocked) {

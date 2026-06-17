@@ -464,7 +464,7 @@ const css = `
 `;
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
-const ConstructionProgressForm = ({ data, editData, extractedData, onSave, onSaveAndNext, saving }) => {
+const ConstructionProgressForm = ({ data, editData, extractedData, onSave, onSaveAndNext, saving, stateRef }) => {
   const [form, setForm] = useState({
     typeOfStructure:               "",
     structureConfiguration:        "",
@@ -553,6 +553,12 @@ const ConstructionProgressForm = ({ data, editData, extractedData, onSave, onSav
   };
 
   const savePayload = { ...form, stageCalculatorRows: weightedStageRows };
+
+  useEffect(() => {
+    if (stateRef) {
+      stateRef.current = savePayload;
+    }
+  }, [form, stageRows, stateRef]);
 
   // Build "Recommended Value" text
   const recNum  = parseInt(form.recommendedValue, 10) || 0;

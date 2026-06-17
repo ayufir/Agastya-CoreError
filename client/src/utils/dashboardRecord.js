@@ -63,6 +63,7 @@ export const getDisplayContact = (record) =>
     "contactNumber",
     "mobileNo",
     "personContactNo",
+    "personContact",
     "contactPerson",
     "contactPersonNumber",
     "header.contactedPerson",

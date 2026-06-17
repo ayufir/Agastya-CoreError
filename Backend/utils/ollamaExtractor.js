@@ -174,48 +174,12 @@
 
 
 require("dotenv").config();
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+const axios = require("axios");
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-async function extractDataWithGemini(text, fields = {}, extraInstructions = "") {
+async function extractDataWithClaude(text, fields = {}, extraInstructions = "") {
     if (!text || text.length < 20) return fields;
 
     const fieldKeys = Object.keys(fields);
-
-    //     const prompt = `
-    // You are an expert property document parser.
-
-    // Your task:
-    // Extract ONLY the requested fields from valuation reports, sale deeds, or registry documents.
-
-    // STRICT RULES:
-    // - Return ONLY valid JSON
-    // - Use EXACT field names provided
-    // - If value missing → return null
-    // - Do NOT add extra fields
-    // - Convert Hinglish/Hindi → English
-    // - Ignore irrelevant text
-    // - Extract best possible meaning even if wording differs
-
-    // SPECIAL EXTRACTION RULES:
-    // • Boundaries may appear as:
-    //   North / East / West / South
-    //   or As per document / site visit
-    // • Plot dimensions may appear like:
-    //   22 x 45, 22*45, East-West & North-South
-    // • Plot area may appear as land area / plot area / site area
-    // • Document type MUST be returned in CAPITAL LETTERS
-
-    // ${extraInstructions}
-
-    // Return JSON in this exact structure:
-
-    // ${JSON.stringify(fields, null, 2)}
-
-    // DOCUMENT TEXT:
-    // ${text}
-    // `;
 
     const prompt = `
 You are an expert property document parser.
@@ -266,21 +230,41 @@ DOCUMENT TEXT:
 ${text}
 `;
 
-
     try {
-        const model = genAI.getGenerativeModel({
-            model: "gemini-1.5-flash-latest",
-        });
+        const api_key = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
 
-        const result = await model.generateContent({
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            generationConfig: {
-                temperature: 0,
-                maxOutputTokens: 2048,
+        if (!api_key) {
+            console.warn("CLAUDE_API_KEY or ANTHROPIC_API_KEY not found in env, skipping data extraction.");
+            return fields;
+        }
+
+        const headers = {
+            "content-type": "application/json",
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01",
+        };
+
+        const response = await axios.post(
+            "https://api.anthropic.com/v1/messages",
+            {
+                model: "claude-3-5-sonnet-20241022",
+                max_tokens: 4096,
+                messages: [
+                    {
+                        role: "user",
+                        content: [
+                            {
+                                type: "text",
+                                text: prompt
+                            }
+                        ]
+                    }
+                ]
             },
-        });
+            { headers }
+        );
+        const raw = response.data?.content?.[0]?.text || "";
 
-        const raw = result.response.text();
         console.log("RAW AI RESPONSE:\n", raw);
 
         const match = raw.match(/\{[\s\S]*\}/);
@@ -301,4 +285,4 @@ ${text}
     }
 }
 
-module.exports = extractDataWithGemini;
+module.exports = extractDataWithClaude;

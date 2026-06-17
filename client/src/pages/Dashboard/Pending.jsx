@@ -253,7 +253,10 @@ const Pending = ({ selectedMonth }) => {
       title: "Attachments",
       key: "AttachDocuments",
       render: (record) => {
-        const attachments = record.AttachDocuments;
+        const attachments = [
+          ...(record.AttachDocuments || []),
+          ...(record.atsDocuments || []),
+        ];
 
         if (!attachments || attachments.length === 0) return "No Attachments";
 

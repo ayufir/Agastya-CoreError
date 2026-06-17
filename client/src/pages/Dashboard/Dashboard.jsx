@@ -92,11 +92,16 @@ const normalizeAllCaseRecord = (record, index) => {
 const getRowStyle = (status, createdAt) => {
   const s = normalizeStatus(status);
 
-  if (s.includes("submitted") || s.includes("done") || s.includes("final")) {
+  if (s.includes("final") || s.includes("done")) {
     return { backgroundColor: "#dcfce7", className: "" };
   }
 
-  if (s.includes("working") || s.includes("assigned") || s.includes("progress")) {
+  if (
+    s.includes("working") ||
+    s.includes("assigned") ||
+    s.includes("progress") ||
+    (s.includes("submitted") && !s.includes("final"))
+  ) {
     return { backgroundColor: "#fef9c3", className: "" };
   }
 
@@ -153,14 +158,15 @@ const getBankStats = (data) => {
 
     map[bank].total++;
 
-    if (s.includes("submitted") || s.includes("done") || s.includes("final")) {
+    if (s.includes("final") || s.includes("done")) {
       map[bank].done++;
     } else if (s.includes("query")) {
       map[bank].query++;
     } else if (
       s.includes("working") ||
       s.includes("assigned") ||
-      s.includes("progress")
+      s.includes("progress") ||
+      (s.includes("submitted") && !s.includes("final"))
     ) {
       map[bank].working++;
     } else {
@@ -354,9 +360,10 @@ const Dashboard = () => {
 
   const cardCounts = useMemo(() => {
     return {
-      pending: filteredCases.filter((item) =>
-        normalizeStatus(item.status).includes("pending")
-      ).length,
+      pending: filteredCases.filter((item) => {
+        const s = normalizeStatus(item.status);
+        return s.includes("pending");
+      }).length,
 
       working: filteredCases.filter((item) => {
         const s = normalizeStatus(item.status);
@@ -366,7 +373,8 @@ const Dashboard = () => {
           s.includes("progress") ||
           s.includes("visited") ||
           s.includes("reported") ||
-          s.includes("reviewed")
+          s.includes("reviewed") ||
+          (s.includes("submitted") && !s.includes("final"))
         );
       }).length,
 
@@ -374,7 +382,6 @@ const Dashboard = () => {
         const s = normalizeStatus(item.status);
         return (
           s.includes("final") ||
-          s.includes("submitted") ||
           s.includes("done")
         );
       }).length,
@@ -868,9 +875,9 @@ const Dashboard = () => {
                           default: bank="bajaj";
                         }
                         const s = normalizeStatus(rec.status);
-                        const badge = s.includes("submitted")||s.includes("done")||s.includes("final") ? { background:"#ecfdf5", color:"#059669" }
+                        const badge = s.includes("final") || s.includes("done") ? { background:"#ecfdf5", color:"#059669" }
                           : s.includes("query") ? { background:"#fff1f2", color:"#e11d48" }
-                          : s.includes("working")||s.includes("assigned")||s.includes("progress") ? { background:"#eef2ff", color:"#6366f1" }
+                          : s.includes("working")||s.includes("assigned")||s.includes("progress")||(s.includes("submitted") && !s.includes("final")) ? { background:"#eef2ff", color:"#6366f1" }
                           : { background:"#fffbeb", color:"#d97706" };
                         return (
                           <tr key={rec.key} className={row.className} style={{ backgroundColor:row.backgroundColor }}>

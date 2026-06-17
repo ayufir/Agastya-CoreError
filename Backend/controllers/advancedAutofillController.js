@@ -1,9 +1,6 @@
-const { GoogleGenAI } = require("@google/genai");
 const imagekit = require("../config/imagekit");
 const axios = require("axios");
 const modelMap = require("./modelMap");
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const downloadFileAsBuffer = async (url) => {
   try {
@@ -962,12 +959,155 @@ const uploadToImageKit = async (file, folder = "site-visit-photos") => {
   }
 };
 
+const XLSX = require("xlsx");
+
+const callClaudeAPI = async (system, messagesPrompt, mediaBlocks = []) => {
+  const api_key = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
+
+  if (!api_key) {
+    throw new Error("CLAUDE_API_KEY is not configured in the environment (.env file).");
+  }
+
+  const headers = {
+    "content-type": "application/json",
+    "x-api-key": api_key,
+    "anthropic-version": "2023-06-01",
+  };
+
+  const hasPdf = mediaBlocks.some((block) => block.type === "document");
+  if (hasPdf) {
+    headers["anthropic-beta"] = "pdfs-2024-09-25";
+  }
+
+  // Filter out any invalid/empty content blocks to prevent Anthropic validation errors
+  const validContentBlocks = mediaBlocks.filter(block => {
+    if (!block) return false;
+    if (block.type === "text" && !block.text) return false;
+    if ((block.type === "image" || block.type === "document") && (!block.source || !block.source.data)) return false;
+    return true;
+  });
+
+  const requestBody = {
+    model: "claude-3-5-sonnet-20241022",
+    max_tokens: 8192,
+    system: system,
+    messages: [
+      {
+        role: "user",
+        content: [
+          ...validContentBlocks,
+          {
+            type: "text",
+            text: messagesPrompt,
+          },
+        ],
+      },
+    ],
+  };
+
+  console.log(`[Claude API] Requesting advanced autofill extraction (${hasPdf ? "with PDF" : "standard"})...`);
+  const response = await axios.post("https://api.anthropic.com/v1/messages", requestBody, { headers });
+  
+  return response.data?.content?.[0]?.text || "";
+};
+
+const getFileContentBlock = async (file) => {
+  const mime = (file.mimetype || "").toLowerCase();
+  
+  if (mime === "application/pdf") {
+    return {
+      type: "document",
+      source: {
+        type: "base64",
+        media_type: "application/pdf",
+        data: file.buffer.toString("base64"),
+      },
+    };
+  }
+  
+  if (mime.startsWith("image/")) {
+    let mediaType = mime;
+    if (mediaType === "image/jpg") mediaType = "image/jpeg";
+    return {
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: mediaType,
+        data: file.buffer.toString("base64"),
+      },
+    };
+  }
+
+  // If Excel or CSV, parse it and return as text
+  if (
+    mime.includes("sheet") ||
+    mime.includes("excel") ||
+    mime.includes("csv") ||
+    file.originalname.endsWith(".xlsx") ||
+    file.originalname.endsWith(".xls") ||
+    file.originalname.endsWith(".csv")
+  ) {
+    try {
+      if (file.originalname.endsWith(".csv") || mime.includes("csv")) {
+        let text;
+        try {
+          text = file.buffer.toString("utf-8");
+        } catch {
+          text = file.buffer.toString("latin1");
+        }
+        return {
+          type: "text",
+          text: `[Excel/CSV Content from ${file.originalname}]:\n${text}`,
+        };
+      } else {
+        const workbook = XLSX.read(file.buffer, {
+          type: "buffer",
+          cellDates: true,
+          cellNF: true,
+          cellText: true,
+        });
+        const allSheetsText = workbook.SheetNames.map((sheetName) => {
+          const sheet = workbook.Sheets[sheetName];
+          const aoa = XLSX.utils.sheet_to_json(sheet, {
+            header: 1,
+            defval: "",
+            raw: false,
+          });
+          const nonEmptyRows = aoa.filter((row) =>
+            row.some((cell) => cell !== "" && cell !== null && cell !== undefined)
+          );
+          if (nonEmptyRows.length === 0) return null;
+          const rowsText = nonEmptyRows
+            .map((row) => row.map((cell) => String(cell).trim()).join(" | "))
+            .join("\n");
+          return `=== SHEET: ${sheetName} ===\n${rowsText}`;
+        })
+          .filter(Boolean)
+          .join("\n\n");
+        return {
+          type: "text",
+          text: `[Excel Content from ${file.originalname}]:\n${allSheetsText}`,
+        };
+      }
+    } catch (err) {
+      console.warn(`Failed to parse spreadsheet ${file.originalname}:`, err.message);
+    }
+  }
+
+  // Otherwise, default to text description
+  return {
+    type: "text",
+    text: `[Unsupported file attachment: ${file.originalname} of type ${mime}]`,
+  };
+};
+
 const advancedAutofill = async (req, res) => {
   try {
-    if (!process.env.GEMINI_API_KEY) {
+    const api_key = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
+    if (!api_key) {
       return res.status(500).json({
         success: false,
-        message: "GEMINI_API_KEY is missing on the server.",
+        message: "No Claude API key (CLAUDE_API_KEY or ANTHROPIC_API_KEY) found on the server.",
       });
     }
 
@@ -1212,7 +1352,7 @@ const advancedAutofill = async (req, res) => {
       });
     }
 
-    // ── 3. Build Gemini content parts ────────────────────────────────────────
+    // ── 3. Build Claude content parts ────────────────────────────────────────
     let bankName = req.body?.bankName || "";
     // Normalize bankName
     const lowerBank = bankName.toLowerCase();
@@ -1232,62 +1372,54 @@ const advancedAutofill = async (req, res) => {
       bankName = "Manappuram";
     }
 
-    const contents = [
-      {
-        role: "user",
-        parts: [
-          {
-            text: buildPrompt({
-              bankName,
-              propertyTypeHint:  req.body?.propertyTypeHint,
-              additionalNotes:   req.body?.additionalNotes,
-              filesByCategory,
-            }),
-          },
-        ],
-      },
-    ];
-
-    const parts = contents[0].parts;
-
-    // Send all document categories to Gemini for text extraction
-    Object.entries(filesByCategory).forEach(([categoryKey, files]) => {
-      files.forEach((file, index) => {
-        parts.push({
-          text: `${CATEGORY_LABELS[categoryKey]} | file ${index + 1} | ${file.originalname}`,
-        });
-        parts.push({
-          inlineData: {
-            mimeType: file.mimetype || "application/octet-stream",
-            data: file.buffer.toString("base64"),
-          },
-        });
-      });
+    const messagesPrompt = buildPrompt({
+      bankName,
+      propertyTypeHint:  req.body?.propertyTypeHint,
+      additionalNotes:   req.body?.additionalNotes,
+      filesByCategory,
     });
 
-    // Also send siteVisitPhotos to Gemini so AI can observe property condition
-    if (siteVisitPhotos.length > 0) {
-      parts.push({ text: `\n--- SITE VISIT PHOTOS (${siteVisitPhotos.length} photos — analyze for property condition, GPS watermarks, construction stage) ---` });
-      siteVisitPhotos.forEach((file, index) => {
-        parts.push({
-          text: `Site visit photo ${index + 1}: ${file.originalname}`,
+    const mediaBlocks = [];
+
+    // Send all document categories to Claude
+    for (const [categoryKey, files] of Object.entries(filesByCategory)) {
+      for (let index = 0; index < files.length; index++) {
+        const file = files[index];
+        const block = await getFileContentBlock(file);
+        
+        mediaBlocks.push({
+          type: "text",
+          text: `\n--- DOCUMENT CATEGORY: ${CATEGORY_LABELS[categoryKey]} | file ${index + 1} | ${file.originalname} ---`
         });
-        parts.push({
-          inlineData: {
-            mimeType: file.mimetype || "image/jpeg",
-            data: file.buffer.toString("base64"),
-          },
-        });
-      });
+        mediaBlocks.push(block);
+      }
     }
 
-    // ── 4. Call Gemini ───────────────────────────────────────────────────────
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents,
-    });
+    // Also send siteVisitPhotos to Claude so AI can observe property condition
+    if (siteVisitPhotos.length > 0) {
+      mediaBlocks.push({
+        type: "text",
+        text: `\n--- SITE VISIT PHOTOS (${siteVisitPhotos.length} photos — analyze for property condition, GPS watermarks, construction stage) ---`
+      });
+      for (let index = 0; index < siteVisitPhotos.length; index++) {
+        const file = siteVisitPhotos[index];
+        const block = await getFileContentBlock(file);
+        mediaBlocks.push({
+          type: "text",
+          text: `Site visit photo ${index + 1}: ${file.originalname}`
+        });
+        mediaBlocks.push(block);
+      }
+    }
 
-    const parsed     = parseModelJson(response.text);
+    // ── 4. Call Claude ───────────────────────────────────────────────────────
+    const responseText = await callClaudeAPI(
+      `You are an expert Indian bank property valuation AI that extracts data from multiple documents and fills bank forms. Use Hinglish/Roman script for Hindi words but keep other text in English. Return ONLY valid JSON.`,
+      messagesPrompt,
+      mediaBlocks
+    );
+
+    const parsed     = parseModelJson(responseText);
     const normalized = normalizeObject(parsed);
     const flatPayload = buildFlatPayload(normalized);
 

@@ -202,7 +202,7 @@ const css = `
 `;
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
-const AmenitiesForm = ({ data, editData, extractedData, onSave, onSaveAndNext, saving }) => {
+const AmenitiesForm = ({ data, editData, extractedData, onSave, onSaveAndNext, saving, stateRef }) => {
   const [form, setForm] = useState({
     // ── Project Amenities ──────────────────────────────────────────────────
     furnished: false,
@@ -257,8 +257,13 @@ const AmenitiesForm = ({ data, editData, extractedData, onSave, onSaveAndNext, s
   const [modalOpen, setModalOpen] = useState(false);
   const [modalIdx, setModalIdx] = useState(0);
   const [modalForm, setModalForm] = useState({ name: "", longitude: "", latitude: "" });
-
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    if (stateRef) {
+      stateRef.current = { ...form, images };
+    }
+  }, [form, images, stateRef]);
 
   // ── Init from props ────────────────────────────────────────────────────────
   useEffect(() => {

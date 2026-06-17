@@ -2,10 +2,16 @@ import React, { useEffect, useState } from "react";
 import { Button, Upload } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 
-const SitePhotographsForm = ({ data, editData, extractedData, onSave, onSaveAndNext, saving }) => {
+const SitePhotographsForm = ({ data, editData, extractedData, onSave, onSaveAndNext, saving, stateRef }) => {
   const [form, setForm] = useState({
     sitePhotographs: [],
   });
+
+  useEffect(() => {
+    if (stateRef) {
+      stateRef.current = form;
+    }
+  }, [form, stateRef]);
 
   useEffect(() => {
     const src = (data && Object.keys(data).length > 0) ? data : (editData || {});

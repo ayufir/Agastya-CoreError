@@ -410,6 +410,26 @@ const IciciBankDetails = () => {
           </div>
         </div>
 
+        {/* ─── Case Details ──────────────────────────────────────── */}
+        {editSection === "caseDetails" ? (
+          <EditOverlay
+            title="Case Details"
+            fields={["customerName", "applicantName", "personContact"]}
+            fieldLabels={{
+              customerName: "Customer Name",
+              applicantName: "Applicant Name",
+              personContact: "Contact / Phone Number",
+            }}
+          />
+        ) : (
+          <SectionCard title="Case Details" onEdit={() => startEdit("caseDetails",
+            ["customerName", "applicantName", "personContact"])}>
+            <Field label="Customer Name" value={data.customerName} />
+            <Field label="Applicant Name" value={data.applicantName} />
+            <Field label="Contact / Phone Number" value={data.personContact} />
+          </SectionCard>
+        )}
+
         {/* ─── 1. PROPERTY DETAILS ──────────────────────────────────────── */}
         {editSection === "propertyDetails" ? (
           <EditOverlay

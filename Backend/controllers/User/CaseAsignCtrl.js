@@ -122,6 +122,7 @@ const getCaseDisplayContact = (record) =>
     "contactNumber",
     "mobileNo",
     "personContactNo",
+    "personContact",
     "contactPerson",
     "contactPersonNumber",
     "header.contactedPerson",
@@ -757,7 +758,7 @@ exports.getAllAssignedCases = async (req, res) => {
       user,
       baseQuery: {
         assignedTo: { $ne: null },
-        status: { $in: WORK_IN_PROGRESS_STATUSES },
+        status: { $in: [...WORK_IN_PROGRESS_STATUSES, "Submitted"] },
       },
       populate: "assignedTo createdBy",
     });
@@ -929,7 +930,7 @@ exports.getFinalSubmittedCases = async (req, res) => {
   try {
     const finalCases = await fetchCasesAcrossBanks({
       user,
-      baseQuery: { status: { $in: ["FinalSubmitted", "Submitted"] } },
+      baseQuery: { status: "FinalSubmitted" },
       populate: "assignedTo createdBy",
     });
 
@@ -1062,7 +1063,7 @@ exports.getSummaryData = async (req, res) => {
         const { key: modelKey, displayName, model: Model } = bankConfig;
         const baseQuery = buildRoleAwareQuery(user);
         const allCases = await Model.find({ ...baseQuery, ...monthFilter })
-          .select("_id status createdAt uploadDate customerName visitedPersonName applicantName applicantsName clientName basicDetails.nameOfClient propertyInfo.applicantName summary.applicantName header.contactedPerson addressLegal legalAddress addressSite propertyAddress address locationDetails.propertyAddressAsVisit locationDetails.propertyAddressAsDocs locationDetails.propertyAddressAsTRF propertyInfo.addressAtSite propertyInfo.addressAsPerDocument summary.propertyAddress customerNo contactNumber mobileNo personContactNo contactPerson contactPersonNumber propertyCity city propertyLocation nearestCityTown locationDetails.mainLocality basicDetails.city propertyInfo.city summary.city assignedTo createdBy AttachDocuments atsDocuments route")
+          .select("_id status createdAt uploadDate customerName visitedPersonName applicantName applicantsName clientName basicDetails.nameOfClient propertyInfo.applicantName summary.applicantName header.contactedPerson addressLegal legalAddress addressSite propertyAddress address locationDetails.propertyAddressAsVisit locationDetails.propertyAddressAsDocs locationDetails.propertyAddressAsTRF propertyInfo.addressAtSite propertyInfo.addressAsPerDocument summary.propertyAddress customerNo contactNumber mobileNo personContactNo personContact contactPerson contactPersonNumber propertyCity city propertyLocation nearestCityTown locationDetails.mainLocality basicDetails.city propertyInfo.city summary.city assignedTo createdBy AttachDocuments atsDocuments route")
           .populate("assignedTo");
         return {
           modelKey,

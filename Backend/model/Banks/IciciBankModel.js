@@ -225,6 +225,8 @@ const IciciBankSchema = new mongoose.Schema({
 
   approvalStatus: { type: String, default: "Pending" },
   isReportSubmitted: { type: Boolean, default: false },
+  customerName: { type: String },
+  applicantName: { type: String },
   // Property Info
   pincode: { type: String },
   state: { type: String },

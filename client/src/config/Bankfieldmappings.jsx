@@ -315,6 +315,8 @@ export const MANAPPURAM_MAPPING = {
 };
 
 export const ICICI_MAPPING = {
+    "customerName": ["customerName", "clientName", "borrowerName", "applicantName"],
+    "applicantName": ["applicantName", "customerName", "clientName", "borrowerName"],
     // 1. Property Details
     "pincode": "pincode",
     "state": "state",

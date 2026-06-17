@@ -88,23 +88,22 @@ router.post("/upload-document", async (req, res) => {
   }
 });
 
-// Helper to extract address using Gemini from ATS/Sale Deed document URL
+// Helper to extract address using Claude from ATS/Sale Deed document URL
 const extractAddressFromPdf = async (fileUrl) => {
   try {
-    if (!process.env.GEMINI_API_KEY) {
-      console.warn("GEMINI_API_KEY not found in env, skipping address extraction.");
+    const api_key = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
+
+    if (!api_key) {
+      console.warn("CLAUDE_API_KEY/ANTHROPIC_API_KEY not found in env, skipping address extraction.");
       return "";
     }
 
     const axios = require("axios");
-    const { GoogleGenAI } = require("@google/genai");
 
     console.log(`[ATS Autodetect] Downloading file for address extraction: ${fileUrl}`);
     const response = await axios.get(fileUrl, { responseType: "arraybuffer" });
     const buffer = Buffer.from(response.data);
 
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-    
     // Determine mime type
     let mimeType = "application/pdf";
     if (fileUrl.toLowerCase().endsWith(".png")) {
@@ -113,31 +112,52 @@ const extractAddressFromPdf = async (fileUrl) => {
       mimeType = "image/jpeg";
     }
 
-    console.log(`[ATS Autodetect] Calling Gemini to extract address (mimeType: ${mimeType})...`);
-    const aiResponse = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: [
-        {
-          role: "user",
-          parts: [
-            {
-              text: `Extract the full property/site address from this document. 
+    const addressPrompt = `Extract the full property/site address from this document. 
 Return ONLY the raw extracted address string. Do not include JSON formatting, markdown formatting, backticks, or explanations. 
 Keep it concise and clear (e.g. "Plot No. 12, Sector 3, Bhopal, Madhya Pradesh"). 
-If no address is found, return an empty string.`,
-            },
+If no address is found, return an empty string.`;
+
+    let address = "";
+    console.log(`[ATS Autodetect] Calling Claude to extract address (mimeType: ${mimeType})...`);
+    const isPdf = mimeType === "application/pdf";
+    const mediaBlock = {
+      type: isPdf ? "document" : "image",
+      source: {
+        type: "base64",
+        media_type: mimeType,
+        data: buffer.toString("base64"),
+      },
+    };
+
+    const headers = {
+      "content-type": "application/json",
+      "x-api-key": api_key,
+      "anthropic-version": "2023-06-01",
+    };
+    if (isPdf) {
+      headers["anthropic-beta"] = "pdfs-2024-09-25";
+    }
+
+    const requestBody = {
+      model: "claude-3-5-sonnet-20241022",
+      max_tokens: 1024,
+      messages: [
+        {
+          role: "user",
+          content: [
+            mediaBlock,
             {
-              inlineData: {
-                mimeType,
-                data: buffer.toString("base64"),
-              },
+              type: "text",
+              text: addressPrompt,
             },
           ],
         },
       ],
-    });
+    };
 
-    const address = aiResponse.text?.trim() || "";
+    const aiResponse = await axios.post("https://api.anthropic.com/v1/messages", requestBody, { headers });
+    address = aiResponse.data?.content?.[0]?.text?.trim() || "";
+
     console.log(`[ATS Autodetect] Successfully extracted address: "${address}"`);
     return address;
   } catch (error) {

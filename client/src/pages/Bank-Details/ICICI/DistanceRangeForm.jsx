@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Input, Button } from "antd";
 
-const DistanceRangeForm = ({ data, editData, extractedData, onSave, onSaveAndNext, saving }) => {
+const DistanceRangeForm = ({ data, editData, extractedData, onSave, onSaveAndNext, saving, stateRef }) => {
   const [form, setForm] = useState({
     distanceFromCPC: "",
     distanceFromCityCenter: "",
@@ -11,6 +11,12 @@ const DistanceRangeForm = ({ data, editData, extractedData, onSave, onSaveAndNex
     longitude: "78.18159",
     oneWayDistance: "",
   });
+
+  useEffect(() => {
+    if (stateRef) {
+      stateRef.current = form;
+    }
+  }, [form, stateRef]);
 
   useEffect(() => {
     const src = (data && Object.keys(data).length > 0) ? data : (editData || {});

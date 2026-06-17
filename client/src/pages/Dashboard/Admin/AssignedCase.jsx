@@ -172,7 +172,11 @@ const AssignedCase = ({ selectedMonth }) => {
         const color = getBankTagColor(bankName);
 
         let indicatorColor = "";
-        switch (record.timeline?.[0]?.status) {
+        const latestTimelineStatus = record.timeline && record.timeline.length > 0
+          ? record.timeline[record.timeline.length - 1]?.status
+          : record.timeline?.[0]?.status;
+
+        switch (latestTimelineStatus) {
           case "submitted-by-fo":
             indicatorColor = "red";
             break;

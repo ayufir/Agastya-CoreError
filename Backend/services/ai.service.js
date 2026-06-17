@@ -295,10 +295,8 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-const { GoogleGenAI } = require("@google/genai");
+const axios = require("axios");
 const XLSX = require("xlsx");
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared extraction prompt — same for all file types
@@ -659,9 +657,51 @@ Rules:
 `;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Helper: parse Gemini response → clean JSON
+// Helper: call Claude API using axios
 // ─────────────────────────────────────────────────────────────────────────────
-const parseGeminiResponse = (rawText) => {
+const callClaudeAPI = async (system, messagesPrompt, mediaBlocks = []) => {
+  const api_key = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
+
+  if (!api_key) {
+    throw new Error("CLAUDE_API_KEY is not configured in the environment (.env file).");
+  }
+
+  const headers = {
+    "content-type": "application/json",
+    "x-api-key": api_key,
+    "anthropic-version": "2023-06-01",
+  };
+
+  const hasPdf = mediaBlocks.some((block) => block.type === "document");
+  if (hasPdf) {
+    headers["anthropic-beta"] = "pdfs-2024-09-25";
+  }
+
+  const requestBody = {
+    model: "claude-3-5-sonnet-20241022",
+    max_tokens: 8192,
+    system: system,
+    messages: [
+      {
+        role: "user",
+        content: [
+          ...mediaBlocks,
+          {
+            type: "text",
+            text: messagesPrompt,
+          },
+        ],
+      },
+    ],
+  };
+
+  console.log(`[Claude API] Requesting extraction (${hasPdf ? "with PDF" : "standard"})...`);
+  const response = await axios.post("https://api.anthropic.com/v1/messages", requestBody, { headers });
+  
+  return response.data?.content?.[0]?.text || "";
+};
+
+const parseClaudeResponse = (rawText) => {
   let output = rawText
     .replace(/```json\s*/gi, "")
     .replace(/```\s*/g, "")
@@ -670,7 +710,7 @@ const parseGeminiResponse = (rawText) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 1. PDF & IMAGE extraction — Gemini vision (multimodal)
+// 1. PDF & IMAGE extraction — Claude vision/document (multimodal)
 // ─────────────────────────────────────────────────────────────────────────────
 const extractRegistryDetails = async (base64, mimeType = "application/pdf") => {
   try {
@@ -678,26 +718,18 @@ const extractRegistryDetails = async (base64, mimeType = "application/pdf") => {
       ? base64.split("base64,")[1]
       : base64;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      systemInstruction: SYSTEM_INSTRUCTION,
-      contents: [
-        {
-          role: "user",
-          parts: [
-            { text: EXTRACTION_PROMPT },
-            {
-              inlineData: {
-                mimeType: mimeType,
-                data: cleanedBase64,
-              },
-            },
-          ],
-        },
-      ],
-    });
+    const isPdf = mimeType === "application/pdf";
+    const mediaBlock = {
+      type: isPdf ? "document" : "image",
+      source: {
+        type: "base64",
+        media_type: mimeType,
+        data: cleanedBase64,
+      },
+    };
 
-    return parseGeminiResponse(response.text);
+    const responseText = await callClaudeAPI(SYSTEM_INSTRUCTION, EXTRACTION_PROMPT, [mediaBlock]);
+    return parseClaudeResponse(responseText);
   } catch (error) {
     console.error("AI PDF/Image Extraction Error:", error);
     throw error;
@@ -705,13 +737,7 @@ const extractRegistryDetails = async (base64, mimeType = "application/pdf") => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 2. EXCEL extraction — convert xlsx/xls → structured text → Gemini
-//
-//    Strategy:
-//      a) Parse all sheets using xlsx library
-//      b) Convert each sheet to readable text table (headers + rows)
-//      c) Also try to extract any embedded images (as base64) and send them too
-//      d) Send structured text to Gemini for extraction
+// 2. EXCEL extraction — convert xlsx/xls → structured text → Claude
 // ─────────────────────────────────────────────────────────────────────────────
 const extractFromExcel = async (buffer) => {
   try {
@@ -767,18 +793,8 @@ ${allSheetsText}
 ${EXTRACTION_PROMPT}
 `;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      systemInstruction: SYSTEM_INSTRUCTION,
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: fullPrompt }],
-        },
-      ],
-    });
-
-    return parseGeminiResponse(response.text);
+    const responseText = await callClaudeAPI(SYSTEM_INSTRUCTION, fullPrompt);
+    return parseClaudeResponse(responseText);
   } catch (error) {
     console.error("AI Excel Extraction Error:", error);
     throw error;
@@ -786,7 +802,7 @@ ${EXTRACTION_PROMPT}
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 3. CSV extraction — read as text → Gemini
+// 3. CSV extraction — read as text → Claude
 // ─────────────────────────────────────────────────────────────────────────────
 const extractFromCsv = async (buffer) => {
   try {
@@ -813,18 +829,8 @@ ${csvText}
 ${EXTRACTION_PROMPT}
 `;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      systemInstruction: SYSTEM_INSTRUCTION,
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: fullPrompt }],
-        },
-      ],
-    });
-
-    return parseGeminiResponse(response.text);
+    const responseText = await callClaudeAPI(SYSTEM_INSTRUCTION, fullPrompt);
+    return parseClaudeResponse(responseText);
   } catch (error) {
     console.error("AI CSV Extraction Error:", error);
     throw error;

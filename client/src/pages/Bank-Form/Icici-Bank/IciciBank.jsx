@@ -1,5 +1,5 @@
 // IciciBank.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Spin, Button } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
@@ -240,6 +240,8 @@ const IciciBank = () => {
   const [saving, setSaving] = useState(false);
   const [showMobileSteps, setShowMobileSteps] = useState(false);
 
+  const currentFormStateRef = useRef(null);
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { id } = useParams();
@@ -270,6 +272,20 @@ const IciciBank = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTabClick = (nextCardKey) => {
+    if (currentFormStateRef.current) {
+      const latestState = currentFormStateRef.current;
+      setFormData((prev) => {
+        const next = { ...prev, ...latestState };
+        writeDraft(id, next);
+        return next;
+      });
+      currentFormStateRef.current = null;
+    }
+    setActiveCard(nextCardKey);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleAutoFill = createAutoFillAdapter(
@@ -450,6 +466,11 @@ const IciciBank = () => {
       if (id) {
         await dispatch(updateIciciBank({ id, formData: { ...updated, isReportSubmitted: false } })).unwrap();
         await fetchEditData();
+      } else {
+        const response = await dispatch(createIciciBank({ ...updated, isReportSubmitted: false })).unwrap();
+        if (response?._id) {
+          navigate(`/bank/icici/edit/${response._id}`);
+        }
       }
       toast.success("Data saved successfully");
     } catch (err) {
@@ -584,6 +605,7 @@ const IciciBank = () => {
       onSave: handleSave,
       onSaveAndNext: handleSaveAndNext,
       saving,
+      stateRef: currentFormStateRef,
     };
 
     switch (activeCard) {
@@ -812,7 +834,7 @@ const IciciBank = () => {
                           key={card.key}
                           type="button"
                           onClick={() => {
-                            setActiveCard(card.key);
+                            handleTabClick(card.key);
                             setShowMobileSteps(false);
                           }}
                           className={`
@@ -858,7 +880,7 @@ const IciciBank = () => {
                     <button
                       key={card.key}
                       type="button"
-                      onClick={() => setActiveCard(card.key)}
+                      onClick={() => handleTabClick(card.key)}
                       className={`
                         relative border rounded-[4px] bg-white cursor-pointer transition-all duration-200
                         flex flex-col items-center justify-center h-[122px] px-1

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Button, Checkbox } from "antd";
 
-const CautionAreaForm = ({ data, editData, extractedData, onSave, onSaveAndNext, saving }) => {
+const CautionAreaForm = ({ data, editData, extractedData, onSave, onSaveAndNext, saving, stateRef }) => {
   const [form, setForm] = useState({
     anyChemicalHazard: false,
     communityDominated: false,
@@ -18,6 +18,12 @@ const CautionAreaForm = ({ data, editData, extractedData, onSave, onSaveAndNext,
     statutoryNoticesOnProperty: false,
     underHighTensionLine: false,
   });
+
+  useEffect(() => {
+    if (stateRef) {
+      stateRef.current = form;
+    }
+  }, [form, stateRef]);
 
   useEffect(() => {
     const src = (data && Object.keys(data).length > 0) ? data : (editData || {});

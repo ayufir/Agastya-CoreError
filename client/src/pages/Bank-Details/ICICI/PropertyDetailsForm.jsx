@@ -1506,8 +1506,9 @@ function floorKeyType(key) {
 }
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
-const PropertyDetailsForm = ({ data, editData, extractedData, onSave, onSaveAndNext, saving }) => {
+const PropertyDetailsForm = ({ data, editData, extractedData, onSave, onSaveAndNext, saving, stateRef }) => {
   const [form, setForm] = useState({
+    customerName: "", applicantName: "", personContact: "",
     pincode: "", state: "", city: "", district: "", taluka: "", village: "",
     locality: "", streetName: "", landmark: "", projectSocietyName: "", plotNo: "",
     propertyType: "non_residential", propertySubType: "", unitType: "", unitNo: "",
@@ -1543,6 +1544,11 @@ const PropertyDetailsForm = ({ data, editData, extractedData, onSave, onSaveAndN
   const [floorDropdownOpen, setFloorDropdownOpen] = useState(false);
   const floorDropdownRef = useRef(null);
   const hydratingSavedFloorsRef = useRef(false);
+  useEffect(() => {
+    if (stateRef) {
+      stateRef.current = { ...form, selectedFloors, floorDetails, areaData };
+    }
+  }, [form, selectedFloors, floorDetails, areaData, stateRef]);
 
   useEffect(() => {
     const src = (data && Object.keys(data).length > 0) ? data : (editData || {});
@@ -1868,6 +1874,22 @@ const PropertyDetailsForm = ({ data, editData, extractedData, onSave, onSaveAndN
             <button className="pf-toast-close" onClick={() => setToast(null)}>×</button>
           </div>
         )}
+
+        {/* ══ CASE / CUSTOMER DETAILS ══════════════════════════════════════════════ */}
+        <div className="pf-card">
+          <div className="pf-section-title">Case Details</div>
+          <div className="pf-addr-row">
+            <AF label="Customer Name" required>
+              <Inp field="customerName" placeholder="Enter Customer Name" {...fp} />
+            </AF>
+            <AF label="Applicant Name">
+              <Inp field="applicantName" placeholder="Enter Applicant Name" {...fp} />
+            </AF>
+            <AF label="Contact / Phone Number" required>
+              <Inp field="personContact" placeholder="Enter Contact Number" {...fp} />
+            </AF>
+          </div>
+        </div>
 
         {/* ══ PROPERTY ADDRESS ══════════════════════════════════════════════ */}
         <div className="pf-card">

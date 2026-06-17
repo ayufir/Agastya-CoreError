@@ -146,6 +146,7 @@ const RemarksForm = ({
   onFinalSubmit,
   isAdmin,
   saving,
+  stateRef,
 }) => {
   const navigate = useNavigate();
 
@@ -285,6 +286,12 @@ const RemarksForm = ({
     
     return payload;
   };
+
+  useEffect(() => {
+    if (stateRef) {
+      stateRef.current = buildPayload();
+    }
+  }, [form, stateRef]);
 
   const handleSave = () => {
     if (onSave) onSave("remarks", buildPayload());

@@ -672,7 +672,7 @@ const RichTextEditor = ({ value, onChange, maxLength = 1000 }) => {
 };
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
-const MaintenanceBoundariesForm = ({ data, editData, extractedData, onSave, onSaveAndNext, saving }) => {
+const MaintenanceBoundariesForm = ({ data, editData, extractedData, onSave, onSaveAndNext, saving, stateRef }) => {
   const [form, setForm] = useState({
     // ── Property Maintenance ──
     propertyAge: "",
@@ -719,6 +719,12 @@ const MaintenanceBoundariesForm = ({ data, editData, extractedData, onSave, onSa
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
   }, []);
+
+  useEffect(() => {
+    if (stateRef) {
+      stateRef.current = form;
+    }
+  }, [form, stateRef]);
 
   useEffect(() => {
     const src = (data && Object.keys(data).length > 0) ? data : (editData || {});
