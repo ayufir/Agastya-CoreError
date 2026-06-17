@@ -28,7 +28,8 @@ import {
   Check, 
   ArrowRight, 
   Calendar, 
-  AlertCircle 
+  AlertCircle,
+  Copy
 } from "lucide-react";
 import {
   getBankRoute,
@@ -228,6 +229,12 @@ const FieldOfficerDashboard = () => {
     setSearchText(value.toLowerCase());
   };
 
+  const handleCopyAddress = (address) => {
+    if (!address || address === "N/A") return;
+    navigator.clipboard.writeText(address);
+    toast.success("Address copied to clipboard!");
+  };
+
   const filteredCasesList = useMemo(() => {
     const result = filterCases();
     if (!searchText) return result;
@@ -403,7 +410,7 @@ const FieldOfficerDashboard = () => {
           <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold ${
             isT 
               ? "bg-emerald-50 text-emerald-700 border border-emerald-100" 
-              : "bg-slate-50/80 text-slate-600 border border-slate-100"
+              : "bg-slate-50/80 text-slate-650 border border-slate-100"
           }`}>
             <Clock className="w-3.5 h-3.5 text-slate-450" />
             {dayjs(date).format("DD/MM/YYYY hh:mm A")}
@@ -442,7 +449,7 @@ const FieldOfficerDashboard = () => {
             </a>
           );
         }
-        return <span className="text-slate-400 text-xs italic">N/A</span>;
+        return <span className="text-slate-405 text-xs italic">N/A</span>;
       },
     },
     {
@@ -525,7 +532,7 @@ const FieldOfficerDashboard = () => {
           className={`font-bold text-xs rounded-xl h-8 flex items-center justify-center cursor-pointer border ${
             record?.isReportSubmitted === true
               ? "text-slate-450 bg-slate-50 border-slate-200 cursor-not-allowed"
-              : "text-slate-650 bg-white border-slate-200 hover:border-slate-350 hover:text-slate-800"
+              : "text-slate-655 bg-white border-slate-200 hover:border-slate-350 hover:text-slate-800"
           }`}
         >
           Mark Query
@@ -611,6 +618,48 @@ const FieldOfficerDashboard = () => {
 
   const isEmpty = sortedCases.length === 0;
 
+  // Visual Stepper Render Helper for Mobile Cases
+  const renderMobileProgress = (cItem) => {
+    const isPending = cItem.approvalStatus === "Pending";
+    const isAccepted = !isPending;
+    const isCompleted = cItem.isReportSubmitted === true;
+    
+    const stages = [
+      { label: "Assigned", active: true },
+      { label: "Accepted", active: isAccepted },
+      { label: "Visited/WIP", active: isAccepted && !isCompleted },
+      { label: "Report Done", active: isCompleted },
+    ];
+
+    return (
+      <div className="flex items-center justify-between w-full mt-2 mb-3 bg-slate-50/50 p-3 rounded-2xl border border-slate-100">
+        {stages.map((stage, idx) => (
+          <div key={idx} className="flex items-center flex-1 last:flex-none">
+            <div className="flex flex-col items-center gap-1.5">
+              <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center border transition-all duration-300 ${
+                stage.active 
+                  ? "bg-indigo-650 border-indigo-650 shadow-sm shadow-indigo-100" 
+                  : "bg-white border-slate-200"
+              }`}>
+                {stage.active && <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />}
+              </div>
+              <span className={`text-[8.5px] font-extrabold uppercase tracking-tight ${
+                stage.active ? "text-indigo-650 font-black" : "text-slate-400"
+              }`}>
+                {stage.label}
+              </span>
+            </div>
+            {idx < stages.length - 1 && (
+              <div className={`h-0.5 flex-1 mx-2 transition-all duration-300 ${
+                stages[idx + 1].active ? "bg-indigo-600" : "bg-slate-200"
+              }`} />
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-[#f8fafc] p-4 md:p-6 pb-24 dash-root">
       <style dangerouslySetInnerHTML={{ __html: `
@@ -693,7 +742,7 @@ const FieldOfficerDashboard = () => {
       `}} />
       
       {/* Premium Header Welcome Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 rounded-3xl p-6 md:p-8 text-white mb-6 border border-white/5 shadow-2xl">
+      <div className="relative overflow-hidden bg-gradient-to-br from-slate-955 via-indigo-950 to-slate-900 rounded-3xl p-6 md:p-8 text-white mb-6 border border-white/5 shadow-2xl">
         <div className="absolute right-0 top-0 -mt-8 -mr-8 w-44 h-44 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute left-1/3 bottom-0 -mb-8 w-36 h-36 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
 
@@ -708,7 +757,7 @@ const FieldOfficerDashboard = () => {
               </span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-              Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 via-white to-slate-200">{user?.name || "Officer"}</span>!
+              Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 via-white to-slate-205">{user?.name || "Officer"}</span>!
             </h1>
             <p className="text-slate-300 text-xs md:text-sm mt-1.5 max-w-xl font-medium leading-relaxed">
               {summaryCounts.NEW_CASES > 0 
@@ -731,9 +780,37 @@ const FieldOfficerDashboard = () => {
         </div>
       </div>
 
-      {/* Modern Interactive Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        {STATUS_TYPES.map(({ title, value, icon: Icon, color, bg, border }) => {
+      {/* Mobile-only Horizontally Scrollable Category Tabs */}
+      <div className="md:hidden flex overflow-x-auto gap-2.5 pb-4.5 pt-0.5 chip-scroll -mx-4 px-4 mb-5">
+        {STATUS_TYPES.map(({ title, value, icon: Icon, color, bg }) => {
+          const isSelected = selectedStatus === value;
+          const count = summaryCounts[value] || 0;
+          
+          return (
+            <button
+              key={value}
+              onClick={() => setSelectedStatus(value)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl font-bold border transition-all shrink-0 active:scale-95 shadow-sm cursor-pointer ${
+                isSelected 
+                  ? "bg-slate-900 border-slate-950 text-white shadow-md shadow-indigo-100" 
+                  : "bg-white border-slate-100 text-slate-750 hover:bg-slate-50"
+              }`}
+            >
+              <Icon size={14} style={{ color: isSelected ? "#ffffff" : color }} />
+              <span className="text-xs whitespace-nowrap tracking-tight">{title}</span>
+              <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold leading-none ${
+                isSelected ? "bg-white/20 text-white" : "bg-slate-50 border border-slate-150 text-slate-600"
+              }`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Modern Interactive Summary Cards (Desktop view) */}
+      <div className="hidden md:grid grid-cols-5 gap-4 mb-6">
+        {STATUS_TYPES.map(({ title, value, icon: Icon, color, bg }) => {
           const isSelected = selectedStatus === value;
           const count = summaryCounts[value] || 0;
           
@@ -743,7 +820,7 @@ const FieldOfficerDashboard = () => {
               onClick={() => setSelectedStatus(value)}
               className={`cursor-pointer transition-all duration-300 border rounded-2xl p-4 md:p-5 relative overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-1 active:scale-[0.98] group flex flex-col justify-between ${
                 isSelected 
-                  ? "bg-slate-900 border-slate-950 text-white shadow-lg ring-2 ring-indigo-500/20" 
+                  ? "bg-slate-900 border-slate-955 text-white shadow-lg ring-2 ring-indigo-500/20" 
                   : "bg-white border-slate-100 hover:border-slate-350 text-slate-800"
               }`}
             >
@@ -798,7 +875,7 @@ const FieldOfficerDashboard = () => {
                   setSearchText("");
                   handleSearch("");
                 }}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-650 transition-colors cursor-pointer"
               >
                 <X size={15} />
               </button>
@@ -960,21 +1037,26 @@ const FieldOfficerDashboard = () => {
                       >
                         {bName}
                       </Tag>
-                      <span className="text-[9px] font-extrabold px-2 py-0.5 bg-rose-50 text-rose-650 rounded-lg border border-rose-100 uppercase tracking-wide">
+                      <span className="text-[9px] font-extrabold px-2 py-0.5 bg-rose-50 text-rose-655 rounded-lg border border-rose-100 uppercase tracking-wide">
                         Query Raised
                       </span>
                     </div>
                     <div className="text-[14.5px] font-extrabold text-slate-800 mb-1">
                       {custName}
                     </div>
-                    <div className="text-[10px] text-slate-400 mb-3 flex items-center gap-1 font-bold">
-                      <Calendar size={12} className="text-slate-405" />
+                    <div className="text-[10px] text-slate-405 mb-3 flex items-center gap-1 font-bold">
+                      <Calendar size={12} className="text-slate-400" />
                       {dateFormatted}
                     </div>
+                    
+                    {/* Stepper on Query card */}
+                    {cData && renderMobileProgress(cData)}
+
                     <div className="text-xs text-slate-650 bg-slate-50 rounded-2xl p-3.5 border border-slate-100 min-h-[3.5rem] mb-4 leading-relaxed">
                       <span className="font-extrabold text-slate-400 block mb-1 text-[9px] uppercase tracking-wider">Query Message:</span>
                       {caseItem.message || "No detailed query message provided."}
                     </div>
+                    
                     <Button
                       type="primary"
                       onClick={() => handleResolveAndEdit(caseItem.caseId, cData)}
@@ -1040,7 +1122,7 @@ const FieldOfficerDashboard = () => {
                       )}
                     </div>
                     <span className="text-[10px] text-slate-400 font-bold flex items-center gap-1 shrink-0">
-                      <Calendar size={12} className="text-slate-350" />
+                      <Calendar size={12} className="text-slate-355" />
                       {formatShortDate(caseItem.createdAt)}
                     </span>
                   </div>
@@ -1049,13 +1131,13 @@ const FieldOfficerDashboard = () => {
                   <div className="mb-3.5">
                     <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Customer Name</div>
                     {isPending ? (
-                      <div className="text-[15px] font-extrabold text-slate-800 leading-snug">
+                      <div className="text-[15.5px] font-extrabold text-slate-800 leading-snug">
                         {customerName || "Unnamed Customer"}
                       </div>
                     ) : (
                       <Link
                         to={`/bank/${bankRoute}/edit/${caseItem._id}`}
-                        className="text-[15px] font-extrabold text-indigo-650 hover:text-indigo-850 hover:underline flex items-center gap-1 group leading-snug"
+                        className="text-[15.5px] font-extrabold text-indigo-650 hover:text-indigo-850 hover:underline flex items-center gap-1 group leading-snug"
                       >
                         {customerName || "Unnamed Customer"}
                         <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5 text-indigo-500 shrink-0" />
@@ -1063,39 +1145,51 @@ const FieldOfficerDashboard = () => {
                     )}
                   </div>
 
+                  {/* Dynamic Workflow Progress Stepper */}
+                  {renderMobileProgress(caseItem)}
+
                   <div className="border-t border-slate-50 my-3" />
 
-                  {/* Contact & Address */}
+                  {/* Contact & Address Interactive Chips */}
                   <div className="space-y-3 mb-4.5">
-                    <div className="flex items-start gap-2.5">
-                      <span className="p-1.5 rounded-lg bg-slate-50 border border-slate-100 text-slate-400 mt-0.5 shrink-0">
-                        <Phone size={12.5} />
-                      </span>
-                      <div className="text-[12px] leading-tight">
-                        <span className="text-[9px] text-slate-400 font-bold block uppercase mb-0.5">Contact</span>
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Customer Contact</span>
+                      <div className="flex gap-2">
                         {contact && contact !== "N/A" ? (
                           <a 
-                            href={`tel:${contact}`} 
-                            className="text-indigo-600 font-extrabold hover:underline inline-flex items-center gap-1.5 mt-0.5"
+                            href={`tel:${contact}`}
+                            className="inline-flex items-center gap-2 px-3.5 py-2 bg-indigo-50/60 hover:bg-indigo-100/80 text-indigo-700 font-extrabold text-[11px] rounded-xl border border-indigo-100 transition-all cursor-pointer shadow-sm active:scale-95"
                           >
-                            {contact}
-                            <span className="text-[8.5px] bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded font-extrabold tracking-wide uppercase">Call</span>
+                            <Phone size={12} className="text-indigo-500" />
+                            <span>Call {contact}</span>
                           </a>
                         ) : (
-                          <span className="text-slate-400">N/A</span>
+                          <div className="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-50 text-slate-400 font-bold text-[11px] rounded-xl border border-slate-100">
+                            <Phone size={12} />
+                            <span>No phone number</span>
+                          </div>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex items-start gap-2.5">
-                      <span className="p-1.5 rounded-lg bg-slate-50 border border-slate-100 text-slate-400 mt-0.5 shrink-0">
-                        <MapPin size={12.5} />
-                      </span>
-                      <div className="text-[12px] leading-tight">
-                        <span className="text-[9px] text-slate-400 font-bold block uppercase mb-0.5">Address</span>
-                        <span className="text-slate-600 font-medium line-clamp-2" title={address}>
-                          {address}
-                        </span>
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block font-outfit">Property Address</span>
+                      <div className="flex gap-2 items-start bg-slate-50/60 p-2.5 rounded-xl border border-slate-100 relative group">
+                        <MapPin size={13.5} className="text-slate-400 mt-0.5 shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <span className="text-[11.5px] text-slate-650 font-medium block leading-normal break-words" title={address}>
+                            {address}
+                          </span>
+                        </div>
+                        {address && address !== "N/A" && (
+                          <button
+                            onClick={() => handleCopyAddress(address)}
+                            className="p-1 hover:bg-slate-200/70 text-slate-400 hover:text-slate-600 rounded-lg transition-colors cursor-pointer shrink-0"
+                            title="Copy Address"
+                          >
+                            <Copy size={11} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
