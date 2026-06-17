@@ -1202,7 +1202,7 @@ const advancedAutofill = async (req, res) => {
       console.log(`✅ ImageKit: ${additionalDocumentUrls.length}/${newFilesByCategory.additionalFiles.length} additional files uploaded.`);
     }
 
-    // ── Fetch existing documents from database and merge for Gemini ─────────
+    // ── Fetch existing documents from database, parse body list uploads, and merge ─────────
     const filesByCategory = {
       gpsFiles:        [...newFilesByCategory.gpsFiles],
       atsFiles:        [...newFilesByCategory.atsFiles],
@@ -1255,23 +1255,48 @@ const advancedAutofill = async (req, res) => {
       })).filter(d => d.url);
     };
 
-    const downloadDbFiles = async (dbDocs) => {
-      const files = [];
-      if (Array.isArray(dbDocs)) {
-        for (let i = 0; i < dbDocs.length; i++) {
-          const doc = dbDocs[i];
-          const url = getUrl(doc);
-          if (url) {
-            console.log(`[Advanced AI] Downloading DB file: ${url}`);
-            const downloaded = await downloadFileAsBuffer(url);
-            if (downloaded) {
-              files.push(downloaded);
-            }
-          }
+    // Helper to merge lists of documents by unique url
+    const mergeUniqueDocs = (arr1 = [], arr2 = []) => {
+      const seen = new Set();
+      const merged = [];
+      [...arr1, ...arr2].forEach((item) => {
+        const url = getUrl(item);
+        if (url && !seen.has(url)) {
+          seen.add(url);
+          merged.push(item);
         }
-      }
-      return files;
+      });
+      return merged;
     };
+
+    // Parse uploaded files list from request body (useful if client uploaded them to ImageKit first)
+    const parseBodyList = (bodyVal) => {
+      if (!bodyVal) return [];
+      try {
+        const parsed = JSON.parse(bodyVal);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        console.error("Failed to parse body file list:", e.message);
+        return [];
+      }
+    };
+
+    const bodyGpsList = normalizeDbDocs(parseBodyList(req.body?.gpsFilesList));
+    const bodyAtsList = normalizeDbDocs(parseBodyList(req.body?.atsFilesList));
+    const bodyEmailList = normalizeDbDocs(parseBodyList(req.body?.emailFilesList));
+    const bodyFieldFormList = normalizeDbDocs(parseBodyList(req.body?.fieldFormFilesList));
+    const bodyAdditionalList = normalizeDbDocs(parseBodyList(req.body?.additionalFilesList));
+    const bodyPhotoList = normalizeDbDocs(parseBodyList(req.body?.siteVisitPhotosList));
+    const bodyVideoList = normalizeDbDocs(parseBodyList(req.body?.siteVisitVideoList));
+
+    // Initial merge of newly uploaded ImageKit URLs and request body lists
+    let finalGpsUrls = mergeUniqueDocs(gpsDocumentUrls, bodyGpsList);
+    let finalAtsUrls = mergeUniqueDocs(atsDocumentUrls, bodyAtsList);
+    let finalEmailUrls = mergeUniqueDocs(emailDocumentUrls, bodyEmailList);
+    let finalFieldFormUrls = mergeUniqueDocs(fieldFormDocumentUrls, bodyFieldFormList);
+    let finalAdditionalUrls = mergeUniqueDocs(additionalDocumentUrls, bodyAdditionalList);
+    let finalPhotoUrls = mergeUniqueDocs(siteVisitPhotoUrls, bodyPhotoList);
+    let finalVideoUrls = mergeUniqueDocs(siteVisitVideoUrls, bodyVideoList);
 
     if (caseId) {
       console.log(`[Advanced AI] Fetching case ID: ${caseId}`);
@@ -1303,41 +1328,69 @@ const advancedAutofill = async (req, res) => {
         ]);
         dbVideoUrls = normalizeDbDocs(matchedCase.siteVisitVideo);
 
-        // Download existing files and append to list for Gemini
-        const dbGps = await downloadDbFiles(matchedCase.gpsFiles);
-        filesByCategory.gpsFiles.push(...dbGps);
-
-        const dbAts = await downloadDbFiles(matchedCase.atsDocuments);
-        filesByCategory.atsFiles.push(...dbAts);
-
-        const dbEmail = await downloadDbFiles(matchedCase.emailFiles);
-        filesByCategory.emailFiles.push(...dbEmail);
-
-        const dbFieldForm = await downloadDbFiles(matchedCase.fieldFormFiles);
-        filesByCategory.fieldFormFiles.push(...dbFieldForm);
-
-        const dbAdditional = await downloadDbFiles(matchedCase.additionalFiles);
-        filesByCategory.additionalFiles.push(...dbAdditional);
-
-        const dbPhotos = await downloadDbFiles([
-          ...(matchedCase.sitePhotographs || []),
-          ...(matchedCase.otherImages || []),
-          ...(matchedCase.imageUrls || []),
-        ]);
-        siteVisitPhotos.push(...dbPhotos);
-
-        const dbVideo = await downloadDbFiles(matchedCase.siteVisitVideo);
-        siteVisitVideo.push(...dbVideo);
+        finalGpsUrls = mergeUniqueDocs(finalGpsUrls, dbGpsUrls);
+        finalAtsUrls = mergeUniqueDocs(finalAtsUrls, dbAtsUrls);
+        finalEmailUrls = mergeUniqueDocs(finalEmailUrls, dbEmailUrls);
+        finalFieldFormUrls = mergeUniqueDocs(finalFieldFormUrls, dbFieldFormUrls);
+        finalAdditionalUrls = mergeUniqueDocs(finalAdditionalUrls, dbAdditionalUrls);
+        finalPhotoUrls = mergeUniqueDocs(finalPhotoUrls, dbPhotoUrls);
+        finalVideoUrls = mergeUniqueDocs(finalVideoUrls, dbVideoUrls);
       }
     }
 
-    const mergedSiteVisitPhotoUrls = [...siteVisitPhotoUrls, ...dbPhotoUrls];
-    const mergedAtsDocumentUrls = [...atsDocumentUrls, ...dbAtsUrls];
-    const mergedSiteVisitVideoUrls = [...siteVisitVideoUrls, ...dbVideoUrls];
-    const mergedGpsDocumentUrls = [...gpsDocumentUrls, ...dbGpsUrls];
-    const mergedEmailDocumentUrls = [...emailDocumentUrls, ...dbEmailUrls];
-    const mergedFieldFormDocumentUrls = [...fieldFormDocumentUrls, ...dbFieldFormUrls];
-    const mergedAdditionalDocumentUrls = [...additionalDocumentUrls, ...dbAdditionalUrls];
+    const mergedSiteVisitPhotoUrls = finalPhotoUrls;
+    const mergedAtsDocumentUrls = finalAtsUrls;
+    const mergedSiteVisitVideoUrls = finalVideoUrls;
+    const mergedGpsDocumentUrls = finalGpsUrls;
+    const mergedEmailDocumentUrls = finalEmailUrls;
+    const mergedFieldFormDocumentUrls = finalFieldFormUrls;
+    const mergedAdditionalDocumentUrls = finalAdditionalUrls;
+
+    // Helper to download unique files and avoid duplicate work
+    const downloadedUrls = new Set();
+    const downloadUniqueFiles = async (docList) => {
+      const files = [];
+      if (Array.isArray(docList)) {
+        for (let i = 0; i < docList.length; i++) {
+          const doc = docList[i];
+          const url = getUrl(doc);
+          if (url && !downloadedUrls.has(url)) {
+            downloadedUrls.add(url);
+            console.log(`[Advanced AI] Downloading unique file: ${url}`);
+            const downloaded = await downloadFileAsBuffer(url);
+            if (downloaded) {
+              files.push({
+                ...downloaded,
+                originalname: doc.name || downloaded.originalname,
+              });
+            }
+          }
+        }
+      }
+      return files;
+    };
+
+    // Download unique files for AI processing and add to categories
+    const downloadedGps = await downloadUniqueFiles(finalGpsUrls);
+    filesByCategory.gpsFiles.push(...downloadedGps);
+
+    const downloadedAts = await downloadUniqueFiles(finalAtsUrls);
+    filesByCategory.atsFiles.push(...downloadedAts);
+
+    const downloadedEmail = await downloadUniqueFiles(finalEmailUrls);
+    filesByCategory.emailFiles.push(...downloadedEmail);
+
+    const downloadedFieldForm = await downloadUniqueFiles(finalFieldFormUrls);
+    filesByCategory.fieldFormFiles.push(...downloadedFieldForm);
+
+    const downloadedAdditional = await downloadUniqueFiles(finalAdditionalUrls);
+    filesByCategory.additionalFiles.push(...downloadedAdditional);
+
+    const downloadedPhotos = await downloadUniqueFiles(finalPhotoUrls);
+    siteVisitPhotos.push(...downloadedPhotos);
+
+    const downloadedVideo = await downloadUniqueFiles(finalVideoUrls);
+    siteVisitVideo.push(...downloadedVideo);
 
     // Total includes siteVisitPhotos and siteVisitVideo (those are only for media fields, not AI text extraction)
     const totalFiles = Object.values(filesByCategory).reduce(

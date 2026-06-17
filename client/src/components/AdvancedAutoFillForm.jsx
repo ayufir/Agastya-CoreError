@@ -982,6 +982,13 @@ const AdvancedAutoFillForm = ({
       if (caseId) {
         formData.append("caseId", caseId);
       }
+      formData.append("gpsFilesList",        JSON.stringify(uploadedGpsUrls));
+      formData.append("atsFilesList",        JSON.stringify(atsDocsList));
+      formData.append("emailFilesList",      JSON.stringify(uploadedEmailUrls));
+      formData.append("fieldFormFilesList",  JSON.stringify(uploadedFieldFormUrls));
+      formData.append("additionalFilesList", JSON.stringify(uploadedAdditionalUrls));
+      formData.append("siteVisitPhotosList", JSON.stringify(uploadedPhotoUrls));
+      formData.append("siteVisitVideoList",  JSON.stringify(uploadedVideoUrls));
 
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/api/advanced-autofill`,
