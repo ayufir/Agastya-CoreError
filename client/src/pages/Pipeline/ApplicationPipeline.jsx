@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Input, Select, Tag, Button, Modal, Spin } from "antd";
-import { Search, RotateCw, Calendar, MapPin, User, Eye, Edit3, HelpCircle, AlertCircle, CheckCircle, Clock } from "lucide-react";
+import { Input, Select, Tag, Button, Modal, Tooltip, Progress } from "antd";
+import { Search, RotateCw, Calendar, MapPin, User, Eye, Edit3, HelpCircle, AlertCircle, CheckCircle, Clock, FileText, Image, Video, ShieldAlert } from "lucide-react";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import axiosInstance from "../../config/axios";
@@ -14,51 +14,46 @@ const PIPELINE_COLUMNS = [
     key: "Pending",
     title: "Pending / To Be Assigned",
     color: "#64748b", // slate
-    bg: "#f8fafc",
+    bg: "rgba(248, 250, 252, 0.7)",
     borderColor: "#e2e8f0",
-    headerBg: "linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)",
-    statusBadgeColor: "default",
-    icon: <Clock size={16} className="text-slate-500" />,
+    glowColor: "rgba(100, 116, 139, 0.15)",
+    icon: <Clock size={15} className="text-slate-500" />,
   },
   {
     key: "Work in Progress",
-    title: "Assigned / Work in Progress",
+    title: "Assigned / In Progress",
     color: "#3b82f6", // blue
-    bg: "#f0f7ff",
+    bg: "rgba(240, 247, 255, 0.7)",
     borderColor: "#dbeafe",
-    headerBg: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
-    statusBadgeColor: "processing",
-    icon: <RotateCw size={16} className="text-blue-500 animate-spin-slow" />,
+    glowColor: "rgba(59, 130, 246, 0.15)",
+    icon: <RotateCw size={15} className="text-blue-500 animate-spin-slow" />,
   },
   {
     key: "Query Raised",
     title: "Query Raised",
     color: "#ef4444", // red
-    bg: "#fff5f5",
+    bg: "rgba(255, 245, 245, 0.7)",
     borderColor: "#fee2e2",
-    headerBg: "linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)",
-    statusBadgeColor: "error",
-    icon: <AlertCircle size={16} className="text-red-500" />,
+    glowColor: "rgba(239, 68, 68, 0.15)",
+    icon: <AlertCircle size={15} className="text-red-500" />,
   },
   {
     key: "Submitted",
     title: "Report Submitted",
     color: "#f59e0b", // amber
-    bg: "#fffbeb",
+    bg: "rgba(255, 251, 235, 0.7)",
     borderColor: "#fef3c7",
-    headerBg: "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
-    statusBadgeColor: "warning",
-    icon: <HelpCircle size={16} className="text-amber-500" />,
+    glowColor: "rgba(245, 158, 11, 0.15)",
+    icon: <HelpCircle size={15} className="text-amber-500" />,
   },
   {
     key: "Done",
     title: "Final Submitted / Closed",
     color: "#10b981", // green
-    bg: "#f0fdf4",
+    bg: "rgba(240, 253, 244, 0.7)",
     borderColor: "#dcfce7",
-    headerBg: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
-    statusBadgeColor: "success",
-    icon: <CheckCircle size={16} className="text-green-500" />,
+    glowColor: "rgba(16, 185, 129, 0.15)",
+    icon: <CheckCircle size={15} className="text-green-500" />,
   },
 ];
 
@@ -71,7 +66,7 @@ const ApplicationPipeline = () => {
   // Drag and Drop active column highlights
   const [activeDragOverCol, setActiveDragOverCol] = useState(null);
 
-  // Status Change Modal State (Specifically for Query / Remarks)
+  // Status Change Modal State
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
   const [modalData, setModalData] = useState({
     caseId: null,
@@ -123,24 +118,23 @@ const ApplicationPipeline = () => {
     });
   }, [cases, searchText, selectedBank]);
 
-  // Unique bank list for filtering dropdown
+  // Unique bank options
   const bankOptions = useMemo(() => {
     const names = cases.map((x) => x.bankName).filter(Boolean);
     return ["All", ...new Set(names)].sort();
   }, [cases]);
 
-  // Helper to categorize case status into pipeline column keys
+  // Status mapping to pipeline columns
   const getCaseColumnKey = (status) => {
     const s = String(status || "").toLowerCase().trim();
     if (s.includes("pending")) return "Pending";
     if (s.includes("query")) return "Query Raised";
     if (s.includes("submitted") && !s.includes("final")) return "Submitted";
     if (s.includes("final") || s.includes("done") || s.includes("closed") || s.includes("complete")) return "Done";
-    // Default fallback to Work in Progress for any other active states (assigned, accepted, visited, reviewed)
     return "Work in Progress";
   };
 
-  // Group cases by pipeline column keys
+  // Group cases by pipeline columns
   const casesByColumn = useMemo(() => {
     const groups = {
       Pending: [],
@@ -162,7 +156,21 @@ const ApplicationPipeline = () => {
     return groups;
   }, [filteredCases]);
 
-  // HTML5 Drag and Drop Handlers
+  // Calculations for pipeline stats
+  const pipelineStats = useMemo(() => {
+    const total = filteredCases.length || 1;
+    const pending = filteredCases.filter((x) => getCaseColumnKey(x.status) === "Pending").length;
+    const active = filteredCases.filter((x) => getCaseColumnKey(x.status) === "Work in Progress").length;
+    const done = filteredCases.filter((x) => getCaseColumnKey(x.status) === "Done").length;
+    
+    return {
+      completionRate: Math.round((done / total) * 100),
+      activeCases: active,
+      pendingAllocation: pending,
+    };
+  }, [filteredCases]);
+
+  // Drag and Drop Handlers
   const handleDragStart = (e, item) => {
     e.dataTransfer.setData(
       "application/json",
@@ -193,10 +201,8 @@ const ApplicationPipeline = () => {
 
       const { id, bankName, currentStatus } = JSON.parse(rawData);
 
-      // Do nothing if dropping in same category
       if (getCaseColumnKey(currentStatus) === targetStatus) return;
 
-      // Map column keys to actual DB statuses
       let dbStatus = targetStatus;
       if (targetStatus === "Pending") dbStatus = "Pending";
       else if (targetStatus === "Work in Progress") dbStatus = "Work in Progress";
@@ -204,7 +210,6 @@ const ApplicationPipeline = () => {
       else if (targetStatus === "Submitted") dbStatus = "Submitted";
       else if (targetStatus === "Done") dbStatus = "Done";
 
-      // Open modal to input remarks/notes
       setModalData({
         caseId: id,
         bankName,
@@ -230,7 +235,7 @@ const ApplicationPipeline = () => {
         note: note || `Status updated to ${targetStatus} via Pipeline`,
       });
 
-      toast.success(`Case updated to ${targetStatus}`);
+      toast.success(`Case status updated to "${targetStatus}"`);
       setIsStatusModalOpen(false);
       fetchCases();
     } catch (error) {
@@ -252,8 +257,29 @@ const ApplicationPipeline = () => {
     });
   };
 
+  // Helper to compute how long case has been active (returns badge class if older than 48 hours)
+  const getAgeIndicator = (dateString) => {
+    if (!dateString) return null;
+    const diffTime = Math.abs(new Date() - new Date(dateString));
+    const diffHours = diffTime / (1000 * 60 * 60);
+    const diffDays = Math.floor(diffHours / 24);
+    
+    if (diffHours > 48) {
+      return {
+        label: `Active ${diffDays}d ago`,
+        bg: "bg-red-50 text-red-600 border-red-100",
+        urgent: true,
+      };
+    }
+    return {
+      label: diffDays === 0 ? "Today" : `Active ${diffDays}d ago`,
+      bg: "bg-slate-50 text-slate-500 border-slate-100",
+      urgent: false,
+    };
+  };
+
   return (
-    <div className="min-h-screen bg-[#f4f6fb] p-6 dash-root">
+    <div className="min-h-screen bg-[#f8fafc] p-6 dash-root">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
         
@@ -262,7 +288,7 @@ const ApplicationPipeline = () => {
         }
 
         .kanban-board-scroll::-webkit-scrollbar {
-          width: 6px;
+          width: 5px;
           height: 6px;
         }
         .kanban-board-scroll::-webkit-scrollbar-track {
@@ -285,36 +311,66 @@ const ApplicationPipeline = () => {
         }
 
         .pipeline-card {
-          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.02);
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .pipeline-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 12px 24px -4px rgb(0 0 0 / 0.08), 0 4px 12px -4px rgb(0 0 0 / 0.08);
+          transform: translateY(-5px);
+          box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.08), 0 5px 15px -5px rgba(0, 0, 0, 0.04);
           border-color: #cbd5e1;
         }
 
-        .pipeline-column {
-          box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.01);
+        .pipeline-column-body {
+          background-image: radial-gradient(rgba(148, 163, 184, 0.12) 1px, transparent 0);
+          background-size: 16px 16px;
         }
       `}</style>
 
-      {/* Header controls section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-white/80 backdrop-blur-md p-5 rounded-2xl shadow-sm border border-slate-100">
+      {/* Top dashboard metric insights bar */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+        <div className="bg-white p-4.5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+          <div>
+            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Completion Rate</div>
+            <div className="text-2xl font-extrabold text-slate-800 mt-1">{pipelineStats.completionRate}%</div>
+          </div>
+          <div className="w-24">
+            <Progress percent={pipelineStats.completionRate} size="small" strokeColor="#10b981" showInfo={false} />
+          </div>
+        </div>
+
+        <div className="bg-white p-4.5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+          <div>
+            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Active Assignments</div>
+            <div className="text-2xl font-extrabold text-blue-600 mt-1">{pipelineStats.activeCases}</div>
+          </div>
+          <span className="p-2.5 bg-blue-50 rounded-xl text-blue-500 font-bold text-xs">Processing</span>
+        </div>
+
+        <div className="bg-white p-4.5 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
+          <div>
+            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pending Allocation</div>
+            <div className="text-2xl font-extrabold text-slate-500 mt-1">{pipelineStats.pendingAllocation}</div>
+          </div>
+          <span className="p-2.5 bg-slate-50 rounded-xl text-slate-500 font-bold text-xs">Unassigned</span>
+        </div>
+      </div>
+
+      {/* Main Header / Filters section */}
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
-            📂 Application Pipeline
+            📂 Case Application Pipeline
           </h1>
-          <p className="text-xs text-slate-500 font-medium mt-0.5">
-            Track and manage your workflow. Drag-and-drop cards to change statuses seamlessly.
+          <p className="text-xs text-slate-400 font-semibold mt-0.5">
+            Interactive SaaS board for managing and routing active evaluation reports.
           </p>
         </div>
 
-        {/* Filters */}
+        {/* Filters and Refresh */}
         <div className="flex flex-wrap items-center gap-3">
           <Input
-            prefix={<Search size={16} className="text-slate-400" />}
+            prefix={<Search size={15} className="text-slate-400" />}
             placeholder="Search by customer, city, officer..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
@@ -336,17 +392,17 @@ const ApplicationPipeline = () => {
           </Select>
 
           <Button
-            icon={<RotateCw size={14} className="mt-0.5 inline-block mr-1.5" />}
+            icon={<RotateCw size={13} className="mt-0.5 inline-block mr-1.5" />}
             onClick={fetchCases}
-            className="h-10 px-4 flex items-center justify-center rounded-xl border border-slate-200 font-semibold text-slate-600 hover:text-red-600 hover:border-red-300 hover:bg-red-50/20 active:scale-95 transition-all"
+            className="h-10 px-4.5 flex items-center justify-center rounded-xl border border-slate-200 font-bold text-slate-600 hover:text-red-600 hover:border-red-300 hover:bg-red-50/20 active:scale-95 transition-all"
           >
             Refresh
           </Button>
         </div>
       </div>
 
-      {/* Kanban Board Container */}
-      <div className="flex gap-5 overflow-x-auto pb-5 kanban-board-scroll" style={{ minHeight: "calc(100vh - 190px)" }}>
+      {/* Kanban Board Layout */}
+      <div className="flex gap-5 overflow-x-auto pb-5 kanban-board-scroll" style={{ minHeight: "calc(100vh - 270px)" }}>
         {PIPELINE_COLUMNS.map((col) => {
           const colCases = casesByColumn[col.key] || [];
           const isOver = activeDragOverCol === col.key;
@@ -357,63 +413,60 @@ const ApplicationPipeline = () => {
               onDragOver={(e) => handleDragOver(e, col.key)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, col.key)}
-              className="flex-1 min-w-[310px] max-w-[360px] flex flex-col rounded-2xl border bg-white/90 backdrop-blur-md shadow-sm transition-all duration-200 pipeline-column"
+              className="flex-1 min-w-[325px] max-w-[370px] flex flex-col rounded-2xl border border-slate-200/80 bg-slate-50/50 backdrop-blur-md shadow-sm transition-all duration-200"
               style={{
                 borderColor: isOver ? col.color : "#e2e8f0",
-                boxShadow: isOver ? `0 10px 30px ${col.color}18` : "none",
+                backgroundColor: isOver ? col.glowColor : "rgba(241, 245, 249, 0.40)",
+                boxShadow: isOver ? `0 12px 30px ${col.color}18` : "none",
               }}
             >
-              {/* Column Header */}
+              {/* Header block */}
               <div
-                className="p-4 rounded-t-2xl flex items-center justify-between border-b"
-                style={{
-                  background: col.headerBg,
-                  borderColor: col.borderColor,
-                }}
+                className="p-4 rounded-t-2xl flex items-center justify-between border-b bg-white"
+                style={{ borderBottomColor: col.borderColor }}
               >
                 <div className="flex items-center gap-2.5">
-                  {col.icon}
-                  <h2 className="font-bold text-[13.5px] text-slate-800 tracking-tight uppercase">
+                  <span className="w-5 h-5 rounded-lg flex items-center justify-center bg-slate-50 shadow-sm border border-slate-100">
+                    {col.icon}
+                  </span>
+                  <h2 className="font-bold text-[12.5px] text-slate-800 tracking-wider uppercase">
                     {col.title}
                   </h2>
                 </div>
                 <span 
-                  className="px-2.5 py-1 text-xs font-extrabold rounded-full shadow-sm"
+                  className="px-2.5 py-0.5 text-xs font-extrabold rounded-full border shadow-sm"
                   style={{
                     backgroundColor: "#ffffff",
                     color: col.color,
-                    border: `1.5px solid ${col.borderColor}`,
+                    borderColor: col.borderColor,
                   }}
                 >
                   {colCases.length}
                 </span>
               </div>
 
-              {/* Column Cards Area */}
-              <div 
-                className="flex-1 p-3.5 flex flex-col gap-3.5 overflow-y-auto max-h-[calc(100vh-270px)] kanban-board-scroll"
-                style={{ backgroundColor: isOver ? `${col.color}05` : "transparent" }}
-              >
+              {/* Cards scroll area */}
+              <div className="flex-1 p-3.5 flex flex-col gap-3.5 overflow-y-auto max-h-[calc(100vh-320px)] kanban-board-scroll pipeline-column-body">
                 {colCases.length === 0 ? (
                   <div className="flex-1 flex flex-col items-center justify-center py-20 opacity-30 select-none">
                     <span className="text-4xl mb-2">💤</span>
-                    <span className="text-xs font-bold text-slate-500">No Applications Here</span>
+                    <span className="text-xs font-bold text-slate-400">Empty Stage</span>
                   </div>
                 ) : (
                   colCases.map((item) => {
                     const custName = getDisplayCustomerName(item);
                     const isNameNA = !custName || custName === "N/A";
+                    const age = getAgeIndicator(item.createdAt);
                     
                     return (
                       <div
                         key={item._id}
                         draggable
                         onDragStart={(e) => handleDragStart(e, item)}
-                        className="bg-white p-4 rounded-xl border border-slate-100 cursor-grab active:cursor-grabbing pipeline-card relative group"
-                        style={{ borderLeft: `4px solid ${col.color}` }}
+                        className="bg-white p-4.5 rounded-xl border border-slate-150 cursor-grab active:cursor-grabbing pipeline-card relative group flex flex-col gap-2.5"
                       >
-                        {/* Card Header: Bank Tag & Action buttons */}
-                        <div className="flex items-start justify-between gap-2 mb-2.5">
+                        {/* Upper line: tags & actions */}
+                        <div className="flex items-center justify-between gap-2">
                           <Tag
                             color={getBankTagColor(item.bankName)}
                             className="font-bold border-none rounded px-2.5 py-0.5 text-[9.5px] uppercase tracking-wider shadow-[0_1px_3px_rgba(0,0,0,0.05)]"
@@ -421,64 +474,89 @@ const ApplicationPipeline = () => {
                             {item.bankName || "N/A"}
                           </Tag>
 
-                          {/* Action Buttons (Fades in on hover) */}
                           <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                             <Link
                               to={`/bank/${getBankRoute(item)}/${item._id}`}
-                              title="View Details"
-                              className="p-1.5 rounded-lg bg-slate-50 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 border border-slate-100 hover:border-indigo-100 transition-colors"
+                              className="p-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-400 hover:text-slate-700 border border-slate-100 transition-all"
+                              title="View Case Details"
                             >
-                              <Eye size={13} />
+                              <Eye size={12.5} />
                             </Link>
                             <Link
                               to={`/bank/${getBankRoute(item)}/edit/${item._id}`}
+                              className="p-1.5 rounded-lg bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-600 border border-slate-100 hover:border-red-100 transition-all"
                               title="Edit Form"
-                              className="p-1.5 rounded-lg bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-600 border border-slate-100 hover:border-red-100 transition-colors"
                             >
-                              <Edit3 size={13} />
+                              <Edit3 size={12.5} />
                             </Link>
                           </div>
                         </div>
 
-                        {/* Customer name */}
-                        <h3 
-                          className={`text-[14px] leading-snug tracking-tight mb-2 truncate ${
-                            isNameNA ? "font-medium text-slate-400 italic" : "font-extrabold text-slate-800"
-                          }`}
-                        >
-                          {isNameNA ? "Unnamed Customer" : custName}
-                        </h3>
-
-                        {/* Location & City */}
-                        <div className="flex items-center gap-2 text-[11.5px] text-slate-500 mb-3.5">
-                          <MapPin size={13.5} className="text-slate-400 flex-shrink-0" />
-                          <span className="truncate font-medium">{getDisplayCity(item)}</span>
+                        {/* Middle Block: Ref No & Customer */}
+                        <div>
+                          <div className="text-[10px] font-bold text-slate-400 font-mono tracking-tight mb-1">
+                            Ref: #{item.refNo || item.basicDetails?.caseReferenceNumber || "N/A"}
+                          </div>
+                          <h3 
+                            className={`text-[14px] leading-snug tracking-tight truncate ${
+                              isNameNA ? "font-medium text-slate-400 italic" : "font-bold text-slate-800"
+                            }`}
+                          >
+                            {isNameNA ? "Unnamed Customer" : custName}
+                          </h3>
                         </div>
 
-                        {/* Footer: Officer & Date */}
-                        <div className="border-t border-slate-100 pt-3 flex items-center justify-between text-[10.5px] text-slate-400">
-                          {/* Assigned Officer */}
+                        {/* Location Details */}
+                        <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
+                          <MapPin size={12.5} className="text-slate-400 flex-shrink-0" />
+                          <span className="truncate">{getDisplayCity(item)}</span>
+                        </div>
+
+                        {/* Extra indicators: attachment counts & active age */}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {/* Active Age Tag */}
+                          {age && (
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold border shadow-sm ${age.bg}`}>
+                              {age.urgent && <ShieldAlert size={10} className="animate-pulse" />}
+                              {age.label}
+                            </span>
+                          )}
+
+                          {/* File indicators */}
+                          {item.imageUrls?.length > 0 && (
+                            <Tooltip title={`${item.imageUrls.length} photos uploaded`}>
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-50 border border-slate-100 text-[10px] text-slate-500 font-bold font-mono">
+                                <Image size={10.5} className="text-slate-400" />
+                                {item.imageUrls.length}
+                              </span>
+                            </Tooltip>
+                          )}
+                        </div>
+
+                        {/* Lower block: Officer Avatar & Date */}
+                        <div className="border-t border-slate-100 pt-3 mt-1 flex items-center justify-between text-[10.5px]">
+                          {/* Officer info */}
                           <div className="flex items-center gap-2 truncate max-w-[62%]">
                             <div 
-                              className="w-5.5 h-5.5 rounded-full flex items-center justify-center text-[10px] text-white font-bold uppercase shadow-sm border border-white"
+                              className="w-5.5 h-5.5 rounded-full flex items-center justify-center text-[9px] text-white font-bold uppercase shadow-sm border border-white"
                               style={{ 
-                                backgroundColor: item.assignedTo?.name ? col.color : "#cbd5e1" 
+                                backgroundColor: item.assignedTo?.name ? col.color : "#94a3b8" 
                               }}
                             >
                               {item.assignedTo?.name ? (
                                 item.assignedTo.name.slice(0, 1)
                               ) : (
-                                <User size={10} className="text-white" />
+                                <User size={9} className="text-white" />
                               )}
                             </div>
-                            <span className={`truncate font-semibold ${item.assignedTo?.name ? "text-slate-700" : "text-slate-400"}`}>
+                            <span className={`truncate font-bold ${item.assignedTo?.name ? "text-slate-700" : "text-slate-400"}`}>
                               {item.assignedTo?.name || "Not Assigned"}
                             </span>
                           </div>
 
                           {/* Created Date */}
-                          <div className="flex items-center gap-1.5 text-slate-400 font-medium">
-                            <Calendar size={12.5} className="text-slate-400" />
+                          <div className="flex items-center gap-1 text-slate-400 font-semibold">
+                            <Calendar size={11.5} className="text-slate-400" />
                             <span>{formatShortDate(item.createdAt)}</span>
                           </div>
                         </div>
@@ -505,7 +583,7 @@ const ApplicationPipeline = () => {
         className="rounded-2xl overflow-hidden font-outfit"
       >
         <div className="py-2.5 font-outfit">
-          <p className="text-[13.5px] text-slate-500 mb-4 leading-relaxed">
+          <p className="text-[13.5px] text-slate-500 mb-4 leading-relaxed font-medium">
             Please provide a remark/note about moving this application to stage{" "}
             <strong className="text-slate-800">"{modalData.targetStatus}"</strong>. This will be added to the case timeline and notifications.
           </p>
