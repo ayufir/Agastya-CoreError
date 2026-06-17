@@ -86,8 +86,12 @@ exports.updateIciciBank = async (req, res) => {
       updateBody.assignedTo = updateBody.assignedTo._id;
     }
 
-    if (req.user?.role === "FieldOfficer" && !updateBody.assignedTo) {
-      updateBody.assignedTo = req.user._id;
+    if (req.user?.role === "FieldOfficer") {
+      if (!updateBody.assignedTo) {
+        updateBody.assignedTo = req.user._id;
+      }
+      updateBody.isReportSubmitted = req.body.isReportSubmitted === true || req.body.isSubmit === true;
+      updateBody.status = "Work in Progress";
     }
 
     const updatedJob = await IciciBank.findByIdAndUpdate(

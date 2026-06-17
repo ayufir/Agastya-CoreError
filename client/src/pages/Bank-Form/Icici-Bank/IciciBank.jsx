@@ -319,7 +319,7 @@ const IciciBank = () => {
         try {
           const payloadWithFiles = await prepareFormDataForServer(updatedData);
           const updated = sanitizeForSave(payloadWithFiles);
-          await dispatch(updateIciciBank({ id, formData: updated })).unwrap();
+          await dispatch(updateIciciBank({ id, formData: { ...updated, isReportSubmitted: false } })).unwrap();
           await fetchEditData();
           toast.success("AI extracted data saved to database successfully!");
         } catch (saveErr) {
@@ -448,7 +448,7 @@ const IciciBank = () => {
       writeDraft(id, updated);
 
       if (id) {
-        await dispatch(updateIciciBank({ id, formData: updated })).unwrap();
+        await dispatch(updateIciciBank({ id, formData: { ...updated, isReportSubmitted: false } })).unwrap();
         await fetchEditData();
       }
       toast.success("Data saved successfully");
@@ -472,10 +472,10 @@ const IciciBank = () => {
       writeDraft(id, updated);
 
       if (id) {
-        await dispatch(updateIciciBank({ id, formData: updated })).unwrap();
+        await dispatch(updateIciciBank({ id, formData: { ...updated, isReportSubmitted: false } })).unwrap();
         await fetchEditData();
       } else {
-        const response = await dispatch(createIciciBank(updated)).unwrap();
+        const response = await dispatch(createIciciBank({ ...updated, isReportSubmitted: false })).unwrap();
         if (response?._id) {
           navigate(`/bank/icici/edit/${response._id}`);
         }
@@ -698,7 +698,7 @@ const IciciBank = () => {
                     setEditData(updated);
                     writeDraft(id, updated);
                     if (id) {
-                      await dispatch(updateIciciBank({ id, formData: updated })).unwrap();
+                      await dispatch(updateIciciBank({ id, formData: { ...updated, isReportSubmitted: false } })).unwrap();
                       await fetchEditData();
                     }
                     toast.success("Draft saved successfully");
@@ -733,7 +733,7 @@ const IciciBank = () => {
                     writeDraft(id, updated);
                     
                     if (id) {
-                      await dispatch(updateIciciBank({ id, formData: updated })).unwrap();
+                      await dispatch(updateIciciBank({ id, formData: { ...updated, isReportSubmitted: false } })).unwrap();
                     }
                     
                     await handleSubmit(updated);
