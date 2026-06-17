@@ -607,7 +607,7 @@ DOCUMENT READING RULES (READ CAREFULLY):
 1. LEGAL DOCUMENTS (Sale Deed, Gift Deed, ATS, Registry, Lease Deed):
    - ANY Indian legal property document is valid: Sale Deed, Gift Deed, Lease Deed, Conveyance Deed, Mortgage Deed, Agreement to Sale, Allotment Letter, Patta, Fard, Khatiyan, Jamabandi, etc.
    - Extract: buyer name, seller name, registration number, registration date, property address, plot area, boundaries (N/S/E/W), khasra/survey/plot number, village, tehsil, district, state.
-   - Document may be in Hindi (Devanagari) — convert to Roman/English.
+   - Document may be in Hindi (Devanagari) — translate and transliterate names, addresses, boundaries, and descriptions to clean, standard English and Roman script (e.g. "राम कुमार" to "Ram Kumar", "भोपाल" to "Bhopal").
    - Registration dates: convert to DD/MM/YYYY format.
 
 2. GPS / MAP SCREENSHOTS:
@@ -1467,7 +1467,7 @@ const advancedAutofill = async (req, res) => {
 
     // ── 4. Call Claude ───────────────────────────────────────────────────────
     const responseText = await callClaudeAPI(
-      `You are an expert Indian bank property valuation AI that extracts data from multiple documents and fills bank forms. Use Hinglish/Roman script for Hindi words but keep other text in English. Return ONLY valid JSON.`,
+      `You are an expert Indian bank property valuation AI that extracts data from multiple documents and fills bank forms. Translate and transliterate all Hindi text (including applicant/owner names, addresses, boundaries, landmarks, and structural descriptions) into clean, standard English and Roman script (e.g. "राम कुमार" becomes "Ram Kumar", "भोपाल" becomes "Bhopal"). Do NOT output any Devanagari/Hindi characters in the JSON. Return ONLY valid JSON.`,
       messagesPrompt,
       mediaBlocks
     );
