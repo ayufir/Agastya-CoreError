@@ -250,9 +250,9 @@ const IciciBank = () => {
     if (id) {
       fetchEditData();
     } else {
-      const draft = readDraft(id);
-      setFormData(draft);
-      setEditData(draft);
+      setFormData({});
+      setEditData({});
+      localStorage.removeItem("icici-bank-draft:new");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
@@ -675,6 +675,8 @@ const IciciBank = () => {
               <AdvancedAutoFillForm
                 bankName="ICICI"
                 setFormData={handleAutoFill}
+                setFormDataDirect={setFormData}
+                setEditDataDirect={setEditData}
                 imageUrls={editData?.sitePhotographs || editData?.imageUrls || []}
                 atsDocuments={editData?.atsDocuments && editData.atsDocuments.length > 0 ? editData.atsDocuments : (editData?.AttachDocuments || [])}
                 siteVisitVideo={editData?.siteVisitVideo || []}
@@ -931,6 +933,8 @@ const IciciBank = () => {
                   <AdvancedAutoFillForm
                     bankName="ICICI"
                     setFormData={handleAutoFill}
+                    setFormDataDirect={setFormData}
+                    setEditDataDirect={setEditData}
                     imageUrls={editData?.sitePhotographs || editData?.imageUrls || []}
                     atsDocuments={editData?.atsDocuments && editData.atsDocuments.length > 0 ? editData.atsDocuments : (editData?.AttachDocuments || [])}
                     siteVisitVideo={editData?.siteVisitVideo || []}

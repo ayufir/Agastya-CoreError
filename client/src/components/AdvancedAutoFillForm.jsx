@@ -253,6 +253,8 @@ const normalizeDocumentsList = (docs) => {
 // ─── Main component ──────────────────────────────────────────────────────────
 const AdvancedAutoFillForm = ({ 
   setFormData, 
+  setFormDataDirect,
+  setEditDataDirect,
   bankName: propBankName = "", 
   atsDocuments: propAtsDocuments = [],
   imageUrls: propImageUrls = [],
@@ -286,6 +288,33 @@ const AdvancedAutoFillForm = ({
   const [uploadedAdditionalUrls, setUploadedAdditionalUrls] = useState([]);
 
   const [uploadingCategory, setUploadingCategory] = useState({});
+
+  const updateParentState = (fieldName, updatedList) => {
+    if (typeof setFormDataDirect === "function") {
+      setFormDataDirect((prev) => {
+        const next = { ...prev, [fieldName]: updatedList };
+        try {
+          const normBank = selectedBank.toLowerCase();
+          let draftKey = `icici-bank-draft:${caseId || "new"}`;
+          if (normBank.includes("first")) {
+            draftKey = `homefirst-bank-draft:${caseId || "new"}`;
+          } else if (normBank.includes("bajaj")) {
+            draftKey = `bajaj-bank-draft:${caseId || "new"}`;
+          }
+          localStorage.setItem(draftKey, JSON.stringify(next));
+        } catch (e) {
+          console.error("Draft auto-save failed:", e);
+        }
+        return next;
+      });
+    }
+    if (typeof setEditDataDirect === "function") {
+      setEditDataDirect((prev) => ({ ...prev, [fieldName]: updatedList }));
+    }
+    if (typeof setFormData === "function" && typeof setFormDataDirect !== "function") {
+      setFormData((prev) => ({ ...(prev || {}), [fieldName]: updatedList }));
+    }
+  };
 
   useEffect(() => {
     setAtsDocsList(normalizeDocumentsList(propAtsDocuments));
@@ -444,25 +473,31 @@ const AdvancedAutoFillForm = ({
         }
       } else {
         if (categoryKey === "gpsFiles") {
-          setUploadedGpsUrls((prev) => [...prev, ...newDocs]);
-          setFormData((prev) => ({ ...(prev || {}), gpsFiles: [...(prev?.gpsFiles || []), ...newDocs] }));
+          const updated = [...uploadedGpsUrls, ...newDocs];
+          setUploadedGpsUrls(updated);
+          updateParentState("gpsFiles", updated);
         } else if (categoryKey === "emailFiles") {
-          setUploadedEmailUrls((prev) => [...prev, ...newDocs]);
-          setFormData((prev) => ({ ...(prev || {}), emailFiles: [...(prev?.emailFiles || []), ...newDocs] }));
+          const updated = [...uploadedEmailUrls, ...newDocs];
+          setUploadedEmailUrls(updated);
+          updateParentState("emailFiles", updated);
         } else if (categoryKey === "fieldFormFiles") {
-          setUploadedFieldFormUrls((prev) => [...prev, ...newDocs]);
-          setFormData((prev) => ({ ...(prev || {}), fieldFormFiles: [...(prev?.fieldFormFiles || []), ...newDocs] }));
+          const updated = [...uploadedFieldFormUrls, ...newDocs];
+          setUploadedFieldFormUrls(updated);
+          updateParentState("fieldFormFiles", updated);
         } else if (categoryKey === "additionalFiles") {
-          setUploadedAdditionalUrls((prev) => [...prev, ...newDocs]);
-          setFormData((prev) => ({ ...(prev || {}), additionalFiles: [...(prev?.additionalFiles || []), ...newDocs] }));
+          const updated = [...uploadedAdditionalUrls, ...newDocs];
+          setUploadedAdditionalUrls(updated);
+          updateParentState("additionalFiles", updated);
         } else if (categoryKey === "siteVisitVideo") {
-          setUploadedVideoUrls((prev) => [...prev, ...newDocs]);
-          setFormData((prev) => ({ ...(prev || {}), siteVisitVideo: [...(prev?.siteVisitVideo || []), ...newDocs] }));
+          const updated = [...uploadedVideoUrls, ...newDocs];
+          setUploadedVideoUrls(updated);
+          updateParentState("siteVisitVideo", updated);
         } else if (categoryKey === "siteVisitPhotos") {
-          setUploadedPhotoUrls((prev) => [...prev, ...newDocs]);
+          const updated = [...uploadedPhotoUrls, ...newDocs];
+          setUploadedPhotoUrls(updated);
           const normBank = selectedBank.toLowerCase();
           const fieldName = normBank.includes("icici") ? "sitePhotographs" : normBank.includes("bajaj") ? "otherImages" : "imageUrls";
-          setFormData((prev) => ({ ...(prev || {}), [fieldName]: [...(prev?.[fieldName] || []), ...newDocs] }));
+          updateParentState(fieldName, updated);
         }
         message.success("Files added!");
       }
@@ -535,29 +570,29 @@ const AdvancedAutoFillForm = ({
         if (categoryKey === "gpsFiles") {
           const updated = uploadedGpsUrls.filter((f) => f.fileId !== docToRemove.fileId && f.url !== docToRemove.url);
           setUploadedGpsUrls(updated);
-          setFormData((prev) => ({ ...(prev || {}), gpsFiles: updated }));
+          updateParentState("gpsFiles", updated);
         } else if (categoryKey === "emailFiles") {
           const updated = uploadedEmailUrls.filter((f) => f.fileId !== docToRemove.fileId && f.url !== docToRemove.url);
           setUploadedEmailUrls(updated);
-          setFormData((prev) => ({ ...(prev || {}), emailFiles: updated }));
+          updateParentState("emailFiles", updated);
         } else if (categoryKey === "fieldFormFiles") {
           const updated = uploadedFieldFormUrls.filter((f) => f.fileId !== docToRemove.fileId && f.url !== docToRemove.url);
           setUploadedFieldFormUrls(updated);
-          setFormData((prev) => ({ ...(prev || {}), fieldFormFiles: updated }));
+          updateParentState("fieldFormFiles", updated);
         } else if (categoryKey === "additionalFiles") {
           const updated = uploadedAdditionalUrls.filter((f) => f.fileId !== docToRemove.fileId && f.url !== docToRemove.url);
           setUploadedAdditionalUrls(updated);
-          setFormData((prev) => ({ ...(prev || {}), additionalFiles: updated }));
+          updateParentState("additionalFiles", updated);
         } else if (categoryKey === "siteVisitVideo") {
           const updated = uploadedVideoUrls.filter((f) => f.fileId !== docToRemove.fileId && f.url !== docToRemove.url);
           setUploadedVideoUrls(updated);
-          setFormData((prev) => ({ ...(prev || {}), siteVisitVideo: updated }));
+          updateParentState("siteVisitVideo", updated);
         } else if (categoryKey === "siteVisitPhotos") {
           const updated = uploadedPhotoUrls.filter((f) => f.fileId !== docToRemove.fileId && f.url !== docToRemove.url);
           setUploadedPhotoUrls(updated);
           const normBank = selectedBank.toLowerCase();
           const fieldName = normBank.includes("icici") ? "sitePhotographs" : normBank.includes("bajaj") ? "otherImages" : "imageUrls";
-          setFormData((prev) => ({ ...(prev || {}), [fieldName]: updated }));
+          updateParentState(fieldName, updated);
         }
         message.success("File removed.");
       }
@@ -645,7 +680,7 @@ const AdvancedAutoFillForm = ({
       setUploadedVideoUrls(updatedList);
 
       if (!caseId) {
-        setFormData((prev) => ({ ...(prev || {}), siteVisitVideo: updatedList }));
+        updateParentState("siteVisitVideo", updatedList);
       }
     } catch (err) {
       console.error("Video delete error:", err);
@@ -719,10 +754,7 @@ const AdvancedAutoFillForm = ({
           message.success("Property paper uploaded and saved successfully!");
         }
       } else {
-        setFormData((prev) => ({
-          ...(prev || {}),
-          atsDocuments: updatedList,
-        }));
+        updateParentState("atsDocuments", updatedList);
         message.success("Property paper added!");
       }
 
@@ -766,10 +798,7 @@ const AdvancedAutoFillForm = ({
       setAtsDocsList(updatedList);
 
       if (!caseId) {
-        setFormData((prev) => ({
-          ...(prev || {}),
-          atsDocuments: updatedList,
-        }));
+        updateParentState("atsDocuments", updatedList);
       }
 
       setFilesByCategory((prev) => ({
@@ -832,8 +861,8 @@ const AdvancedAutoFillForm = ({
         fieldName = "otherImages";
       }
 
-      if (!caseId && typeof setFormData === "function") {
-        setFormData({ [fieldName]: updatedList });
+      if (!caseId) {
+        updateParentState(fieldName, updatedList);
       }
     } catch (err) {
       console.error("Photo delete error:", err);
@@ -877,23 +906,24 @@ const AdvancedAutoFillForm = ({
     setUploadedAdditionalUrls([]);
     setAtsDocsList([]);
     
-    if (caseId) {
-      const normBank = selectedBank.toLowerCase();
-      const photoField = normBank.includes("icici") ? "sitePhotographs" : normBank.includes("bajaj") ? "otherImages" : "imageUrls";
+    const normBank = selectedBank.toLowerCase();
+    const photoField = normBank.includes("icici") ? "sitePhotographs" : normBank.includes("bajaj") ? "otherImages" : "imageUrls";
 
-      setFormData((prev) => ({
-        ...(prev || {}),
-        atsDocuments: [],
-        siteVisitVideo: [],
-        gpsFiles: [],
-        emailFiles: [],
-        fieldFormFiles: [],
-        additionalFiles: [],
-        [photoField]: [],
-      }));
+    if (caseId) {
+      if (typeof setFormData === "function") {
+        setFormData((prev) => ({
+          ...(prev || {}),
+          atsDocuments: [],
+          siteVisitVideo: [],
+          gpsFiles: [],
+          emailFiles: [],
+          fieldFormFiles: [],
+          additionalFiles: [],
+          [photoField]: [],
+        }));
+      }
     } else {
-      setFormData((prev) => ({
-        ...(prev || {}),
+      const clearedFields = {
         atsDocuments: [],
         siteVisitVideo: [],
         gpsFiles: [],
@@ -903,7 +933,31 @@ const AdvancedAutoFillForm = ({
         imageUrls: [],
         sitePhotographs: [],
         otherImages: [],
-      }));
+      };
+
+      if (typeof setFormDataDirect === "function") {
+        setFormDataDirect((prev) => {
+          const next = { ...prev, ...clearedFields };
+          try {
+            let draftKey = `icici-bank-draft:${caseId || "new"}`;
+            if (normBank.includes("first")) {
+              draftKey = `homefirst-bank-draft:${caseId || "new"}`;
+            } else if (normBank.includes("bajaj")) {
+              draftKey = `bajaj-bank-draft:${caseId || "new"}`;
+            }
+            localStorage.setItem(draftKey, JSON.stringify(next));
+          } catch (e) {
+            console.error("Draft auto-save failed:", e);
+          }
+          return next;
+        });
+      }
+      if (typeof setEditDataDirect === "function") {
+        setEditDataDirect((prev) => ({ ...prev, ...clearedFields }));
+      }
+      if (typeof setFormData === "function" && typeof setFormDataDirect !== "function") {
+        setFormData((prev) => ({ ...(prev || {}), ...clearedFields }));
+      }
     }
     message.info("Advanced AI uploads cleared.");
   };
