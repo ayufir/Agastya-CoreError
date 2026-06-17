@@ -303,6 +303,12 @@ export const routesConfig = [
     element: lazy(() => import("../pages/admin/EmployeeManagement")),
   },
 
+  // ! Pipeline
+  {
+    path: "/pipeline",
+    element: lazy(() => import("../pages/Pipeline/ApplicationPipeline")),
+  },
+
   // ! Filed Dashboard
   {
     path: "/field/dashboard",
