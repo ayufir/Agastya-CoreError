@@ -1157,7 +1157,7 @@ const AdvancedAutoFillForm = ({
             <span>🤖 AI Engine Processing</span>
           </h3>
           <p className="text-xs text-slate-500 font-semibold text-center mb-6 max-w-xs leading-relaxed">
-            Please wait while Gemini extracts property data, maps coordinates, and uploads media assets...
+            Please wait while Claude AI extracts property data, maps coordinates, and uploads media assets...
           </p>
 
           <div className="w-full max-w-xs bg-slate-50/80 border border-slate-150 rounded-2xl p-4.5 space-y-3 shadow-inner">
@@ -1168,7 +1168,7 @@ const AdvancedAutoFillForm = ({
             </div>
             <div className="flex items-center gap-3 text-xs font-bold text-slate-450">
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-400 text-[10px] font-extrabold">2</span>
-              <span className="flex-1">Gemini AI address and content scan</span>
+              <span className="flex-1">Claude AI address and content scan</span>
             </div>
             <div className="flex items-center gap-3 text-xs font-bold text-slate-450">
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-400 text-[10px] font-extrabold">3</span>
@@ -1197,7 +1197,7 @@ const AdvancedAutoFillForm = ({
             <div className="mt-1 text-xs text-slate-500 font-semibold leading-relaxed">
               {isFieldOfficer 
                 ? "Upload property documents, screenshots, site visit form and site visit photographs."
-                : "Upload site media and property documents to auto-populate files using intelligent Gemini extraction."}
+                : "Upload site media and property documents to auto-populate files using intelligent Claude AI extraction."}
             </div>
           </div>
         </div>
