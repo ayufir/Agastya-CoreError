@@ -364,7 +364,7 @@ const FieldOfficerDashboard = () => {
               ) : (
                 <Link
                   to={`/bank/${getBankRoute(record)}/edit/${record._id}`}
-                  className="text-sm font-extrabold text-indigo-650 hover:text-indigo-800 hover:underline flex items-center gap-1.5 group transition-all"
+                  className="text-sm font-extrabold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1.5 group transition-all"
                 >
                   {isNameNA ? "Unnamed Customer" : customerName}
                   <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-indigo-500" />
@@ -410,9 +410,9 @@ const FieldOfficerDashboard = () => {
           <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold ${
             isT 
               ? "bg-emerald-50 text-emerald-700 border border-emerald-100" 
-              : "bg-slate-50/80 text-slate-650 border border-slate-100"
+              : "bg-slate-50/80 text-slate-600 border border-slate-100"
           }`}>
-            <Clock className="w-3.5 h-3.5 text-slate-450" />
+            <Clock className="w-3.5 h-3.5 text-slate-400" />
             {dayjs(date).format("DD/MM/YYYY hh:mm A")}
           </span>
         );
@@ -531,8 +531,8 @@ const FieldOfficerDashboard = () => {
           }}
           className={`font-bold text-xs rounded-xl h-8 flex items-center justify-center cursor-pointer border ${
             record?.isReportSubmitted === true
-              ? "text-slate-450 bg-slate-50 border-slate-200 cursor-not-allowed"
-              : "text-slate-655 bg-white border-slate-200 hover:border-slate-350 hover:text-slate-800"
+              ? "text-slate-400 bg-slate-50 border-slate-200 cursor-not-allowed"
+              : "text-slate-600 bg-white border-slate-200 hover:border-slate-300 hover:text-slate-800"
           }`}
         >
           Mark Query
@@ -583,7 +583,7 @@ const FieldOfficerDashboard = () => {
       title: "Message",
       dataIndex: "message",
       key: "message",
-      render: (text) => <span className="text-slate-650 font-semibold text-xs">{text}</span>,
+      render: (text) => <span className="text-slate-600 font-semibold text-xs">{text}</span>,
     },
     {
       title: "Date",
@@ -624,38 +624,84 @@ const FieldOfficerDashboard = () => {
     const isAccepted = !isPending;
     const isCompleted = cItem.isReportSubmitted === true;
     
+    // Determine active stage index
+    let activeStageIndex = 0;
+    if (isCompleted) {
+      activeStageIndex = 3;
+    } else if (isAccepted) {
+      activeStageIndex = cItem.status === "Visited" || cItem.status === "Work in Progress" ? 2 : 1;
+    } else {
+      activeStageIndex = 0;
+    }
+
     const stages = [
-      { label: "Assigned", active: true },
-      { label: "Accepted", active: isAccepted },
-      { label: "Visited/WIP", active: isAccepted && !isCompleted },
-      { label: "Report Done", active: isCompleted },
+      { label: "Assigned", desc: "Case Assigned" },
+      { label: "Accepted", desc: "Case Accepted" },
+      { label: "Visited/WIP", desc: "Site Visit / WIP" },
+      { label: "Report Done", desc: "Report Submitted" },
     ];
 
+    const currentStatus = stages[activeStageIndex].desc;
+
     return (
-      <div className="flex items-center justify-between w-full mt-2 mb-3 bg-slate-50/50 p-3 rounded-2xl border border-slate-100">
-        {stages.map((stage, idx) => (
-          <div key={idx} className="flex items-center flex-1 last:flex-none">
-            <div className="flex flex-col items-center gap-1.5">
-              <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center border transition-all duration-300 ${
-                stage.active 
-                  ? "bg-indigo-650 border-indigo-650 shadow-sm shadow-indigo-100" 
-                  : "bg-white border-slate-200"
-              }`}>
-                {stage.active && <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />}
+      <div className="bg-slate-50/70 p-3.5 rounded-2xl border border-slate-100 mt-2.5 mb-4 shadow-inner">
+        {/* Top Status Label */}
+        <div className="flex justify-between items-center mb-3.5">
+          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Progress Status</span>
+          <span className={`text-[9.5px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border ${
+            isCompleted 
+              ? "bg-emerald-50 text-emerald-700 border-emerald-250" 
+              : isAccepted 
+                ? "bg-indigo-50 text-indigo-700 border-indigo-250" 
+                : "bg-blue-50 text-blue-700 border-blue-200"
+          }`}>
+            {currentStatus}
+          </span>
+        </div>
+
+        {/* Stepper Dots & Connector Line */}
+        <div className="flex items-center justify-between relative px-2.5">
+          {stages.map((stage, idx) => {
+            const isActive = idx <= activeStageIndex;
+            const isLastActive = idx === activeStageIndex;
+            
+            return (
+              <div key={idx} className="flex items-center flex-1 last:flex-none relative">
+                {/* Step Circle */}
+                <div 
+                  className={`w-6 h-6 rounded-full flex items-center justify-center border text-[10px] font-bold transition-all duration-300 relative z-10 ${
+                    isActive 
+                      ? isLastActive
+                        ? "bg-indigo-650 border-indigo-650 text-white shadow-sm ring-4 ring-indigo-100 animate-pulse"
+                        : "bg-indigo-500 border-indigo-500 text-white shadow-sm"
+                      : "bg-white border-slate-200 text-slate-400"
+                  }`}
+                  title={stage.label}
+                >
+                  {isActive ? "✓" : idx + 1}
+                </div>
+
+                {/* Label below the circle, positioned absolutely so it doesn't stretch the flex item */}
+                <div className={`absolute top-7 left-1/2 -translate-x-1/2 whitespace-nowrap text-[8.5px] font-extrabold uppercase tracking-tight ${
+                  isActive ? "text-indigo-600 font-black" : "text-slate-400"
+                }`}>
+                  {stage.label}
+                </div>
+
+                {/* Connector Line */}
+                {idx < stages.length - 1 && (
+                  <div className="absolute left-6 right-0 top-3 -translate-y-1/2 h-0.5 pointer-events-none z-0">
+                    <div className={`h-full w-full transition-all duration-300 ${
+                      idx < activeStageIndex ? "bg-indigo-500" : "bg-slate-200"
+                    }`} />
+                  </div>
+                )}
               </div>
-              <span className={`text-[8.5px] font-extrabold uppercase tracking-tight ${
-                stage.active ? "text-indigo-650 font-black" : "text-slate-400"
-              }`}>
-                {stage.label}
-              </span>
-            </div>
-            {idx < stages.length - 1 && (
-              <div className={`h-0.5 flex-1 mx-2 transition-all duration-300 ${
-                stages[idx + 1].active ? "bg-indigo-600" : "bg-slate-200"
-              }`} />
-            )}
-          </div>
-        ))}
+            );
+          })}
+        </div>
+        {/* Extra spacing to clear the absolute labels */}
+        <div className="h-5" />
       </div>
     );
   };
@@ -742,7 +788,7 @@ const FieldOfficerDashboard = () => {
       `}} />
       
       {/* Premium Header Welcome Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-slate-955 via-indigo-950 to-slate-900 rounded-3xl p-6 md:p-8 text-white mb-6 border border-white/5 shadow-2xl">
+      <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-955 to-slate-900 rounded-3xl p-6 md:p-8 text-white mb-6 border border-white/5 shadow-2xl">
         <div className="absolute right-0 top-0 -mt-8 -mr-8 w-44 h-44 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute left-1/3 bottom-0 -mb-8 w-36 h-36 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
 
@@ -757,7 +803,7 @@ const FieldOfficerDashboard = () => {
               </span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-              Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 via-white to-slate-205">{user?.name || "Officer"}</span>!
+              Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 via-white to-slate-200">{user?.name || "Officer"}</span>!
             </h1>
             <p className="text-slate-300 text-xs md:text-sm mt-1.5 max-w-xl font-medium leading-relaxed">
               {summaryCounts.NEW_CASES > 0 
@@ -793,7 +839,7 @@ const FieldOfficerDashboard = () => {
               className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl font-bold border transition-all shrink-0 active:scale-95 shadow-sm cursor-pointer ${
                 isSelected 
                   ? "bg-slate-900 border-slate-950 text-white shadow-md shadow-indigo-100" 
-                  : "bg-white border-slate-100 text-slate-750 hover:bg-slate-50"
+                  : "bg-white border-slate-100 text-slate-700 hover:bg-slate-50"
               }`}
             >
               <Icon size={14} style={{ color: isSelected ? "#ffffff" : color }} />
@@ -820,8 +866,8 @@ const FieldOfficerDashboard = () => {
               onClick={() => setSelectedStatus(value)}
               className={`cursor-pointer transition-all duration-300 border rounded-2xl p-4 md:p-5 relative overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-1 active:scale-[0.98] group flex flex-col justify-between ${
                 isSelected 
-                  ? "bg-slate-900 border-slate-955 text-white shadow-lg ring-2 ring-indigo-500/20" 
-                  : "bg-white border-slate-100 hover:border-slate-350 text-slate-800"
+                  ? "bg-slate-900 border-slate-900 text-white shadow-lg ring-2 ring-indigo-500/20" 
+                  : "bg-white border-slate-100 hover:border-slate-300 text-slate-800"
               }`}
             >
               <div className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl" style={{ backgroundColor: isSelected ? "#4f46e5" : color }} />
@@ -845,7 +891,7 @@ const FieldOfficerDashboard = () => {
 
               <div className="flex items-baseline gap-1 mt-2">
                 <span className={`text-2xl md:text-3.5xl font-extrabold tracking-tight ${
-                  isSelected ? "text-white" : "text-slate-850"
+                  isSelected ? "text-white" : "text-slate-800"
                 }`}>
                   {count}
                 </span>
@@ -875,7 +921,7 @@ const FieldOfficerDashboard = () => {
                   setSearchText("");
                   handleSearch("");
                 }}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-650 transition-colors cursor-pointer"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
               >
                 <X size={15} />
               </button>
@@ -909,7 +955,7 @@ const FieldOfficerDashboard = () => {
                     className={`text-[11px] px-4 py-2 rounded-2xl font-bold border transition-all duration-300 cursor-pointer flex items-center gap-1.5 shadow-sm hover:scale-105 active:scale-95 ${
                       isBankSelected
                         ? "bg-slate-900 border-slate-900 text-white shadow-indigo-100"
-                        : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-350"
+                        : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300"
                     }`}
                   >
                     {bank}
@@ -939,10 +985,10 @@ const FieldOfficerDashboard = () => {
         </div>
       ) : isEmpty ? (
         <div className="flex flex-col items-center justify-center text-center p-16 bg-white rounded-3xl border border-slate-100 shadow-sm">
-          <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-450 mb-4 border border-slate-100 shadow-inner">
-            <Briefcase size={24} className="text-slate-450" />
+          <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 mb-4 border border-slate-100 shadow-inner">
+            <Briefcase size={24} className="text-slate-400" />
           </div>
-          <h3 className="text-base font-bold text-slate-755">No applications found</h3>
+          <h3 className="text-base font-bold text-slate-700">No applications found</h3>
           <p className="text-slate-400 text-xs max-w-xs mt-1.5 font-medium leading-relaxed">
             {selectedStatus !== "TOTAL_ASSIGNED" || selectedBank || searchText
               ? "We couldn't find any cases matching your current filters. Try resetting them."
@@ -1027,7 +1073,7 @@ const FieldOfficerDashboard = () => {
                 return (
                   <div 
                     key={caseItem._id || caseItem.caseId}
-                    className="bg-white rounded-2xl border border-slate-150 p-4.5 shadow-sm hover:shadow-md transition-all relative overflow-hidden"
+                    className="bg-white rounded-2xl border border-slate-200 p-4.5 shadow-sm hover:shadow-md transition-all relative overflow-hidden"
                     style={{ borderLeft: "4px solid #ef4444" }}
                   >
                     <div className="flex justify-between items-start mb-3">
@@ -1052,7 +1098,7 @@ const FieldOfficerDashboard = () => {
                     {/* Stepper on Query card */}
                     {cData && renderMobileProgress(cData)}
 
-                    <div className="text-xs text-slate-650 bg-slate-50 rounded-2xl p-3.5 border border-slate-100 min-h-[3.5rem] mb-4 leading-relaxed">
+                    <div className="text-xs text-slate-600 bg-slate-50 rounded-2xl p-3.5 border border-slate-100 min-h-[3.5rem] mb-4 leading-relaxed">
                       <span className="font-extrabold text-slate-400 block mb-1 text-[9px] uppercase tracking-wider">Query Message:</span>
                       {caseItem.message || "No detailed query message provided."}
                     </div>
@@ -1075,7 +1121,7 @@ const FieldOfficerDashboard = () => {
                   className={`bg-white rounded-2xl border p-4.5 shadow-sm hover:shadow-md transition-all relative overflow-hidden ${
                     isDelayed 
                       ? (isPending ? "animate-alert-red border-2 border-rose-350" : "animate-alert-amber border-2 border-amber-350")
-                      : (isPending ? "animate-alert-blue border-2 border-blue-350" : "border-slate-100")
+                      : (isPending ? "animate-alert-blue border-2 border-blue-300" : "border-slate-100")
                   }`}
                   style={{ 
                     borderLeftWidth: "4px",
@@ -1137,7 +1183,7 @@ const FieldOfficerDashboard = () => {
                     ) : (
                       <Link
                         to={`/bank/${bankRoute}/edit/${caseItem._id}`}
-                        className="text-[15.5px] font-extrabold text-indigo-650 hover:text-indigo-850 hover:underline flex items-center gap-1 group leading-snug"
+                        className="text-[15.5px] font-extrabold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1 group leading-snug"
                       >
                         {customerName || "Unnamed Customer"}
                         <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5 text-indigo-500 shrink-0" />
@@ -1177,7 +1223,7 @@ const FieldOfficerDashboard = () => {
                       <div className="flex gap-2 items-start bg-slate-50/60 p-2.5 rounded-xl border border-slate-100 relative group">
                         <MapPin size={13.5} className="text-slate-400 mt-0.5 shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <span className="text-[11.5px] text-slate-650 font-medium block leading-normal break-words" title={address}>
+                          <span className="text-[11.5px] text-slate-600 font-medium block leading-normal break-words" title={address}>
                             {address}
                           </span>
                         </div>
@@ -1216,7 +1262,7 @@ const FieldOfficerDashboard = () => {
                         <div className="flex gap-2">
                           <Link
                             to={`/bank/${bankRoute}/edit/${caseItem._id}`}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-indigo-50 text-indigo-750 hover:bg-indigo-100 font-bold text-xs rounded-xl transition-all border border-indigo-100"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold text-xs rounded-xl transition-all border border-indigo-100"
                             title="Edit Report"
                           >
                             <Eye size={13.5} className="text-indigo-500" />
@@ -1269,7 +1315,7 @@ const FieldOfficerDashboard = () => {
       <Modal
         title={
           <div className="flex items-center gap-2 pb-3 border-b border-slate-100 font-bold text-slate-800 text-lg">
-            <FileText className="w-5 h-5 text-indigo-650" />
+            <FileText className="w-5 h-5 text-indigo-600" />
             <span>Case Notes / Mark Query</span>
           </div>
         }
@@ -1297,7 +1343,7 @@ const FieldOfficerDashboard = () => {
       <Modal
         title={
           <div className="flex items-center gap-2 pb-3 border-b border-slate-100 font-bold text-slate-800 text-lg">
-            <FileText className="w-5 h-5 text-indigo-650" />
+            <FileText className="w-5 h-5 text-indigo-600" />
             <span>Property Papers & Documents</span>
           </div>
         }
@@ -1327,7 +1373,7 @@ const FieldOfficerDashboard = () => {
                 return (
                   <div
                     key={idx}
-                    className="flex flex-col sm:flex-row justify-between sm:items-center p-3.5 border border-slate-150 rounded-2xl bg-slate-50/50 hover:bg-slate-50 transition-all gap-3"
+                    className="flex flex-col sm:flex-row justify-between sm:items-center p-3.5 border border-slate-200 rounded-2xl bg-slate-50/50 hover:bg-slate-50 transition-all gap-3"
                   >
                     <a 
                       href={url}
@@ -1368,7 +1414,7 @@ const FieldOfficerDashboard = () => {
             </div>
           ) : (
             <div className="text-center text-slate-400 py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-              <FileText className="w-10 h-10 mx-auto text-slate-350 mb-2" />
+              <FileText className="w-10 h-10 mx-auto text-slate-300 mb-2" />
               <span className="font-semibold text-sm">No property papers available for this case.</span>
             </div>
           )}

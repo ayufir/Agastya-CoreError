@@ -27,16 +27,16 @@ const HomeFirstPortalSections = ({
   useEffect(() => {
     if (mode === "observations") {
       const remarks = Array.isArray(isEdit.valuationRemarks)
-        ? isEdit.valuationRemarks.join("\n")
-        : isEdit.valuationRemarks || "";
+        ? isEdit.valuationRemarks.map(r => String(r || "").toUpperCase()).join("\n")
+        : String(isEdit.valuationRemarks || "").toUpperCase();
       form.setFieldsValue({ observations: remarks });
     }
 
     if (mode === "billing") {
       form.setFieldsValue({
-        charges: isEdit.charges ?? "",
-        baseRate: isEdit.baseRate ?? "",
-        totalAmount: isEdit.totalAmount ?? "",
+        charges: isEdit.charges || 1800,
+        baseRate: isEdit.baseRate || 1800,
+        totalAmount: isEdit.totalAmount || 2124,
       });
     }
 
@@ -57,6 +57,18 @@ const HomeFirstPortalSections = ({
       setVideoUrls(Array.isArray(isEdit.siteVisitVideo) ? isEdit.siteVisitVideo : []);
     }
   }, [form, isEdit, mode]);
+
+  const handleValuesChange = (_, all) => {
+    if (mode === "billing") {
+      const charges = parseFloat(all.charges) || 0;
+      const gst = 0.18;
+      const total = Math.round(charges * (1 + gst));
+      form.setFieldsValue({
+        totalAmount: total || "",
+        baseRate: all.charges || ""
+      });
+    }
+  };
 
   useEffect(() => {
     if (!registerSectionSubmitter || !sectionId) return;
@@ -86,7 +98,7 @@ const HomeFirstPortalSections = ({
         return {
           valuationRemarks: String(values.observations || "")
             .split(/\r?\n/)
-            .map((line) => line.trim())
+            .map((line) => line.trim().toUpperCase())
             .filter(Boolean),
         };
       }
@@ -316,7 +328,7 @@ const HomeFirstPortalSections = ({
   }
 
   return (
-    <Form form={form} layout="vertical" className="home-first-reference-section">
+    <Form form={form} layout="vertical" onValuesChange={handleValuesChange} className="home-first-reference-section">
       {mode === "observations" && (
         <Form.Item label="Observations" name="observations">
           <TextArea

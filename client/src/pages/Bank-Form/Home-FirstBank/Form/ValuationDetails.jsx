@@ -29,30 +29,145 @@ const buildDefaultRemarks = (extracted = {}, formData = {}) => {
   const personMet = pick("personMetDuringVisit") || "..........";
   const contactNo = pick("customerNo") || "..........";
 
-  const plotArea =
-    extracted?.property?.plot_area || pick("landArea") || "......";
-  const dimensions =
-    extracted?.property?.plot_dimensions || pick("linearDimension") || "";
-  const areaStr = dimensions ? `${plotArea} (${dimensions})` : plotArea;
+  const l1 = parseFloat(pick("landDocumentArea")) || 0;
+  const l2 = parseFloat(pick("landPlanArea")) || 0;
+  const l3 = parseFloat(pick("landSiteArea")) || 0;
 
-  const landRate = pick("landSiteRate", "marketRatePerSqft") || "......";
+  const validAreas = [];
+  if (l1 > 0) validAreas.push({ name: "L1", val: l1 });
+  if (l2 > 0) validAreas.push({ name: "L2", val: l2 });
+  if (l3 > 0) validAreas.push({ name: "L3", val: l3 });
 
-  return [
+  let minAreaName = "L1";
+  if (validAreas.length > 0) {
+    const minObj = validAreas.reduce((min, curr) => curr.val < min.val ? curr : min, validAreas[0]);
+    minAreaName = minObj.name;
+  }
+
+  let demarcationType = "BOUNDARY WALL";
+  const propDemarcated = pick("propertyDemarcated");
+  if (propDemarcated === "NO" || propDemarcated === "No") {
+    demarcationType = "DEMARCATION NOT FOUND AT SITE";
+  } else {
+    demarcationType = "NEIGHBOUR WALL / LIME MARKING / BOUNDARY WALL";
+  }
+
+  let areaStatement = `AS PER SALE DEED ACTUAL LAND AREA IS ${l1 || "......"} SQFT`;
+  if (minAreaName === "L2") {
+    areaStatement = `AS PER LAYOUT PLAN ACTUAL LAND AREA IS ${l2} SQFT`;
+  } else if (minAreaName === "L3") {
+    areaStatement = `AS PER SITE MEASUREMENT ACTUAL LAND AREA IS ${l3} SQFT`;
+  }
+
+  const boundsMatching = pick("boundariesMatching") || "";
+  let identStatement = `PROPERTY IS IDENTIFIED BY FOUR SIDE BOUNDARIES OF GIVEN ${extracted?.document_type || "SALE DEED / ATS DRAFT"} LOCAL ENQUIRY`;
+  if (boundsMatching === "NO" || boundsMatching === "No") {
+    identStatement = "PROPERTY IS IDENTIFIED WITH THE HELP OF COLONY LAYOUT PLAN";
+  }
+
+  const hasLayoutPlan = pick("sanctionPlanProvided") === "YES" || pick("sanctionPlanProvided") === "Yes";
+  const layoutPlanStatement = hasLayoutPlan 
+    ? null 
+    : "COLONY LAYOUT PLAN, BUILDING PERMISSION AND MAP IS NOT OBTAIN, SAME IS REQUIRED";
+
+  const remarks = [
     `GIVEN XEROX COPY OF SALE DEED IS FAVOUR OF ${sellerNames} / GIVEN XEROX COPY OF DRAFT/SALE AGREEMENT IT IS BETWEEN OF (SEELER: ${sellerNames}) AND (BUYER: ${buyerNames}).`,
     `DURING PROPERTY VISIT MR. ${personMet} JI MET AT THE PROPERTY WHO IS CUSTOMER CONTACT NO. ${contactNo}. IT WAS CLEARLY EXPLAINED TO HIM THAT THE PROPERTY VISIT IS BEING DONE FOR VALUATION PURPOSE IN RELATION WITH LOAN PROPOSAL.`,
-    "RATE HAS BEEN CONFIRM FORM MARKET ENQUIRY.",
-    "PROPERTY IS SITUATED AT SURROUNDING AREA OF LOCALITY IS RESI-CUM A. ZONING SURROUNDING AREA DEVELOPMENT IS 45 %.",
-    "AT SITE PROPERTY IS GROUND FLOOR UNDER CONST RESIDENTIAL HOUSE WHICH IS OCCUPIED BY OWNER AND WORK DONE UPTO BRICK AND SLAB WORK COMPLETED.",
-    `AS PER SALE DEED/ DRAFT /A.T.S/ ACTUAL LAND AREA IS ${areaStr} SQFT.`,
-    "PROPERTY IS NOT IDENTIFIED BY FOUR SIDE BOUNDARIES OF GIVEN SALE DEED/ AGREEMENT AND KEY LOCATION PLAN IS REQUIRE FOR IDENTIFICATION / PRIVATE KEY LOCATION PLAN WHICH IS DRAW BY ARCHITECT.",
-    "BUILDING PERMISSION AND MAP IS NOT OBTAIN / ARCHITECT MAP RECEIVE FOR G.F.",
+    `AT SITE PROPERTY IS OPEN PLOT WHICH IS DEMARCATED BY ${demarcationType}.`,
+    areaStatement,
+    identStatement,
+  ];
+
+  if (layoutPlanStatement) {
+    remarks.push(layoutPlanStatement);
+  }
+
+  remarks.push(
     "BUILDING ESTIMATE NOT PROVIDED JUSTIFY CONST. COST CONSIDER AS PER HOME FIRST POLICY.",
-    "CONST COST CONSIDER FOR EXISTING STRUCTURE AS PRESENT CONDITION OF STRUCTURE, ALSO CONST COST OF PROPOSED EXTENSION WORK WILL BE CONSIDER AFTER COMPLETION OF WORK./ CONST COST CONSIDER AFTER COMPLETION OF WORK.",
+    "CONST COST CONSIDER AFTER COMPLETION OF WORK.",
     "CLEAR LEGAL OPINION TO BE TAKEN REGARDING LAND USES.",
     "SUGGEST TO CREDIT TEAM TO BE CHECK PROPER OWNERSHIP DOCUMENT PRIOR DISBURSEMENT.",
-    "VALUER IS NOT RESPONSIBLE FOR ANY LEGAL DISPUTE.",
-    `TENTATIVE LAND RATE IS RS. ${landRate}/- SQFT`,
-  ];
+    "VALUER IS NOT RESPONSIBLE FOR ANY LEGAL DISPUTE."
+  );
+
+  return remarks;
+};
+
+const performCalculation = (values) => {
+  const n = (k) => parseFloat(values?.[k]) || 0;
+
+  const l1 = n("landDocumentArea");
+  const l2 = n("landPlanArea");
+  const l3 = n("landSiteArea");
+
+  const validAreas = [];
+  if (l1 > 0) validAreas.push({ name: "landDocument", val: l1 });
+  if (l2 > 0) validAreas.push({ name: "landPlan", val: l2 });
+  if (l3 > 0) validAreas.push({ name: "landSite", val: l3 });
+
+  let minAreaName = "";
+  let minAreaVal = 0;
+  if (validAreas.length > 0) {
+    const minObj = validAreas.reduce((min, curr) => curr.val < min.val ? curr : min, validAreas[0]);
+    minAreaName = minObj.name;
+    minAreaVal = minObj.val;
+  }
+
+  let activeRate = n("landSiteRate") || n("landPlanRate") || n("landDocumentRate") || n("marketRatePerSqft") || 0;
+
+  const landDocumentRate = minAreaName === "landDocument" ? activeRate : 0.0;
+  const landPlanRate = minAreaName === "landPlan" ? activeRate : 0.0;
+  const landSiteRate = minAreaName === "landSite" ? activeRate : 0.0;
+
+  const landDocumentValuation = minAreaName === "landDocument" ? l1 * activeRate : 0.0;
+  const landPlanValuation = minAreaName === "landPlan" ? l2 * activeRate : 0.0;
+  const landSiteValuation = minAreaName === "landSite" ? l3 * activeRate : 0.0;
+
+  const landValue = minAreaVal * activeRate;
+
+  const c2Area = n("constructionPlanArea");
+  const c2Rate = 1400;
+  const c2Valuation = c2Area * c2Rate;
+
+  const realizableValue = landValue;
+  const valuationAtPresentStage = landValue;
+
+  return {
+    landDocumentArea: l1 || "",
+    landDocumentRate,
+    landDocumentValuation: landDocumentValuation || "",
+    landPlanArea: l2 || "",
+    landPlanRate,
+    landPlanValuation: landPlanValuation || "",
+    landSiteArea: l3 || "",
+    landSiteRate,
+    landSiteValuation: landSiteValuation || "",
+
+    constructionDocumentArea: 0,
+    constructionDocumentRate: 0.0,
+    constructionDocumentValuation: "",
+    constructionSiteArea: 0,
+    constructionSiteRate: 0.0,
+    constructionSiteValuation: "",
+    
+    constructionPlanArea: c2Area || "",
+    constructionPlanRate: c2Rate,
+    constructionPlanValuation: c2Valuation || "",
+
+    amenitiesDetails: "NA",
+    amenitiesValue: 0,
+    liftAvailable: "NO",
+    buildingHeight: 0,
+    realizableValue: realizableValue || "",
+    constructionStage: "Foundation",
+    constructionStatus: "0%",
+    ValuationatPresentStage: valuationAtPresentStage || "",
+    constructionEstimateByCustomer: 0,
+    estimateRecommendedByValuer: 0,
+    marketRatePerSqft: 1400,
+    constructionAsPerPlan: "Yes",
+    ValuationasperGovtGuideline: values?.ValuationasperGovtGuideline || "",
+  };
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -307,73 +422,29 @@ const ValuationDetails = ({
       });
     }
 
-    const safeVal = (key, fallback = "") => {
-      if (merged[key] !== undefined && merged[key] !== null && merged[key] !== "") {
-        return merged[key];
-      }
-      return currentValues[key] !== undefined && currentValues[key] !== null ? currentValues[key] : fallback;
-    };
+    const calculated = performCalculation(merged);
+    const finalFormValues = { ...merged, ...calculated };
 
-    form.setFieldsValue({
-      landDocumentArea: safeVal("landDocumentArea"),
-      landDocumentRate: safeVal("landDocumentRate"),
-      landDocumentValuation: safeVal("landDocumentValuation"),
-      landPlanArea: safeVal("landPlanArea"),
-      landPlanRate: safeVal("landPlanRate"),
-      landPlanValuation: safeVal("landPlanValuation"),
-      landSiteArea: safeVal("landSiteArea") || safeVal("landAreaSite"),
-      landSiteRate: safeVal("landSiteRate") || safeVal("landRate"),
-      landSiteValuation: safeVal("landSiteValuation"),
-      constructionDocumentArea: safeVal("constructionDocumentArea"),
-      constructionDocumentRate: safeVal("constructionDocumentRate"),
-      constructionDocumentValuation: safeVal("constructionDocumentValuation"),
-      constructionPlanArea: safeVal("constructionPlanArea"),
-      constructionPlanRate: safeVal("constructionPlanRate"),
-      constructionPlanValuation: safeVal("constructionPlanValuation"),
-      constructionSiteArea: safeVal("constructionSiteArea") || safeVal("constructionAreaForValuation"),
-      constructionSiteRate: safeVal("constructionSiteRate") || safeVal("constructionRate"),
-      constructionSiteValuation: safeVal("constructionSiteValuation"),
-      amenitiesDetails: safeVal("amenitiesDetails", "NA"),
-      amenitiesValue: safeVal("amenitiesValue"),
-      liftAvailable: safeVal("liftAvailable"),
-      buildingHeight: safeVal("buildingHeight"),
-      realizableValue: safeVal("realizableValue"),
-      constructionStage: safeVal("constructionStage"),
-      constructionStatus: safeVal("constructionStatus"),
-      ValuationatPresentStage: safeVal("ValuationatPresentStage"),
-      ValuationasperGovtGuideline: safeVal("ValuationasperGovtGuideline"),
-      constructionEstimateByCustomer: safeVal("constructionEstimateByCustomer"),
-      estimateRecommendedByValuer: safeVal("estimateRecommendedByValuer"),
-      marketRatePerSqft: safeVal("marketRatePerSqft"),
-      constructionAsPerPlan: safeVal("constructionAsPerPlan"),
-    });
+    form.setFieldsValue(finalFormValues);
 
     const savedRemarks =
-      merged.valuationRemarks &&
-        Array.isArray(merged.valuationRemarks) &&
-        merged.valuationRemarks.length > 0
-        ? merged.valuationRemarks
-        : buildDefaultRemarks(extractedData, isEdit);
+      isEdit.valuationRemarks &&
+        Array.isArray(isEdit.valuationRemarks) &&
+        isEdit.valuationRemarks.length > 0
+        ? isEdit.valuationRemarks
+        : buildDefaultRemarks(extractedData, finalFormValues);
 
     setRemarks(savedRemarks);
   }, [isEdit, extractedData, form]);
 
-  const handleValuesChange = (_, all) => {
-    const n = (k) => parseFloat(all[k]) || 0;
-    const lSite = n("landSiteArea") * n("landSiteRate");
-    const cSite = n("constructionSiteArea") * n("constructionSiteRate");
+  const handleValuesChange = (changedValues, all) => {
+    const updates = performCalculation(all);
+    form.setFieldsValue(updates);
 
-    form.setFieldsValue({
-      landDocumentValuation: n("landDocumentArea") * n("landDocumentRate") || "",
-      landPlanValuation: n("landPlanArea") * n("landPlanRate") || "",
-      landSiteValuation: lSite || "",
-      constructionDocumentValuation:
-        n("constructionDocumentArea") * n("constructionDocumentRate") || "",
-      constructionPlanValuation:
-        n("constructionPlanArea") * n("constructionPlanRate") || "",
-      constructionSiteValuation: cSite || "",
-      realizableValue: lSite + cSite + n("amenitiesValue") || "",
-    });
+    if (changedValues.landDocumentArea || changedValues.landPlanArea || changedValues.landSiteArea || changedValues.landSiteRate || changedValues.landPlanRate || changedValues.landDocumentRate) {
+      const updatedRemarks = buildDefaultRemarks(extractedData, { ...isEdit, ...all, ...updates });
+      setRemarks(updatedRemarks);
+    }
   };
 
   const handleRemarkChange = (index, html) => {

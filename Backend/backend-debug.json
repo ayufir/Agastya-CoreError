@@ -1,39 +1,1097 @@
 {
-  "timestamp": "2026-06-12T19:15:13.492Z",
+  "timestamp": "2026-06-17T12:12:25.197Z",
   "body": {
-    "siteVisitVideo": [],
-    "_id": "6a2a991fce822aae97526cea",
+    "_id": "6a325d13a881edc418688a74",
     "status": "Work in Progress",
-    "AttachDocuments": [],
-    "atsDocuments": [],
+    "AttachDocuments": [
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/registry_documents_R2RI7UUHb.pdf",
+        "fileId": "6a325cee5c7cd75eb8dae10b",
+        "name": "registry_documents_R2RI7UUHb.pdf"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/registry_documents_R2RI7UUHb.pdf",
+        "fileId": "6a325cee5c7cd75eb8dae10b",
+        "name": "registry_documents_R2RI7UUHb.pdf"
+      }
+    ],
+    "atsDocuments": [
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/registry_documents_R2RI7UUHb.pdf",
+        "fileId": "6a325cee5c7cd75eb8dae10b",
+        "name": "registry_documents_R2RI7UUHb.pdf"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/registry_documents_R2RI7UUHb.pdf",
+        "fileId": "6a325cee5c7cd75eb8dae10b",
+        "name": "registry_documents_R2RI7UUHb.pdf"
+      }
+    ],
+    "gpsFiles": [
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.39_PM_xjr-Wo-8f.jpeg",
+        "fileId": "6a325e435c7cd75eb8e52f04",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.39_PM_xjr-Wo-8f.jpeg"
+      }
+    ],
+    "emailFiles": [
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/Untitled_1V4uV3kRh.png",
+        "fileId": "6a325ed35c7cd75eb8e8eb35",
+        "name": "Untitled_1V4uV3kRh.png"
+      }
+    ],
+    "fieldFormFiles": [
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.38_PM__1__9R421avXX.jpeg",
+        "fileId": "6a325e4d5c7cd75eb8e5690c",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.38_PM__1__9R421avXX.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.38_PM_M17Nv3ZmH.jpeg",
+        "fileId": "6a325e4f5c7cd75eb8e57655",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.38_PM_M17Nv3ZmH.jpeg"
+      }
+    ],
+    "additionalFiles": [],
+    "siteVisitVideo": [],
     "createdBy": "683070c765ba61b559c1ecc1",
     "bankName": "HomeFirst",
     "city": "",
     "approvalStatus": "Accepted",
-    "isReportSubmitted": false,
-    "refNo": "N/A",
-    "dateOfReport": null,
-    "dateOfVisit": null,
-    "vendorName": "",
-    "clContractNo": "",
-    "latitude": "",
-    "longitude": "",
-    "imageUrls": [],
+    "isReportSubmitted": true,
+    "customerName": "Brimha Singh Solanki",
+    "customerNo": "8319551529",
+    "personMetDuringVisit": "Brimha Singh Solanki",
+    "relationshipOfPersonMet": "SELF",
+    "propertyOwnerName": "Brihmasingh",
+    "howFoundOwnerName": "SALE DEED",
+    "documentsAvailable": "YES",
+    "nameOnSocietyBoard": "NA",
+    "addressLegal": "House No. 2-E, Mansarovar Residency, Village Phanda Kala, Tehsil Huzur, District Bhopal, Madhya Pradesh - 462030",
+    "addressSite": "House No. 2-E, Mansarovar Residency, Village Phanda Kala, Tehsil Huzur, District Bhopal, Madhya Pradesh - 462030",
+    "nameOnDoor": "NA",
+    "nearbyLandmark": "Near Govt. School",
+    "statusOfOccupancy": "Vacant",
+    "occupiedBy": "Owner",
+    "usageOfProperty": "Commercial",
+    "propertyEasilyIdentifiable": "YES",
+    "imageUrls": [
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.00_PM_Kbw11PM6b.jpeg",
+        "fileId": "6a325e7b5c7cd75eb8e6a7e2",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.00_PM_Kbw11PM6b.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.02_PM__1__AUMgdEkTQ.jpeg",
+        "fileId": "6a325e7d5c7cd75eb8e6b624",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.02_PM__1__AUMgdEkTQ.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.02_PM_MVitQwFhG.jpeg",
+        "fileId": "6a325e7e5c7cd75eb8e6be5e",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.02_PM_MVitQwFhG.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.03_PM_popgLqvLM.jpeg",
+        "fileId": "6a325e815c7cd75eb8e6dabc",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.03_PM_popgLqvLM.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.07_PM_QFJ-Hyn3g.jpeg",
+        "fileId": "6a325e825c7cd75eb8e6e2ad",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.07_PM_QFJ-Hyn3g.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.09_PM__1__c82mBaJWr.jpeg",
+        "fileId": "6a325e825c7cd75eb8e6e7d1",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.09_PM__1__c82mBaJWr.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.09_PM__2__cDfMlrPBr.jpeg",
+        "fileId": "6a325e835c7cd75eb8e6ea95",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.09_PM__2__cDfMlrPBr.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.09_PM_zsAaz99nq.jpeg",
+        "fileId": "6a325e845c7cd75eb8e6edf5",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.09_PM_zsAaz99nq.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.10_PM__1__F9QY9F3kl.jpeg",
+        "fileId": "6a325e855c7cd75eb8e6f2aa",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.10_PM__1__F9QY9F3kl.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.10_PM_wDAeWIQUS.jpeg",
+        "fileId": "6a325e865c7cd75eb8e6f84b",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.10_PM_wDAeWIQUS.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.12_PM_BSxREK4ve.jpeg",
+        "fileId": "6a325e865c7cd75eb8e6fc23",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.12_PM_BSxREK4ve.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.00_PM_Kbw11PM6b.jpeg",
+        "fileId": "6a325e7b5c7cd75eb8e6a7e2",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.00_PM_Kbw11PM6b.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.02_PM__1__AUMgdEkTQ.jpeg",
+        "fileId": "6a325e7d5c7cd75eb8e6b624",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.02_PM__1__AUMgdEkTQ.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.02_PM_MVitQwFhG.jpeg",
+        "fileId": "6a325e7e5c7cd75eb8e6be5e",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.02_PM_MVitQwFhG.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.03_PM_popgLqvLM.jpeg",
+        "fileId": "6a325e815c7cd75eb8e6dabc",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.03_PM_popgLqvLM.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.07_PM_QFJ-Hyn3g.jpeg",
+        "fileId": "6a325e825c7cd75eb8e6e2ad",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.07_PM_QFJ-Hyn3g.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.09_PM__1__c82mBaJWr.jpeg",
+        "fileId": "6a325e825c7cd75eb8e6e7d1",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.09_PM__1__c82mBaJWr.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.09_PM__2__cDfMlrPBr.jpeg",
+        "fileId": "6a325e835c7cd75eb8e6ea95",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.09_PM__2__cDfMlrPBr.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.09_PM_zsAaz99nq.jpeg",
+        "fileId": "6a325e845c7cd75eb8e6edf5",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.09_PM_zsAaz99nq.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.10_PM__1__F9QY9F3kl.jpeg",
+        "fileId": "6a325e855c7cd75eb8e6f2aa",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.10_PM__1__F9QY9F3kl.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.10_PM_wDAeWIQUS.jpeg",
+        "fileId": "6a325e865c7cd75eb8e6f84b",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.10_PM_wDAeWIQUS.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.12_PM_BSxREK4ve.jpeg",
+        "fileId": "6a325e865c7cd75eb8e6fc23",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.12_PM_BSxREK4ve.jpeg"
+      }
+    ],
+    "nearestCityTown": "Bhopal",
+    "locationCategory": "Gram Panchayat / Tehsil Huzur, District Bhopal",
+    "localityDevelopment": "Phanda Kala, on Indore-Bhopal Main Road (NH-18)",
+    "approachRoadType": "Kachcha Road (East side)",
+    "approachRoadWidth": "Road winding concern noted",
+    "distanceFromCityCentre": "",
+    "distanceFromRailwayStation": "2 km",
+    "distanceFromBusStand": "13 km",
+    "distanceFromHospital": "",
+    "occupancyPercentage": "Partially occupied (Ground floor in use as shops/godown; upper floors under construction)",
+    "habitationPercentage": "",
+    "nallahRiverHighTension": "Road winding concern noted. Property outside Bhopal Nagar Nigam limits. Khasra screenshot taken.",
+    "electricityAvailability": "YES",
+    "waterAvailability": "YES",
+    "drainageAvailability": "YES",
+    "documents": [],
     "valuationRemarks": [],
     "timeline": [
       {
         "status": "Work in Progress",
-        "updatedAt": "2026-06-11T18:41:06.089Z",
+        "updatedAt": "2026-06-17T08:40:26.669Z",
         "updatedBy": "683070c765ba61b559c1ecc1",
-        "note": "Assigned to user 6a2a4ed58ddfdbd661279b46",
-        "_id": "6a2b0142a2257c5f154a6875"
+        "note": "Assigned to user 69f304941bf36e8b8676ce93",
+        "_id": "6a325d7aa881edc418688afb"
+      },
+      {
+        "status": "submitted-by-fo",
+        "updatedAt": "2026-06-17T08:45:24.147Z",
+        "updatedBy": "6a2a4ed58ddfdbd661279b46",
+        "note": "Submitted by field officer",
+        "_id": "6a325ea4a881edc418688e25"
       }
     ],
-    "documents": [],
-    "createdAt": "2026-06-11T11:16:47.309Z",
-    "updatedAt": "2026-06-11T11:16:47.325Z",
+    "dateOfReport": "25/05/2026",
+    "dateOfVisit": "25/05/2026",
+    "createdAt": "2026-06-17T08:38:43.452Z",
+    "updatedAt": "2026-06-17T08:38:43.455Z",
     "__v": 0,
     "assignedTo": "6a2a4ed58ddfdbd661279b46",
-    "route": "/bank/home-first/edit/6a2a991fce822aae97526cea"
+    "route": "/bank/home-first/edit/6a325d13a881edc418688a74",
+    "seller": [
+      {
+        "name": "Dr. Dilip Singh Sisodia",
+        "relation": "Son of",
+        "relation_name": "Shri R.C. Sisodia",
+        "address": "F-4, Indraprasth Colony, Airport Road, Bhopal (represented through registered Power of Attorney holder Shri Sanjay Kashyap, S/o Shri Rajendra Kashyap, resident of House No. 17/1, Risaldar Colony, Chhola, Bhopal, Proprietor - Messrs Mansarovar Reyal Estate, Bhopal)"
+      }
+    ],
+    "buyer": [
+      {
+        "name": "Brihmasingh",
+        "relation": "Son of",
+        "relation_name": "Shri Dasrath",
+        "address": "141, Village Phanda Kala, Tehsil Huzur, District Bhopal (Madhya Pradesh)"
+      }
+    ],
+    "property": {
+      "applicant_name": "Brimha Singh Solanki",
+      "owner_name": "Brihmasingh",
+      "contact_person": "Brimha Singh Solanki",
+      "duringPropertyVisit": "Brimha Singh Solanki",
+      "contact_number": "8319551529",
+      "relationship_met_at_site": "Owner",
+      "person_met_at_site_contact": "8319551529",
+      "number_of_tenants": "",
+      "tenant_vintage": "",
+      "documents_provided": "Sale Deed / ATS",
+      "property_code": "265595",
+      "property_name": "House No. 2-E, Mansarovar Residency, Village Phanda Kala, Bhopal",
+      "property_type": "Residential",
+      "property_sub_type": "Independent House / Plot with Construction",
+      "property_use": "Residential cum Commercial",
+      "sanction_usage": "Own Plot + SECO",
+      "actual_usage": "Residential cum Commercial (Ground floor shops/godown, upper floors residential)",
+      "construction_stage": "Under Construction",
+      "plot_area": "1250 sq.ft.",
+      "plot_dimensions": "25 ft x 50 ft",
+      "dimension_width": "25",
+      "dimension_depth": "50",
+      "latitude": "23.228582",
+      "longitude": "77.208680",
+      "dateOfReport": "25/05/2026",
+      "boundary_matching": "YES",
+      "property_entrance_facing": "East (Kachcha Road)",
+      "floor_number": "",
+      "count_of_properties": "",
+      "evaluation_mode": "",
+      "rejection_reason": "",
+      "site_visits": "25/05/2026",
+      "report_remarks": "Property is under construction (B+G+2 structure). Ground floor has shops and godown in use. First floor has 3 rooms + hall + kitchen + 3 bathrooms under construction. Second floor has 1 room under construction. Structure is RCC. Construction started approximately 2015. Nearest landmark: Near Govt. School. Property located on Indore-Bhopal Road (National Highway), Phanda Kala.",
+      "bank_specific_details": {
+        "file_no": "",
+        "lan_no": "",
+        "branch": "Home First Finance Sehore",
+        "loan_category": "Own Plot + SECO",
+        "brq_no": "",
+        "property_code": "265595"
+      },
+      "address": {
+        "full_address": "House No. 2-E, Mansarovar Residency, Village Phanda Kala, Tehsil Huzur, District Bhopal, Madhya Pradesh - 462030",
+        "plot_number": "2-E",
+        "survey_number": "",
+        "khasra_number": "656",
+        "ward_number": "",
+        "colony_area": "Mansarovar Residency",
+        "village_name": "Phanda Kala",
+        "patwari_halka_number": "38",
+        "tehsil": "Huzur",
+        "district": "Bhopal",
+        "state": "Madhya Pradesh",
+        "pincode": "462030",
+        "main_locality": "Phanda Kala",
+        "sub_locality": "Mansarovar Residency"
+      },
+      "boundaries": {
+        "north_as_per_deed": "Government Road (Sarkari Rasta)",
+        "south_as_per_deed": "Plot No. 2-F",
+        "east_as_per_deed": "Proposed Kachcha Road",
+        "west_as_per_deed": "Plot No. 2-H",
+        "north_actual": "Indore to Bhopal Road",
+        "south_actual": "Open Plot",
+        "east_actual": "Kachcha Road",
+        "west_actual": "House of Munna Khandelwal"
+      },
+      "location_details": {
+        "micro_location": "Phanda Kala, on Indore-Bhopal Main Road (NH-18)",
+        "landmark": "Near Govt. School",
+        "locality": "Phanda Kala",
+        "property_falling_within": "Outside Bhopal Nagar Nigam limits (Gram Panchayat area)",
+        "occupancy_level": "Partially occupied (Ground floor in use as shops/godown; upper floors under construction)",
+        "condition_of_site": "Under Construction",
+        "distance_city_centre": "",
+        "distance_railway_station": "2 km",
+        "distance_bus_stop": "13 km",
+        "distance_hospital": "",
+        "distance_abcl_branch": "",
+        "width_approach_road": "Road winding concern noted",
+        "physical_approach": "Kachcha Road (East side)",
+        "legal_approach": "As per colony layout plan",
+        "other_features": "Property is on Indore-Bhopal Road. East side road (colony internal) is kachcha. North side is Indore-Bhopal main road.",
+        "connectivity": "On Indore-Bhopal NH, good road connectivity",
+        "site_access": "Via kachcha road on east side",
+        "proximity_to_amenities": "Near Govt. School",
+        "comments_on_property": "Property is B+G+2 RCC structure under construction. Ground floor has shops in use (Airtel 5G Plus outlet and godown). Upper floors under construction with plastering done on some portions. Roof slab cast. Columns visible for further construction. Good frontage on colony road.",
+        "adverse_factors": "Road winding concern noted. Property outside Bhopal Nagar Nigam limits. Khasra screenshot taken."
+      },
+      "property_details": {
+        "occupancy": "Partially Occupied",
+        "occupied_by": "Owner",
+        "occupied_since": "",
+        "name_of_occupant": "Brihmasingh / Brimha Singh Solanki",
+        "property_demarcated": "YES",
+        "property_identification": "YES",
+        "identification_through": "Sale Deed and field verification"
+      },
+      "infrastructure_details": {
+        "water_supply": "",
+        "electricity_available": "YES",
+        "electricity_distributor": "",
+        "water_distributor": "",
+        "sewer_line_connected": "",
+        "any_demolition_threat": "NO"
+      },
+      "legal_and_compliance": {
+        "jurisdiction": "Gram Panchayat / Tehsil Huzur, District Bhopal",
+        "risk_of_demolition": "NO",
+        "is_property_in_negative_area": "NO",
+        "approving_authority": "Nagar Tatha Gram Nivesh Vibhag, Bhopal (Colony layout approved vide letter no. 351/LP-07/Abhimat/Jika/Nagalin/2012 dated 30.06.2012). Colonizer license no. 42/2011 dated 05.07.2011."
+      },
+      "structural_engineering": {
+        "steel_grade": "",
+        "concrete_grade": "",
+        "fire_exit": "",
+        "footing_type": "",
+        "no_of_lifts": "",
+        "type_of_masonry": "",
+        "seismic_zone": "",
+        "flood_prone_area": "NO",
+        "roof_type": "RCC"
+      },
+      "municipal_details": {
+        "sanction_plan_provided": "YES",
+        "date_of_sanction": "30/06/2012",
+        "sanctioned_area": "",
+        "municipal_compliance": "Colony layout approved by Nagar Tatha Gram Nivesh Vibhag, Bhopal"
+      },
+      "valuation_details": {
+        "plot_area_in_deed": "1250 sq.ft. (25 ft x 50 ft)",
+        "plot_area_physical": "1250 sq.ft.",
+        "plot_area_physical_rate": "3000 to 3500 per sq.ft.",
+        "built_up_area_norms": "",
+        "built_up_area_norms_rate": "",
+        "built_up_area_tinshed": "",
+        "built_up_area_tinshed_rate": "",
+        "super_built_up_area": "",
+        "super_built_up_rate": "",
+        "carpet_area_plan": "",
+        "carpet_area_plan_rate": "",
+        "carpet_area_measurement": "",
+        "carpet_area_measurement_rate": "",
+        "land_rate": "3000 to 3500 per sq.ft.",
+        "construction_rate": "",
+        "total_value": "",
+        "distress_value": "",
+        "government_value": "Rs. 6,01,000 (as per deed stamp duty calculation)",
+        "completion_percentage": "",
+        "recommendation_percentage": "",
+        "construction_status": "Under Construction (B+G+2, RCC, approx. started 2015)"
+      },
+      "accommodation_details": {
+        "total_floors": "B+G+2",
+        "property_holding": "Free Hold",
+        "type_of_structure": "RCC",
+        "age_of_property": "Approx. 10-11 years (started ~2015)",
+        "residual_age": "",
+        "project_category": "",
+        "flat_type": "",
+        "flat_configuration": "Ground Floor: 1 Hall + Shops/Godown; First Floor: 3 Rooms + 1 Hall + 1 Kitchen + 3 Bathrooms (Residential); Second Floor: 1 Room (Residential)",
+        "area_of_flat": "",
+        "lift_facility": "NO",
+        "amenities": "",
+        "marketability": "",
+        "view_of_property": "",
+        "parking_facility": "",
+        "quality_of_construction": "Average",
+        "type_of_parking": "",
+        "shape_of_property": "Rectangular",
+        "placement_of_property": "",
+        "exteriors_of_property": "Exposed RCC, partially finished, under construction",
+        "interiors_of_property": "Plastered, wiring done partially, flooring not done on upper floors",
+        "source_of_age": "Field observation and valuation form",
+        "maintenance_of_property": "Average",
+        "cautious_location": "NO",
+        "independent_access": "YES"
+      },
+      "basic_details": {
+        "valuer_name": "Jitenday",
+        "client_name": "Home First Finance",
+        "vertical": "",
+        "case_reference_number": "",
+        "initiation_date": "23/05/2026",
+        "visit_date": "25/05/2026",
+        "report_date": "25/05/2026"
+      },
+      "setbacks": {
+        "front_plan": "",
+        "front_actual": "",
+        "rear_plan": "",
+        "rear_actual": "",
+        "side1_plan": "",
+        "side1_actual": "",
+        "side2_plan": "",
+        "side2_actual": ""
+      },
+      "document_details": {
+        "sale_deed_details": "Sale Deed registered on 23/10/2013, Registration No. 2398/11-915/28, Book No. 1, Volume 19, Page 4990, Sub-Registrar Office Bhopal. Sale consideration Rs. 6,00,000/-. Total stamp duty paid Rs. 37,600/-. Seller: Dr. Dilip Singh Sisodia (through POA holder Sanjay Kashyap). Buyer: Brihmasingh S/o Dasrath.",
+        "sanctioned_plan_details": "Colony layout approved by Nagar Tatha Gram Nivesh Vibhag, Bhopal vide letter no. 351/LP-07/Abhimat/Jika/Nagalin/2012 dated 30.06.2012. Colonizer license no. 42/2011 dated 05.07.2011.",
+        "cc_oc_details": "",
+        "agreement_to_sale_details": "",
+        "mutation_possession_details": "Mutation done in Revenue records. Bhu-Adhikar evam Rin Pustika Bhag-1 issued, M-60577.",
+        "tax_receipt_details": "",
+        "electricity_bill_details": "",
+        "conversion_details": "Conversion/diversion application submitted to Anuvibhagiya Adhikari, Tehsil Huzur, District Bhopal."
+      },
+      "surrounding_amenities": {
+        "airport": "",
+        "bus_stop": "13 km",
+        "metro_station": "",
+        "railway_station": "2 km",
+        "college": "",
+        "school": "Near Govt. School",
+        "hospital": "",
+        "super_market": "",
+        "mall": "",
+        "place_of_worship": "Temple visible near property",
+        "rickshaw_stop": ""
+      },
+      "risk_flags": {
+        "any_chemical_hazard": "NO",
+        "near_crematorium": "NO",
+        "probable_road_extension": "YES - Proposed 66M wide road on west side as per colony layout plan; proposed 7.50M wide road adjacent to plot",
+        "statutory_notices_on_property": "NO",
+        "community_dominated": "NO",
+        "near_garbage_dump": "NO",
+        "property_access_issues": "NO",
+        "under_high_tension_line": "NO",
+        "flood_prone": "NO",
+        "near_nalla": "NO",
+        "property_is_land_locked": "NO",
+        "land_reservation": "NO",
+        "near_to_rail_track": "NO",
+        "slum_area": "NO"
+      }
+    },
+    "document_type": "Sale Deed (Vikray Patra)",
+    "registration_number": "2398 / 11-915 / 28",
+    "registration_date": "23/10/2013",
+    "reportRemarks": "Property is under construction (B+G+2 structure). Ground floor has shops and godown in use. First floor has 3 rooms + hall + kitchen + 3 bathrooms under construction. Second floor has 1 room under construction. Structure is RCC. Construction started approximately 2015. Nearest landmark: Near Govt. School. Property located on Indore-Bhopal Road (National Highway), Phanda Kala.",
+    "photo_analysis": [
+      {
+        "source_category": "GPS / site photos / map screenshots with lat-long",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.39_PM_xjr-Wo-8f.jpeg",
+        "intent": "Google Maps satellite view with dropped pin showing property location at Phanda Kala (Fanda), near Ashok Leyland LCV Motors (Authorized) showroom",
+        "observations": "Dropped pin at coordinates 23.228582, 77.208680. Satellite view shows the property plot with a structure visible. Area shows Fanda/Phanda Kala locality. Road (Indore-Bhopal NH) visible on north side. Adjacent to authorized Ashok Leyland LCV Motors showroom.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Field visit form / engineer site visit form (HF valuation format, handwritten form)",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.38_PM__1__9R421avXX.jpeg",
+        "intent": "HF Valuation Format - Field visit form with all property details filled",
+        "observations": "Bank: Home First. Visit date: 28/05/26. Nearest landmark: Near Govt. School. Customer: Brimha Singh Solanki. Person met at site: Brimha Singh Solanki. Contact: 8319551525. Property address: House No. 2-E, Mansarovar Residency, Village Phanda Kala, Bhopal. Documents: Sale Deed/ATS. Status: Free Hold. Type: Residential. Occupation: Owner. Floor: B+G+2. Structure: RCC. Year: 2015 (old). Boundaries - East: Kachcha Road, West: House of Munna Khandelwal, North: Indore to Bhopal Road, South: Open Plot. Plot Size: 1250 sq.ft. Land Rate: 3000-3500/sq.ft. Floors accommodation details filled. Distance to bus stand: 13 km. Distance to railway station: 2 km. Khasra screenshot taken. Road winding concern noted. Plot dimension sketch on reverse.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Field visit form / engineer site visit form (HF valuation format, handwritten form)",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.38_PM_M17Nv3ZmH.jpeg",
+        "intent": "Hand-drawn plot dimension sketch showing property layout",
+        "observations": "Sketch shows rectangular plot 25 ft wide x 50 ft deep. Structure shown as B+G+1 (appears to indicate building footprint). Colony road on west side (left). North: Indore to Bhopal road at bottom of sketch. South side: open. Building footprint shows internal dimensions ~12.5 ft. Compass directions marked: E (East), S (South), N (North).",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Site visit photo",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.00_PM_Kbw11PM6b.jpeg",
+        "intent": "Engineer selfie at property with GPS watermark",
+        "observations": "Engineer selfie in front of the property (under construction RCC building). GPS: Lat 23.228753, Long 77.20843. Date: 2026-05-25 04:25 PM. Location: 66H5+F9P, Indore-Bhopal Rd, Phanda Kala, Madhya Pradesh 462030. Ground floor shows Airtel 5G Plus shop (red frontage). Structure is under construction - exposed RCC frame visible on first floor. Temperature 42°C.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Site visit photo",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.02_PM__1__AUMgdEkTQ.jpeg",
+        "intent": "Front elevation of property from road level",
+        "observations": "Front view of property. RCC structure B+G+1 visible (second floor columns protruding indicating further construction planned). Ground floor: Airtel 5G Plus shop. First floor: under construction. GPS: Lat 23.228779, Long 77.208778. Date: 2026-05-25 04:24 PM. Location: Indore-Bhopal Rd, Phanda Kala, MP 462030.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Site visit photo",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.02_PM_MVitQwFhG.jpeg",
+        "intent": "Street view showing property in neighborhood context",
+        "observations": "View from road showing property and neighboring structures. Indore-Bhopal highway visible on left. Multiple commercial/residential buildings visible. Property (RCC under construction with Airtel 5G Plus) visible on right. GPS: Lat 23.228753, Long 77.20843. Date: 2026-05-25 04:25 PM. Temple visible nearby.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Site visit photo",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.03_PM_popgLqvLM.jpeg",
+        "intent": "Side/corner view of property showing construction stage",
+        "observations": "Corner view of property showing RCC structure with Airtel 5G Plus on ground floor. Upper floors under construction. GPS: Lat 23.228832, Long 77.208776. Date: 2026-05-25 04:24 PM.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Site visit photo",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.07_PM_QFJ-Hyn3g.jpeg",
+        "intent": "Side elevation of property showing height and construction",
+        "observations": "Side view showing height of structure (B+G+2 apparent). Ground floor occupied. First and second floors under construction. RCC columns visible. GPS: Lat 23.228482, Long 77.208711. Date: 2026-05-25 04:23 PM.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Site visit photo",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.09_PM__1__c82mBaJWr.jpeg",
+        "intent": "Rooftop/terrace view showing construction stage of upper floor",
+        "observations": "Rooftop view showing slab laid, columns with exposed rebar protruding for next floor. Walls partially constructed on roof level. Engineer standing on terrace. GPS: Lat 23.228608, Long 77.208663. Date: 2026-05-25 04:18 PM. Construction stage: Slab cast, columns ready for next floor.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Site visit photo",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.09_PM__2__cDfMlrPBr.jpeg",
+        "intent": "Interior room photo showing construction stage",
+        "observations": "Interior of a room (likely first floor) - plastered walls, whitewash done, electrical wiring/conduits installed, no flooring yet. Door and window openings present. GPS: Lat 23.228578, Long 77.208691. Date: 2026-05-25 04:18 PM.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Site visit photo",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.09_PM_zsAaz99nq.jpeg",
+        "intent": "Interior of ground floor godown/storage area",
+        "observations": "Interior of ground floor area being used as godown/storage. Onions being sorted by workers. Basement/lower ground level visible. GPS: Lat 23.22859, Long 77.208633. Date: 2026-05-25 04:21 PM. Ground floor is partially occupied for commercial/storage use.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Site visit photo",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.10_PM__1__F9QY9F3kl.jpeg",
+        "intent": "Interior under-construction room - plastering stage",
+        "observations": "Interior room with half-plastered walls (lower half plastered, upper unfinished). Window with grill visible. Electrical conduit pipe laid. No flooring. GPS: Lat 23.228627, Long 77.20864. Date: 2026-05-25 04:17 PM.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Site visit photo",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.10_PM_wDAeWIQUS.jpeg",
+        "intent": "Interior room with material storage",
+        "observations": "Interior room - plastered and whitewashed walls, electrical points installed, no flooring, cement bags stored. GPS: Lat 23.228554, Long 77.208673. Date: 2026-05-25 04:18 PM.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Site visit photo",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.12_PM_BSxREK4ve.jpeg",
+        "intent": "Ground floor commercial area/basement showing shuttered shops",
+        "observations": "Ground floor area showing two shuttered shops/units with rolling shutters. Two-wheeler showroom hoarding visible (Bajaj/Hero brand). Gravel flooring. GPS: Lat 23.22878, Long 77.20861. Date: 2026-05-25 04:15 PM.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      }
+    ],
+    "audit_notes": [
+      "Applicant name in bank email is 'Brimha Singh Solanki' / 'Brimha Singh Solanki' (phonetic variation of 'Brihmasingh' in sale deed). These are the same person - buyer in sale deed is Brihmasingh S/o Dasrath.",
+      "Contact number from email is 8319551529; from field visit form is 8319551525. Minor discrepancy - using email value as primary.",
+      "Visit date in field form reads 28/05/26 but GPS photo watermarks show 25/05/2026. Using 25/05/2026 from GPS photos as actual visit date.",
+      "Sale deed registration date is 23/10/2013. Property sold for Rs. 6,00,000/-.",
+      "Plot area confirmed as 1250 sq.ft. (25 ft x 50 ft) from both sale deed and field visit form.",
+      "Khasra number 656 confirmed from sale deed (Khasra No. 656, total area 2.417 hectare = 5.97 acres). The sold plot (Plot No. 2-E) is part of this larger khasra developed as Mansarovar Residency colony.",
+      "Property is outside Bhopal Nagar Nigam limits. Falls under Gram Panchayat jurisdiction. Colony developed by Messrs Mansarovar Reyal Estate, Bhopal with Colonizer License No. 42/2011.",
+      "Patwari Halka No. 38, Revenue Inspector Mandal-3 Bairagarh, Vikas Khand Fanda, Tehsil Huzur, District Bhopal.",
+      "GPS coordinates from multiple photos consistently around 23.2285-23.2288, 77.2086-77.2088 - consistent with dropped pin 23.228582, 77.208680.",
+      "Structure type: RCC (confirmed from field visit form and photos). Age: approximately 10-11 years (started 2015 per field form).",
+      "Road winding concern flagged in field visit form checklist.",
+      "Proposed 66M wide road shown on western side of colony in layout map - potential future road widening impact.",
+      "Previous owner chain: Land originally belonged to Dr. Dilip Singh Sisodia who had purchased from Shri Tulsiram and Shri Vishnuprasad (S/o late Ganpat and Smt. Radhabai) on 05.11.2001 via Sale Deed entered in Book A-1, Vol. 17474, Doc. No. 1839-K, Sub-Registrar Bhopal.",
+      "General Power of Attorney from Dr. Dilip Singh Sisodia to Sanjay Kashyap (Proprietor, Mansarovar Reyal Estate) was registered on 05.04.2013, Document No. 16/2, Book A-4, Vol. 13, Sub-Registrar Bhopal.",
+      "Bhu-Adhikar evam Rin Pustika (land rights and loan register) no. M-60577 issued in name of Dr. Dilip Singh Sisodia for Khasra 656.",
+      "Pincode 462030 extracted from GPS photo watermarks (Phanda Kala, Madhya Pradesh 462030).",
+      "Bank branch: Home First Finance Sehore per email. Property is in Bhopal district.",
+      "Property code 265595 from bank email."
+    ],
+    "visitedPersonName": "Brimha Singh Solanki",
+    "contactNumber": "8319551529",
+    "personName": "Brimha Singh Solanki",
+    "personContact": "8319551529",
+    "fileNo": "",
+    "lanNo": "",
+    "branch": "Home First Finance Sehore",
+    "brqNo": "",
+    "loanCategory": "Own Plot + SECO",
+    "propertyCode": "265595",
+    "caseReferenceNumber": "2398 / 11-915 / 28",
+    "refNo": "2398 / 11-915 / 28",
+    "reportDate": "25/05/2026",
+    "visitDate": "25/05/2026",
+    "initiationDate": "23/05/2026",
+    "propertyName": "House No. 2-E, Mansarovar Residency, Village Phanda Kala, Bhopal",
+    "propertyAddress": "House No. 2-E, Mansarovar Residency, Village Phanda Kala, Tehsil Huzur, District Bhopal, Madhya Pradesh - 462030",
+    "plotNo": "2-E",
+    "plotNumber": "2-E",
+    "surveyNumber": "",
+    "khasraNumber": "656",
+    "wardNumber": "",
+    "colonyArea": "Mansarovar Residency",
+    "villageName": "Phanda Kala",
+    "patwariHalkaNumber": "38",
+    "tehsil": "Huzur",
+    "district": "Bhopal",
+    "state": "Madhya Pradesh",
+    "projectState": "Madhya Pradesh",
+    "pincode": "462030",
+    "projectPinCode": "462030",
+    "mainLocality": "Phanda Kala",
+    "subLocality": "Mansarovar Residency",
+    "latitude": "23.228582",
+    "longitude": "77.208680",
+    "unitType": "OPEN PLOT",
+    "propertySubType": "Independent House / Plot with Construction",
+    "typeOfStructure": "RCC",
+    "zone": "Commercial",
+    "sanctionUsage": "Own Plot + SECO",
+    "actualUsage": "Residential cum Commercial (Ground floor shops/godown, upper floors residential)",
+    "propertyJurisdiction": "Gram Panchayat / Tehsil Huzur, District Bhopal",
+    "sanctionAuthorityName": "Nagar Tatha Gram Nivesh Vibhag, Bhopal (Colony layout approved vide letter no. 351/LP-07/Abhimat/Jika/Nagalin/2012 dated 30.06.2012). Colonizer license no. 42/2011 dated 05.07.2011.",
+    "constructionStatus": "Under Construction",
+    "propertyEntranceFacing": "East (Kachcha Road)",
+    "floorNumber": "",
+    "countOfProperties": "",
+    "locality": "Phanda Kala",
+    "microLocation": "Phanda Kala, on Indore-Bhopal Main Road (NH-18)",
+    "landmark": "Near Govt. School",
+    "propertyFallingWithin": "Outside Bhopal Nagar Nigam limits (Gram Panchayat area)",
+    "occupancyLevel": "Partially occupied (Ground floor in use as shops/godown; upper floors under construction)",
+    "conditionOfSite": "Under Construction",
+    "distanceRailwayStation": "2 km",
+    "railwayStation": "2 km",
+    "distanceBusStop": "13 km",
+    "busStop": "13 km",
+    "distanceCityCentre": "",
+    "distanceFromCityCenter": "",
+    "distanceHospital": "",
+    "hospital": "",
+    "distanceABCLBranch": "",
+    "distanceFromICICIBank": "",
+    "widthApproachRoad": "Road winding concern noted",
+    "physicalApproach": "Kachcha Road (East side)",
+    "legalApproach": "As per colony layout plan",
+    "otherFeatures": "Property is on Indore-Bhopal Road. East side road (colony internal) is kachcha. North side is Indore-Bhopal main road.",
+    "connectivity": "On Indore-Bhopal NH, good road connectivity",
+    "siteAccess": "Via kachcha road on east side",
+    "proximityToAmenities": "Near Govt. School",
+    "commentsOnProperty": "Property is B+G+2 RCC structure under construction. Ground floor has shops in use (Airtel 5G Plus outlet and godown). Upper floors under construction with plastering done on some portions. Roof slab cast. Columns visible for further construction. Good frontage on colony road.",
+    "adverseFactors": "Road winding concern noted. Property outside Bhopal Nagar Nigam limits. Khasra screenshot taken.",
+    "occupancy": "Partially Occupied",
+    "occupiedSince": "",
+    "nameOfOccupant": "Brihmasingh / Brimha Singh Solanki",
+    "propertyDemarcated": "YES",
+    "propertyIdentification": "YES",
+    "identificationThrough": "Sale Deed and field verification",
+    "northDocument": "Government Road (Sarkari Rasta)",
+    "southDocument": "Plot No. 2-F",
+    "eastDocument": "Proposed Kachcha Road",
+    "westDocument": "Plot No. 2-H",
+    "northActual": "Indore to Bhopal Road",
+    "southActual": "Open Plot",
+    "eastActual": "Kachcha Road",
+    "westActual": "House of Munna Khandelwal",
+    "northPlan": "Government Road (Sarkari Rasta)",
+    "southPlan": "Plot No. 2-F",
+    "eastPlan": "Proposed Kachcha Road",
+    "westPlan": "Plot No. 2-H",
+    "northDimensions": "50",
+    "southDimensions": "50",
+    "eastDimensions": "25",
+    "westDimensions": "25",
+    "boundariesMatching": "YES",
+    "plotArea": 0,
+    "landArea": "1250 sq.ft.",
+    "LandArea": "1250 sq.ft.",
+    "landSiteArea": "1250 sq.ft.",
+    "landDocumentArea": "1250 sq.ft. (25 ft x 50 ft)",
+    "landPlanArea": "1250 sq.ft. (25 ft x 50 ft)",
+    "linearDimension": "25 ft x 50 ft",
+    "Dimension": "25 ft x 50 ft",
+    "dimensionWidth": "25",
+    "dimensionDepth": "50",
+    "propertyHolding": "Free Hold",
+    "ownershipType": "Free Hold",
+    "totalNoOfFloors": "B+G+2",
+    "ageOfProperty": "Approx. 10-11 years (started ~2015)",
+    "propertyAge": "Approx. 10-11 years (started ~2015)",
+    "residualAge": 0,
+    "projectCategory": "",
+    "flatType": "",
+    "flatConfiguration": "Ground Floor: 1 Hall + Shops/Godown; First Floor: 3 Rooms + 1 Hall + 1 Kitchen + 3 Bathrooms (Residential); Second Floor: 1 Room (Residential)",
+    "areaOfFlat": "",
+    "liftFacility": "NO",
+    "liftAvailable": "NO",
+    "amenities": "",
+    "marketability": "",
+    "viewOfProperty": "",
+    "parkingFacility": "",
+    "qualityOfConstruction": "Average",
+    "constructionQuality": "Average",
+    "typeOfParking": "",
+    "shapeOfProperty": "Rectangular",
+    "placementOfProperty": "",
+    "exteriorsOfProperty": "Exposed RCC, partially finished, under construction",
+    "interiorsOfProperty": "Plastered, wiring done partially, flooring not done on upper floors",
+    "sourceOfAge": "Field observation and valuation form",
+    "maintenanceOfProperty": "Average",
+    "internalMaintenance": "Plastered, wiring done partially, flooring not done on upper floors",
+    "externalMaintenance": "Exposed RCC, partially finished, under construction",
+    "cautiousLocation": "NO",
+    "independentAccess": "YES",
+    "valuerName": "Jitenday",
+    "clientName": "Home First Finance",
+    "vertical": "",
+    "frontAsPerPlan": "",
+    "frontActual": "",
+    "rearAsPerPlan": "",
+    "rearActual": "",
+    "side1AsPerPlan": "",
+    "side1Actual": "",
+    "side2AsPerPlan": "",
+    "side2Actual": "",
+    "plotAreaInDeed": "1250 sq.ft. (25 ft x 50 ft)",
+    "plotAreaPhysical": "1250 sq.ft.",
+    "plotAreaPhysicalRate": "3000 to 3500 per sq.ft.",
+    "builtUpAreaNorms": "",
+    "builtUpAreaNormsRate": "",
+    "builtUpAreaTinShed": "",
+    "builtUpTinShedRate": "",
+    "superBuiltUpArea": "",
+    "superBuiltUpRate": "",
+    "carpetAreaPlan": "",
+    "carpetAreaPlanRate": "",
+    "carpetAreaMeasurement": "",
+    "carpetAreaMeasRate": "",
+    "carPark": "",
+    "carParkRate": "",
+    "amenitiesVal": "",
+    "amenitiesRate": "",
+    "landRate": "3000 to 3500 per sq.ft.",
+    "constructionRate": "",
+    "totalValue": "",
+    "distressValue": "",
+    "insuranceValue": "",
+    "governmentValue": "Rs. 6,01,000 (as per deed stamp duty calculation)",
+    "completionPercentage": "",
+    "recommendationPercentage": "",
+    "realizableValue": "",
+    "constructionStage": "Under Construction",
+    "constructionStatusPercent": "",
+    "visitedEngineer": "",
+    "appraiserName": "",
+    "preparedBy": "",
+    "finalizedBy": "",
+    "electricityAvailable": "YES",
+    "electricityDistributor": "",
+    "waterSupply": "",
+    "waterDistributor": "",
+    "sewerLineConnected": "",
+    "anyDemolitionThreat": "NO",
+    "jurisdiction": "Gram Panchayat / Tehsil Huzur, District Bhopal",
+    "demolitionRisk": "NO",
+    "riskOfDemolition": "NO",
+    "isPropertyInNegativeArea": "NO",
+    "approvingAuthority": "Nagar Tatha Gram Nivesh Vibhag, Bhopal (Colony layout approved vide letter no. 351/LP-07/Abhimat/Jika/Nagalin/2012 dated 30.06.2012). Colonizer license no. 42/2011 dated 05.07.2011.",
+    "steelGrade": "",
+    "concreteGrade": "",
+    "fireExit": "",
+    "footingType": "",
+    "noOfLifts": "",
+    "typeOfMasonry": "",
+    "seismicZone": "II",
+    "floodProneArea": "NO",
+    "floodZone": "NO",
+    "roofType": "RCC",
+    "sanctionPlanProvided": "YES",
+    "dateOfSanction": "30/06/2012",
+    "sanctionedArea": "",
+    "municipalCompliance": "Colony layout approved by Nagar Tatha Gram Nivesh Vibhag, Bhopal",
+    "saleDeedDetails": "Sale Deed registered on 23/10/2013, Registration No. 2398/11-915/28, Book No. 1, Volume 19, Page 4990, Sub-Registrar Office Bhopal. Sale consideration Rs. 6,00,000/-. Total stamp duty paid Rs. 37,600/-. Seller: Dr. Dilip Singh Sisodia (through POA holder Sanjay Kashyap). Buyer: Brihmasingh S/o Dasrath.",
+    "sanctionedPlanDetails": "Colony layout approved by Nagar Tatha Gram Nivesh Vibhag, Bhopal vide letter no. 351/LP-07/Abhimat/Jika/Nagalin/2012 dated 30.06.2012. Colonizer license no. 42/2011 dated 05.07.2011.",
+    "ccOcDetails": "",
+    "agreementToSaleDetails": "",
+    "mutationPossessionDetails": "Mutation done in Revenue records. Bhu-Adhikar evam Rin Pustika Bhag-1 issued, M-60577.",
+    "taxReceiptDetails": "",
+    "electricityBillDetails": "",
+    "conversionDetails": "Conversion/diversion application submitted to Anuvibhagiya Adhikari, Tehsil Huzur, District Bhopal.",
+    "airport": "",
+    "busStopAmenity": "13 km",
+    "metroStation": "",
+    "railwayStationAmenity": "2 km",
+    "college": "",
+    "school": "Near Govt. School",
+    "hospitalAmenity": "",
+    "superMarket": "",
+    "mall": "",
+    "placeOfWorship": "Temple visible near property",
+    "rickshawStop": "",
+    "anyChemicalHazard": "NO",
+    "nearCrematorium": "NO",
+    "probableRoadExtension": "YES - Proposed 66M wide road on west side as per colony layout plan; proposed 7.50M wide road adjacent to plot",
+    "statutoryNoticesOnProperty": "NO",
+    "communityDominated": "NO",
+    "nearGarbageDump": "NO",
+    "propertyAccessIssues": "NO",
+    "underHighTensionLine": "NO",
+    "floodProne": "NO",
+    "nearNalla": "NO",
+    "propertyIsLandLocked": "NO",
+    "landReservation": "NO",
+    "nearToRailTrack": "NO",
+    "slumArea": "NO",
+    "generalObservations": "Property is under construction (B+G+2 structure). Ground floor has shops and godown in use. First floor has 3 rooms + hall + kitchen + 3 bathrooms under construction. Second floor has 1 room under construction. Structure is RCC. Construction started approximately 2015. Nearest landmark: Near Govt. School. Property located on Indore-Bhopal Road (National Highway), Phanda Kala.",
+    "evaluationMode": "",
+    "rejectionReason": "",
+    "verifiedBy": "Jitenday",
+    "siteVisits": "25/05/2026",
+    "siteVisitPhotoUrls": [
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.00_PM_Kbw11PM6b.jpeg",
+        "fileId": "6a325e7b5c7cd75eb8e6a7e2",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.00_PM_Kbw11PM6b.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.02_PM__1__AUMgdEkTQ.jpeg",
+        "fileId": "6a325e7d5c7cd75eb8e6b624",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.02_PM__1__AUMgdEkTQ.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.02_PM_MVitQwFhG.jpeg",
+        "fileId": "6a325e7e5c7cd75eb8e6be5e",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.02_PM_MVitQwFhG.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.03_PM_popgLqvLM.jpeg",
+        "fileId": "6a325e815c7cd75eb8e6dabc",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.03_PM_popgLqvLM.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.07_PM_QFJ-Hyn3g.jpeg",
+        "fileId": "6a325e825c7cd75eb8e6e2ad",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.07_PM_QFJ-Hyn3g.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.09_PM__1__c82mBaJWr.jpeg",
+        "fileId": "6a325e825c7cd75eb8e6e7d1",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.09_PM__1__c82mBaJWr.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.09_PM__2__cDfMlrPBr.jpeg",
+        "fileId": "6a325e835c7cd75eb8e6ea95",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.09_PM__2__cDfMlrPBr.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.09_PM_zsAaz99nq.jpeg",
+        "fileId": "6a325e845c7cd75eb8e6edf5",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.09_PM_zsAaz99nq.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.10_PM__1__F9QY9F3kl.jpeg",
+        "fileId": "6a325e855c7cd75eb8e6f2aa",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.10_PM__1__F9QY9F3kl.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.10_PM_wDAeWIQUS.jpeg",
+        "fileId": "6a325e865c7cd75eb8e6f84b",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.10_PM_wDAeWIQUS.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.12_PM_BSxREK4ve.jpeg",
+        "fileId": "6a325e865c7cd75eb8e6fc23",
+        "name": "WhatsApp_Image_2026-05-25_at_5.30.12_PM_BSxREK4ve.jpeg"
+      }
+    ],
+    "photoAnalysis": [
+      {
+        "source_category": "GPS / site photos / map screenshots with lat-long",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.39_PM_xjr-Wo-8f.jpeg",
+        "intent": "Google Maps satellite view with dropped pin showing property location at Phanda Kala (Fanda), near Ashok Leyland LCV Motors (Authorized) showroom",
+        "observations": "Dropped pin at coordinates 23.228582, 77.208680. Satellite view shows the property plot with a structure visible. Area shows Fanda/Phanda Kala locality. Road (Indore-Bhopal NH) visible on north side. Adjacent to authorized Ashok Leyland LCV Motors showroom.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Field visit form / engineer site visit form (HF valuation format, handwritten form)",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.38_PM__1__9R421avXX.jpeg",
+        "intent": "HF Valuation Format - Field visit form with all property details filled",
+        "observations": "Bank: Home First. Visit date: 28/05/26. Nearest landmark: Near Govt. School. Customer: Brimha Singh Solanki. Person met at site: Brimha Singh Solanki. Contact: 8319551525. Property address: House No. 2-E, Mansarovar Residency, Village Phanda Kala, Bhopal. Documents: Sale Deed/ATS. Status: Free Hold. Type: Residential. Occupation: Owner. Floor: B+G+2. Structure: RCC. Year: 2015 (old). Boundaries - East: Kachcha Road, West: House of Munna Khandelwal, North: Indore to Bhopal Road, South: Open Plot. Plot Size: 1250 sq.ft. Land Rate: 3000-3500/sq.ft. Floors accommodation details filled. Distance to bus stand: 13 km. Distance to railway station: 2 km. Khasra screenshot taken. Road winding concern noted. Plot dimension sketch on reverse.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Field visit form / engineer site visit form (HF valuation format, handwritten form)",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.38_PM_M17Nv3ZmH.jpeg",
+        "intent": "Hand-drawn plot dimension sketch showing property layout",
+        "observations": "Sketch shows rectangular plot 25 ft wide x 50 ft deep. Structure shown as B+G+1 (appears to indicate building footprint). Colony road on west side (left). North: Indore to Bhopal road at bottom of sketch. South side: open. Building footprint shows internal dimensions ~12.5 ft. Compass directions marked: E (East), S (South), N (North).",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Site visit photo",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.00_PM_Kbw11PM6b.jpeg",
+        "intent": "Engineer selfie at property with GPS watermark",
+        "observations": "Engineer selfie in front of the property (under construction RCC building). GPS: Lat 23.228753, Long 77.20843. Date: 2026-05-25 04:25 PM. Location: 66H5+F9P, Indore-Bhopal Rd, Phanda Kala, Madhya Pradesh 462030. Ground floor shows Airtel 5G Plus shop (red frontage). Structure is under construction - exposed RCC frame visible on first floor. Temperature 42°C.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Site visit photo",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.02_PM__1__AUMgdEkTQ.jpeg",
+        "intent": "Front elevation of property from road level",
+        "observations": "Front view of property. RCC structure B+G+1 visible (second floor columns protruding indicating further construction planned). Ground floor: Airtel 5G Plus shop. First floor: under construction. GPS: Lat 23.228779, Long 77.208778. Date: 2026-05-25 04:24 PM. Location: Indore-Bhopal Rd, Phanda Kala, MP 462030.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Site visit photo",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.02_PM_MVitQwFhG.jpeg",
+        "intent": "Street view showing property in neighborhood context",
+        "observations": "View from road showing property and neighboring structures. Indore-Bhopal highway visible on left. Multiple commercial/residential buildings visible. Property (RCC under construction with Airtel 5G Plus) visible on right. GPS: Lat 23.228753, Long 77.20843. Date: 2026-05-25 04:25 PM. Temple visible nearby.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Site visit photo",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.03_PM_popgLqvLM.jpeg",
+        "intent": "Side/corner view of property showing construction stage",
+        "observations": "Corner view of property showing RCC structure with Airtel 5G Plus on ground floor. Upper floors under construction. GPS: Lat 23.228832, Long 77.208776. Date: 2026-05-25 04:24 PM.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Site visit photo",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.07_PM_QFJ-Hyn3g.jpeg",
+        "intent": "Side elevation of property showing height and construction",
+        "observations": "Side view showing height of structure (B+G+2 apparent). Ground floor occupied. First and second floors under construction. RCC columns visible. GPS: Lat 23.228482, Long 77.208711. Date: 2026-05-25 04:23 PM.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Site visit photo",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.09_PM__1__c82mBaJWr.jpeg",
+        "intent": "Rooftop/terrace view showing construction stage of upper floor",
+        "observations": "Rooftop view showing slab laid, columns with exposed rebar protruding for next floor. Walls partially constructed on roof level. Engineer standing on terrace. GPS: Lat 23.228608, Long 77.208663. Date: 2026-05-25 04:18 PM. Construction stage: Slab cast, columns ready for next floor.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Site visit photo",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.09_PM__2__cDfMlrPBr.jpeg",
+        "intent": "Interior room photo showing construction stage",
+        "observations": "Interior of a room (likely first floor) - plastered walls, whitewash done, electrical wiring/conduits installed, no flooring yet. Door and window openings present. GPS: Lat 23.228578, Long 77.208691. Date: 2026-05-25 04:18 PM.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Site visit photo",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.09_PM_zsAaz99nq.jpeg",
+        "intent": "Interior of ground floor godown/storage area",
+        "observations": "Interior of ground floor area being used as godown/storage. Onions being sorted by workers. Basement/lower ground level visible. GPS: Lat 23.22859, Long 77.208633. Date: 2026-05-25 04:21 PM. Ground floor is partially occupied for commercial/storage use.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Site visit photo",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.10_PM__1__F9QY9F3kl.jpeg",
+        "intent": "Interior under-construction room - plastering stage",
+        "observations": "Interior room with half-plastered walls (lower half plastered, upper unfinished). Window with grill visible. Electrical conduit pipe laid. No flooring. GPS: Lat 23.228627, Long 77.20864. Date: 2026-05-25 04:17 PM.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Site visit photo",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.10_PM_wDAeWIQUS.jpeg",
+        "intent": "Interior room with material storage",
+        "observations": "Interior room - plastered and whitewashed walls, electrical points installed, no flooring, cement bags stored. GPS: Lat 23.228554, Long 77.208673. Date: 2026-05-25 04:18 PM.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      },
+      {
+        "source_category": "Site visit photo",
+        "file_name": "WhatsApp_Image_2026-05-25_at_5.30.12_PM_BSxREK4ve.jpeg",
+        "intent": "Ground floor commercial area/basement showing shuttered shops",
+        "observations": "Ground floor area showing two shuttered shops/units with rolling shutters. Two-wheeler showroom hoarding visible (Bajaj/Hero brand). Gravel flooring. GPS: Lat 23.22878, Long 77.20861. Date: 2026-05-25 04:15 PM.",
+        "supports_fields": [
+          "imageUrls"
+        ]
+      }
+    ],
+    "personContactNo": "8319551529",
+    "cycloneZone": "NO",
+    "landslideProneZone": "No",
+    "crZone": "NO",
+    "demolitionRiskDetails": "NA",
+    "followsNDMAGuidelines": "YES",
+    "directions": {
+      "North": {
+        "document": "Government Road (Sarkari Rasta)",
+        "actual": "Indore to Bhopal Road",
+        "plan": "Government Road (Sarkari Rasta)"
+      },
+      "South": {
+        "document": "Plot No. 2-F",
+        "actual": "Open Plot",
+        "plan": "Plot No. 2-F"
+      },
+      "East": {
+        "document": "Proposed Kachcha Road",
+        "actual": "Kachcha Road",
+        "plan": "Proposed Kachcha Road"
+      },
+      "West": {
+        "document": "Plot No. 2-H",
+        "actual": "House of Munna Khandelwal",
+        "plan": "Plot No. 2-H"
+      }
+    },
+    "boundaryRemarks": "",
+    "typeOfRoof": "RCC",
+    "noOfFloorsPermissible": "NA",
+    "noOfFloorsActual": 0,
+    "noOfUnitFlatOnEachFloor": "NA",
+    "approxAgeOfProperty": 0
   }
 }

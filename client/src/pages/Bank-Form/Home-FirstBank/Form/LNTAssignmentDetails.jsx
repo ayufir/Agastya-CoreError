@@ -36,17 +36,17 @@ const LNTAssignmentDetails = ({
     relationshipOfPersonMet: "SELF",
     propertyOwnerName: "",
     howFoundOwnerName: "SALE DEED",
-    typeOfLoan: "P+C",
+    typeOfLoan: "",
     dateOfReport: null,
     dateOfVisit: null,
-    vendorName: "",
+    vendorName: "Unique Engineering and Associate - Bhopal",
     clContractNo: "",
     refNo: "N/A",
     evaluationType: "N/A",
     unitType: "OPEN PLOT",
     propertyCategory: "INDIVIDUAL",
     propertyLocation: "Town",
-    populationCensus2011: "Btw 10000 to 1.0 Lac",
+    populationCensus2011: "Above 1.0 Lac",
     ruralUrban: "URBAN",
     zone: "Residential",
     propertyAreaLimits: "Municipal",
@@ -59,7 +59,7 @@ const LNTAssignmentDetails = ({
     nameOnDoor: "NA",
     nearbyLandmark: "",
     statusOfOccupancy: "Vacant",
-    occupiedBy: "SELF",
+    occupiedBy: "Vacant",
     usageOfProperty: "Residential",
     propertyEasilyIdentifiable: "YES",
   };
@@ -67,6 +67,10 @@ const LNTAssignmentDetails = ({
   useEffect(() => {
     const currentValues = form.getFieldsValue();
     const merged = { ...isEdit };
+
+    let locCat = "";
+    let customerName = isEdit?.customerName || "";
+    let statusOfOccupancy = isEdit?.statusOfOccupancy || "Vacant";
 
     if (extractedData && Object.keys(extractedData).length > 0) {
       const p = extractedData.property || {};
@@ -76,23 +80,68 @@ const LNTAssignmentDetails = ({
       const propDet = p.property_details || {};
       const loc = p.location_details || {};
 
+      locCat = extractedData.locationCategory || loc.property_falling_within || "";
+      customerName = p.applicant_name || p.owner_name || extractedData.customerName || customerName;
+      statusOfOccupancy = propDet.occupancy || loc.occupancy_level || statusOfOccupancy;
+
+      const docPersonMet = p.contact_person || extractedData.personMetDuringVisit || "";
+      const docRelation = p.relationship_met_at_site || extractedData.relationshipOfPersonMet || "";
+      
+      let finalPersonMet = "N/A";
+      let finalRelation = "SELF";
+
+      if (statusOfOccupancy === "Vacant" && !docPersonMet) {
+        finalPersonMet = "";
+        finalRelation = "";
+      } else if (docPersonMet && docRelation && docRelation !== "N/A" && docRelation !== "SELF") {
+        finalPersonMet = docPersonMet;
+        finalRelation = docRelation;
+      } else if (docPersonMet) {
+        finalPersonMet = docPersonMet;
+        finalRelation = "Representative";
+      } else {
+        finalPersonMet = customerName || "N/A";
+        finalRelation = "SELF";
+      }
+
+      let finalPropLoc = "Town";
+      let finalAreaLim = "Town Planning";
+
+      const normalizedLocCat = String(locCat).toLowerCase();
+      if (normalizedLocCat.includes("municipal") || normalizedLocCat.includes("mc") || normalizedLocCat.includes("corporation")) {
+        finalPropLoc = "City";
+        finalAreaLim = "Municipal";
+      } else if (normalizedLocCat.includes("nagar") || normalizedLocCat.includes("palika") || normalizedLocCat.includes("planning") || normalizedLocCat.includes("tp")) {
+        finalPropLoc = "Town";
+        finalAreaLim = "Town Planning";
+      } else if (normalizedLocCat.includes("gram") || normalizedLocCat.includes("panchayat") || normalizedLocCat.includes("gp")) {
+        finalPropLoc = "Village";
+        finalAreaLim = "Gram Panchayat";
+      }
+
+      const addrLegal = addr.full_address || extractedData.addressLegal || "";
+      const addrSite = addr.full_address || extractedData.addressSite || addrLegal;
+
       const mapped = {
-        customerName: p.applicant_name || p.owner_name || extractedData.customerName,
+        customerName,
         customerNo: p.contact_number || p["Mobile No."] || extractedData.customerNo,
         propertyName: p.property_type || accom.type_of_structure,
-        personMetDuringVisit: p.contact_person || extractedData.personMetDuringVisit,
-        propertyOwnerName: p.owner_name || extractedData.propertyOwnerName,
+        personMetDuringVisit: finalPersonMet,
+        relationshipOfPersonMet: finalRelation,
+        propertyOwnerName: p.owner_name || extractedData.propertyOwnerName || customerName,
         dateOfReport: p.dateOfReport || extractedData.dateOfReport || extractedData.reportDate,
         dateOfVisit: p.dateOfVisit || extractedData.dateOfVisit,
         refNo: bankDet.file_no || bankDet.lan_no || extractedData.registration_number || extractedData.refNo,
-        addressLegal: addr.full_address || extractedData.addressLegal,
-        addressSite: addr.full_address || extractedData.addressSite,
+        addressLegal: addrLegal,
+        addressSite: addrSite,
         nearbyLandmark: loc.landmark || extractedData.nearbyLandmark,
-        statusOfOccupancy: propDet.occupancy || loc.occupancy_level,
-        occupiedBy: propDet.occupied_by,
-        usageOfProperty: p.property_use,
+        statusOfOccupancy,
+        occupiedBy: propDet.occupied_by || "Vacant",
+        usageOfProperty: p.property_use || "Residential",
         latitude: p.latitude || extractedData.latitude,
         longitude: p.longitude || extractedData.longitude,
+        propertyLocation: finalPropLoc,
+        propertyAreaLimits: finalAreaLim,
       };
 
       Object.entries(mapped).forEach(([key, val]) => {
@@ -116,8 +165,8 @@ const LNTAssignmentDetails = ({
         return null;
       };
 
-      const parsedDate = getValidMoment(merged.dateOfReport) || currentValues.dateOfReport || null;
-      const parsedVisitDate = getValidMoment(merged.dateOfVisit) || currentValues.dateOfVisit || null;
+      const parsedDate = getValidMoment(merged.dateOfReport) || currentValues.dateOfReport || moment();
+      const parsedVisitDate = getValidMoment(merged.dateOfVisit) || currentValues.dateOfVisit || moment();
 
       const safeVal = (key, fallback = "") => {
         if (merged[key] !== undefined && merged[key] !== null && merged[key] !== "") {
@@ -134,31 +183,31 @@ const LNTAssignmentDetails = ({
         personContactNo: safeVal("personContactNo", "N/A"),
         relationshipOfPersonMet: safeVal("relationshipOfPersonMet", "SELF"),
         propertyOwnerName: safeVal("propertyOwnerName"),
-        howFoundOwnerName: safeVal("howFoundOwnerName"),
-        typeOfLoan: safeVal("typeOfLoan", "P+C"),
+        howFoundOwnerName: safeVal("howFoundOwnerName", "SALE DEED"),
+        typeOfLoan: safeVal("typeOfLoan", ""),
         dateOfReport: parsedDate,
         dateOfVisit: parsedVisitDate,
-        vendorName: safeVal("vendorName"),
-        clContractNo: safeVal("clContractNo"),
+        vendorName: safeVal("vendorName", "Unique Engineering and Associate - Bhopal"),
+        clContractNo: safeVal("clContractNo", ""),
         refNo: safeVal("refNo", "N/A"),
         evaluationType: safeVal("evaluationType", "N/A"),
         unitType: safeVal("unitType", "OPEN PLOT"),
         propertyCategory: safeVal("propertyCategory", "INDIVIDUAL"),
-        propertyLocation: safeVal("propertyLocation"),
-        populationCensus2011: safeVal("populationCensus2011", "Btw 10000 to 1.0 Lac"),
-        ruralUrban: safeVal("ruralUrban"),
+        propertyLocation: safeVal("propertyLocation", "Town"),
+        populationCensus2011: safeVal("populationCensus2011", "Above 1.0 Lac"),
+        ruralUrban: safeVal("ruralUrban", "URBAN"),
         zone: safeVal("zone", "Residential"),
-        propertyAreaLimits: safeVal("propertyAreaLimits"),
+        propertyAreaLimits: safeVal("propertyAreaLimits", "Municipal"),
         eraApplicable: safeVal("eraApplicable", "NA"),
-        projectName: safeVal("projectName"),
+        projectName: safeVal("projectName", ""),
         documentsAvailable: safeVal("documentsAvailable", "YES"),
         nameOnSocietyBoard: safeVal("nameOnSocietyBoard", "NA"),
         addressLegal: safeVal("addressLegal"),
-        addressSite: safeVal("addressSite"),
+        addressSite: safeVal("addressSite") || safeVal("addressLegal"),
         nameOnDoor: safeVal("nameOnDoor", "NA"),
         nearbyLandmark: safeVal("nearbyLandmark"),
-        statusOfOccupancy: safeVal("statusOfOccupancy"),
-        occupiedBy: safeVal("occupiedBy"),
+        statusOfOccupancy: safeVal("statusOfOccupancy", "Vacant"),
+        occupiedBy: safeVal("occupiedBy", "Vacant"),
         usageOfProperty: safeVal("usageOfProperty", "Residential"),
         propertyEasilyIdentifiable: safeVal("propertyEasilyIdentifiable", "YES"),
         latitude: safeVal("latitude"),
@@ -371,6 +420,8 @@ const LNTAssignmentDetails = ({
                 <Option value="Tenant">Tenant</Option>
                 <Option value="Caretaker">Caretaker</Option>
                 <Option value="Neighbor">Neighbor</Option>
+                <Option value="Representative">Representative</Option>
+                <Option value="">Blank</Option>
               </Select>
             </Form.Item>
 
