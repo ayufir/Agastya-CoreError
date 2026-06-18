@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
   Menu,
   X,
@@ -13,19 +15,32 @@ import {
 import BellWithNotifications from "./BellWithNotifications";
 
 const Header = () => {
+  const navigate = useNavigate();
+  const user = useSelector((state) => state.auth.user);
   const [activeTab, setActiveTab] = useState("Home");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [logoClickCount, setLogoClickCount] = useState(0);
 
   const handleLogoClick = () => {
-    setLogoClickCount((prev) => {
-      const next = prev + 1;
-      if (next === 5) {
-        alert("This application is developed by Ayush Shrivastava");
-        return 0;
+    const role = user?.role;
+    if (role === "Admin" || role === "SuperAdmin") {
+      navigate("/");
+    } else if (role === "FieldOfficer" || role === "FIELDOFFICER") {
+      navigate("/field/dashboard");
+    } else if (role === "Coordinator") {
+      navigate("/coordinator/dashboard");
+    } else if (role === "TechnicalManager") {
+      navigate("/tm/dashboard");
+    } else if (role === "RegionalManager") {
+      navigate("/rtm/dashboard");
+    } else if (role === "Accountant") {
+      navigate("/accountant/dashboard");
+    } else {
+      if (role?.toLowerCase() === "fieldofficer") {
+        navigate("/field/dashboard");
+      } else {
+        navigate("/");
       }
-      return next;
-    });
+    }
   };
 
   const navLinks = [

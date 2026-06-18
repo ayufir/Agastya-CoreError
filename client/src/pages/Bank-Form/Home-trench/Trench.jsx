@@ -734,6 +734,9 @@ const Trench = () => {
           }
           .trench-shell {
             display: block;
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
           }
           .trench-sidebar {
             display: flex;

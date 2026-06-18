@@ -125,7 +125,7 @@ const ValuationReportSchema = new mongoose.Schema({
   marketability: { type: String },
   landArea: { type: String },                 // e.g. "1980 SQFT"
   linearDimension: { type: String },          // e.g. "30*66"
-  plotArea: { type: Number },
+  plotArea: { type: String },
 
   // ─── SECTION 8: Structural Details ───────────────────────────────────────
   typeOfStructure: { type: String },
@@ -134,8 +134,8 @@ const ValuationReportSchema = new mongoose.Schema({
   noOfFloorsActual: { type: String },
   noOfUnitFlatOnEachFloor: { type: String },
   qualityOfConstruction: { type: String },
-  approxAgeOfProperty: { type: Number },
-  residualAge: { type: Number },
+  approxAgeOfProperty: { type: String },
+  residualAge: { type: String },
 
   // ─── SECTION 9: Violation ────────────────────────────────────────────────
   deviationToPlan: { type: String },
@@ -146,47 +146,47 @@ const ValuationReportSchema = new mongoose.Schema({
 
   // ─── SECTION 10: Valuation ───────────────────────────────────────────────
   // Land rows
-  landDocumentArea: { type: Number },
-  landDocumentRate: { type: Number },
-  landDocumentValuation: { type: Number },
-  landPlanArea: { type: Number },
-  landPlanRate: { type: Number },
-  landPlanValuation: { type: Number },
-  landSiteArea: { type: Number },
-  landSiteRate: { type: Number },
-  landSiteValuation: { type: Number },
+  landDocumentArea: { type: String },
+  landDocumentRate: { type: String },
+  landDocumentValuation: { type: String },
+  landPlanArea: { type: String },
+  landPlanRate: { type: String },
+  landPlanValuation: { type: String },
+  landSiteArea: { type: String },
+  landSiteRate: { type: String },
+  landSiteValuation: { type: String },
 
   // Construction rows
-  constructionDocumentArea: { type: Number },
-  constructionDocumentRate: { type: Number },
-  constructionDocumentValuation: { type: Number },
-  constructionPlanArea: { type: Number },
-  constructionPlanRate: { type: Number },
-  constructionPlanValuation: { type: Number },
-  constructionSiteArea: { type: Number },
-  constructionSiteRate: { type: Number },
-  constructionSiteValuation: { type: Number },
+  constructionDocumentArea: { type: String },
+  constructionDocumentRate: { type: String },
+  constructionDocumentValuation: { type: String },
+  constructionPlanArea: { type: String },
+  constructionPlanRate: { type: String },
+  constructionPlanValuation: { type: String },
+  constructionSiteArea: { type: String },
+  constructionSiteRate: { type: String },
+  constructionSiteValuation: { type: String },
 
   // Summary
   amenitiesDetails: { type: String },
-  amenitiesValue: { type: Number },
+  amenitiesValue: { type: String },
   liftAvailable: { type: String },
   buildingHeight: { type: String },
-  realizableValue: { type: Number },
+  realizableValue: { type: String },
   constructionStage: { type: String },
   constructionStatus: { type: String },
-  ValuationatPresentStage: { type: Number },
-  ValuationasperGovtGuideline: { type: Number },
-  constructionEstimateByCustomer: { type: Number },
-  estimateRecommendedByValuer: { type: Number },
+  ValuationatPresentStage: { type: String },
+  ValuationasperGovtGuideline: { type: String },
+  constructionEstimateByCustomer: { type: String },
+  estimateRecommendedByValuer: { type: String },
   marketRatePerSqft: { type: String },
   constructionAsPerPlan: { type: String },
 
   // ─── SECTION 11: Observation Remarks ─────────────────────────────────────
   valuationRemarks: [{ type: String }],
-  charges: { type: Number },
-  baseRate: { type: Number },
-  totalAmount: { type: Number },
+  charges: { type: String },
+  baseRate: { type: String },
+  totalAmount: { type: String },
 
   // Floor wise section
   ffPlan: { type: String },

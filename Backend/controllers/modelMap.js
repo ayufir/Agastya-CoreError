@@ -146,6 +146,27 @@ Object.defineProperty(modelMap, "bankRegistry", {
   enumerable: false,
 });
 
+// Dynamically register all models from bankRegistry into modelMap
+bankRegistry.forEach((entry) => {
+  if (entry.key && entry.model) {
+    const keysToAdd = [
+      entry.key,
+      entry.key.toLowerCase(),
+      entry.displayName,
+      entry.displayName?.toLowerCase(),
+      entry.route,
+      entry.route?.toLowerCase()
+    ].filter(Boolean);
+
+    keysToAdd.forEach((k) => {
+      if (!modelMap[k]) {
+        modelMap[k] = entry.model;
+      }
+    });
+  }
+});
+
+
 // Dynamic injection of fields to all bank models to allow saving and retrieval
 Object.values(modelMap).forEach((Model) => {
   if (Model && Model.schema) {

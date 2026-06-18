@@ -99,20 +99,26 @@ const MenuItems = () => {
 
   const menus = ["SuperAdmin", "Admin"].includes(user?.role) ? adminMenu : fieldOfficerMenu;
 
+  const isFieldOfficer = user?.role === "FIELDOFFICER";
+
   return (
-    <div className='h-full w-full'>
+    <div className='h-full w-full font-outfit'>
       {/* User Avatar Section */}
       <div className='flex-col items-center gap-3 mb-6'>
         <div className='flex gap-2 relative left-2'>
-          <div className='h-12 w-12 uppercase bg-gray-400 rounded-full flex items-center justify-center text-white font-semibold text-lg shadow-md'>
-            <p>{user?.name.slice(0, 1)}</p>
+          <div className={`h-12 w-12 uppercase rounded-full flex items-center justify-center text-white font-semibold text-lg shadow-md ${
+            isFieldOfficer ? 'bg-[#5c8a7b]' : 'bg-gray-400'
+          }`}>
+            <p>{user?.name?.slice(0, 1)}</p>
           </div>
           <div className='mt-1'>
-            <h1 className='text-gray-800 font-semibold relative text-xl leading-tight'>
+            <h1 className='text-gray-800 font-bold relative text-xl leading-tight'>
               {user?.name}
             </h1>
-            <p className='text-[10px] text-red-600 font-bold uppercase tracking-widest'>
-              {user?.role === "SuperAdmin" ? "Super Admin" : user?.role}
+            <p className={`text-[10px] font-extrabold uppercase tracking-widest ${
+              isFieldOfficer ? 'text-[#3b6657]' : 'text-red-600'
+            }`}>
+              {user?.role === "SuperAdmin" ? "Super Admin" : (user?.role === "FIELDOFFICER" ? "Field Officer" : user?.role)}
             </p>
           </div>
         </div>
@@ -146,7 +152,11 @@ const MenuItems = () => {
           </>
         ) : (
           <div className='w-full max-w-sm mx-auto p-2'>
-            <div className='px-3 p-2 bg-gray-100 border border-gray-300 rounded-md text-gray-700 font-medium'>
+            <div className={`px-4.5 py-2 border rounded-2xl text-xs font-bold transition-all ${
+              isFieldOfficer 
+                ? 'bg-[#eef7f4] border-[#d0e6df] text-[#1c2725]' 
+                : 'bg-gray-100 border-gray-300 text-gray-700'
+            }`}>
               Zone: {user?.assignedCity || "All Zones"}
             </div>
           </div>
@@ -155,28 +165,35 @@ const MenuItems = () => {
 
       {/* Menu Items */}
       <div className='flex flex-col gap-2'>
-        {menus.map((item) => (
-          <div
-            key={item.name}
-            onClick={() => {
-              if (item.name === "Logout") {
-                onLogout();
-              } else if (item.action) {
-                item.action();
-              } else {
-                navigate(item.path);
-              }
-            }}
-            className={`flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 ${
-              item.isActive
-                ? "bg-[#C40C0C] text-white shadow-md"
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
-          >
-            {item.icon}
-            <span className='text-sm font-medium'>{item.name}</span>
-          </div>
-        ))}
+        {menus.map((item) => {
+          let activeClass = "bg-[#C40C0C] text-white shadow-md";
+          if (isFieldOfficer) {
+            activeClass = "bg-[#1c2725] text-white shadow-md shadow-[#1c2725]/15";
+          }
+          
+          return (
+            <div
+              key={item.name}
+              onClick={() => {
+                if (item.name === "Logout") {
+                  onLogout();
+                } else if (item.action) {
+                  item.action();
+                } else {
+                  navigate(item.path);
+                }
+              }}
+              className={`flex items-center gap-4 px-4 py-3 rounded-2xl cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-95 ${
+                item.isActive
+                  ? activeClass
+                  : `text-gray-700 hover:bg-gray-100 ${isFieldOfficer ? 'hover:bg-[#eef7f4]/60 hover:text-[#1c2725]' : ''}`
+              }`}
+            >
+              {item.icon}
+              <span className='text-sm font-bold'>{item.name}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -97,6 +97,60 @@ const QueryRaised = ({ selectedMonth }) => {
       wrap: true,
     },
     {
+      name: "Attachment",
+      cell: (row) => {
+        if (!row.image?.url) {
+          return <span style={{ fontSize: "11px", color: "#a0aec0" }}>No attachment</span>;
+        }
+
+        const isAudioUrl = (url) => {
+          if (!url) return false;
+          const lower = url.toLowerCase();
+          return (
+            lower.endsWith(".mp3") ||
+            lower.endsWith(".wav") ||
+            lower.endsWith(".ogg") ||
+            lower.endsWith(".m4a") ||
+            lower.endsWith(".aac") ||
+            lower.includes("audio") ||
+            lower.includes("recording")
+          );
+        };
+
+        if (isAudioUrl(row.image.url)) {
+          return (
+            <div style={{ padding: "4px 8px", background: "#f0f5ff", border: "1px solid #adc6ff", borderRadius: "6px", display: "flex", flexDirection: "column", gap: "2px", width: "100%", minWidth: "160px" }}>
+              <span style={{ fontSize: "9px", fontWeight: 700, color: "#1d39c4" }}>🎙️ Recording</span>
+              <audio src={row.image.url} controls style={{ width: "100%", height: "24px" }} />
+            </div>
+          );
+        }
+
+        return (
+          <div style={{ display: "flex", flexDirection: "column", gap: "2px", padding: "2px 0" }}>
+            <span style={{ fontSize: "9px", fontWeight: 700, color: "#276749" }}>📸 Photo</span>
+            <a href={row.image.url} target="_blank" rel="noreferrer">
+              <img
+                src={row.image.url}
+                alt="attachment"
+                style={{
+                  maxHeight: "45px",
+                  maxWidth: "80px",
+                  borderRadius: "4px",
+                  border: "1px solid #cbd5e0",
+                  objectFit: "cover",
+                  cursor: "pointer",
+                }}
+              />
+            </a>
+          </div>
+        );
+      },
+      ignoreRowClick: true,
+      allowOverflow: true,
+      minWidth: "180px",
+    },
+    {
       name: "Date",
       selector: (row) =>
         new Date(row.createdAt).toLocaleString("en-IN", {

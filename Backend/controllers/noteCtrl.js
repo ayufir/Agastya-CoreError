@@ -20,10 +20,12 @@ exports.addNote = async (req, res) => {
     let imageData = { url: null, fileId: null };
     if (req.file) {
       try {
+        const isAudio = req.file.mimetype?.startsWith("audio/") || req.file.originalname?.match(/\.(mp3|wav|ogg|m4a|aac)$/i);
+        const folderPath = isAudio ? "/notes/call_recordings" : "/notes/images";
         const result = await imagekit.upload({
           file: req.file.buffer,
           fileName: `note_${Date.now()}_${req.file.originalname}`,
-          folder: "/notes",
+          folder: folderPath,
         });
         imageData = { url: result.url, fileId: result.fileId };
       } catch (imgErr) {

@@ -1,6 +1,4 @@
-
-
-
+// Nodemon config loaded
 require("dotenv").config();
 
 const cors = require("cors");

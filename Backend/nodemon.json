@@ -1,0 +1,10 @@
+{
+  "verbose": true,
+  "ignore": [
+    "backend-debug.json",
+    "autofill-debug.json",
+    "error-log.txt",
+    "uploads/*",
+    "uploads/**/*"
+  ]
+}

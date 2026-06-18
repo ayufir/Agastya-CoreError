@@ -42,11 +42,11 @@ import axiosInstance from "../../../config/axios";
 import getBankTagColor from "../getBankTagColor";
 
 const STATUS_TYPES = [
-  { title: "New Cases", value: "NEW_CASES", icon: PlusCircle, color: "#3b82f6", bg: "rgba(59, 130, 246, 0.07)", border: "#bfdbfe" },
-  { title: "Pending", value: "PENDING", icon: Clock, color: "#f59e0b", bg: "rgba(245, 158, 11, 0.07)", border: "#fef3c7" },
-  { title: "Query Raised", value: "QUERY_RAISED", icon: AlertTriangle, color: "#ef4444", bg: "rgba(239, 68, 68, 0.07)", border: "#fee2e2" },
-  { title: "Completed", value: "COMPLETED", icon: CheckCircle2, color: "#10b981", bg: "rgba(16, 185, 129, 0.07)", border: "#dcfce7" },
-  { title: "Total Assigned", value: "TOTAL_ASSIGNED", icon: Briefcase, color: "#6366f1", bg: "rgba(99, 102, 241, 0.07)", border: "#c7d2fe" },
+  { title: "New Cases", value: "NEW_CASES", icon: PlusCircle, color: "#2563eb", bg: "rgba(37, 99, 235, 0.05)", border: "#d0e6df" },
+  { title: "Pending", value: "PENDING", icon: Clock, color: "#ca8a04", bg: "rgba(202, 138, 4, 0.05)", border: "#d0e6df" },
+  { title: "Query Raised", value: "QUERY_RAISED", icon: AlertTriangle, color: "#dc2626", bg: "rgba(220, 38, 38, 0.05)", border: "#d0e6df" },
+  { title: "Completed", value: "COMPLETED", icon: CheckCircle2, color: "#16a34a", bg: "rgba(22, 163, 74, 0.05)", border: "#d0e6df" },
+  { title: "Total Assigned", value: "TOTAL_ASSIGNED", icon: Briefcase, color: "#0d9488", bg: "rgba(13, 148, 136, 0.05)", border: "#d0e6df" },
 ];
 
 const formatShortDate = (dateString) => {
@@ -347,7 +347,7 @@ const FieldOfficerDashboard = () => {
         const isNameNA = !customerName || customerName === "N/A";
 
         return (
-          <div className="flex flex-col gap-1 py-0.5">
+          <div className="flex flex-col gap-1 py-0.5 font-outfit">
             <div className="flex items-center gap-2 flex-wrap">
               {/* LED Blinking Light Indicator */}
               {isPending && (
@@ -358,16 +358,16 @@ const FieldOfficerDashboard = () => {
               )}
 
               {isPending ? (
-                <span className={`text-sm tracking-tight ${isNameNA ? 'font-medium text-slate-400 italic' : 'font-extrabold text-slate-800'}`}>
+                <span className={`text-sm tracking-tight ${isNameNA ? 'font-medium text-slate-400 italic' : 'font-extrabold text-[#1c2725]'}`}>
                   {isNameNA ? "Unnamed Customer" : customerName}
                 </span>
               ) : (
                 <Link
                   to={`/bank/${getBankRoute(record)}/edit/${record._id}`}
-                  className="text-sm font-extrabold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1.5 group transition-all"
+                  className="text-sm font-extrabold text-[#1b4d3e] hover:text-[#1c2725] hover:underline flex items-center gap-1.5 group transition-all"
                 >
                   {isNameNA ? "Unnamed Customer" : customerName}
-                  <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-indigo-500" />
+                  <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-[#1b4d3e]" />
                 </Link>
               )}
             </div>
@@ -386,7 +386,7 @@ const FieldOfficerDashboard = () => {
                 )
               )}
               {isPending && !isDelayed && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-blue-50 text-blue-600 border border-blue-100">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-[#eef7f4] text-[#1b4d3e] border border-[#c8e2da]">
                   NEW CASE
                 </span>
               )}
@@ -409,7 +409,7 @@ const FieldOfficerDashboard = () => {
         return (
           <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold ${
             isT 
-              ? "bg-emerald-50 text-emerald-700 border border-emerald-100" 
+              ? "bg-[#eef7f4] text-[#1b4d3e] border border-[#c8e2da]" 
               : "bg-slate-50/80 text-slate-600 border border-slate-100"
           }`}>
             <Clock className="w-3.5 h-3.5 text-slate-400" />
@@ -426,7 +426,7 @@ const FieldOfficerDashboard = () => {
       render: (_, record) => {
         const address = getDisplayAddress(record);
         return (
-          <span className="text-slate-600 text-xs font-medium max-w-[220px] truncate block" title={address}>
+          <span className="text-[#5c706c] text-xs font-semibold max-w-[220px] truncate block" title={address}>
             {address}
           </span>
         );
@@ -442,14 +442,14 @@ const FieldOfficerDashboard = () => {
           return (
             <a 
               href={`tel:${contact}`} 
-              className="text-indigo-650 hover:text-indigo-800 font-bold hover:underline inline-flex items-center gap-1.5 text-xs bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-100 transition-colors"
+              className="text-[#1c2725] hover:text-[#5c706c] font-bold hover:underline inline-flex items-center gap-1.5 text-xs bg-[#f4faf8] px-2.5 py-1 rounded-xl border border-[#d0e6df] transition-colors"
             >
               <Phone className="w-3.5 h-3.5 text-slate-400" />
               {contact}
             </a>
           );
         }
-        return <span className="text-slate-405 text-xs italic">N/A</span>;
+        return <span className="text-slate-400 text-xs italic">N/A</span>;
       },
     },
     {
@@ -463,13 +463,13 @@ const FieldOfficerDashboard = () => {
               <Button
                 type="primary"
                 onClick={() => handleAccept(record._id, record.bankName)}
-                className="bg-indigo-600 hover:bg-indigo-700 border-none font-bold text-xs rounded-xl h-8 px-4 flex items-center justify-center cursor-pointer shadow-md active:scale-95 transition-all"
+                className="bg-[#1c2725] hover:bg-[#243531] border-none font-bold text-xs rounded-xl h-8 px-4 flex items-center justify-center cursor-pointer shadow-md active:scale-95 transition-all text-white"
               >
                 Accept
               </Button>
               <Button
                 onClick={() => handleDecline(record._id, record.bankName)}
-                className="bg-rose-50 hover:bg-rose-105 text-rose-605 hover:text-rose-700 border border-rose-100 hover:border-rose-200 font-bold text-xs rounded-xl h-8 px-4 flex items-center justify-center cursor-pointer active:scale-95 transition-all"
+                className="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100 hover:border-rose-200 font-bold text-xs rounded-xl h-8 px-4 flex items-center justify-center cursor-pointer active:scale-95 transition-all"
               >
                 Deny
               </Button>
@@ -479,10 +479,10 @@ const FieldOfficerDashboard = () => {
           return (
             <Link
               to={`/bank/${getBankRoute(record)}/edit/${record._id}`}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-100 hover:border-indigo-200 font-bold text-xs rounded-xl transition-all shadow-sm"
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#eef7f4] hover:bg-[#dceee8] text-[#1b4d3e] border border-[#c8e2da] hover:border-[#a4d4c4] font-bold text-xs rounded-xl transition-all shadow-sm"
               title="Edit Report"
             >
-              <Eye className="w-4 h-4 text-indigo-500" />
+              <Eye className="w-4 h-4 text-[#1b4d3e]" />
               <span>Edit Report</span>
               {record.isReportSubmitted && (
                 <CheckCheck className="text-emerald-600 w-4 h-4 ml-0.5" />
@@ -508,8 +508,8 @@ const FieldOfficerDashboard = () => {
                 setSelectedCaseDocs(docs);
                 setIsDocsModalOpen(true);
               }}
-              className="text-amber-700 border-amber-200 bg-amber-50/50 hover:bg-amber-100 hover:border-amber-350 flex items-center gap-1.5 font-bold text-xs px-3 py-1.5 rounded-xl transition-all shadow-sm cursor-pointer"
-              icon={<FileText className="w-3.5 h-3.5 text-amber-500" />}
+              className="text-amber-800 border-amber-250 bg-amber-50/50 hover:bg-amber-100 hover:border-amber-350 flex items-center gap-1.5 font-bold text-xs px-3 py-1.5 rounded-xl transition-all shadow-sm cursor-pointer"
+              icon={<FileText className="w-3.5 h-3.5 text-amber-600" />}
             >
               Papers
             </Button>
@@ -532,7 +532,7 @@ const FieldOfficerDashboard = () => {
           className={`font-bold text-xs rounded-xl h-8 flex items-center justify-center cursor-pointer border ${
             record?.isReportSubmitted === true
               ? "text-slate-400 bg-slate-50 border-slate-200 cursor-not-allowed"
-              : "text-slate-600 bg-white border-slate-200 hover:border-slate-300 hover:text-slate-800"
+              : "text-[#5c706c] bg-white border-[#d0e6df] hover:border-[#a4d4c4] hover:text-[#1c2725]"
           }`}
         >
           Mark Query
@@ -550,7 +550,7 @@ const FieldOfficerDashboard = () => {
         const bankName = caseMap[record.caseId]?.bankName || "N/A";
         const color = getBankTagColor(bankName);
         return (
-          <Tag color={color} className="font-extrabold border-none rounded-lg px-3 py-1 text-[10px] uppercase tracking-wider">
+          <Tag color={color} className="font-extrabold border-none rounded-lg px-3 py-1 text-[10px] uppercase tracking-wider shadow-sm">
             {bankName}
           </Tag>
         );
@@ -568,7 +568,7 @@ const FieldOfficerDashboard = () => {
       render: (_, record) => {
         const caseData = caseMap[record.caseId];
         return caseData ? (
-          <span className="font-extrabold text-slate-800 text-sm">
+          <span className="font-extrabold text-[#1c2725] text-sm">
             {getDisplayCustomerName(caseData) || "Unnamed Customer"}
           </span>
         ) : "N/A";
@@ -583,14 +583,14 @@ const FieldOfficerDashboard = () => {
       title: "Message",
       dataIndex: "message",
       key: "message",
-      render: (text) => <span className="text-slate-600 font-semibold text-xs">{text}</span>,
+      render: (text) => <span className="text-[#5c706c] font-bold text-xs">{text}</span>,
     },
     {
       title: "Date",
       dataIndex: "createdAt",
       key: "createdAt",
       render: (date) => (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold bg-slate-50 border border-slate-100 text-slate-600">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold bg-[#f4faf8] border border-[#d0e6df] text-[#1c2725]">
           <Calendar size={13} className="text-slate-400" />
           {dayjs(date).format("DD/MM/YYYY hh:mm A")}
         </span>
@@ -607,7 +607,7 @@ const FieldOfficerDashboard = () => {
             type="primary"
             onClick={() => handleResolveAndEdit(record.caseId, caseData)}
             disabled={!caseData}
-            className="bg-indigo-600 hover:bg-indigo-700 border-none font-bold text-xs rounded-xl h-8 px-4 flex items-center justify-center cursor-pointer shadow-md active:scale-95 transition-all"
+            className="bg-[#1c2725] hover:bg-[#243531] border-none font-bold text-xs rounded-xl h-8 px-4 flex items-center justify-center cursor-pointer shadow-md active:scale-95 transition-all text-white"
           >
             Resolve & Edit
           </Button>
@@ -644,15 +644,15 @@ const FieldOfficerDashboard = () => {
     const currentStatus = stages[activeStageIndex].desc;
 
     return (
-      <div className="bg-slate-50/70 p-3.5 rounded-2xl border border-slate-100 mt-2.5 mb-4 shadow-inner">
+      <div className="bg-[#f4faf8] p-3.5 rounded-2xl border border-[#d0e6df]/60 mt-2.5 mb-4 shadow-sm">
         {/* Top Status Label */}
         <div className="flex justify-between items-center mb-3.5">
-          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Progress Status</span>
+          <span className="text-[9px] font-bold text-[#7a928e] uppercase tracking-widest">Progress Status</span>
           <span className={`text-[9.5px] font-extrabold uppercase px-2.5 py-0.5 rounded-full border ${
             isCompleted 
-              ? "bg-emerald-50 text-emerald-700 border-emerald-250" 
+              ? "bg-[#eef7f4] text-[#1b4d3e] border-[#c8e2da]" 
               : isAccepted 
-                ? "bg-indigo-50 text-indigo-700 border-indigo-250" 
+                ? "bg-[#f4faf8] text-[#1c2725] border-[#d0e6df]" 
                 : "bg-blue-50 text-blue-700 border-blue-200"
           }`}>
             {currentStatus}
@@ -672,9 +672,9 @@ const FieldOfficerDashboard = () => {
                   className={`w-6 h-6 rounded-full flex items-center justify-center border text-[10px] font-bold transition-all duration-300 relative z-10 ${
                     isActive 
                       ? isLastActive
-                        ? "bg-indigo-650 border-indigo-650 text-white shadow-sm ring-4 ring-indigo-100 animate-pulse"
-                        : "bg-indigo-500 border-indigo-500 text-white shadow-sm"
-                      : "bg-white border-slate-200 text-slate-400"
+                        ? "bg-[#1c2725] border-[#1c2725] text-white shadow-sm ring-4 ring-[#1c2725]/10 animate-pulse"
+                        : "bg-[#3b6657] border-[#3b6657] text-white shadow-sm"
+                      : "bg-white border-[#d0e6df] text-[#7a928e]"
                   }`}
                   title={stage.label}
                 >
@@ -683,7 +683,7 @@ const FieldOfficerDashboard = () => {
 
                 {/* Label below the circle, positioned absolutely so it doesn't stretch the flex item */}
                 <div className={`absolute top-7 left-1/2 -translate-x-1/2 whitespace-nowrap text-[8.5px] font-extrabold uppercase tracking-tight ${
-                  isActive ? "text-indigo-600 font-black" : "text-slate-400"
+                  isActive ? "text-[#1b4d3e] font-black" : "text-[#7a928e]"
                 }`}>
                   {stage.label}
                 </div>
@@ -692,7 +692,7 @@ const FieldOfficerDashboard = () => {
                 {idx < stages.length - 1 && (
                   <div className="absolute left-6 right-0 top-3 -translate-y-1/2 h-0.5 pointer-events-none z-0">
                     <div className={`h-full w-full transition-all duration-300 ${
-                      idx < activeStageIndex ? "bg-indigo-500" : "bg-slate-200"
+                      idx < activeStageIndex ? "bg-[#3b6657]" : "bg-[#d0e6df]"
                     }`} />
                   </div>
                 )}
@@ -707,7 +707,7 @@ const FieldOfficerDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] p-4 md:p-6 pb-24 dash-root">
+    <div className="min-h-screen bg-gradient-to-br from-[#c7e1d9] via-[#edf4f1] to-[#f4faf7] p-4 md:p-6 pb-24 dash-root">
       <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
         
@@ -722,34 +722,49 @@ const FieldOfficerDashboard = () => {
         }
 
         .custom-premium-table .ant-table-thead > tr > th {
-          background: #f8fafc !important;
-          color: #475569 !important;
-          font-weight: 700 !important;
+          background: #eef4f2 !important;
+          color: #1c2725 !important;
+          font-weight: 800 !important;
           font-size: 11px !important;
           text-transform: uppercase !important;
           letter-spacing: 0.06em !important;
-          border-bottom: 2px solid #e2e8f0 !important;
+          border-bottom: 2px solid #d0e6df !important;
           padding: 16px 20px !important;
         }
 
         .custom-premium-table .ant-table-tbody > tr > td {
-          border-bottom: 1px solid #f1f5f9 !important;
+          border-bottom: 1px solid #edf4f1 !important;
           padding: 16px 20px !important;
+          background: #ffffff !important;
+          color: #1c2725 !important;
+          font-weight: 500 !important;
           transition: all 0.2s ease;
         }
 
+        .custom-premium-table .ant-table-tbody > tr:hover > td {
+          background: #f4faf8 !important;
+        }
+
         .custom-premium-table .ant-pagination-item {
-          border-radius: 10px !important;
-          font-weight: 600 !important;
+          border-radius: 12px !important;
+          font-weight: 700 !important;
+          border-color: #d0e6df !important;
         }
 
         .custom-premium-table .ant-pagination-item-active {
-          background: #4f46e5 !important;
-          border-color: #4f46e5 !important;
+          background: #1c2725 !important;
+          border-color: #1c2725 !important;
         }
 
         .custom-premium-table .ant-pagination-item-active a {
           color: #ffffff !important;
+        }
+
+        .custom-premium-table .ant-pagination-item:hover {
+          border-color: #1c2725 !important;
+        }
+        .custom-premium-table .ant-pagination-item:hover a {
+          color: #1c2725 !important;
         }
 
         @keyframes alert-pulse-red {
@@ -788,36 +803,36 @@ const FieldOfficerDashboard = () => {
       `}} />
       
       {/* Premium Header Welcome Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-955 to-slate-900 rounded-3xl p-6 md:p-8 text-white mb-6 border border-white/5 shadow-2xl">
-        <div className="absolute right-0 top-0 -mt-8 -mr-8 w-44 h-44 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute left-1/3 bottom-0 -mb-8 w-36 h-36 bg-emerald-500/5 rounded-full blur-2xl pointer-events-none" />
+      <div className="relative overflow-hidden bg-gradient-to-br from-[#1c2725] via-[#243531] to-[#1c2725] rounded-[32px] p-6 md:p-8 text-white mb-6 border border-white/10 shadow-lg">
+        <div className="absolute right-0 top-0 -mt-8 -mr-8 w-44 h-44 bg-[#a4d4c4]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute left-1/3 bottom-0 -mb-8 w-36 h-36 bg-[#eef68f]/5 rounded-full blur-2xl pointer-events-none" />
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="bg-indigo-500/20 text-indigo-300 text-[10px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full border border-indigo-500/30">
+              <span className="bg-[#eef68f] text-[#1c2725] text-[10px] font-extrabold uppercase tracking-widest px-3.5 py-1 rounded-full shadow-sm">
                 Field Operations
               </span>
-              <span className="text-slate-400 text-xs font-semibold">
+              <span className="text-[#a4d4c4] text-xs font-bold">
                 • Unique Engineering
               </span>
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
-              Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 via-white to-slate-200">{user?.name || "Officer"}</span>!
+              Welcome back, <span className="text-[#eef68f]">{user?.name || "Officer"}</span>!
             </h1>
-            <p className="text-slate-300 text-xs md:text-sm mt-1.5 max-w-xl font-medium leading-relaxed">
+            <p className="text-[#7a928e] text-xs md:text-sm mt-1.5 max-w-xl font-bold leading-relaxed">
               {summaryCounts.NEW_CASES > 0 
                 ? `You have ${summaryCounts.NEW_CASES} new cases awaiting your acceptance.` 
                 : "All caught up! You don't have any new cases pending acceptance."}
             </p>
           </div>
           
-          <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md rounded-2xl p-3.5 border border-white/10 self-start md:self-auto shadow-lg">
-            <div className="p-2.5 bg-indigo-500/20 rounded-xl text-indigo-300">
+          <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md rounded-2xl p-3.5 border border-white/10 self-start md:self-auto shadow-md">
+            <div className="p-2.5 bg-white/10 rounded-xl text-[#eef68f]">
               <Calendar className="w-5 h-5" />
             </div>
             <div className="text-left">
-              <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-none">Current Date</div>
+              <div className="text-[9px] text-[#7a928e] font-bold uppercase tracking-wider leading-none">Current Date</div>
               <div className="text-xs font-bold text-white mt-1">
                 {dayjs().format("dddd, D MMMM YYYY")}
               </div>
@@ -831,22 +846,38 @@ const FieldOfficerDashboard = () => {
         {STATUS_TYPES.map(({ title, value, icon: Icon, color, bg }) => {
           const isSelected = selectedStatus === value;
           const count = summaryCounts[value] || 0;
+          const isHighlight = value === "TOTAL_ASSIGNED";
+          
+          let cardStyle = "bg-white/80 backdrop-blur-sm border-[#d0e6df] text-[#1c2725] hover:bg-[#f4faf8]/50";
+          let badgeStyle = "bg-[#f4faf8] border border-[#d0e6df] text-[#5c706c]";
+          
+          if (isSelected) {
+            if (isHighlight) {
+              cardStyle = "bg-[#eef68f] border-[#e1ea9a] text-[#1c2725] shadow-md scale-[1.02]";
+              badgeStyle = "bg-[#1c2725]/10 text-[#1c2725]";
+            } else {
+              cardStyle = "bg-[#1c2725] border-[#1c2725] text-white shadow-md scale-[1.02]";
+              badgeStyle = "bg-white/20 text-white";
+            }
+          }
           
           return (
             <button
               key={value}
               onClick={() => setSelectedStatus(value)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl font-bold border transition-all shrink-0 active:scale-95 shadow-sm cursor-pointer ${
-                isSelected 
-                  ? "bg-slate-900 border-slate-950 text-white shadow-md shadow-indigo-100" 
-                  : "bg-white border-slate-100 text-slate-700 hover:bg-slate-50"
-              }`}
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full font-bold border transition-all shrink-0 active:scale-95 shadow-sm cursor-pointer ${cardStyle}`}
             >
-              <Icon size={14} style={{ color: isSelected ? "#ffffff" : color }} />
+              <div 
+                className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-colors"
+                style={{ 
+                  backgroundColor: isSelected ? (isHighlight ? "rgba(28, 39, 37, 0.1)" : "rgba(255, 255, 255, 0.15)") : bg,
+                  color: isSelected ? (isHighlight ? "#1c2725" : "#ffffff") : color
+                }}
+              >
+                <Icon size={12} />
+              </div>
               <span className="text-xs whitespace-nowrap tracking-tight">{title}</span>
-              <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold leading-none ${
-                isSelected ? "bg-white/20 text-white" : "bg-slate-50 border border-slate-150 text-slate-600"
-              }`}>
+              <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold leading-none ${badgeStyle}`}>
                 {count}
               </span>
             </button>
@@ -859,30 +890,46 @@ const FieldOfficerDashboard = () => {
         {STATUS_TYPES.map(({ title, value, icon: Icon, color, bg }) => {
           const isSelected = selectedStatus === value;
           const count = summaryCounts[value] || 0;
+          const isHighlight = value === "TOTAL_ASSIGNED";
+          
+          let cardStyle = "bg-white border-[#edf4f1] text-[#1c2725] hover:border-[#d0e6df] hover:bg-white";
+          let textTitleStyle = "text-[#7a928e]";
+          let textCountStyle = "text-[#1c2725]";
+          let iconWrapperStyle = "";
+          
+          if (isSelected) {
+            if (isHighlight) {
+              cardStyle = "bg-[#eef68f] border-[#e1ea9a] text-[#1c2725] shadow-md hover:border-[#e1ea9a] hover:bg-[#eef68f]";
+              textTitleStyle = "text-[#5c706c]";
+              textCountStyle = "text-[#1c2725]";
+              iconWrapperStyle = "bg-[#1c2725]/10 text-[#1c2725]";
+            } else {
+              cardStyle = "bg-[#1c2725] border-[#1c2725] text-white shadow-md hover:border-[#1c2725] hover:bg-[#1c2725]";
+              textTitleStyle = "text-[#a4d4c4]";
+              textCountStyle = "text-white";
+              iconWrapperStyle = "bg-white/10 text-white";
+            }
+          } else {
+            iconWrapperStyle = "bg-[#f4faf8] text-[#1c2725]";
+          }
           
           return (
             <div
               key={value}
               onClick={() => setSelectedStatus(value)}
-              className={`cursor-pointer transition-all duration-300 border rounded-2xl p-4 md:p-5 relative overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-1 active:scale-[0.98] group flex flex-col justify-between ${
-                isSelected 
-                  ? "bg-slate-900 border-slate-900 text-white shadow-lg ring-2 ring-indigo-500/20" 
-                  : "bg-white border-slate-100 hover:border-slate-300 text-slate-800"
-              }`}
+              className={`cursor-pointer transition-all duration-300 border rounded-[24px] p-4 md:p-5 relative overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-1 active:scale-[0.98] group flex flex-col justify-between ${cardStyle}`}
             >
-              <div className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl" style={{ backgroundColor: isSelected ? "#4f46e5" : color }} />
+              <div className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-[24px]" style={{ backgroundColor: isSelected ? (isHighlight ? "#1c2725" : "#3b6657") : color }} />
               
               <div className="flex justify-between items-start gap-2 mb-2">
-                <span className={`text-[10px] md:text-[11px] font-bold tracking-wider uppercase block ${
-                  isSelected ? "text-indigo-200" : "text-slate-400"
-                }`}>
+                <span className={`text-[10px] md:text-[11px] font-bold tracking-wider uppercase block ${textTitleStyle}`}>
                   {title}
                 </span>
                 <div 
-                  className="p-2 rounded-xl transition-all duration-350 group-hover:scale-110 shadow-sm shrink-0"
+                  className={`p-2 rounded-xl transition-all duration-350 group-hover:scale-110 shadow-sm shrink-0 ${iconWrapperStyle}`}
                   style={{ 
-                    backgroundColor: isSelected ? "rgba(255,255,255,0.1)" : bg, 
-                    color: isSelected ? "#ffffff" : color 
+                    backgroundColor: isSelected ? undefined : bg, 
+                    color: isSelected ? undefined : color 
                   }}
                 >
                   <Icon className="w-4.5 h-4.5" />
@@ -890,9 +937,7 @@ const FieldOfficerDashboard = () => {
               </div>
 
               <div className="flex items-baseline gap-1 mt-2">
-                <span className={`text-2xl md:text-3.5xl font-extrabold tracking-tight ${
-                  isSelected ? "text-white" : "text-slate-800"
-                }`}>
+                <span className={`text-2xl md:text-3.5xl font-extrabold tracking-tight ${textCountStyle}`}>
                   {count}
                 </span>
               </div>
@@ -902,10 +947,10 @@ const FieldOfficerDashboard = () => {
       </div>
 
       {/* Advanced Filter and Search Panel */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-4 md:p-5 shadow-sm mb-6 flex flex-col gap-4">
+      <div className="bg-white rounded-[24px] border border-[#d0e6df] p-4 md:p-5 shadow-sm mb-6 flex flex-col gap-4">
         <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
           <div className="relative w-full lg:max-w-md">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#5c706c]">
               <SearchIcon size={16} />
             </div>
             <input
@@ -913,7 +958,7 @@ const FieldOfficerDashboard = () => {
               placeholder="Search by customer, address, contact..."
               value={searchText}
               onChange={(e) => handleSearch(e.target.value)}
-              className="block w-full pl-11 pr-10 py-2.5 bg-slate-50 border border-slate-200 text-slate-800 placeholder-slate-400 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-xs font-semibold shadow-inner"
+              className="block w-full pl-11 pr-10 py-2.5 bg-[#f4faf8]/80 border border-[#d0e6df] text-[#1c2725] placeholder-slate-400 rounded-xl focus:outline-none focus:ring-4 focus:ring-[#3b6657]/10 focus:border-[#3b6657] transition-all text-xs font-semibold shadow-inner"
             />
             {searchText && (
               <button
@@ -954,14 +999,14 @@ const FieldOfficerDashboard = () => {
                     onClick={() => setSelectedBank(isBankSelected ? null : bank)}
                     className={`text-[11px] px-4 py-2 rounded-2xl font-bold border transition-all duration-300 cursor-pointer flex items-center gap-1.5 shadow-sm hover:scale-105 active:scale-95 ${
                       isBankSelected
-                        ? "bg-slate-900 border-slate-900 text-white shadow-indigo-100"
-                        : "bg-white hover:bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300"
+                        ? "bg-[#1c2725] border-[#1c2725] text-white shadow-sm"
+                        : "bg-white hover:bg-[#f4faf8]/50 border-[#d0e6df] text-[#5c706c] hover:border-[#1c2725]"
                     }`}
                   >
                     {bank}
                     {todayCount > 0 && (
                       <span className={`px-1.5 py-0.5 rounded-full text-[8.5px] font-extrabold ${
-                        isBankSelected ? "bg-white/20 text-white" : "bg-indigo-50 text-indigo-600"
+                        isBankSelected ? "bg-white/20 text-white" : "bg-[#eef7f4] text-[#1b4d3e]"
                       }`}>
                         {todayCount} new
                       </span>
@@ -979,17 +1024,17 @@ const FieldOfficerDashboard = () => {
 
       {/* Main Cases Container */}
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-28 bg-white rounded-3xl border border-slate-100 shadow-sm">
+        <div className="flex flex-col items-center justify-center py-28 bg-white rounded-[24px] border border-[#d0e6df] shadow-sm">
           <Spin size="large" />
-          <span className="text-slate-400 text-xs font-bold mt-4">Loading assigned cases...</span>
+          <span className="text-[#5c706c] text-xs font-bold mt-4">Loading assigned cases...</span>
         </div>
       ) : isEmpty ? (
-        <div className="flex flex-col items-center justify-center text-center p-16 bg-white rounded-3xl border border-slate-100 shadow-sm">
-          <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 mb-4 border border-slate-100 shadow-inner">
-            <Briefcase size={24} className="text-slate-400" />
+        <div className="flex flex-col items-center justify-center text-center p-16 bg-white rounded-[24px] border border-[#d0e6df] shadow-sm">
+          <div className="w-16 h-16 bg-[#f4faf8] rounded-full flex items-center justify-center text-[#5c706c] mb-4 border border-[#d0e6df] shadow-inner">
+            <Briefcase size={24} className="text-[#5c706c]" />
           </div>
-          <h3 className="text-base font-bold text-slate-700">No applications found</h3>
-          <p className="text-slate-400 text-xs max-w-xs mt-1.5 font-medium leading-relaxed">
+          <h3 className="text-base font-bold text-[#1c2725]">No applications found</h3>
+          <p className="text-[#5c706c] text-xs max-w-xs mt-1.5 font-medium leading-relaxed">
             {selectedStatus !== "TOTAL_ASSIGNED" || selectedBank || searchText
               ? "We couldn't find any cases matching your current filters. Try resetting them."
               : "You don't have any cases assigned in this category right now."}
@@ -1001,7 +1046,7 @@ const FieldOfficerDashboard = () => {
                 setSelectedBank(null);
                 setSearchText("");
               }}
-              className="mt-5 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer active:scale-95 hover:shadow-lg"
+              className="mt-5 px-5 py-2.5 bg-[#1c2725] hover:bg-[#2c3d3a] text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer active:scale-95 hover:shadow-lg"
             >
               Reset Filters
             </button>
@@ -1010,7 +1055,7 @@ const FieldOfficerDashboard = () => {
       ) : (
         <>
           {/* Desktop View (Data Table) */}
-          <div className="hidden md:block bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="hidden md:block bg-white rounded-[24px] border border-[#d0e6df] shadow-sm overflow-hidden">
             <Table
               dataSource={sortedCases}
               columns={
@@ -1073,7 +1118,7 @@ const FieldOfficerDashboard = () => {
                 return (
                   <div 
                     key={caseItem._id || caseItem.caseId}
-                    className="bg-white rounded-2xl border border-slate-200 p-4.5 shadow-sm hover:shadow-md transition-all relative overflow-hidden"
+                    className="bg-white rounded-[24px] border border-[#d0e6df] p-4.5 shadow-sm hover:shadow-md transition-all relative overflow-hidden"
                     style={{ borderLeft: "4px solid #ef4444" }}
                   >
                     <div className="flex justify-between items-start mb-3">
@@ -1083,14 +1128,14 @@ const FieldOfficerDashboard = () => {
                       >
                         {bName}
                       </Tag>
-                      <span className="text-[9px] font-extrabold px-2 py-0.5 bg-rose-50 text-rose-655 rounded-lg border border-rose-100 uppercase tracking-wide">
+                      <span className="text-[9px] font-extrabold px-2 py-0.5 bg-rose-50 text-rose-600 rounded-lg border border-rose-100 uppercase tracking-wide">
                         Query Raised
                       </span>
                     </div>
-                    <div className="text-[14.5px] font-extrabold text-slate-800 mb-1">
+                    <div className="text-[14.5px] font-extrabold text-[#1c2725] mb-1">
                       {custName}
                     </div>
-                    <div className="text-[10px] text-slate-405 mb-3 flex items-center gap-1 font-bold">
+                    <div className="text-[10px] text-[#5c706c] mb-3 flex items-center gap-1 font-bold">
                       <Calendar size={12} className="text-slate-400" />
                       {dateFormatted}
                     </div>
@@ -1098,8 +1143,8 @@ const FieldOfficerDashboard = () => {
                     {/* Stepper on Query card */}
                     {cData && renderMobileProgress(cData)}
 
-                    <div className="text-xs text-slate-600 bg-slate-50 rounded-2xl p-3.5 border border-slate-100 min-h-[3.5rem] mb-4 leading-relaxed">
-                      <span className="font-extrabold text-slate-400 block mb-1 text-[9px] uppercase tracking-wider">Query Message:</span>
+                    <div className="text-xs text-[#1c2725] bg-[#f4faf8] rounded-2xl p-3.5 border border-[#d0e6df] min-h-[3.5rem] mb-4 leading-relaxed">
+                      <span className="font-extrabold text-[#5c706c] block mb-1 text-[9px] uppercase tracking-wider">Query Message:</span>
                       {caseItem.message || "No detailed query message provided."}
                     </div>
                     
@@ -1107,7 +1152,7 @@ const FieldOfficerDashboard = () => {
                       type="primary"
                       onClick={() => handleResolveAndEdit(caseItem.caseId, cData)}
                       disabled={!cData}
-                      className="bg-indigo-600 hover:bg-indigo-700 border-none font-bold text-xs rounded-xl h-10 w-full flex items-center justify-center cursor-pointer active:scale-95 transition-all shadow-md hover:shadow-lg"
+                      className="bg-[#1c2725] hover:bg-[#2c3d3a] border-none font-bold text-xs rounded-xl h-10 w-full flex items-center justify-center cursor-pointer active:scale-95 transition-all shadow-md hover:shadow-lg"
                     >
                       Resolve & Edit Case
                     </Button>
@@ -1183,10 +1228,10 @@ const FieldOfficerDashboard = () => {
                     ) : (
                       <Link
                         to={`/bank/${bankRoute}/edit/${caseItem._id}`}
-                        className="text-[15.5px] font-extrabold text-indigo-600 hover:text-indigo-800 hover:underline flex items-center gap-1 group leading-snug"
+                        className="text-[15.5px] font-extrabold text-[#1b4d3e] hover:text-[#1c2725] hover:underline flex items-center gap-1 group leading-snug"
                       >
                         {customerName || "Unnamed Customer"}
-                        <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5 text-indigo-500 shrink-0" />
+                        <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5 text-[#1b4d3e] shrink-0" />
                       </Link>
                     )}
                   </div>
@@ -1204,9 +1249,9 @@ const FieldOfficerDashboard = () => {
                         {contact && contact !== "N/A" ? (
                           <a 
                             href={`tel:${contact}`}
-                            className="inline-flex items-center gap-2 px-3.5 py-2 bg-indigo-50/60 hover:bg-indigo-100/80 text-indigo-700 font-extrabold text-[11px] rounded-xl border border-indigo-100 transition-all cursor-pointer shadow-sm active:scale-95"
+                            className="inline-flex items-center gap-2 px-3.5 py-2 bg-[#eef7f4] hover:bg-[#dceee8] text-[#1b4d3e] font-extrabold text-[11px] rounded-xl border border-[#c8e2da] transition-all cursor-pointer shadow-sm active:scale-95"
                           >
-                            <Phone size={12} className="text-indigo-500" />
+                            <Phone size={12} className="text-[#1b4d3e]" />
                             <span>Call {contact}</span>
                           </a>
                         ) : (
@@ -1246,7 +1291,7 @@ const FieldOfficerDashboard = () => {
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           onClick={() => handleAccept(caseItem._id, caseItem.bankName)}
-                          className="py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm text-center flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                          className="py-3 px-4 bg-[#1c2725] hover:bg-[#2c3d3a] text-white font-bold text-xs rounded-xl transition-all shadow-sm text-center flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                         >
                           <Check size={14} /> Accept
                         </button>
@@ -1262,10 +1307,10 @@ const FieldOfficerDashboard = () => {
                         <div className="flex gap-2">
                           <Link
                             to={`/bank/${bankRoute}/edit/${caseItem._id}`}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold text-xs rounded-xl transition-all border border-indigo-100"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-[#eef7f4] text-[#1b4d3e] hover:bg-[#dceee8] font-bold text-xs rounded-xl transition-all border border-[#c8e2da]"
                             title="Edit Report"
                           >
-                            <Eye size={13.5} className="text-indigo-500" />
+                            <Eye size={13.5} className="text-[#1b4d3e]" />
                             <span>Edit Case</span>
                             {caseItem.isReportSubmitted && (
                               <CheckCheck className="text-emerald-600 w-4 h-4 ml-0.5" />
@@ -1314,8 +1359,8 @@ const FieldOfficerDashboard = () => {
       {/* Notes Modal */}
       <Modal
         title={
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-100 font-bold text-slate-800 text-lg">
-            <FileText className="w-5 h-5 text-indigo-600" />
+          <div className="flex items-center gap-2 pb-3 border-b border-slate-100 font-bold text-[#1c2725] text-lg">
+            <FileText className="w-5 h-5 text-[#1b4d3e]" />
             <span>Case Notes / Mark Query</span>
           </div>
         }
@@ -1342,8 +1387,8 @@ const FieldOfficerDashboard = () => {
       {/* Property Papers Modal */}
       <Modal
         title={
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-100 font-bold text-slate-800 text-lg">
-            <FileText className="w-5 h-5 text-indigo-600" />
+          <div className="flex items-center gap-2 pb-3 border-b border-slate-100 font-bold text-[#1c2725] text-lg">
+            <FileText className="w-5 h-5 text-[#1b4d3e]" />
             <span>Property Papers & Documents</span>
           </div>
         }
@@ -1353,7 +1398,7 @@ const FieldOfficerDashboard = () => {
           <button 
             key="close" 
             onClick={() => setIsDocsModalOpen(false)}
-            className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer active:scale-95 shadow-sm"
+            className="px-5 py-2.5 bg-[#1c2725] hover:bg-[#2c3d3a] text-white text-xs font-bold rounded-xl transition-colors cursor-pointer active:scale-95 shadow-sm"
           >
             Close
           </button>
@@ -1402,7 +1447,7 @@ const FieldOfficerDashboard = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         icon={<Download className="w-4 h-4" />}
-                        className="flex items-center justify-center gap-1 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 border-none rounded-xl py-2 px-3 cursor-pointer"
+                        className="flex items-center justify-center gap-1 text-xs font-bold text-white bg-[#1c2725] hover:bg-[#2c3d3a] border-none rounded-xl py-2 px-3 cursor-pointer"
                         title="Download Document"
                       >
                         Download

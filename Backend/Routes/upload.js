@@ -56,8 +56,23 @@ router.post("/upload-document", async (req, res) => {
     });
   }
 
-  // const modelKey = toPascalCase(bankName);
-  const Model = modelMap[bankName];
+  let Model = modelMap[bankName];
+  if (!Model) {
+    const normalized = String(bankName).toLowerCase().replace(/\bbank\b/gi, "").replace(/[^a-z0-9]/g, "");
+    const modelMapKey = Object.keys(modelMap).find(
+      (k) => k.toLowerCase() === bankName.toLowerCase() || k.toLowerCase().replace(/\bbank\b/gi, "").replace(/[^a-z0-9]/g, "") === normalized
+    );
+    if (modelMapKey) Model = modelMap[modelMapKey];
+  }
+  if (!Model && modelMap.bankRegistry) {
+    const entry = modelMap.bankRegistry.find(
+      (b) =>
+        b.key.toLowerCase() === bankName.toLowerCase() ||
+        (b.displayName && b.displayName.toLowerCase() === bankName.toLowerCase()) ||
+        (b.route && b.route.toLowerCase() === bankName.toLowerCase())
+    );
+    if (entry) Model = entry.model;
+  }
 
   if (!Model) {
     return res.status(400).json({

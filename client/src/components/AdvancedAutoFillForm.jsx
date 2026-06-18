@@ -21,7 +21,8 @@ import {
   Check, 
   AlertTriangle,
   Clock,
-  ExternalLink
+  ExternalLink,
+  FileUp
 } from "lucide-react";
 
 const { TextArea } = Input;
@@ -85,22 +86,34 @@ const PROPERTY_TYPE_OPTIONS = [
 // ─── File chip ────────────────────────────────────────────────────────────────
 const FileChip = ({ file, onRemove, showDelete = true }) => {
   const isPdf = file.name?.toLowerCase().endsWith(".pdf");
+  
+  const formatFileSize = (bytes) => {
+    if (!bytes) return "Uploaded • 100%";
+    const kb = bytes / 1024;
+    if (kb < 1024) return `${kb.toFixed(1)} KB | 100%`;
+    const mb = kb / 1024;
+    return `${mb.toFixed(1)} MB | 100%`;
+  };
+
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-150/70 bg-white/95 px-3 py-2 text-xs shadow-sm hover:border-slate-300 hover:shadow-md transition-all duration-200 group">
-      <div className="flex items-center gap-2 min-w-0">
-        <div className={`p-1.5 rounded-lg ${isPdf ? "bg-red-50 text-red-500" : "bg-blue-50 text-blue-500"} shrink-0 flex items-center justify-center`}>
-          <FileText className="w-3.5 h-3.5" />
+    <div className="flex items-center justify-between gap-3 sm:gap-4 rounded-2xl border border-[#d0e6df]/75 bg-white p-3 sm:p-3.5 shadow-sm hover:border-[#3b6657] hover:shadow-md transition-all duration-250 group">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div className={`p-2 rounded-xl ${isPdf ? "bg-red-50 text-red-500 border-red-100" : "bg-[#f4faf8] text-[#3b6657] border-[#d0e6df]/40"} border shrink-0 flex items-center justify-center`}>
+          <FileText className="w-5 h-5" />
         </div>
-        <span className="truncate text-slate-700 font-semibold leading-none">{file.name}</span>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[#1c2725] text-xs font-bold leading-none mb-1">{file.name}</div>
+          <div className="text-[10px] text-[#7a928e] font-semibold">{formatFileSize(file.size)}</div>
+        </div>
       </div>
       {showDelete && onRemove && (
         <button
           type="button"
           onClick={onRemove}
-          className="shrink-0 p-1.5 rounded-lg bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors duration-150 cursor-pointer border-none flex items-center justify-center"
+          className="shrink-0 p-2 rounded-xl bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition-all cursor-pointer border-none flex items-center justify-center"
           title="Remove File"
         >
-          <Trash2 className="w-3.5 h-3.5" />
+          <Trash2 className="w-4 h-4" />
         </button>
       )}
     </div>
@@ -177,49 +190,201 @@ const ACCENT_STYLES = {
 const UploadCard = ({ title, helper, files, onAddFiles, onRemoveFile, accent = "blue", accept = "image/*,.pdf", icon, loading = false, allowDelete = true, isFieldOfficer = false }) => {
   const styles = ACCENT_STYLES[accent] || ACCENT_STYLES.blue;
 
-  return (
-    <div className={`rounded-2xl border ${isFieldOfficer ? "border-slate-200 bg-white shadow-sm" : `${styles.border} ${styles.bg} ${styles.shadow}`} p-5 transition-all duration-300 hover:scale-[1.015]`}>
-      <div className="mb-4">
-        <div className="text-sm font-extrabold text-slate-800 flex items-center gap-2">
-          <span className="p-1.5 rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center">
-            {icon}
-          </span>
-          <span>{title}</span>
+  // accent → CTA button color
+  const btnColorMap = {
+    purple:  { bg: "#7c3aed", hover: "#6d28d9" },
+    blue:    { bg: "#2563eb", hover: "#1d4ed8" },
+    emerald: { bg: "#059669", hover: "#047857" },
+    rose:    { bg: "#e11d48", hover: "#be123c" },
+    amber:   { bg: "#d97706", hover: "#b45309" },
+    indigo:  { bg: "#4f46e5", hover: "#4338ca" },
+    slate:   { bg: "#475569", hover: "#334155" },
+  };
+  const btnColor = btnColorMap[accent] || btnColorMap.blue;
+
+  // ── Field Officer view stays unchanged ──
+  if (isFieldOfficer) {
+    return (
+      <div className="rounded-[24px] border border-[#d0e6df] bg-white shadow-sm p-4 sm:p-5 transition-all duration-300 flex flex-col justify-between">
+        <div>
+          <div className="mb-4">
+            <div className="text-sm font-extrabold text-[#1c2725] flex items-center gap-2">
+              <span className="p-1.5 rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center">{icon}</span>
+              <span>{title}</span>
+            </div>
+            <div className="mt-2 text-[11px] text-[#5c706c] font-semibold leading-relaxed">{helper}</div>
+          </div>
+          <label className="flex flex-col items-center justify-center cursor-pointer rounded-[20px] border border-dashed border-[#d0e6df] bg-[#f4faf8]/35 hover:bg-[#eef7f4]/60 hover:border-[#3b6657] px-3 sm:px-4 py-6 sm:py-8 text-center transition-all duration-200 group">
+            {loading ? (
+              <Loader2 className="w-10 h-10 text-[#3b6657] mb-2.5 animate-spin" />
+            ) : (
+              <FileUp className="w-10 h-10 text-[#7a928e] group-hover:text-[#3b6657] mb-2.5 transition-all duration-300 group-hover:scale-110" />
+            )}
+            <span className="text-[11.5px] font-semibold text-[#5c706c] mb-1">
+              {loading ? "Uploading files, please wait..." : (
+                <>Drag and Drop file here or <span className="text-[#3b6657] font-extrabold underline decoration-2 cursor-pointer hover:text-[#1c2725] transition-all">Choose here</span></>
+              )}
+            </span>
+            <input type="file" multiple disabled={loading} accept={accept} className="hidden" onChange={(e) => { onAddFiles(e.target.files); e.target.value = ""; }} />
+          </label>
+          <div className="flex flex-wrap justify-between items-center gap-y-1 gap-x-2 text-[9px] text-[#7a928e] font-extrabold uppercase mt-2.5 px-1 tracking-wider">
+            <span>Supported formats: Images, PDF</span>
+            <span>Maximum size: 20 MB</span>
+          </div>
         </div>
-        <div className="mt-2 text-[11px] text-slate-500 font-semibold leading-relaxed">{helper}</div>
+        {files.length > 0 && (
+          <div className="mt-4 space-y-2">
+            {files.map((file, index) => (
+              <FileChip key={`${file.name}-${index}`} file={file} showDelete={allowDelete} onRemove={() => onRemoveFile(index)} />
+            ))}
+          </div>
+        )}
       </div>
-      <label
-        className={`flex flex-col items-center justify-center cursor-pointer rounded-xl border-2 border-dashed ${isFieldOfficer ? "border-slate-200 bg-slate-55/40 hover:bg-slate-50" : `${styles.dashed} bg-white/65 hover:bg-white/95`} px-4 py-5 text-center transition-all duration-200`}
+    );
+  }
+
+  // ── Admin / SuperAdmin — premium redesign ──
+  return (
+    <div style={{
+      background: "#ffffff",
+      borderRadius: 20,
+      border: "1px solid #e8eaed",
+      boxShadow: "0 1px 6px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)",
+      padding: "20px",
+      display: "flex",
+      flexDirection: "column",
+      gap: 0,
+      transition: "box-shadow 0.2s ease, transform 0.2s ease",
+    }}
+    onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 4px 20px rgba(0,0,0,0.10)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+    onMouseLeave={e => { e.currentTarget.style.boxShadow = "0 1px 6px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)"; e.currentTarget.style.transform = "none"; }}
+    >
+      {/* Card Header */}
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+          <span style={{
+            display: "flex", alignItems: "center", justifyContent: "center",
+            width: 30, height: 30, borderRadius: 10,
+            background: "#f8f9fa", border: "1px solid #eee",
+            flexShrink: 0,
+          }}>{icon}</span>
+          <span style={{ fontSize: 14, fontWeight: 800, color: "#1a1a2e", letterSpacing: "-0.01em" }}>{title}</span>
+        </div>
+        <div style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, lineHeight: 1.5, paddingLeft: 38 }}>{helper}</div>
+      </div>
+
+      {/* Drop Zone */}
+      <label style={{
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        border: "1.5px dashed #d1d5db",
+        borderRadius: 14,
+        padding: "28px 16px",
+        cursor: loading ? "not-allowed" : "pointer",
+        background: "#fafafa",
+        transition: "border-color 0.2s ease, background 0.2s ease",
+        textAlign: "center",
+        position: "relative",
+        minHeight: 130,
+      }}
+      onMouseEnter={e => { if (!loading) { e.currentTarget.style.borderColor = btnColor.bg; e.currentTarget.style.background = "#f5f5ff"; }}}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = "#d1d5db"; e.currentTarget.style.background = "#fafafa"; }}
       >
-        <CloudUpload className={`w-7 h-7 text-slate-450 mb-2 transition-colors duration-250 ${isFieldOfficer ? "" : "animate-bounce"}`} style={isFieldOfficer ? {} : { animationDuration: '3s' }} />
-        <span className="text-[11px] font-extrabold text-slate-600 mb-0.5">Drag & drop or browse</span>
-        <span className="text-[9px] font-semibold text-slate-400 mb-3">Supports images, PDF up to 20MB</span>
-        <span className={`rounded-lg ${isFieldOfficer ? "bg-slate-800 hover:bg-slate-900 text-white shadow-sm" : styles.btn} px-4 py-1.5 text-[11px] font-bold shadow-sm transition-all duration-200 hover:scale-[1.02] cursor-pointer flex items-center gap-1.5`}>
-          {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-          {loading ? "Uploading..." : "Browse Files"}
-        </span>
+        {/* Upload Icon — Document with arrow */}
+        {loading ? (
+          <Loader2 style={{ width: 36, height: 36, color: btnColor.bg, marginBottom: 10, animation: "spin 1s linear infinite" }} />
+        ) : (
+          <div style={{ position: "relative", width: 44, height: 44, marginBottom: 10 }}>
+            {/* Document body */}
+            <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="6" y="4" width="24" height="32" rx="4" fill="#f0f4ff" stroke="#c7d2fe" strokeWidth="1.5"/>
+              <path d="M22 4v8h8" fill="#e0e7ff" stroke="#c7d2fe" strokeWidth="1.5" strokeLinejoin="round"/>
+              <path d="M12 18h12M12 22h10M12 26h8" stroke="#a5b4fc" strokeWidth="1.5" strokeLinecap="round"/>
+              {/* Upload arrow */}
+              <circle cx="33" cy="33" r="9" fill={btnColor.bg}/>
+              <path d="M33 37v-8M30 32l3-3 3 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+        )}
+        <div style={{ fontSize: 12.5, fontWeight: 600, color: "#374151", marginBottom: 6 }}>
+          {loading ? "Uploading, please wait…" : (
+            <>
+              Drag and Drop file here or{" "}
+              <span style={{ color: btnColor.bg, fontWeight: 800, textDecoration: "underline", cursor: "pointer" }}>
+                Choose here
+              </span>
+            </>
+          )}
+        </div>
         <input
-          type="file"
-          multiple
-          disabled={loading}
-          accept={accept}
-          className="hidden"
-          onChange={(event) => {
-            onAddFiles(event.target.files);
-            event.target.value = "";
-          }}
+          type="file" multiple disabled={loading} accept={accept} style={{ display: "none" }}
+          onChange={e => { onAddFiles(e.target.files); e.target.value = ""; }}
         />
       </label>
+
+      {/* Meta row */}
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8, marginBottom: files.length > 0 ? 14 : 0, paddingInline: 2 }}>
+        <span style={{ fontSize: 9.5, color: "#9ca3af", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          Supported: Images, PDF
+        </span>
+        <span style={{ fontSize: 9.5, color: "#9ca3af", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          Max size: 20 MB
+        </span>
+      </div>
+
+      {/* Uploaded files list */}
       {files.length > 0 && (
-        <div className="mt-4 space-y-2">
-          {files.map((file, index) => (
-            <FileChip
-              key={`${file.name}-${file.lastModified}-${index}`}
-              file={file}
-              showDelete={allowDelete}
-              onRemove={() => onRemoveFile(index)}
-            />
-          ))}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {files.map((file, index) => {
+            const isPdf = file.name?.toLowerCase().endsWith(".pdf");
+            return (
+              <div key={`${file.name}-${index}`} style={{
+                display: "flex", alignItems: "center", gap: 10,
+                background: "#fafafa", border: "1px solid #e5e7eb",
+                borderRadius: 12, padding: "10px 12px",
+                transition: "border-color 0.15s ease, background 0.15s ease",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = "#c7d2fe"; e.currentTarget.style.background = "#f5f5ff"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "#e5e7eb"; e.currentTarget.style.background = "#fafafa"; }}
+              >
+                {/* File icon */}
+                <div style={{
+                  width: 34, height: 34, borderRadius: 8, flexShrink: 0,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  background: isPdf ? "#fff1f2" : "#eff6ff",
+                  border: `1px solid ${isPdf ? "#fecdd3" : "#bfdbfe"}`,
+                }}>
+                  <FileText style={{ width: 16, height: 16, color: isPdf ? "#e11d48" : "#3b82f6" }} />
+                </div>
+                {/* Name + status */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 11.5, fontWeight: 700, color: "#1f2937", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {file.name || `file_${index + 1}`}
+                  </div>
+                  <div style={{ fontSize: 10, color: "#10b981", fontWeight: 700, marginTop: 1 }}>
+                    Uploaded • 100%
+                  </div>
+                </div>
+                {/* Delete */}
+                {allowDelete && onRemoveFile && (
+                  <button
+                    type="button"
+                    onClick={() => onRemoveFile(index)}
+                    title="Remove file"
+                    style={{
+                      flexShrink: 0, width: 28, height: 28, borderRadius: 8,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      background: "transparent", border: "1px solid #e5e7eb",
+                      cursor: "pointer", color: "#9ca3af", transition: "all 0.15s ease",
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = "#fff1f2"; e.currentTarget.style.borderColor = "#fecdd3"; e.currentTarget.style.color = "#e11d48"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "#e5e7eb"; e.currentTarget.style.color = "#9ca3af"; }}
+                  >
+                    <Trash2 style={{ width: 13, height: 13 }} />
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
@@ -1134,7 +1299,7 @@ const AdvancedAutoFillForm = ({
   };
 
   return (
-    <div className={`rounded-3xl border border-slate-200 ${isFieldOfficer ? "bg-white p-6 shadow-sm" : "bg-gradient-to-br from-indigo-50/20 via-white to-blue-50/15 p-6 shadow-md relative overflow-hidden backdrop-blur-md"}`}>
+    <div className={`w-full max-w-full overflow-hidden rounded-3xl border border-slate-200 ${isFieldOfficer ? "bg-white p-4 sm:p-6 shadow-sm" : "bg-gradient-to-br from-indigo-50/20 via-white to-blue-50/15 p-4 sm:p-6 shadow-md relative backdrop-blur-md"}`}>
       {/* Decorative background glow elements */}
       {!isFieldOfficer && (
         <>
@@ -1180,29 +1345,27 @@ const AdvancedAutoFillForm = ({
       )}
 
       {/* Header Panel */}
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-150/70 pb-5">
-        <div className="flex items-start gap-3">
-          <div className={`p-2.5 bg-gradient-to-tr ${isFieldOfficer ? "from-slate-400 to-slate-500" : "from-indigo-500 to-purple-600"} rounded-2xl text-white shadow-md flex items-center justify-center shrink-0`}>
-            {isFieldOfficer ? <FolderPlus className="w-5 h-5" /> : <Sparkles className="w-5 h-5 animate-pulse" />}
-          </div>
-          <div>
-            <div className="text-base font-extrabold text-slate-900 tracking-tight flex items-center gap-2 flex-wrap">
-              <span>{isFieldOfficer ? "Case Documents & Media" : "AI Advanced Auto Fill"}</span>
-              {!isFieldOfficer && (
+      {!isFieldOfficer && (
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-150/70 pb-5">
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-2xl text-white shadow-md flex items-center justify-center shrink-0">
+              <Sparkles className="w-5 h-5 animate-pulse" />
+            </div>
+            <div>
+              <div className="text-base font-extrabold text-slate-900 tracking-tight flex items-center gap-2 flex-wrap">
+                <span>AI Advanced Auto Fill</span>
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-white border border-slate-200 text-slate-700 shadow-sm">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   {user?.role === "SuperAdmin" ? "Super Admin Mode" : `${user?.role || "Guest"} Mode`}
                 </span>
-              )}
-            </div>
-            <div className="mt-1 text-xs text-slate-500 font-semibold leading-relaxed">
-              {isFieldOfficer 
-                ? "Upload property documents, screenshots, site visit form and site visit photographs."
-                : "Upload site media and property documents to auto-populate files using intelligent Claude AI extraction."}
+              </div>
+              <div className="mt-1 text-xs text-slate-500 font-semibold leading-relaxed">
+                Upload site media and property documents to auto-populate files using intelligent Claude AI extraction.
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Bank + Property Type + Notes row */}
       {!isFieldOfficer && (
@@ -1303,8 +1466,8 @@ const AdvancedAutoFillForm = ({
           isFieldOfficer={isFieldOfficer}
         />
 
-        {/* Card 5: Additional Photos / Docs (Show for Admin/SuperAdmin only) */}
-        {!isFieldOfficer && (
+        {/* Card 5: Additional Photos / Docs — HIDDEN */}
+        {/* {!isFieldOfficer && (
           <UploadCard
             title="Additional Photos / Docs"
             helper="Extra site proof, supporting legal screenshots, or structural layouts"
@@ -1317,7 +1480,7 @@ const AdvancedAutoFillForm = ({
             allowDelete={!isFieldOfficer}
             isFieldOfficer={isFieldOfficer}
           />
-        )}
+        )} */}
 
         {/* Card 6: Site Visit Photos */}
         <UploadCard
@@ -1332,26 +1495,24 @@ const AdvancedAutoFillForm = ({
           isFieldOfficer={isFieldOfficer}
         />
 
-        {/* Card 7: Site Visit Video (Show for Admin/SuperAdmin only) */}
-        {!isFieldOfficer && (
-          <UploadCard
-            title="Site Visit Video"
-            helper="Property site video sequence. Persisted to ImageKit video repository"
-            files={uploadedVideoUrls}
-            onAddFiles={(incoming) => handleGenericFileUpload("siteVisitVideo", incoming)}
-            onRemoveFile={(index) => handleGenericFileRemove("siteVisitVideo", uploadedVideoUrls[index])}
-            accent="rose"
-            accept="video/*"
-            loading={uploadingCategory["siteVisitVideo"]}
-            icon={<Video className="w-4 h-4 text-rose-650" />}
-            isFieldOfficer={isFieldOfficer}
-          />
-        )}
+        {/* Card 7: Site Visit Video */}
+        <UploadCard
+          title="Site Visit Video"
+          helper="Property site video sequence. Persisted to ImageKit video repository"
+          files={uploadedVideoUrls}
+          onAddFiles={(incoming) => handleGenericFileUpload("siteVisitVideo", incoming)}
+          onRemoveFile={(index) => handleGenericFileRemove("siteVisitVideo", uploadedVideoUrls[index])}
+          accent="rose"
+          accept="video/*"
+          loading={uploadingCategory["siteVisitVideo"]}
+          icon={<Video className="w-4 h-4 text-rose-650" />}
+          isFieldOfficer={isFieldOfficer}
+        />
       </div>
 
       {/* ── Field Officer: Uploaded Documents Preview Panel ─────────────────── */}
       {isFieldOfficer && (() => {
-        const totalFoFiles = uploadedGpsUrls.length + atsDocsList.length + uploadedFieldFormUrls.length + uploadedPhotoUrls.length;
+        const totalFoFiles = uploadedGpsUrls.length + atsDocsList.length + uploadedFieldFormUrls.length + uploadedPhotoUrls.length + uploadedVideoUrls.length;
         return (
           <div className="mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             {/* Panel Header - always visible */}
@@ -1392,7 +1553,7 @@ const AdvancedAutoFillForm = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {uploadedGpsUrls.map((doc, index) => (
                       <div key={index} className="flex items-center justify-between gap-3 rounded-xl border border-purple-100 bg-purple-50/30 px-3 py-2.5">
-                        <div className="flex items-center gap-2 min-w-0">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
                             <MapPin className="w-4 h-4" />
                           </div>
@@ -1424,7 +1585,7 @@ const AdvancedAutoFillForm = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {atsDocsList.map((doc, index) => (
                       <div key={index} className="flex items-center justify-between gap-3 rounded-xl border border-amber-100 bg-amber-50/30 px-3 py-2.5">
-                        <div className="flex items-center gap-2 min-w-0">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
                             <FileText className="w-4 h-4" />
                           </div>
@@ -1456,7 +1617,7 @@ const AdvancedAutoFillForm = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {uploadedFieldFormUrls.map((doc, index) => (
                       <div key={index} className="flex items-center justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50/30 px-3 py-2.5">
-                        <div className="flex items-center gap-2 min-w-0">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
                             <ClipboardList className="w-4 h-4" />
                           </div>
@@ -1505,6 +1666,38 @@ const AdvancedAutoFillForm = ({
                   </div>
                 </div>
               )}
+
+              {/* Site Visit Videos */}
+              {uploadedVideoUrls.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-[11px] font-extrabold text-rose-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <Video className="w-3.5 h-3.5" />
+                    <span>Site Visit Videos ({uploadedVideoUrls.length})</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {uploadedVideoUrls.map((video, index) => (
+                      <div key={index} className="flex items-center justify-between gap-3 rounded-xl border border-rose-100 bg-rose-50/30 px-3 py-2.5">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-150 text-rose-650">
+                            <Video className="w-4 h-4" />
+                          </div>
+                          <span className="truncate text-xs font-bold text-slate-700">{video.name || `video_${index + 1}`}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <a href={video.url} target="_blank" rel="noopener noreferrer"
+                            className="text-[10px] text-indigo-650 hover:underline font-bold flex items-center gap-0.5 border-none cursor-pointer">
+                            Play <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                          <button type="button" onClick={() => handleVideoDelete(video)}
+                            className="rounded-lg p-1.5 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 border border-slate-200 transition-colors cursor-pointer" title="Delete video">
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -1541,11 +1734,9 @@ const AdvancedAutoFillForm = ({
               <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100/50 text-[10px] font-extrabold flex items-center gap-1 shadow-sm">
                 <Camera className="w-3 h-3" /> Photo: {uploadedPhotoUrls.length}
               </span>
-              {!isFieldOfficer && (
-                <span className="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 border border-rose-100/50 text-[10px] font-extrabold flex items-center gap-1 shadow-sm">
-                  <Video className="w-3 h-3" /> Video: {uploadedVideoUrls.length}
-                </span>
-              )}
+              <span className="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 border border-rose-100/50 text-[10px] font-extrabold flex items-center gap-1 shadow-sm">
+                <Video className="w-3 h-3" /> Video: {uploadedVideoUrls.length}
+              </span>
             </div>
           </div>
 
@@ -1581,7 +1772,7 @@ const AdvancedAutoFillForm = ({
         uploadedEmailUrls.length > 0 || 
         uploadedFieldFormUrls.length > 0 || 
         uploadedAdditionalUrls.length > 0) && (
-        <div className="mt-6 rounded-3xl border border-slate-200 bg-white/95 p-5.5 shadow-md space-y-5.5 relative overflow-hidden">
+        <div className="w-full max-w-full overflow-hidden mt-6 rounded-3xl border border-slate-200 bg-white/95 p-4 sm:p-5.5 shadow-md space-y-5.5 relative">
           <div className="border-b border-slate-150 pb-3.5 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="p-1.5 bg-indigo-50 rounded-xl text-indigo-600">
@@ -1607,7 +1798,7 @@ const AdvancedAutoFillForm = ({
                     key={index}
                     className="flex items-center justify-between gap-3 rounded-xl border border-slate-150/70 bg-gradient-to-br from-white to-amber-50/10 p-3 shadow-sm transition-all hover:border-amber-300 hover:shadow-md duration-200 group"
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600 text-sm font-extrabold">
                         <FileText className="w-4 h-4" />
                       </div>
@@ -1654,7 +1845,7 @@ const AdvancedAutoFillForm = ({
                     key={index}
                     className="flex items-center justify-between gap-3 rounded-xl border border-slate-150/70 bg-gradient-to-br from-white to-indigo-50/10 p-3 shadow-sm transition-all hover:border-indigo-300 hover:shadow-md duration-200 group"
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-650 text-sm font-extrabold">
                         <Mail className="w-4 h-4" />
                       </div>
@@ -1701,7 +1892,7 @@ const AdvancedAutoFillForm = ({
                     key={index}
                     className="flex items-center justify-between gap-3 rounded-xl border border-slate-150/70 bg-gradient-to-br from-white to-slate-50/10 p-3 shadow-sm transition-all hover:border-slate-300 hover:shadow-md duration-200 group"
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-50 text-slate-600 text-sm font-extrabold">
                         <FolderPlus className="w-4 h-4" />
                       </div>
@@ -1803,8 +1994,8 @@ const AdvancedAutoFillForm = ({
             </div>
           )}
 
-          {/* Uploaded ImageKit video URLs (Show for Admin/SuperAdmin only) */}
-          {!isFieldOfficer && uploadedVideoUrls.length > 0 && (
+          {/* Uploaded ImageKit video URLs */}
+          {uploadedVideoUrls.length > 0 && (
             <div className="space-y-2.5">
               <div className="text-[11px] font-extrabold text-rose-700 uppercase tracking-wider flex items-center gap-1.5">
                 <Video className="w-3.5 h-3.5" />
@@ -1816,7 +2007,7 @@ const AdvancedAutoFillForm = ({
                     key={index}
                     className="flex items-center justify-between gap-3 rounded-xl border border-slate-150/70 bg-gradient-to-br from-white to-rose-50/10 p-3 shadow-sm transition-all hover:border-rose-300 hover:shadow-md duration-200 group"
                   >
-                    <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-rose-650 text-xs font-extrabold">
                         <Play className="w-4 h-4 fill-current" />
                       </div>

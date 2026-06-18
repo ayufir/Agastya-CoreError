@@ -355,10 +355,48 @@ function toPascalCaseSmart(str) {
   return pascal.charAt(0) + pascal.slice(1).toLowerCase(); // only first letter capital
 }
 
-// function toPascalCaseSmart(str) {
-//   if (dictionaryFix[str.toLowerCase()]) return dictionaryFix[str.toLowerCase()];
-//   return toPascalCase(str);
-// }
+const resolveModel = (bankNameOrRoute) => {
+  if (!bankNameOrRoute) return null;
+
+  // Clean the string (e.g. if it's a route "/bank/icici/edit/123", extract bank slug)
+  let name = bankNameOrRoute;
+  if (name.includes("/")) {
+    const routeParts = name.split("/").filter(Boolean);
+    const filteredParts = routeParts.filter(
+      (p) =>
+        !/^[0-9a-f]{24}$/i.test(p) &&
+        !["edit", "bank"].includes(p.toLowerCase())
+    );
+    name = filteredParts.length > 0 ? filteredParts[filteredParts.length - 1] : (routeParts[0] || name);
+  }
+
+  const modelKey = toPascalCaseSmart(name);
+
+  // 1. Direct modelMap lookup
+  if (modelMap[modelKey]) return modelMap[modelKey];
+
+  // 2. Case-insensitive lookup in modelMap keys
+  const modelMapKey = Object.keys(modelMap).find(
+    (k) => k.toLowerCase() === modelKey.toLowerCase() || k.toLowerCase() === name.toLowerCase()
+  );
+  if (modelMapKey && modelMap[modelMapKey]) return modelMap[modelMapKey];
+
+  // 3. Lookup in bankRegistry
+  const registry = modelMap.bankRegistry || [];
+  const entry = registry.find(
+    (b) =>
+      b.key.toLowerCase() === name.toLowerCase() ||
+      b.key.toLowerCase() === modelKey.toLowerCase() ||
+      (b.displayName && b.displayName.toLowerCase() === name.toLowerCase()) ||
+      (b.route && b.route.toLowerCase() === name.toLowerCase())
+  );
+  if (entry && entry.model) return entry.model;
+
+  // 4. Try matching direct keys
+  if (modelMap[name]) return modelMap[name];
+
+  return null;
+};
 
 exports.assignCase = async (req, res) => {
   const { caseId, fieldOfficerId, route } = req.body;
@@ -382,15 +420,12 @@ exports.assignCase = async (req, res) => {
     const bankName = filteredParts.length > 0 ? filteredParts[filteredParts.length - 1] : (routeParts[0] || route);
 
     console.log(bankName, "this is the bank model name")
-    // const modelKey = toPascalCase(bankName); // "HomeFirst"
-    const modelKey = toPascalCaseSmart(bankName); // "HomeFirst"
-    console.log(modelKey, "POPPPP");
-    let Model = modelMap[modelKey];
+    const Model = resolveModel(bankName);
 
     if (!Model) {
       return res
         .status(400)
-        .json({ error: `Invalid route/model: ${modelKey}` });
+        .json({ error: `Invalid route/model for bank: ${bankName}` });
     }
 
     let updated = await Model.findByIdAndUpdate(
@@ -427,13 +462,20 @@ exports.unassignCase = async (req, res) => {
     let foundModel = null;
     let foundDoc = null;
 
-    for (const key in modelMap) {
-      const Model = modelMap[key];
-      const doc = await Model.findById(caseId);
-      if (doc) {
-        foundModel = Model;
-        foundDoc = doc;
-        break;
+    const registry = modelMap.bankRegistry || Object.values(modelMap);
+    for (const bankConfig of registry) {
+      const Model = bankConfig.model || bankConfig;
+      if (Model && Model.findById) {
+        try {
+          const doc = await Model.findById(caseId);
+          if (doc) {
+            foundModel = Model;
+            foundDoc = doc;
+            break;
+          }
+        } catch (err) {
+          // ignore
+        }
       }
     }
 
@@ -498,25 +540,7 @@ exports.unassignCase = async (req, res) => {
 //   }
 // };
 
-exports.updateCaseStatus = async (req, res) => {
-  const { caseId, status, note } = req.body;
-  const updated = await Case.findByIdAndUpdate(
-    caseId,
-    {
-      status,
-      $push: {
-        timeline: {
-          status,
-          updatedAt: new Date(),
-          updatedBy: req.user._id,
-          note,
-        },
-      },
-    },
-    { new: true }
-  );
-  res.json(updated);
-};
+// Duplicate updateCaseStatus removed. Robust version is defined below.
 
 // exports.getAllAssignedCases = async (req, res) => {
 //   try {
@@ -576,11 +600,10 @@ exports.acceptCase = async (req, res) => {
     return res.status(400).json({ error: "Bank name is required." });
   }
 
-  const modelKey = toPascalCaseSmart(bankName);
-  const Model = modelMap[modelKey];
+  const Model = resolveModel(bankName);
 
   if (!Model) {
-    return res.status(400).json({ error: `Invalid route/model: ${modelKey}` });
+    return res.status(400).json({ error: `Invalid route/model for bank: ${bankName}` });
   }
 
   try {
@@ -608,11 +631,10 @@ exports.declineCase = async (req, res) => {
     return res.status(400).json({ error: "Bank name is required." });
   }
 
-  const modelKey = toPascalCaseSmart(bankName);
-  const Model = modelMap[modelKey];
+  const Model = resolveModel(bankName);
 
   if (!Model) {
-    return res.status(400).json({ error: `Invalid route/model: ${modelKey}` });
+    return res.status(400).json({ error: `Invalid route/model for bank: ${bankName}` });
   }
 
   try {
@@ -642,15 +664,36 @@ exports.declineCase = async (req, res) => {
 exports.updateCaseStatus = async (req, res) => {
   const { caseId, status, note, bankName } = req.body; // Assuming bankName is sent in the body
 
-  if (!bankName) {
-    return res.status(400).json({ error: "Bank name is required." });
+  if (!caseId) {
+    return res.status(400).json({ error: "Case ID is required." });
   }
 
-  const modelKey = toPascalCaseSmart(bankName);
-  const Model = modelMap[modelKey];
+  let Model = null;
+  if (bankName) {
+    Model = resolveModel(bankName);
+  }
+
+  // Fallback: search across all models if bankName not provided or not matched
+  if (!Model) {
+    const registry = modelMap.bankRegistry || Object.values(modelMap);
+    for (const bankConfig of registry) {
+      const M = bankConfig.model || bankConfig;
+      if (M && M.findById) {
+        try {
+          const doc = await M.findById(caseId);
+          if (doc) {
+            Model = M;
+            break;
+          }
+        } catch (err) {
+          // ignore error and continue
+        }
+      }
+    }
+  }
 
   if (!Model) {
-    return res.status(400).json({ error: `Invalid route/model: ${modelKey}` });
+    return res.status(400).json({ error: "Case not found in any bank model." });
   }
 
   try {
@@ -793,20 +836,26 @@ exports.deleteCase = async (req, res) => {
     let updatedCase = null;
     let matchedModel = null;
 
-    for (const key in modelMap) {
-      const Model = modelMap[key];
-
-      // Try to find the case by ID in this model
-      const found = await Model.findById(id);
-      if (found) {
-        // Update the status to "cancelled" instead of deleting
-        updatedCase = await Model.findByIdAndUpdate(
-          id,
-          { status: "cancelled" },
-          { new: true } // returns the updated document
-        );
-        matchedModel = key;
-        break;
+    const registry = modelMap.bankRegistry || Object.values(modelMap);
+    for (const bankConfig of registry) {
+      const Model = bankConfig.model || bankConfig;
+      const key = bankConfig.key || bankConfig.modelName || "Bank";
+      if (Model && Model.findById) {
+        try {
+          const found = await Model.findById(id);
+          if (found) {
+            // Update the status to "cancelled" instead of deleting
+            updatedCase = await Model.findByIdAndUpdate(
+              id,
+              { status: "cancelled" },
+              { new: true } // returns the updated document
+            );
+            matchedModel = key;
+            break;
+          }
+        } catch (err) {
+          // ignore and continue
+        }
       }
     }
 
@@ -841,23 +890,7 @@ exports.finalUpdate = async (req, res) => {
 
   console.log(bankName, "zero")
 
-  const modelKey = toPascalCaseSmart(bankName);
-
-  // Case-insensitive lookup in modelMap
-  let Model = null;
-  const modelMapKey = Object.keys(modelMap).find(
-    (k) => k.toLowerCase() === modelKey.toLowerCase() || k.toLowerCase() === bankName.toLowerCase()
-  );
-  if (modelMapKey) Model = modelMap[modelMapKey];
-
-  if (!Model) {
-    // Try to find in bankRegistry for all 20+ banks
-    const registry = modelMap.bankRegistry || [];
-    const entry = registry.find(
-      (b) => b.key.toLowerCase() === bankName.toLowerCase() || b.key.toLowerCase() === modelKey.toLowerCase()
-    );
-    if (entry) Model = entry.model;
-  }
+  const Model = resolveModel(bankName);
 
   if (!Model) {
     return res.status(400).json({
@@ -1146,13 +1179,12 @@ exports.deleteImageFromCase = async (req, res) => {
 
     // 🧠 Dynamic model from route
     const bankName = route.split("/")[2]; // e.g., "home-first"
-    const modelKey = toPascalCaseSmart(bankName); // e.g., "HomeFirst"
-    const Model = modelMap[modelKey];
+    const Model = resolveModel(bankName);
 
     if (!Model) {
       return res
         .status(400)
-        .json({ message: `Invalid model for route: ${modelKey}` });
+        .json({ message: `Invalid model for route: ${bankName}` });
     }
 
     // ✅ Step 1: Delete image from storage
@@ -1212,34 +1244,36 @@ exports.changeAssign = async (req, res) => {
     let foundModel = null;
 
     // FIRST: Search across all models to find the case (most reliable method)
-    for (const modelKey in modelMap) {
-      const Model = modelMap[modelKey];
-      try {
-        const doc = await Model.findById(caseId);
-        if (doc) {
-          console.log(`Found case in model: ${modelKey}`);
-          updatedDoc = await Model.findByIdAndUpdate(
-            caseId,
-            { $set: { assignedTo: officerId } },
-            { new: true }
-          );
-          foundModel = modelKey;
-          break;
+    const registry = modelMap.bankRegistry || Object.values(modelMap);
+    for (const bankConfig of registry) {
+      const Model = bankConfig.model || bankConfig;
+      const modelKey = bankConfig.key || bankConfig.modelName || "Bank";
+      if (Model && Model.findById) {
+        try {
+          const doc = await Model.findById(caseId);
+          if (doc) {
+            console.log(`Found case in model: ${modelKey}`);
+            updatedDoc = await Model.findByIdAndUpdate(
+              caseId,
+              { $set: { assignedTo: officerId } },
+              { new: true }
+            );
+            foundModel = modelKey;
+            break;
+          }
+        } catch (modelError) {
+          continue;
         }
-      } catch (modelError) {
-        // Continue to next model
-        continue;
       }
     }
 
     // FALLBACK: Try using bankName if not found in first pass
     if (!updatedDoc && bankName) {
       try {
-        const modelKey = toPascalCaseSmart(bankName);
-        const Model = modelMap[modelKey];
+        const Model = resolveModel(bankName);
         
         if (Model) {
-          console.log(`Trying bankName-derived key: ${modelKey}`);
+          console.log(`Trying bankName-derived key: ${bankName}`);
           updatedDoc = await Model.findByIdAndUpdate(
             caseId,
             { $set: { assignedTo: officerId } },
@@ -1247,8 +1281,8 @@ exports.changeAssign = async (req, res) => {
           );
           
           if (updatedDoc) {
-            foundModel = modelKey;
-            console.log(`Successfully updated via bankName: ${modelKey}`);
+            foundModel = bankName;
+            console.log(`Successfully updated via bankName: ${bankName}`);
           }
         }
       } catch (e) {
@@ -1259,25 +1293,19 @@ exports.changeAssign = async (req, res) => {
     // FALLBACK: Try using route if not found
     if (!updatedDoc && route) {
       try {
-        const routeParts = (route || "").split("/").filter(Boolean);
-        const bankSlug = routeParts.length > 0 ? routeParts[routeParts.length - 1] : null;
+        const Model = resolveModel(route);
         
-        if (bankSlug) {
-          const modelKey = toPascalCaseSmart(bankSlug);
-          const Model = modelMap[modelKey];
+        if (Model) {
+          console.log(`Trying route-derived key/model`);
+          updatedDoc = await Model.findByIdAndUpdate(
+            caseId,
+            { $set: { assignedTo: officerId } },
+            { new: true }
+          );
           
-          if (Model) {
-            console.log(`Trying route-derived key: ${modelKey}`);
-            updatedDoc = await Model.findByIdAndUpdate(
-              caseId,
-              { $set: { assignedTo: officerId } },
-              { new: true }
-            );
-            
-            if (updatedDoc) {
-              foundModel = modelKey;
-              console.log(`Successfully updated via route: ${modelKey}`);
-            }
+          if (updatedDoc) {
+            foundModel = route;
+            console.log(`Successfully updated via route`);
           }
         }
       } catch (e) {

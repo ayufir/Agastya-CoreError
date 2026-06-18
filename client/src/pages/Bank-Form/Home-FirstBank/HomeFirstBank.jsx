@@ -17,6 +17,8 @@ import {
 import AutoFillForm from "../../AutoFillForm";
 import AdvancedAutoFillForm from "../../../components/AdvancedAutoFillForm";
 import { finalUpdate } from "../../../redux/features/case/caseThunks";
+import { Copy, Download, X } from "lucide-react";
+import axiosInstance from "../../../config/axios";
 
 // ─── Sidebar Nav Item ────────────────────────────────────────────────────────
 const SidebarItem = ({ id, label, isActive, onClick }) => (
@@ -83,6 +85,10 @@ const HomeFirstBank = () => {
   const sectionSubmittersRef = useRef({});
   const [createdDate, setCreatedDate] = useState(null);
   const [finalSubmitting, setFinalSubmitting] = useState(false);
+  const [showJsonModal, setShowJsonModal] = useState(false);
+  const [jsonOutputData, setJsonOutputData] = useState(null);
+  const [onModalCloseAction, setOnModalCloseAction] = useState(null);
+  const [isAutofillOpen, setIsAutofillOpen] = useState(false);
 
   const isFieldOfficer = user?.role === "FieldOfficer";
   const canFinalSubmit = id && (user?.role === "Admin" || user?.role === "SuperAdmin");
@@ -305,23 +311,8 @@ const HomeFirstBank = () => {
             <div>
               <AutoFillForm setFormData={setExtractedData} />
             </div>
-            <AdvancedAutoFillForm
-              bankName="HomeFirst Bank"
-              setFormData={setExtractedData}
-              atsDocuments={
-                isEdit?.atsDocuments && isEdit.atsDocuments.length > 0
-                  ? isEdit.atsDocuments
-                  : (isEdit?.AttachDocuments || [])
-              }
-              imageUrls={isEdit?.imageUrls || []}
-              siteVisitVideo={isEdit?.siteVisitVideo || []}
-              gpsFiles={isEdit?.gpsFiles || []}
-              emailFiles={isEdit?.emailFiles || []}
-              fieldFormFiles={isEdit?.fieldFormFiles || []}
-              additionalFiles={isEdit?.additionalFiles || []}
-              fetchData={() => fetchEditData(id)}
-            />
           </div>
+
         </>
       ),
     },
@@ -615,6 +606,8 @@ const HomeFirstBank = () => {
     }
   };
 
+
+
   const handlePrimaryAction = async (finalSubmit) => {
     try {
       const latestSections = await collectSectionData();
@@ -634,26 +627,33 @@ const HomeFirstBank = () => {
 
       if (isFieldOfficer) {
         const payload = { ...finalPayload, isReportSubmitted: true };
+        let res;
         if (id) {
-          await dispatch(updateDetails({ id, ...payload })).unwrap();
+          res = await dispatch(updateDetails({ id, ...payload })).unwrap();
         } else {
-          await dispatch(createHFBanks(payload)).unwrap();
+          res = await dispatch(createHFBanks(payload)).unwrap();
         }
         toast.success("Form submitted successfully");
-        navigate("/");
+        setJsonOutputData(res?.updatedJob || res?.data || res || payload);
+        setOnModalCloseAction(() => () => navigate("/"));
+        setShowJsonModal(true);
         return;
       }
 
       if (!id) {
-        await dispatch(createHFBanks(finalPayload)).unwrap();
+        const res = await dispatch(createHFBanks(finalPayload)).unwrap();
         toast.success("Form submitted successfully");
-        navigate("/");
+        setJsonOutputData(res?.updatedJob || res?.data || res || finalPayload);
+        setOnModalCloseAction(() => () => navigate("/"));
+        setShowJsonModal(true);
         return;
       }
 
-      await dispatch(updateDetails({ id, ...finalPayload })).unwrap();
+      const res = await dispatch(updateDetails({ id, ...finalPayload })).unwrap();
       toast.success("Form updated successfully");
-      navigate("/");
+      setJsonOutputData(res?.updatedJob || res?.data || res || finalPayload);
+      setOnModalCloseAction(() => () => navigate("/"));
+      setShowJsonModal(true);
     } catch (submitError) {
       if (submitError?.errorFields) {
         toast.error("Please complete the required fields");
@@ -675,13 +675,15 @@ const HomeFirstBank = () => {
       let finalPayload = { ...finalData, city: savedCity };
       if (createdDate) finalPayload = { ...finalData, createdAt: createdDate };
 
-      await dispatch(updateDetails({ id, ...finalPayload })).unwrap();
+      const res = await dispatch(updateDetails({ id, ...finalPayload })).unwrap();
       await dispatch(
         finalUpdate({ id, bankName: "HomeFirstBank", updateData: finalPayload })
       ).unwrap();
 
       toast.success("Case final submitted successfully!");
-      navigate("/");
+      setJsonOutputData(res?.updatedJob || res?.data || res || finalPayload);
+      setOnModalCloseAction(() => () => navigate("/"));
+      setShowJsonModal(true);
     } catch (err) {
       console.error("Final submission failed:", err);
       toast.error(err?.message || "Final submission failed");
@@ -690,7 +692,115 @@ const HomeFirstBank = () => {
     }
   };
 
+  const handleCopyJson = () => {
+    if (jsonOutputData) {
+      navigator.clipboard.writeText(JSON.stringify(jsonOutputData, null, 2));
+      toast.success("JSON copied to clipboard!");
+    }
+  };
+
+  const handleDownloadJson = () => {
+    if (jsonOutputData) {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(jsonOutputData, null, 2));
+      const downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.setAttribute("href", dataStr);
+      downloadAnchorNode.setAttribute("download", `home_first_valuation_${id || "case"}.json`);
+      document.body.appendChild(downloadAnchorNode);
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+      toast.success("JSON downloaded successfully!");
+    }
+  };
+
+  const handleCloseJsonModal = () => {
+    setShowJsonModal(false);
+
+    if (onModalCloseAction) {
+      onModalCloseAction();
+    }
+  };
+
+  const handleDownloadAll = async () => {
+    const toastId = toast.loading("Fetching latest files and generating ZIP…");
+    try {
+      const { saveAs } = await import("file-saver");
+
+      // ── Always fetch the freshest data from server so recently-uploaded files are included ──
+      let freshData = isEdit;
+      if (id) {
+        try {
+          const response = await dispatch(fetchHFBankById(id)).unwrap();
+          freshData = response;
+          setIsEdit(response); // also sync local state
+        } catch (fetchErr) {
+          console.warn("Could not refresh from server, using cached isEdit:", fetchErr);
+        }
+      }
+
+      // Fallback: if still nothing, use built collected section data
+      const dataSource = freshData || collectedData || {};
+
+      const urls = [];
+
+      // ── Smart URL extractor — handles { url, fileId }, plain strings, and nested arrays ──
+      const addUrl = (fileObj) => {
+        if (!fileObj) return;
+        if (typeof fileObj === "string" && fileObj.startsWith("http")) {
+          urls.push(fileObj);
+        } else if (fileObj.url && typeof fileObj.url === "string" && fileObj.url.startsWith("http")) {
+          urls.push(fileObj.url);
+        } else if (Array.isArray(fileObj)) {
+          fileObj.forEach(addUrl);
+        }
+      };
+
+      // ── Collect from every possible file field ──
+      [
+        dataSource.atsDocuments,
+        dataSource.AttachDocuments,
+        dataSource.imageUrls,
+        dataSource.siteVisitVideo,
+        dataSource.gpsFiles,
+        dataSource.emailFiles,
+        dataSource.fieldFormFiles,
+        dataSource.additionalFiles,
+      ]
+        .filter(Array.isArray)
+        .forEach(arr => arr.forEach(addUrl));
+
+      if (urls.length === 0 && (!dataSource || Object.keys(dataSource).length === 0)) {
+        toast.error("No files or data found to download.", { id: toastId });
+        return;
+      }
+
+      if (urls.length === 0) {
+        // No files but we have form data — download JSON only
+        toast.loading("No files found — downloading form data as JSON…", { id: toastId });
+      }
+
+      // ── Call proxy to bundle everything into a ZIP ──
+      const res = await axiosInstance.post("/proxy", {
+        urls,
+        jsonData: dataSource,
+        jsonFilename: "complete_application_data.json",
+      }, { responseType: "blob" });
+
+      saveAs(res.data, `HFB_all_files_${id || "new"}.zip`);
+      toast.success(
+        urls.length > 0
+          ? `Downloaded ${urls.length} file(s) + form data ✓`
+          : "Form data downloaded as JSON ✓",
+        { id: toastId }
+      );
+    } catch (error) {
+      console.error("Failed to download ZIP:", error);
+      toast.error("Download failed: " + (error?.response?.data?.error || error.message || error), { id: toastId });
+    }
+  };
+
   // ─── Active section title ────────────────────────────────────────────────
+
+
   const activeSectionLabel = isFieldOfficer
     ? ""
     : activeContent?.label || "";
@@ -742,7 +852,152 @@ const HomeFirstBank = () => {
         </div>
       </header>
 
+      {/* ── Advanced Autofill Section (Collapsible Accordion) ── */}
+      <div className="top-advanced-autofill-section" style={{ maxWidth: 1280, margin: "16px auto 0", padding: "0 16px" }}>
+        <div style={{
+          background: "#ffffff",
+          borderRadius: 12,
+          border: "1px solid #e5e7eb",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+          overflow: "hidden",
+          transition: "all 0.3s ease"
+        }}>
+          {/* Accordion Trigger Bar */}
+          {/* Accordion Header Row */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "10px 14px",
+            background: "linear-gradient(135deg, #f5f3ff, #ede9fe)",
+            borderBottom: isAutofillOpen ? "1px solid #e2e8f0" : "none",
+            gap: 8,
+            flexWrap: "wrap"
+          }}>
+            {/* Left: Toggle trigger */}
+            <button
+              onClick={() => setIsAutofillOpen(!isAutofillOpen)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                flex: 1,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                textAlign: "left",
+                padding: 0,
+                minWidth: 0,
+              }}
+            >
+              <span style={{ fontSize: "16px", flexShrink: 0 }}>✨</span>
+              <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, minWidth: 0 }}>
+                <span style={{ fontSize: "13px", fontWeight: 700, color: "#5b21b6", whiteSpace: "nowrap" }}>
+                  AI Advanced Auto Fill
+                </span>
+                <span style={{ fontSize: "11px", color: "#7c3aed", fontWeight: 500 }} className="desktop-only-text">
+                  — Upload site photos &amp; docs to auto-populate form fields
+                </span>
+              </div>
+            </button>
+
+            {/* Right: Download All + Show/Hide Toggle */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+
+              {/* ── Download All Button ── */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleDownloadAll(); }}
+                  title="Download all uploaded images, PDFs and application data as ZIP"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "5px 14px",
+                    background: "linear-gradient(135deg, #0f172a, #1e40af)",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: 20,
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    boxShadow: "0 2px 6px rgba(30,64,175,0.35)",
+                    letterSpacing: "0.02em",
+                    transition: "all 0.2s ease",
+                    whiteSpace: "nowrap",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, #1e3a8a, #2563eb)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(37,99,235,0.45)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, #0f172a, #1e40af)"; e.currentTarget.style.boxShadow = "0 2px 6px rgba(30,64,175,0.35)"; }}
+                >
+                  <Download size={13} />
+                  Download All
+                </button>
+
+              {/* ── Show / Hide Toggle ── */}
+              <button
+                onClick={() => setIsAutofillOpen(!isAutofillOpen)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                  padding: "4px 10px",
+                  background: "#7c3aed",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 12,
+                  fontSize: "11px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  transition: "background 0.15s ease",
+                }}
+              >
+                {isAutofillOpen ? "Hide" : "Show"}
+                <svg
+                  width="13" height="13"
+                  fill="none" stroke="#fff" strokeWidth="2.5"
+                  viewBox="0 0 24 24"
+                  style={{
+                    transform: isAutofillOpen ? "rotate(180deg)" : "rotate(0deg)",
+                    transition: "transform 0.2s ease"
+                  }}
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Accordion Content Panel */}
+          <div style={{
+            maxHeight: isAutofillOpen ? "2000px" : "0px",
+            overflow: "hidden",
+            transition: "max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+          }}>
+            <div style={{ padding: "16px" }}>
+              <AdvancedAutoFillForm
+                bankName="HomeFirst Bank"
+                setFormData={setExtractedData}
+                atsDocuments={
+                  isEdit?.atsDocuments && isEdit.atsDocuments.length > 0
+                    ? isEdit.atsDocuments
+                    : (isEdit?.AttachDocuments || [])
+                }
+                imageUrls={isEdit?.imageUrls || []}
+                siteVisitVideo={isEdit?.siteVisitVideo || []}
+                gpsFiles={isEdit?.gpsFiles || []}
+                emailFiles={isEdit?.emailFiles || []}
+                fieldFormFiles={isEdit?.fieldFormFiles || []}
+                additionalFiles={isEdit?.additionalFiles || []}
+                fetchData={() => fetchEditData(id)}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+
       {/* ── Body: Sidebar + Content ── */}
+
       <div
         className="form-container-flex"
         style={{
@@ -846,139 +1101,177 @@ const HomeFirstBank = () => {
           </div>
 
           {/* Save & Proceed footer */}
-          <div className="form-footer">
-            {/* Save & Proceed Navigation (Back + Proceed) */}
-            <div className="form-footer-nav-buttons" style={{ display: "flex", gap: 10, width: "100%", justifyContent: "flex-start" }}>
-              {activeSection > 1 && (
-                <button
-                  type="button"
-                  className="form-footer-back-btn"
-                  onClick={handleBack}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "9px 20px",
-                    background: "#fff",
-                    border: "2px solid #6b7280",
-                    borderRadius: 20,
-                    color: "#374151",
-                    fontWeight: 600,
-                    fontSize: 13,
-                    cursor: "pointer",
-                    transition: "all 0.15s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "#f3f4f6";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "#fff";
-                  }}
-                >
-                  <svg width="16" height="16" fill="none" stroke="#374151" strokeWidth="2" viewBox="0 0 24 24">
-                    <line x1="19" y1="12" x2="5" y2="12"></line>
-                    <polyline points="12 19 5 12 12 5"></polyline>
-                  </svg>
-                  Back
-                </button>
-              )}
-
-              <button
-                type="button"
-                className="form-footer-save-btn"
-                onClick={handleSaveAndProceed}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 8,
-                  padding: "9px 20px",
-                  background: "#fff",
-                  border: "2px solid #2563eb",
-                  borderRadius: 20,
-                  color: "#2563eb",
-                  fontWeight: 600,
-                  fontSize: 13,
-                  cursor: "pointer",
-                  transition: "all 0.15s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#eff6ff";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "#fff";
-                }}
-              >
-                <svg width="16" height="16" fill="none" stroke="#2563eb" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
-                  <polyline points="17 21 17 13 7 13 7 21" />
-                  <polyline points="7 3 7 8 15 8" />
-                </svg>
-                Save &amp; Proceed
-              </button>
-            </div>
-
-            {/* Submit / Update / Final Submit buttons */}
-            <div className="form-footer-actions-group">
+          <div className="form-footer" style={isFieldOfficer ? { justifyContent: "center", padding: "16px 20px" } : {}}>
+            {isFieldOfficer ? (
               <button
                 type="button"
                 onClick={handlePrimaryAction}
                 disabled={loading}
                 style={{
-                  padding: "9px 20px",
-                  borderRadius: 8,
+                  width: "100%",
+                  padding: "12px 24px",
+                  borderRadius: 20,
                   background: loading ? "#9ca3af" : "#2563eb",
                   color: "#fff",
-                  fontWeight: 600,
-                  fontSize: 13,
+                  fontWeight: 700,
+                  fontSize: 14,
                   border: "none",
                   cursor: loading ? "not-allowed" : "pointer",
-                  transition: "background 0.15s",
+                  transition: "all 0.2s ease",
+                  textAlign: "center",
+                  boxShadow: "0 4px 10px rgba(37, 99, 235, 0.15)",
+                }}
+                onMouseEnter={(e) => {
+                  if (!loading) {
+                    e.currentTarget.style.background = "#1d4ed8";
+                    e.currentTarget.style.boxShadow = "0 6px 15px rgba(37, 99, 235, 0.25)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!loading) {
+                    e.currentTarget.style.background = "#2563eb";
+                    e.currentTarget.style.boxShadow = "0 4px 10px rgba(37, 99, 235, 0.15)";
+                  }
                 }}
               >
-                {loading ? "Processing..." : primaryActionLabel}
+                {loading ? "Processing..." : "Submit"}
               </button>
+            ) : (
+              <>
+                {/* Save & Proceed Navigation (Back + Proceed) */}
+                <div className="form-footer-nav-buttons" style={{ display: "flex", gap: 10, width: "100%", justifyContent: "flex-start" }}>
+                  {activeSection > 1 && (
+                    <button
+                      type="button"
+                      className="form-footer-back-btn"
+                      onClick={handleBack}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        padding: "9px 20px",
+                        background: "#fff",
+                        border: "2px solid #6b7280",
+                        borderRadius: 20,
+                        color: "#374151",
+                        fontWeight: 600,
+                        fontSize: 13,
+                        cursor: "pointer",
+                        transition: "all 0.15s",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "#f3f4f6";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "#fff";
+                      }}
+                    >
+                      <svg width="16" height="16" fill="none" stroke="#374151" strokeWidth="2" viewBox="0 0 24 24">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                      </svg>
+                      Back
+                    </button>
+                  )}
 
-              <button
-                type="button"
-                onClick={() => handlePrimaryAction("final")}
-                disabled={loading}
-                style={{
-                  padding: "9px 20px",
-                  borderRadius: 8,
-                  background: loading ? "#9ca3af" : "#2563eb",
-                  color: "#fff",
-                  fontWeight: 600,
-                  fontSize: 13,
-                  border: "none",
-                  cursor: loading ? "not-allowed" : "pointer",
-                  transition: "background 0.15s",
-                }}
-              >
-                {loading ? "Processing..." : "Final Submit"}
-              </button>
+                  <button
+                    type="button"
+                    className="form-footer-save-btn"
+                    onClick={handleSaveAndProceed}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                      padding: "9px 20px",
+                      background: "#fff",
+                      border: "2px solid #2563eb",
+                      borderRadius: 20,
+                      color: "#2563eb",
+                      fontWeight: 600,
+                      fontSize: 13,
+                      cursor: "pointer",
+                      transition: "all 0.15s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "#eff6ff";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "#fff";
+                    }}
+                  >
+                    <svg width="16" height="16" fill="none" stroke="#2563eb" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+                      <polyline points="17 21 17 13 7 13 7 21" />
+                      <polyline points="7 3 7 8 15 8" />
+                    </svg>
+                    Save &amp; Proceed
+                  </button>
+                </div>
 
-              {canFinalSubmit && (
-                <button
-                  type="button"
-                  onClick={handleFinalSubmit}
-                  disabled={finalSubmitting || loading}
-                  style={{
-                    padding: "9px 20px",
-                    borderRadius: 8,
-                    background: finalSubmitting || loading ? "#9ca3af" : "#dc2626",
-                    color: "#fff",
-                    fontWeight: 600,
-                    fontSize: 13,
-                    border: "none",
-                    cursor: finalSubmitting || loading ? "not-allowed" : "pointer",
-                    transition: "background 0.15s",
-                  }}
-                >
-                  {finalSubmitting ? "Finalizing..." : "Final Submit"}
-                </button>
-              )}
-            </div>
+                {/* Submit / Update / Final Submit buttons */}
+                <div className="form-footer-actions-group">
+                  <button
+                    type="button"
+                    onClick={handlePrimaryAction}
+                    disabled={loading}
+                    style={{
+                      padding: "9px 20px",
+                      borderRadius: 8,
+                      background: loading ? "#9ca3af" : "#2563eb",
+                      color: "#fff",
+                      fontWeight: 600,
+                      fontSize: 13,
+                      border: "none",
+                      cursor: loading ? "not-allowed" : "pointer",
+                      transition: "background 0.15s",
+                    }}
+                  >
+                    {loading ? "Processing..." : primaryActionLabel}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handlePrimaryAction("final")}
+                    disabled={loading}
+                    style={{
+                      padding: "9px 20px",
+                      borderRadius: 8,
+                      background: loading ? "#9ca3af" : "#2563eb",
+                      color: "#fff",
+                      fontWeight: 600,
+                      fontSize: 13,
+                      border: "none",
+                      cursor: loading ? "not-allowed" : "pointer",
+                      transition: "background 0.15s",
+                    }}
+                  >
+                    {loading ? "Processing..." : "Final Submit"}
+                  </button>
+
+                  {canFinalSubmit && (
+                    <button
+                      type="button"
+                      onClick={handleFinalSubmit}
+                      disabled={finalSubmitting || loading}
+                      style={{
+                        padding: "9px 20px",
+                        borderRadius: 8,
+                        background: finalSubmitting || loading ? "#9ca3af" : "#dc2626",
+                        color: "#fff",
+                        fontWeight: 600,
+                        fontSize: 13,
+                        border: "none",
+                        cursor: finalSubmitting || loading ? "not-allowed" : "pointer",
+                        transition: "background 0.15s",
+                      }}
+                    >
+                      {finalSubmitting ? "Finalizing..." : "Final Submit"}
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Status messages */}
@@ -1024,7 +1317,40 @@ const HomeFirstBank = () => {
             </div>
           )}
         </main>
+
+        {/* ── JSON Modal Output ── */}
+        {showJsonModal && (
+          <div className="json-modal-overlay">
+            <div className="json-modal-container">
+              <div className="json-modal-header">
+                <div className="json-modal-title">
+                  <span style={{ fontSize: "20px" }}>📋</span> Final JSON Output Generated
+                </div>
+                <button className="json-modal-close-btn" onClick={handleCloseJsonModal}>
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="json-modal-body">
+                <pre className="json-code-block">
+                  {JSON.stringify(jsonOutputData, null, 2)}
+                </pre>
+              </div>
+              <div className="json-modal-footer">
+                <button className="json-btn json-btn-copy" onClick={handleCopyJson}>
+                  <Copy size={16} /> Copy JSON
+                </button>
+                <button className="json-btn json-btn-download" onClick={handleDownloadJson}>
+                  <Download size={16} /> Download JSON
+                </button>
+                <button className="json-btn json-btn-close" onClick={handleCloseJsonModal}>
+                  Close & Go to Dashboard
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
+
 
       <style>{`
         @keyframes spin {
@@ -1032,7 +1358,152 @@ const HomeFirstBank = () => {
           to { transform: rotate(360deg); }
         }
 
+        /* JSON Modal Styles */
+        .json-modal-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(15, 23, 42, 0.7);
+          backdrop-filter: blur(8px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 99999;
+          padding: 20px;
+          animation: fadeIn 0.25s ease-out;
+        }
+
+        .json-modal-container {
+          background: #ffffff;
+          border-radius: 16px;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+          width: 100%;
+          max-width: 800px;
+          max-height: 85vh;
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+          border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        .json-modal-header {
+          padding: 18px 24px;
+          border-bottom: 1px solid #f1f5f9;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: #f8fafc;
+        }
+
+        .json-modal-title {
+          font-size: 18px;
+          font-weight: 700;
+          color: #0f172a;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .json-modal-close-btn {
+          background: none;
+          border: none;
+          color: #64748b;
+          cursor: pointer;
+          padding: 4px;
+          border-radius: 6px;
+          transition: all 0.15s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .json-modal-close-btn:hover {
+          background: #e2e8f0;
+          color: #0f172a;
+        }
+
+        .json-modal-body {
+          padding: 24px;
+          overflow-y: auto;
+          background: #0f172a;
+          flex: 1;
+        }
+
+        .json-code-block {
+          margin: 0;
+          font-family: 'Courier New', Courier, monospace;
+          font-size: 13px;
+          color: #38bdf8;
+          white-space: pre-wrap;
+          word-break: break-all;
+          line-height: 1.5;
+        }
+
+        .json-modal-footer {
+          padding: 16px 24px;
+          border-top: 1px solid #f1f5f9;
+          display: flex;
+          justify-content: flex-end;
+          gap: 12px;
+          background: #f8fafc;
+        }
+
+        .json-btn {
+          padding: 10px 18px;
+          font-size: 13px;
+          font-weight: 600;
+          border-radius: 8px;
+          border: none;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: all 0.2s ease;
+        }
+
+        .json-btn-copy {
+          background: #f1f5f9;
+          color: #334155;
+          border: 1px solid #cbd5e1;
+        }
+
+        .json-btn-copy:hover {
+          background: #e2e8f0;
+        }
+
+        .json-btn-download {
+          background: #3b82f6;
+          color: #ffffff;
+        }
+
+        .json-btn-download:hover {
+          background: #2563eb;
+        }
+
+        .json-btn-close {
+          background: #10b981;
+          color: #ffffff;
+        }
+
+        .json-btn-close:hover {
+          background: #059669;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes scaleUp {
+          from { transform: scale(0.95); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+
         /* Responsive Header & Content classes */
+
         .form-sub-header {
           background: #fff;
           border-bottom: 1px solid #e5e7eb;
@@ -1079,7 +1550,26 @@ const HomeFirstBank = () => {
         }
 
         @media (max-width: 768px) {
+          .json-modal-container {
+            max-height: 90vh !important;
+            max-width: 95vw !important;
+          }
+          .json-modal-footer {
+            flex-direction: column !important;
+            gap: 8px !important;
+            padding: 12px 16px !important;
+          }
+          .json-btn {
+            width: 100% !important;
+            justify-content: center !important;
+          }
+          .desktop-only-text {
+            display: none !important;
+          }
+
+
           .form-sub-header {
+
             top: 0 !important; /* Stays below navbar on mobile too! */
             padding: 8px 12px !important;
             flex-direction: row !important; /* Keep inline side-by-side */
@@ -1145,10 +1635,13 @@ const HomeFirstBank = () => {
             width: 100% !important;
           }
 
-          .form-container-flex {
+           .form-container-flex {
             flex-direction: column !important;
             margin: 12px auto !important;
             padding: 0 8px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
           }
           .form-sidebar-aside {
             width: 100% !important;
@@ -1197,11 +1690,14 @@ const HomeFirstBank = () => {
           }
           .form-content-main {
             width: 100% !important;
+            max-width: 100% !important;
             border-radius: 0 0 12px 12px !important;
             border-top: none !important;
             border-left: 1px solid #e5e7eb !important;
           }
           .form-content-main.is-field-officer {
+            width: 100% !important;
+            max-width: 100% !important;
             border-radius: 12px !important;
             border-top: 1px solid #e5e7eb !important;
             border-left: 1px solid #e5e7eb !important;

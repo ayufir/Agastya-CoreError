@@ -10,8 +10,11 @@ const CaseNotes = ({ caseId, onSuccess }) => {
   const [message, setMessage] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [audioFile, setAudioFile] = useState(null);
+  const [audioPreview, setAudioPreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const fileRef = useRef();
+  const audioRef = useRef();
 
   useEffect(() => {
     if (caseId) dispatch(fetchNotes(caseId));
@@ -22,12 +25,45 @@ const CaseNotes = ({ caseId, onSuccess }) => {
     if (!file) return;
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
+    setAudioFile(null);
+    setAudioPreview(null);
+    if (audioRef.current) audioRef.current.value = "";
+  };
+
+  const handleAudioChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setAudioFile(file);
+    setAudioPreview(URL.createObjectURL(file));
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileRef.current) fileRef.current.value = "";
   };
 
   const removeImage = () => {
     setImageFile(null);
     setImagePreview(null);
     if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const removeAudio = () => {
+    setAudioFile(null);
+    setAudioPreview(null);
+    if (audioRef.current) audioRef.current.value = "";
+  };
+
+  const isAudioUrl = (url) => {
+    if (!url) return false;
+    const lower = url.toLowerCase();
+    return (
+      lower.endsWith(".mp3") ||
+      lower.endsWith(".wav") ||
+      lower.endsWith(".ogg") ||
+      lower.endsWith(".m4a") ||
+      lower.endsWith(".aac") ||
+      lower.includes("audio") ||
+      lower.includes("recording")
+    );
   };
 
   const submitNote = async (noteMessage, noteType = "note") => {
@@ -42,12 +78,13 @@ const CaseNotes = ({ caseId, onSuccess }) => {
           caseId,
           message: noteMessage,
           type: noteType,
-          image: noteType === "note" ? imageFile : null,
+          image: noteType === "note" ? (imageFile || audioFile) : null,
         })
       ).unwrap();
 
       setMessage("");
       removeImage();
+      removeAudio();
       toast.success(
         noteType === "call_not_attended"
           ? "Call log added!"
@@ -120,16 +157,60 @@ const CaseNotes = ({ caseId, onSuccess }) => {
             </div>
           )}
 
+          {/* Audio preview */}
+          {audioPreview && (
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px", background: "#f0f5ff", borderRadius: "8px", border: "1px solid #adc6ff", width: "100%", maxWidth: "340px", boxSizing: "border-box" }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: "10px", fontWeight: 700, color: "#1d39c4", marginBottom: "4px" }}>🎙️ Call Recording Selected</div>
+                <audio src={audioPreview} controls style={{ width: "100%", height: "30px" }} />
+              </div>
+              <button
+                type="button"
+                onClick={removeAudio}
+                style={{
+                  background: "#fff1f0",
+                  border: "1px solid #ffa39e",
+                  color: "#cf1322",
+                  borderRadius: "50%",
+                  width: "24px",
+                  height: "24px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  fontWeight: 700,
+                  fontSize: "12px",
+                  flexShrink: 0,
+                }}
+                title="Remove call recording"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
           {/* Action row */}
           <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
             {/* Upload photo button */}
             <label style={uploadLabelStyle} title="Attach photo">
-              📎 Photo
+              📸 Photo Upload
               <input
                 ref={fileRef}
                 type="file"
                 accept="image/*"
                 onChange={handleImageChange}
+                style={{ display: "none" }}
+              />
+            </label>
+
+            {/* Upload Call Recording button */}
+            <label style={audioUploadLabelStyle} title="Attach call recording">
+              🎙️ Call Recording Upload
+              <input
+                ref={audioRef}
+                type="file"
+                accept="audio/*"
+                onChange={handleAudioChange}
                 style={{ display: "none" }}
               />
             </label>
@@ -200,21 +281,28 @@ const CaseNotes = ({ caseId, onSuccess }) => {
                   <span style={roleBadgeStyle(note.role)}>{note.role}</span>
                 </div>
 
-                {/* Note image */}
+                {/* Note attachment (Image or Audio Call Recording) */}
                 {note.image?.url && (
-                  <a href={note.image.url} target="_blank" rel="noreferrer">
-                    <img
-                      src={note.image.url}
-                      alt="note attachment"
-                      style={{
-                        maxHeight: "160px",
-                        borderRadius: "8px",
-                        marginTop: "8px",
-                        border: "1px solid #e2e8f0",
-                        cursor: "pointer",
-                      }}
-                    />
-                  </a>
+                  isAudioUrl(note.image.url) ? (
+                    <div style={{ marginTop: "10px", padding: "10px", background: "#fff6f6", borderRadius: "10px", border: "1px solid #ffe3e3", display: "inline-block", width: "100%", maxWidth: "320px", boxSizing: "border-box" }}>
+                      <div style={{ fontSize: "10px", fontWeight: 700, color: "#c53030", marginBottom: "4px" }}>🎙️ Call Recording Attachment</div>
+                      <audio src={note.image.url} controls style={{ width: "100%", height: "32px" }} />
+                    </div>
+                  ) : (
+                    <a href={note.image.url} target="_blank" rel="noreferrer">
+                      <img
+                        src={note.image.url}
+                        alt="note attachment"
+                        style={{
+                          maxHeight: "160px",
+                          borderRadius: "8px",
+                          marginTop: "8px",
+                          border: "1px solid #e2e8f0",
+                          cursor: "pointer",
+                        }}
+                      />
+                    </a>
+                  )
                 )}
 
                 <div style={{ display: "flex", gap: "10px", marginTop: "6px" }}>
@@ -276,6 +364,21 @@ const uploadLabelStyle = {
   fontWeight: 600,
   cursor: "pointer",
   color: "#4a5568",
+  whiteSpace: "nowrap",
+};
+
+const audioUploadLabelStyle = {
+  display: "flex",
+  alignItems: "center",
+  gap: "4px",
+  padding: "8px 14px",
+  background: "#f0f5ff",
+  border: "1px solid #adc6ff",
+  borderRadius: "8px",
+  fontSize: "13px",
+  fontWeight: 600,
+  cursor: "pointer",
+  color: "#1d39c4",
   whiteSpace: "nowrap",
 };
 

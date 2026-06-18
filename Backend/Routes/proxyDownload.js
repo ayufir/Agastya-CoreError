@@ -6,13 +6,15 @@ const router = express.Router();
 const archiver = require("archiver");
 
 router.post("/", async (req, res) => {
-  const { urls } = req.body;
+  const { urls, jsonData } = req.body;
 
   console.log(urls);
 
-  if (!Array.isArray(urls) || urls.length === 0) {
-    return res.status(400).json({ error: "URLs are required in array" });
+
+  if ((!Array.isArray(urls) || urls.length === 0) && !jsonData) {
+    return res.status(400).json({ error: "Either URLs array or jsonData is required" });
   }
+
 
   try {
     res.setHeader("Content-Type", "application/zip");
@@ -26,7 +28,15 @@ router.post("/", async (req, res) => {
 
     archive.pipe(res);
 
-    for (const url of urls) {
+    if (req.body.jsonData) {
+      const jsonContent = typeof req.body.jsonData === "string"
+        ? req.body.jsonData
+        : JSON.stringify(req.body.jsonData, null, 2);
+      archive.append(Buffer.from(jsonContent), { name: req.body.jsonFilename || "application_data.json" });
+    }
+
+    for (const url of (Array.isArray(urls) ? urls : [])) {
+
       const filename = decodeURIComponent(url.split("/").pop());
 
       try {
