@@ -120,9 +120,14 @@ const AssignedCase = ({ selectedMonth }) => {
   }, [selectedZone, selectedMonth, selectedBanks, selectedStatuses, debouncedSearch]);
 
   const monthFilteredAssignedCases = useMemo(() => {
-    return (cases || []).filter((item) =>
-      isSameMonth(getCaseDate(item), selectedMonth)
-    );
+    return (cases || []).filter((item) => {
+      if (!isSameMonth(getCaseDate(item), selectedMonth)) return false;
+      const status = (item.status || "").toLowerCase().trim();
+      if (status.includes("final") || status.includes("done") || status.includes("complete")) {
+        return false;
+      }
+      return true;
+    });
   }, [cases, selectedMonth]);
 
   const handleRemoveAssignment = async (recordId) => {

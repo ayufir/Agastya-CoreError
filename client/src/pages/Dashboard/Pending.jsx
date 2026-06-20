@@ -111,9 +111,21 @@ const Pending = ({ selectedMonth }) => {
   }, [selectedZone, selectedMonth, selectedBanks, selectedStatuses, debouncedSearch]);
 
   const monthFilteredPendingCases = useMemo(() => {
-    return (pendingCases || []).filter((item) =>
-      isSameMonth(getCaseDate(item), selectedMonth)
-    );
+    return (pendingCases || []).filter((item) => {
+      if (!isSameMonth(getCaseDate(item), selectedMonth)) return false;
+      const status = (item.status || "").toLowerCase().trim();
+      if (
+        status.includes("complete") ||
+        status.includes("final") ||
+        status.includes("submit") ||
+        status.includes("progress") ||
+        status.includes("working") ||
+        status.includes("assigned")
+      ) {
+        return false;
+      }
+      return true;
+    });
   }, [pendingCases, selectedMonth]);
 
   const handleDelete = async (recordId) => {
