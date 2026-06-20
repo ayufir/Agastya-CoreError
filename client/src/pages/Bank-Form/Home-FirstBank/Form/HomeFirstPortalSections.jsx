@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Form, Input, InputNumber } from "antd";
+import { Form, Input, InputNumber, Button } from "antd";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import ImageUploader from "../../../../components/ImageUploader";
@@ -15,8 +15,12 @@ const HomeFirstPortalSections = ({
   sectionId,
   registerSectionSubmitter,
   fetchData,
+  onNext,
+  onBack,
 }) => {
   const [form] = Form.useForm();
+  const formValues = Form.useWatch([], form) || {};
+  const hasValue = (name) => formValues[name] !== undefined && formValues[name] !== null && formValues[name] !== "";
   const user = useSelector((state) => state.auth.user);
   const [images, setImages] = useState([]);
   const [uploadedImages, setUploadedImages] = useState([]);
@@ -34,9 +38,9 @@ const HomeFirstPortalSections = ({
 
     if (mode === "billing") {
       form.setFieldsValue({
-        charges: isEdit.charges || 1800,
-        baseRate: isEdit.baseRate || 1800,
-        totalAmount: isEdit.totalAmount || 2124,
+        charges: (isEdit.charges !== undefined && isEdit.charges !== null && isEdit.charges !== "") ? isEdit.charges : 0,
+        baseRate: (isEdit.baseRate !== undefined && isEdit.baseRate !== null && isEdit.baseRate !== "") ? isEdit.baseRate : 1800,
+        totalAmount: (isEdit.totalAmount !== undefined && isEdit.totalAmount !== null && isEdit.totalAmount !== "") ? isEdit.totalAmount : 0,
       });
     }
 
@@ -60,12 +64,12 @@ const HomeFirstPortalSections = ({
 
   const handleValuesChange = (_, all) => {
     if (mode === "billing") {
-      const charges = parseFloat(all.charges) || 0;
+      const charges = all.charges !== undefined && all.charges !== null && all.charges !== "" ? parseFloat(all.charges) : 0;
       const gst = 0.18;
       const total = Math.round(charges * (1 + gst));
       form.setFieldsValue({
-        totalAmount: total || "",
-        baseRate: all.charges || ""
+        totalAmount: all.charges !== undefined && all.charges !== null && all.charges !== "" ? total : 0,
+        baseRate: all.charges !== undefined && all.charges !== null && all.charges !== "" ? all.charges : 1800
       });
     }
   };
@@ -282,9 +286,67 @@ const HomeFirstPortalSections = ({
     );
   }
 
+  const renderSaveButton = () => {
+    const isPhotos = mode === "photos";
+    const label = isPhotos ? "Proceed to Document Uploading" : "Save & Proceed";
+    const btnStyle = isPhotos
+      ? {
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "8px",
+          padding: "8px 24px",
+          borderRadius: "999px",
+          border: "none",
+          background: "#0056b3",
+          color: "#fff",
+          fontWeight: 600,
+          fontSize: "14px",
+          height: "42px",
+          cursor: "pointer",
+          boxShadow: "none",
+        }
+      : {
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "8px",
+          padding: "8px 24px",
+          borderRadius: "999px",
+          border: "2px solid #0056b3",
+          background: "transparent",
+          color: "#0056b3",
+          fontWeight: 600,
+          fontSize: "14px",
+          height: "42px",
+          cursor: "pointer",
+          boxShadow: "none",
+        };
+
+    return (
+      <div style={{ 
+        marginTop: "24px", 
+        paddingTop: isPhotos ? "24px" : "0px", 
+        borderTop: isPhotos ? "1px solid #e2e8f0" : "none" 
+      }}>
+        <button
+          type="button"
+          onClick={() => onNext && onNext()}
+          style={btnStyle}
+        >
+          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+            <polyline points="17 21 17 13 7 13 7 21" />
+            <polyline points="7 3 7 8 15 8" />
+          </svg>
+          {label}
+        </button>
+      </div>
+    );
+  };
+
   if (mode === "photos") {
     return (
-      <div className="home-first-reference-section">
+      <div className="max-w-5xl mx-auto p-4 bg-white rounded shadow">
+        <h2 className="text-xl font-bold mb-6 text-slate-800">Site Pics</h2>
         <ImageUploader
           deleteId={isEdit?._id}
           images={images}
@@ -295,13 +357,15 @@ const HomeFirstPortalSections = ({
           fetchData={fetchData}
           url="first-bank"
         />
+        {renderSaveButton()}
       </div>
     );
   }
 
   if (mode === "documents") {
     return (
-      <div className="home-first-reference-section">
+      <div className="max-w-5xl mx-auto p-4 bg-white rounded shadow">
+        <h2 className="text-xl font-bold mb-6 text-slate-800">Documents</h2>
         <DocumentUploader
           caseId={isEdit?._id}
           bankName="first-bank"
@@ -309,13 +373,15 @@ const HomeFirstPortalSections = ({
           setDocUrls={setDocUrls}
           fetchData={fetchData}
         />
+        {renderSaveButton()}
       </div>
     );
   }
 
   if (mode === "videos") {
     return (
-      <div className="home-first-reference-section">
+      <div className="max-w-5xl mx-auto p-4 bg-white rounded shadow">
+        <h2 className="text-xl font-bold mb-6 text-slate-800">Site Video</h2>
         <VideoUploader
           caseId={isEdit?._id}
           bankName="first-bank"
@@ -323,35 +389,133 @@ const HomeFirstPortalSections = ({
           setVideoUrls={setVideoUrls}
           fetchData={fetchData}
         />
+        {renderSaveButton()}
       </div>
     );
   }
 
   return (
-    <Form form={form} layout="vertical" onValuesChange={handleValuesChange} className="home-first-reference-section">
-      {mode === "observations" && (
-        <Form.Item label="Observations" name="observations">
-          <TextArea
-            autoSize={{ minRows: 5, maxRows: 16 }}
-            placeholder="Enter complete observations"
-          />
-        </Form.Item>
-      )}
+    <div className="max-w-5xl mx-auto p-4 bg-white rounded shadow">
+      <style>{`
+        .custom-form-item-wrapper .custom-label {
+          position: absolute;
+          top: -8px;
+          left: 10px;
+          background: #fff;
+          padding: 0 6px;
+          font-size: 11px;
+          color: #475569;
+          font-weight: 600;
+          z-index: 2;
+          opacity: 0;
+          transform: translateY(12px);
+          transition: opacity 0.15s ease, transform 0.15s ease;
+          pointer-events: none;
+        }
+        .custom-form-item-wrapper:focus-within .custom-label,
+        .custom-form-item-wrapper:has(.ant-form-item-has-error) .custom-label,
+        .custom-form-item-wrapper.has-value .custom-label {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        .custom-form-item-wrapper .ant-input-number {
+          width: 100% !important;
+          height: 40px !important;
+          border-radius: 6px !important;
+          display: flex !important;
+          align-items: center !important;
+          border: 1px solid #d1d5db !important;
+          box-shadow: none !important;
+        }
+        .custom-form-item-wrapper .ant-input-number-input {
+          height: 38px !important;
+          color: #0f172a !important;
+          font-weight: 500 !important;
+        }
+        .custom-form-item-wrapper:has(.ant-form-item-has-error) .custom-label {
+          color: #ff4d4f !important;
+        }
+        .custom-form-item-wrapper:has(.ant-form-item-has-error) .ant-input-number {
+          border-color: #ff4d4f !important;
+        }
+      `}</style>
+      <h2 className="text-xl font-bold mb-6 text-slate-800">
+        {mode === "observations" ? "Observations" : "Billing"}
+      </h2>
+      <Form
+        form={form}
+        layout="vertical"
+        onValuesChange={handleValuesChange}
+        onFinish={onNext}
+      >
+        {mode === "observations" && (
+          <Form.Item name="observations" style={{ margin: 0 }}>
+            <TextArea
+              autoSize={{ minRows: 5, maxRows: 16 }}
+              placeholder="Observations"
+              style={{ border: "1px solid #d1d5db", borderRadius: "6px" }}
+            />
+          </Form.Item>
+        )}
 
-      {mode === "billing" && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Form.Item label="Charges" name="charges">
-            <InputNumber className="w-full" min={0} />
-          </Form.Item>
-          <Form.Item label="Base Rate" name="baseRate">
-            <InputNumber className="w-full" min={0} />
-          </Form.Item>
-          <Form.Item label="Total" name="totalAmount" className="md:col-span-2">
-            <InputNumber className="w-full" min={0} />
-          </Form.Item>
+        {mode === "billing" && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+              <div className={`custom-form-item-wrapper ${hasValue("charges") ? "has-value" : ""}`} style={{ position: "relative", marginTop: "8px" }}>
+                <span className="custom-label">Charges</span>
+                <Form.Item name="charges" style={{ margin: 0 }}>
+                  <InputNumber min={0} placeholder="Charges" />
+                </Form.Item>
+              </div>
+
+              <div className={`custom-form-item-wrapper ${hasValue("baseRate") ? "has-value" : ""}`} style={{ position: "relative", marginTop: "8px" }}>
+                <span className="custom-label">Base Rate</span>
+                <Form.Item name="baseRate" style={{ margin: 0 }}>
+                  <InputNumber min={0} placeholder="Base Rate" />
+                </Form.Item>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-y-4">
+              <div className={`custom-form-item-wrapper ${hasValue("totalAmount") ? "has-value" : ""}`} style={{ position: "relative", marginTop: "8px" }}>
+                <span className="custom-label">Total</span>
+                <Form.Item name="totalAmount" style={{ margin: 0 }}>
+                  <InputNumber min={0} placeholder="Total" />
+                </Form.Item>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div style={{ marginTop: "24px" }}>
+          <Button
+            htmlType="submit"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "8px 24px",
+              borderRadius: "999px",
+              border: "2px solid #0056b3",
+              background: "transparent",
+              color: "#0056b3",
+              fontWeight: 600,
+              fontSize: "14px",
+              height: "42px",
+              cursor: "pointer",
+              boxShadow: "none",
+            }}
+          >
+            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+              <polyline points="17 21 17 13 7 13 7 21" />
+              <polyline points="7 3 7 8 15 8" />
+            </svg>
+            Save & Proceed
+          </Button>
         </div>
-      )}
-    </Form>
+      </Form>
+    </div>
   );
 };
 

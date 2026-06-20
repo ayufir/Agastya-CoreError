@@ -99,6 +99,7 @@ export const getDisplayCity = (record) => {
 
 const BANK_ROUTE_ALIASES = {
   homefirst: "home-first",
+  homefirstbank: "home-first",
   "home first": "home-first",
   "home first bank": "home-first",
   homefirsttrench: "home-first-trench",

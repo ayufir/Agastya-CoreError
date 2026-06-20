@@ -262,16 +262,20 @@ const AssignedCase = ({ selectedMonth }) => {
             <Edit3 size={18} />
           </Link>
 
-          <Button
-            danger
-            onClick={async () => {
+          <Popconfirm
+            title="Are you sure you want to delete this case?"
+            onConfirm={async () => {
               await dispatch(deletedCases(record._id));
               toast.success("Deleted");
               await fetchAssignedList();
             }}
+            okText="Yes"
+            cancelText="No"
           >
-            <Trash2 size={18} />
-          </Button>
+            <Button danger>
+              <Trash2 size={18} />
+            </Button>
+          </Popconfirm>
         </div>
       ),
     },

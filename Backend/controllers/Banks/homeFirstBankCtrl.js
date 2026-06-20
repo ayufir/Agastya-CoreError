@@ -204,9 +204,28 @@ exports.deleteImageFromValuationReport = async (req, res) => {
       }
     }
 
-    const updatedJob = await ValuationReport.findByIdAndUpdate(id, buildAssetPullQuery(fieldName, imageUrl), {
-      new: true,
-    });
+    const fileId = imageUrl?.fileId || "";
+    const pullConditions = [];
+    if (fileId) {
+      pullConditions.push({ fileId: fileId });
+    }
+    if (assetUrl) {
+      pullConditions.push({ url: assetUrl });
+    }
+
+    let updatedJob = await ValuationReport.findByIdAndUpdate(
+      id,
+      { $pull: { [fieldName]: { $or: pullConditions } } },
+      { new: true }
+    );
+
+    if (assetUrl) {
+      updatedJob = await ValuationReport.findByIdAndUpdate(
+        id,
+        { $pull: { [fieldName]: assetUrl } },
+        { new: true }
+      );
+    }
 
     if (!updatedJob) {
       return res.status(404).json({ message: "Job not found" });

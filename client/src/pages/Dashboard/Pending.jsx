@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Table, Input, Tag, Select, Modal, Button } from "antd";
+import { Table, Input, Tag, Select, Modal, Button, Popconfirm } from "antd";
 import { Link } from "react-router-dom";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
@@ -229,12 +229,18 @@ const Pending = ({ selectedMonth }) => {
             <Edit3 size={38} />
           </Link>
 
-          <Button
-            onClick={() => handleDelete(record._id)}
-            className="!text-red-600 hover:underline"
+          <Popconfirm
+            title="Are you sure you want to delete this case?"
+            onConfirm={() => handleDelete(record._id)}
+            okText="Yes"
+            cancelText="No"
           >
-            <Trash2 size={18} />
-          </Button>
+            <Button
+              className="!text-red-600 hover:underline"
+            >
+              <Trash2 size={18} />
+            </Button>
+          </Popconfirm>
         </div>
       ),
     },

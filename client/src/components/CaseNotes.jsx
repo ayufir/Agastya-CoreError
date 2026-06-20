@@ -111,6 +111,7 @@ const CaseNotes = ({ caseId, onSuccess }) => {
   const formatTime = (dateStr) => {
     if (!dateStr) return "";
     const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return "";
     return d.toLocaleString("en-IN", {
       day: "2-digit",
       month: "short",

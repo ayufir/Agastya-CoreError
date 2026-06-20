@@ -280,9 +280,16 @@ router.post("/remove-ats-document", async (req, res) => {
     const bankRegistry = modelMap.bankRegistry || Object.values(modelMap);
     let updatedCase = null;
 
-    const pullQuery = fileId 
-      ? { atsDocuments: { fileId: fileId } }
-      : { atsDocuments: { url: assetUrl } };
+    const pullConditions = [];
+    if (fileId) {
+      pullConditions.push({ fileId: fileId });
+      pullConditions.push(fileId);
+    }
+    if (assetUrl) {
+      pullConditions.push({ url: assetUrl });
+      pullConditions.push(assetUrl);
+    }
+    const pullQuery = { atsDocuments: { $or: pullConditions } };
 
     for (const bankConfig of bankRegistry) {
       const Model = bankConfig.model || bankConfig;
@@ -387,9 +394,16 @@ router.post("/remove-category-document", async (req, res) => {
     const bankRegistry = modelMap.bankRegistry || Object.values(modelMap);
     let updatedCase = null;
 
-    const pullQuery = fileId 
-      ? { [fieldName]: { fileId: fileId } }
-      : { [fieldName]: { url: assetUrl } };
+    const pullConditions = [];
+    if (fileId) {
+      pullConditions.push({ fileId: fileId });
+      pullConditions.push(fileId);
+    }
+    if (assetUrl) {
+      pullConditions.push({ url: assetUrl });
+      pullConditions.push(assetUrl);
+    }
+    const pullQuery = { [fieldName]: { $or: pullConditions } };
 
     for (const bankConfig of bankRegistry) {
       const Model = bankConfig.model || bankConfig;

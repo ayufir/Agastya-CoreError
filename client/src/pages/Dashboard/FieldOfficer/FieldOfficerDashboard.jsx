@@ -200,14 +200,14 @@ const FieldOfficerDashboard = () => {
       if (selectedStatus === "NEW_CASES") {
         filtered = filtered?.filter(
           (caseItem) =>
+            caseItem.approvalStatus === "Pending" &&
             !caseItem.isReportSubmitted &&
-            caseItem.status !== "Query Raised" &&
-            !caseItem.queryResolved
+            caseItem.status !== "Query Raised"
         );
       } else if (selectedStatus === "PENDING") {
         filtered = filtered?.filter(
           (caseItem) =>
-            caseItem.queryResolved === true &&
+            caseItem.approvalStatus !== "Pending" &&
             !caseItem.isReportSubmitted &&
             caseItem.status !== "Query Raised"
         );
@@ -279,13 +279,13 @@ const FieldOfficerDashboard = () => {
       TOTAL_ASSIGNED: items.length,
       NEW_CASES: items.filter(
         (c) =>
+          c.approvalStatus === "Pending" &&
           !c.isReportSubmitted &&
-          c.status !== "Query Raised" &&
-          !c.queryResolved
+          c.status !== "Query Raised"
       ).length,
       PENDING: items.filter(
         (c) =>
-          c.queryResolved === true &&
+          c.approvalStatus !== "Pending" &&
           !c.isReportSubmitted &&
           c.status !== "Query Raised"
       ).length,

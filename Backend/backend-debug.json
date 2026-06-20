@@ -1,18 +1,84 @@
 {
-  "timestamp": "2026-06-18T12:50:46.184Z",
+  "timestamp": "2026-06-20T12:30:26.272Z",
   "body": {
-    "gpsFiles": [],
-    "emailFiles": [],
-    "fieldFormFiles": [],
-    "additionalFiles": [],
-    "_id": "6a2bab98f53d5cf2ffe34ec3",
+    "directions": {
+      "North": {
+        "document": "Seller's Land (Vikreta ki Bhoomi)",
+        "actual": "House of Tulsiman Atariya",
+        "plan": "Seller's Land (Vikreta ki Bhoomi)"
+      },
+      "South": {
+        "document": "Harikuwar's Plot (Harikuwar ka Bhu-Khand)",
+        "actual": "Open Plot",
+        "plan": "Harikuwar's Plot (Harikuwar ka Bhu-Khand)"
+      },
+      "East": {
+        "document": "Narayan Singh's Land (Narayan Singh ki Bhoomi)",
+        "actual": "Agricultural Land of Kashkwache Ji",
+        "plan": "Narayan Singh's Land (Narayan Singh ki Bhoomi)"
+      },
+      "West": {
+        "document": "20 Feet Road (Rasta 20 Feet ka)",
+        "actual": "Colony Road",
+        "plan": "20 Feet Road (Rasta 20 Feet ka)"
+      }
+    },
+    "_id": "6a34ff1f9946976926710014",
     "status": "Work in Progress",
-    "AttachDocuments": [],
+    "AttachDocuments": [
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/2026-06-12_14-20-40-1-15_compressed_1__9Ly415so-.pdf",
+        "fileId": "6a34fdef5c7cd75eb8a60114",
+        "name": "2026-06-12_14-20-40-1-15_compressed_1__9Ly415so-.pdf"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/2026-06-12_14-20-40-1-15_compressed_1__9Ly415so-.pdf",
+        "fileId": "6a34fdef5c7cd75eb8a60114",
+        "name": "2026-06-12_14-20-40-1-15_compressed_1__9Ly415so-.pdf"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/2026-06-12_14-20-40-1-15_compressed_1__9Ly415so-.pdf",
+        "fileId": "6a34fdef5c7cd75eb8a60114",
+        "name": "2026-06-12_14-20-40-1-15_compressed_1__9Ly415so-.pdf"
+      }
+    ],
     "atsDocuments": [
       {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/Pooja_M_JzocIDx.pdf",
-        "fileId": "6a2bab815c7cd75eb84179bd",
-        "name": "Pooja_M_JzocIDx.pdf"
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/2026-06-12_14-20-40-1-15_compressed_1__9Ly415so-.pdf",
+        "fileId": "6a34fdef5c7cd75eb8a60114",
+        "name": "2026-06-12_14-20-40-1-15_compressed_1__9Ly415so-.pdf"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/2026-06-12_14-20-40-1-15_compressed_1__9Ly415so-.pdf",
+        "fileId": "6a34fdef5c7cd75eb8a60114",
+        "name": "2026-06-12_14-20-40-1-15_compressed_1__9Ly415so-.pdf"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/2026-06-12_14-20-40-1-15_compressed_1__9Ly415so-.pdf",
+        "fileId": "6a34fdef5c7cd75eb8a60114",
+        "name": "2026-06-12_14-20-40-1-15_compressed_1__9Ly415so-.pdf"
+      }
+    ],
+    "gpsFiles": [],
+    "emailFiles": [],
+    "fieldFormFiles": [
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/IMG20260619125458_To18mr-1d.jpg",
+        "fileId": "6a3522e15c7cd75eb8a40575",
+        "name": "IMG20260619125458_To18mr-1d.jpg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/IMG20260619125504_s4bX0BtFC.jpg",
+        "fileId": "6a3522e45c7cd75eb8a417c5",
+        "name": "IMG20260619125504_s4bX0BtFC.jpg"
+      }
+    ],
+    "additionalFiles": [],
+    "siteVisitVideo": [
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/VID20260612091355_dbMoocisd.mp4",
+        "fileId": "6a35233b5c7cd75eb8a76b11",
+        "name": "VID20260612091355_dbMoocisd.mp4"
       }
     ],
     "createdBy": "683070c765ba61b559c1ecc1",
@@ -20,30 +86,189 @@
     "city": "",
     "approvalStatus": "Accepted",
     "isReportSubmitted": true,
-    "refNo": "N/A",
-    "dateOfReport": null,
-    "dateOfVisit": null,
-    "vendorName": "",
-    "clContractNo": "",
-    "latitude": "23.228184",
-    "longitude": "77.437570",
-    "imageUrls": [],
+    "refNo": "MP35242020A1721505",
+    "dateOfReport": "2026-06-19T11:19:02.217Z",
+    "dateOfVisit": "2026-06-19T11:19:02.217Z",
+    "projectPinCode": "",
+    "latitude": "23.022002",
+    "longitude": "76.733676",
+    "unitType": "OPEN PLOT",
+    "zone": "Residential",
+    "customerName": "Vikash Rajju",
+    "customerNo": "8463846043",
+    "personMetDuringVisit": "Rahul Damdiya",
+    "personContactNo": "8463846043",
+    "relationshipOfPersonMet": "SELF",
+    "propertyOwnerName": "Sumitra Bai",
+    "howFoundOwnerName": "SALE DEED",
+    "documentsAvailable": "YES",
+    "nameOnSocietyBoard": "NA",
+    "addressLegal": "Plot No., Ward No. 16, Ashint Colony, Murli Road, Ashta, Sehore, Madhya Pradesh",
+    "addressSite": "Plot No., Ward No. 16, Ashint Colony, Murli Road, Ashta, Sehore, Madhya Pradesh",
+    "nameOnDoor": "NA",
+    "nearbyLandmark": "Near Model School",
+    "statusOfOccupancy": "Vacant",
+    "occupiedBy": "",
+    "usageOfProperty": "Residential",
+    "propertyEasilyIdentifiable": "YES",
+    "imageUrls": [
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-06-18_at_3.07.35_PM_VrqsaPIMJ.jpeg",
+        "fileId": "6a35006b5c7cd75eb8b3539c",
+        "name": "WhatsApp_Image_2026-06-18_at_3.07.35_PM_VrqsaPIMJ.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-06-18_at_3.07.36_PM__1__MyK7RWrc5.jpeg",
+        "fileId": "6a35006d5c7cd75eb8b36133",
+        "name": "WhatsApp_Image_2026-06-18_at_3.07.36_PM__1__MyK7RWrc5.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-06-18_at_3.07.36_PM_MWJXwtSL0.jpeg",
+        "fileId": "6a35006e5c7cd75eb8b36534",
+        "name": "WhatsApp_Image_2026-06-18_at_3.07.36_PM_MWJXwtSL0.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/TimePhoto_20260619_154313_hVWMbK6rn.jpg",
+        "fileId": "6a3523235c7cd75eb8a5c73f",
+        "name": "TimePhoto_20260619_154313_hVWMbK6rn.jpg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/TimePhoto_20260619_154251_VmvZKP1qu.jpg",
+        "fileId": "6a3523265c7cd75eb8a5fef5",
+        "name": "TimePhoto_20260619_154251_VmvZKP1qu.jpg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/TimePhoto_20260619_154134_XNrzZoQYC.jpg",
+        "fileId": "6a3523295c7cd75eb8a63a54",
+        "name": "TimePhoto_20260619_154134_XNrzZoQYC.jpg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/TimePhoto_20260619_154058_es5jRcUl8.jpg",
+        "fileId": "6a35232b5c7cd75eb8a65ed9",
+        "name": "TimePhoto_20260619_154058_es5jRcUl8.jpg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/TimePhoto_20260619_153945_qacj6c-HB.jpg",
+        "fileId": "6a35232c5c7cd75eb8a66e37",
+        "name": "TimePhoto_20260619_153945_qacj6c-HB.jpg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/Screenshot_2026-06-19-13-02-48-26_a2dc840926681ead4b73943a358d5d7a_q_-W8ehLd.jpg",
+        "fileId": "6a35232d5c7cd75eb8a67c44",
+        "name": "Screenshot_2026-06-19-13-02-48-26_a2dc840926681ead4b73943a358d5d7a_q_-W8ehLd.jpg"
+      }
+    ],
+    "nearestCityTown": "Sehore",
+    "locationCategory": "Nagar Palika Ashta, Ward No. 16",
+    "localityDevelopment": "Ashta, Bhopal Division, Madhya Pradesh",
+    "approachRoadType": "20 ft Colony Road",
+    "approachRoadWidth": "20 ft",
+    "distanceFromCityCentre": "1 km (approx)",
+    "distanceFromRailwayStation": "40 km (approx)",
+    "distanceFromBusStand": "1 km (approx)",
+    "distanceFromHospital": "",
+    "occupancyPercentage": "Under Construction",
+    "habitationPercentage": "",
+    "nallahRiverHighTension": "Agricultural land on East boundary; property is at some distance from road as per deed",
+    "electricityAvailability": "Yes (electrical lines visible near property)",
+    "waterAvailability": "YES",
+    "drainageAvailability": "YES",
+    "seismicZone": "II",
+    "cycloneZone": "NO",
+    "landslideProneZone": "No",
+    "floodZone": "No",
+    "crZone": "NO",
+    "demolitionRisk": "No",
+    "demolitionRiskDetails": "NA",
+    "followsNDMAGuidelines": "YES",
+    "boundariesMatching": "Yes",
+    "propertyDemarcated": "Yes",
+    "boundaryRemarks": "",
+    "marketability": "",
+    "landArea": "830 sq.ft (approx - as per site sketch: 40x20 = 800 sq.ft measured, deed says 830 sq.ft)",
+    "linearDimension": "40 ft (N-S) x 20 ft (E-W frontage) x 43 ft (E side)",
+    "plotArea": "0",
+    "typeOfStructure": "RCC (Under Construction)",
+    "typeOfRoof": "",
+    "noOfFloorsPermissible": "NA",
+    "noOfFloorsActual": "0",
+    "noOfUnitFlatOnEachFloor": "NA",
+    "qualityOfConstruction": "",
+    "approxAgeOfProperty": "0",
+    "residualAge": "0",
+    "landDocumentArea": "830 sq.ft (77.13 sq.mt)",
+    "landPlanArea": "830 sq.ft (77.13 sq.mt)",
+    "landSiteArea": "830 sq.ft (approx - as per site sketch: 40x20 = 800 sq.ft measured, deed says 830 sq.ft)",
+    "liftAvailable": "Not Applicable",
+    "realizableValue": "",
+    "constructionStage": "Foundation / Plinth level - Under Construction",
+    "constructionStatus": "Foundation / Plinth level - Under Construction",
     "valuationRemarks": [],
     "timeline": [
       {
+        "status": "Work in Progress",
+        "updatedAt": "2026-06-19T08:36:57.387Z",
+        "updatedBy": "683070c765ba61b559c1ecc1",
+        "note": "Assigned to user 6a2a4ed58ddfdbd661279b46",
+        "_id": "6a34ffa9994697692671009b"
+      },
+      {
         "status": "submitted-by-fo",
-        "updatedAt": "2026-06-12T06:52:34.329Z",
+        "updatedAt": "2026-06-19T08:41:31.856Z",
         "updatedBy": "6a2a4ed58ddfdbd661279b46",
-        "note": "Updated by field officer",
-        "_id": "6a2bacb2f53d5cf2ffe350e6"
+        "note": "Submitted by field officer",
+        "_id": "6a3500bb99469769267102bd"
+      },
+      {
+        "status": "submitted-by-fo",
+        "updatedAt": "2026-06-19T08:42:30.232Z",
+        "updatedBy": "6a2a4ed58ddfdbd661279b46",
+        "note": "Submitted by field officer",
+        "_id": "6a3500f6994697692671047a"
+      },
+      {
+        "status": "submitted-by-fo",
+        "updatedAt": "2026-06-19T08:43:46.237Z",
+        "updatedBy": "6a2a4ed58ddfdbd661279b46",
+        "note": "Submitted by field officer",
+        "_id": "6a350142994697692671064b"
+      },
+      {
+        "status": "submitted-by-fo",
+        "updatedAt": "2026-06-19T11:08:17.164Z",
+        "updatedBy": "6a2a4ed58ddfdbd661279b46",
+        "note": "Submitted by field officer",
+        "_id": "6a3523219946976926710f5d"
+      },
+      {
+        "status": "submitted-by-fo",
+        "updatedAt": "2026-06-19T11:10:28.054Z",
+        "updatedBy": "6a2a4ed58ddfdbd661279b46",
+        "note": "Submitted by field officer",
+        "_id": "6a3523a49946976926711118"
+      },
+      {
+        "status": "submitted-by-fo",
+        "updatedAt": "2026-06-20T06:54:51.071Z",
+        "updatedBy": "6a2a4ed58ddfdbd661279b46",
+        "note": "Submitted by field officer",
+        "_id": "6a36393bd25fba77bc87e531"
+      },
+      {
+        "status": "submitted-by-fo",
+        "updatedAt": "2026-06-20T12:10:40.197Z",
+        "updatedBy": "6a2a4ed58ddfdbd661279b46",
+        "note": "Submitted by field officer",
+        "_id": "6a368340035aa3c39e3834ac"
       }
     ],
     "documents": [],
-    "createdAt": "2026-06-12T06:47:52.233Z",
-    "updatedAt": "2026-06-15T08:15:09.820Z",
-    "__v": 1,
+    "createdAt": "2026-06-19T08:34:39.485Z",
+    "updatedAt": "2026-06-19T08:34:39.492Z",
+    "__v": 0,
     "assignedTo": "6a2a4ed58ddfdbd661279b46",
-    "route": "/bank/home-first/edit/6a2bab98f53d5cf2ffe34ec3",
-    "siteVisitVideo": []
+    "route": "/bank/home-first/edit/6a34ff1f9946976926710014",
+    "clContractNo": "",
+    "vendorName": "Unique Engineering and Associate - Bhopal"
   }
 }

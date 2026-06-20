@@ -1,316 +1,6 @@
-
-
-// import React, { useState, useEffect } from "react";
-// import { Form, Input, Button, Table, Divider, Select, Row, Col } from "antd";
-
-// const { TextArea } = Input;
-// const { Option } = Select;
-
-// // PDF Section 5 - Property Plan document types
-// const defaultDocumentData = [
-//   {
-//     key: "1",
-//     type: "NA Converted",
-//     approvingAuthority: ["Yes", "No", "NA"],
-//     selectedApprovingAuthority: "Yes", // default dropdown value
-//     approvalDate: "",
-//     approvalDetails: "",
-//   },
-//   {
-//     key: "2",
-//     type: "Layout Plan",
-//     approvingAuthority: [
-//       "Municipal/Town Planning (TP)",
-//       "Gram Panchayat (GP)",
-//       "Collector (Zilla Parishad) (ZP)",
-//       "Licensed Surveyor Plan",
-//       "No",
-//     ],
-//     selectedApprovingAuthority: "Licensed Surveyor Plan",
-//     // default dropdown value
-//     approvalDate: "",
-//     approvalDetails: "",
-//   },
-//   {
-//     key: "3",
-//     type: "Building Plan",
-//     approvingAuthority: [
-//       "Municipal/Town Planning (TP)",
-//       "Gram Panchayat (GP)",
-//       "Collector (Zilla Parishad) (ZP)",
-//       "Licensed Surveyor Plan",
-//       "No",
-//     ],
-//     selectedApprovingAuthority: "Licensed Surveyor Plan",
-//     approvalDate: "",
-//     approvalDetails: "",
-//   },
-//   {
-//     key: "4",
-//     type: "Commencement Certificate",
-//     approvingAuthority: [
-//       "Municipal/Town Planning (TP)",
-//       "Gram Panchayat (GP)",
-//       "Collector (Zilla Parishad) (ZP)",
-//       "No",
-//     ],
-//     approvalDate: "",
-//     approvalDetails: "",
-//   },
-//   {
-//     key: "5",
-//     type: "Occupancy / Completion / Building Usage Certificate",
-//     approvingAuthority: [
-//       "Municipal/Town Planning (TP)",
-//       "Gram Panchayat (GP)",
-//       "Collector (Zilla Parishad) (ZP)",
-//       "Licensed Surveyor Plan",
-//       "No",
-//     ],
-//     approvalDate: "",
-//     approvalDetails: "",
-//   },
-//   {
-//     key: "6",
-//     type: "Sub Plotting Plan",
-//     approvingAuthority: [
-//       "Municipal/Town Planning (TP)",
-//       "Gram Panchayat (GP)",
-//       "Collector (Zilla Parishad) (ZP)",
-//       "Licensed Surveyor Plan",
-//       "No",
-//     ],
-//     selectedApprovingAuthority: "Licensed Surveyor Plan",
-//     approvalDate: "",
-//     approvalDetails: "",
-//   },
-// ];
-
-// const GeneralDetails = ({ isEdit, onNext, onBack, extractedData }) => {
-//   const [form] = Form.useForm();
-//   const [isMobile, setIsMobile] = useState(false);
-//   const [documents, setDocuments] = useState(defaultDocumentData);
-
-//   useEffect(() => {
-//     const merged = { ...extractedData, ...isEdit };
-//     if (merged) {
-//       form.setFieldsValue({
-//         nearestCityTown: merged.nearestCityTown || merged.cityCentreName || "Bhopal",
-//         locationCategory: merged.locationCategory || "MC",
-//         electricityAvailability: merged.electricityAvailability || "YES",
-//         waterAvailability: merged.waterAvailability || "YES",
-//         drainageAvailability: merged.drainageAvailability || "YES",
-//       });
-
-//       // Restore documents if saved
-//       if (merged.documents && Array.isArray(merged.documents)) {
-//         const updatedDocs = defaultDocumentData.map((defaultDoc) => {
-//           const existing = merged.documents.find((d) => d.type === defaultDoc.type);
-//           return {
-//             ...defaultDoc,
-//             ...existing,
-//             selectedApprovingAuthority: existing?.approvingAuthority || "",
-//             approvingAuthority: defaultDoc.approvingAuthority,
-//           };
-//         });
-//         setDocuments(updatedDocs);
-//       }
-//     }
-//   }, [isEdit, extractedData, form]);
-
-//   useEffect(() => {
-//     const handleResize = () => setIsMobile(window.innerWidth < 768);
-//     window.addEventListener("resize", handleResize);
-//     handleResize();
-//     return () => window.removeEventListener("resize", handleResize);
-//   }, []);
-
-//   const updateField = (key, field, value) => {
-//     setDocuments((prev) =>
-//       prev.map((doc) => (doc.key === key ? { ...doc, [field]: value } : doc))
-//     );
-//   };
-
-//   const handleSubmit = (values) => {
-//     const fullData = {
-//       ...values,
-//       documents: documents.map((doc) => ({
-//         key: doc.key,
-//         type: doc.type,
-//         approvingAuthority: doc.selectedApprovingAuthority || "",
-//         approvalDate: doc.approvalDate,
-//         approvalDetails: doc.approvalDetails,
-//       })),
-//     };
-//     onNext(fullData);
-//   };
-
-//   const columns = [
-//     {
-//       title: "TYPE",
-//       dataIndex: "type",
-//       key: "type",
-//       render: (_, record) => <span className="font-medium">{record.type}</span>,
-//     },
-//     {
-//       title: "Approving Authority",
-//       dataIndex: "approvingAuthority",
-//       key: "approvingAuthority",
-//       render: (_, record) => (
-//         <Select
-//           value={record.selectedApprovingAuthority || ""}
-//           style={{ width: 220 }}
-//           onChange={(value) => updateField(record.key, "selectedApprovingAuthority", value)}
-//           placeholder="Select"
-//           allowClear
-//         >
-//           {record.approvingAuthority.map((option) => (
-//             <Option key={option} value={option}>{option}</Option>
-//           ))}
-//         </Select>
-//       ),
-//     },
-//     {
-//       title: "Plan Number / Date",
-//       dataIndex: "approvalDate",
-//       key: "approvalDate",
-//       render: (_, record) => (
-//         <Input
-//           placeholder="Number & Date"
-//           defaultValue={record.approvalDate}
-//           onChange={(e) => updateField(record.key, "approvalDate", e.target.value)}
-//         />
-//       ),
-//     },
-//     {
-//       title: "Details",
-//       dataIndex: "approvalDetails",
-//       key: "approvalDetails",
-//       render: (_, record) => (
-//         <Input
-//           placeholder="Details"
-//           defaultValue={record.approvalDetails}
-//           onChange={(e) => updateField(record.key, "approvalDetails", e.target.value)}
-//         />
-//       ),
-//     },
-//   ];
-
-//   return (
-//     <div className="max-w-5xl mx-auto p-6 bg-white rounded shadow">
-//       {/* <h2 className="text-2xl font-bold mb-6">Property Plan & Availability</h2> */}
-
-//       <Form
-//         layout="vertical"
-//         form={form}
-//         onFinish={handleSubmit}
-//         className="grid grid-cols-1 lg:grid-cols-2 gap-4"
-//       >
-//         {/* Nearest City / Location Category */}
-//         <Divider orientation="left" className="lg:col-span-2">Location Info</Divider>
-
-//         <Form.Item name="nearestCityTown" label="Nearest City / Town">
-//           <Input />
-//         </Form.Item>
-
-//         <Form.Item name="locationCategory" label="Location Category (TP / ZP / GP / MC)">
-//           <Select allowClear className="w-full">
-//             <Option value="TP">TP – Town Planning</Option>
-//             <Option value="ZP">ZP – Zilla Parishad</Option>
-//             <Option value="GP">GP – Gram Panchayat</Option>
-//             <Option value="MC">MC – Municipal Corporation</Option>
-//           </Select>
-//         </Form.Item>
-
-//         {/* Availability */}
-//         <Divider orientation="left" className="lg:col-span-2">Availability</Divider>
-
-//         <Form.Item name="electricityAvailability" label="Electricity">
-//           <Select allowClear className="w-full">
-//             <Option value="YES">Yes</Option>
-//             <Option value="NO">No</Option>
-//             <Option value="NA">NA</Option>
-//           </Select>
-//         </Form.Item>
-
-//         <Form.Item name="waterAvailability" label="Water">
-//           <Select allowClear className="w-full">
-//             <Option value="YES">Yes</Option>
-//             <Option value="NO">No</Option>
-//             <Option value="NA">NA</Option>
-//           </Select>
-//         </Form.Item>
-
-//         <Form.Item name="drainageAvailability" label="Drainage">
-//           <Select allowClear className="w-full">
-//             <Option value="YES">Yes</Option>
-//             <Option value="NO">No</Option>
-//             <Option value="NA">NA</Option>
-//           </Select>
-//         </Form.Item>
-
-//         {/* Document / Plan Table */}
-//         <div className="lg:col-span-2">
-//           <h2 className="text-2xl font-bold mb-6 text-red-600">Propert Plan</h2>
-
-//           {!isMobile ? (
-//             <Table
-//               columns={columns}
-//               dataSource={documents}
-//               pagination={false}
-//               bordered
-//               rowKey="key"
-//             />
-//           ) : (
-//             documents.map((record) => (
-//               <div key={record.key} className="border p-3 rounded bg-gray-50 mb-4">
-//                 <p className="font-semibold mb-2">TYPE: {record.type}</p>
-//                 <Form.Item label="Approving Authority">
-//                   <Select
-//                     value={record.selectedApprovingAuthority || ""}
-//                     onChange={(value) => updateField(record.key, "selectedApprovingAuthority", value)}
-//                     className="w-full"
-//                     allowClear
-//                   >
-//                     {record.approvingAuthority.map((option) => (
-//                       <Option key={option} value={option}>{option}</Option>
-//                     ))}
-//                   </Select>
-//                 </Form.Item>
-//                 <Form.Item label="Plan Number & Date">
-//                   <Input
-//                     value={record.approvalDate}
-//                     onChange={(e) => updateField(record.key, "approvalDate", e.target.value)}
-//                   />
-//                 </Form.Item>
-//                 <Form.Item label="Details">
-//                   <Input
-//                     value={record.approvalDetails}
-//                     onChange={(e) => updateField(record.key, "approvalDetails", e.target.value)}
-//                   />
-//                 </Form.Item>
-//               </div>
-//             ))
-//           )}
-//         </div>
-
-//         <Form.Item className="lg:col-span-2 text-end">
-//           {onBack && (
-//             <Button onClick={onBack} className="mr-2">Back</Button>
-//           )}
-//           <Button type="primary" htmlType="submit">Next</Button>
-//         </Form.Item>
-//       </Form>
-//     </div>
-//   );
-// };
-
-// export default GeneralDetails;
-
-
-
 import React, { useState, useEffect } from "react";
-import { Form, Input, Table, Divider, Select } from "antd";
+import { Input, Select } from "antd";
+import { CalendarOutlined } from "@ant-design/icons";
 
 const { Option } = Select;
 
@@ -318,75 +8,72 @@ const defaultDocumentData = [
   {
     key: "1",
     type: "NA Converted",
-    approvingAuthority: ["Yes", "No", "NA"],
-    selectedApprovingAuthority: "Yes",
+    label: "NA CONVERSION",
+    authorityLabel: "NA Conversion Order",
+    authorityOptions: ["Yes", "No", "NA"],
+    numberPlaceholder: "NA Order Number",
+    datePlaceholder: "NA Order Date",
+    selectedApprovingAuthority: undefined,
     approvalDate: "",
     approvalDetails: "",
   },
   {
     key: "2",
     type: "Layout Plan",
-    approvingAuthority: [
-      "Municipal/Town Planning (TP)",
-      "Gram Panchayat (GP)",
-      "Collector (Zilla Parishad) (ZP)",
-      "Licensed Surveyor Plan",
-      "No",
-    ],
-    selectedApprovingAuthority: "Licensed Surveyor Plan",
+    label: "LAYOUT PLAN",
+    authorityLabel: "Layout Plan Approving Authority",
+    authorityOptions: ["TP", "ZP", "GP", "Licensed Surveyor", "NA"],
+    numberPlaceholder: "Layout Plan Approval No",
+    datePlaceholder: "Layout Plan Approval Date",
+    selectedApprovingAuthority: undefined,
     approvalDate: "",
     approvalDetails: "",
   },
   {
     key: "3",
     type: "Building Plan",
-    approvingAuthority: [
-      "Municipal/Town Planning (TP)",
-      "Gram Panchayat (GP)",
-      "Collector (Zilla Parishad) (ZP)",
-      "Licensed Surveyor Plan",
-      "No",
-    ],
-    selectedApprovingAuthority: "Licensed Surveyor Plan",
+    label: "BUILDING PLAN",
+    authorityLabel: "Building Plan Authority",
+    authorityOptions: ["TP", "ZP", "GP", "Licensed Surveyor", "NA"],
+    numberPlaceholder: "Plan Number",
+    datePlaceholder: "Plan Date",
+    selectedApprovingAuthority: undefined,
     approvalDate: "",
     approvalDetails: "",
   },
   {
     key: "4",
     type: "Commencement Certificate",
-    approvingAuthority: [
-      "Municipal/Town Planning (TP)",
-      "Gram Panchayat (GP)",
-      "Collector (Zilla Parishad) (ZP)",
-      "No",
-    ],
+    label: "COMMENCEMENT CERTIFICATE",
+    authorityLabel: "Commencement Certificate Authority",
+    authorityOptions: ["TP", "ZP", "GP", "Licensed Surveyor", "NA"],
+    numberPlaceholder: "Commencement Certificate Number",
+    datePlaceholder: "Commencement Certificate Date",
+    selectedApprovingAuthority: undefined,
     approvalDate: "",
     approvalDetails: "",
   },
   {
     key: "5",
     type: "Occupancy / Completion / Building Usage Certificate",
-    approvingAuthority: [
-      "Municipal/Town Planning (TP)",
-      "Gram Panchayat (GP)",
-      "Collector (Zilla Parishad) (ZP)",
-      "Licensed Surveyor Plan",
-      "No",
-    ],
+    label: "OCCUPANCY / COMPLETION CERTIFICATE",
+    authorityLabel: "Occupancy / Completion Certificate Authority",
+    authorityOptions: ["TP", "ZP", "GP", "Licensed Surveyor", "NA"],
+    numberPlaceholder: "Occupancy / Completion Certificate Number",
+    datePlaceholder: "Occupancy / Completion Certificate Date",
+    selectedApprovingAuthority: undefined,
     approvalDate: "",
     approvalDetails: "",
   },
   {
     key: "6",
     type: "Sub Plotting Plan",
-    approvingAuthority: [
-      "Municipal/Town Planning (TP)",
-      "Gram Panchayat (GP)",
-      "Collector (Zilla Parishad) (ZP)",
-      "Licensed Surveyor Plan",
-      "No",
-    ],
-    selectedApprovingAuthority: "Licensed Surveyor Plan",
+    label: "SUB PLOTTING PLAN",
+    authorityLabel: "Sub Plotting Plan Authority",
+    authorityOptions: ["TP", "ZP", "GP", "Licensed Surveyor", "NA"],
+    numberPlaceholder: "Sub Plotting Plan Approval No",
+    datePlaceholder: "Sub Plotting Plan Approval Date",
+    selectedApprovingAuthority: undefined,
     approvalDate: "",
     approvalDetails: "",
   },
@@ -394,7 +81,6 @@ const defaultDocumentData = [
 
 const GeneralDetails = ({ isEdit, extractedData, onDocumentsChange }) => {
   const [documents, setDocuments] = useState(defaultDocumentData);
-  const [isMobile, setIsMobile] = useState(false);
 
   // Sync with parent form's extractedData (if any)
   useEffect(() => {
@@ -406,16 +92,15 @@ const GeneralDetails = ({ isEdit, extractedData, onDocumentsChange }) => {
           if (!existing) return doc;
           return {
             ...doc,
-            approvingAuthority: doc.approvingAuthority,
             selectedApprovingAuthority: existing.approvingAuthority !== undefined && existing.approvingAuthority !== "" 
               ? existing.approvingAuthority 
-              : (doc.selectedApprovingAuthority || ""),
+              : undefined,
             approvalDate: existing.approvalDate !== undefined && existing.approvalDate !== "" 
               ? existing.approvalDate 
-              : (doc.approvalDate || ""),
+              : "",
             approvalDetails: existing.approvalDetails !== undefined && existing.approvalDetails !== "" 
               ? existing.approvalDetails 
-              : (doc.approvalDetails || ""),
+              : "",
           };
         });
       });
@@ -429,164 +114,120 @@ const GeneralDetails = ({ isEdit, extractedData, onDocumentsChange }) => {
     }
   }, [documents, onDocumentsChange]);
 
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", handleResize);
-    handleResize();
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
   const updateField = (key, field, value) => {
     setDocuments((prev) =>
       prev.map((doc) => (doc.key === key ? { ...doc, [field]: value } : doc))
     );
   };
 
-  const columns = [
-    {
-      title: "TYPE",
-      dataIndex: "type",
-      key: "type",
-      render: (_, record) => <span className="font-medium">{record.type}</span>,
-    },
-    {
-      title: "Approving Authority",
-      dataIndex: "approvingAuthority",
-      key: "approvingAuthority",
-      render: (_, record) => (
-        <Select
-          value={record.selectedApprovingAuthority || ""}
-          style={{ width: 220 }}
-          onChange={(value) => updateField(record.key, "selectedApprovingAuthority", value)}
-          placeholder="Select"
-          allowClear
-        >
-          {record?.approvingAuthority?.map((option) => (
-            <Option key={option} value={option}>{option}</Option>
-          ))}
-        </Select>
-      ),
-    },
-    {
-      title: "Plan Number / Date",
-      dataIndex: "approvalDate",
-      key: "approvalDate",
-      render: (_, record) => (
-        <Input
-          placeholder="Number & Date"
-          value={record.approvalDate}
-          onChange={(e) => updateField(record.key, "approvalDate", e.target.value)}
-        />
-      ),
-    },
-    {
-      title: "Details",
-      dataIndex: "approvalDetails",
-      key: "approvalDetails",
-      render: (_, record) => (
-        <Input
-          placeholder="Details"
-          value={record.approvalDetails}
-          onChange={(e) => updateField(record.key, "approvalDetails", e.target.value)}
-        />
-      ),
-    },
-  ];
+  const hasVal = (val) => val !== undefined && val !== null && val !== "";
 
   return (
     <div className="w-full">
-      {/* Location Info */}
-      <Divider orientation="left">Location Info</Divider>
+      <style>{`
+        .custom-form-item-wrapper label {
+          position: absolute;
+          top: -8px;
+          left: 10px;
+          background: #fff;
+          padding: 0 6px;
+          font-size: 11px;
+          color: #0056b3;
+          font-weight: 600;
+          z-index: 2;
+          opacity: 0;
+          transform: translateY(12px);
+          transition: opacity 0.15s ease, transform 0.15s ease;
+          pointer-events: none;
+        }
+        .custom-form-item-wrapper:focus-within label,
+        .custom-form-item-wrapper.has-value label {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        .custom-form-item-wrapper .ant-select-selector {
+          height: 40px !important;
+          border-radius: 6px !important;
+          display: flex !important;
+          align-items: center !important;
+          border: 1px solid #d1d5db !important;
+          box-shadow: none !important;
+        }
+        .custom-form-item-wrapper .ant-select-selection-placeholder {
+          line-height: 38px !important;
+        }
+        .custom-form-item-wrapper .ant-select-selection-item {
+          line-height: 38px !important;
+          color: #0f172a !important;
+          font-weight: 500 !important;
+        }
+        .custom-form-item-wrapper .ant-input {
+          color: #0f172a !important;
+          font-weight: 500 !important;
+        }
+        .custom-form-item-wrapper .ant-input-affix-wrapper {
+          height: 40px !important;
+          border-radius: 6px !important;
+          border: 1px solid #d1d5db !important;
+          box-shadow: none !important;
+        }
+        .custom-form-item-wrapper .ant-input-affix-wrapper input {
+          color: #0f172a !important;
+          font-weight: 500 !important;
+        }
+      `}</style>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Form.Item name="nearestCityTown" label="Nearest City / Town">
-          <Input />
-        </Form.Item>
+      <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+        {documents.map((doc) => (
+          <div key={doc.key} style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {/* Header */}
+            <h4 style={{ fontSize: "12px", fontWeight: 700, color: "#0056b3", textTransform: "uppercase", letterSpacing: "0.5px", margin: "0" }}>
+              {doc.label}
+            </h4>
 
-        <Form.Item name="locationCategory" label="Location Category (TP / ZP / GP / MC)">
-          <Select allowClear className="w-full">
-            <Option value="TP">TP – Town Planning</Option>
-            <Option value="ZP">ZP – Zilla Parishad</Option>
-            <Option value="GP">GP – Gram Panchayat</Option>
-            <Option value="MC">MC – Municipal Corporation</Option>
-          </Select>
-        </Form.Item>
-      </div>
+            {/* Grid of 3 Fields */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-6">
+              {/* Field 1: Authority Dropdown */}
+              <div className={`custom-form-item-wrapper ${hasVal(doc.selectedApprovingAuthority) ? "has-value" : ""}`} style={{ position: "relative" }}>
+                <label>{doc.authorityLabel}</label>
+                <Select
+                  value={doc.selectedApprovingAuthority}
+                  onChange={(val) => updateField(doc.key, "selectedApprovingAuthority", val)}
+                  className="w-full"
+                  placeholder={doc.authorityLabel}
+                  allowClear
+                >
+                  {doc.authorityOptions.map((opt) => (
+                    <Option key={opt} value={opt}>{opt}</Option>
+                  ))}
+                </Select>
+              </div>
 
-      {/* Availability */}
-      <Divider orientation="left">Availability</Divider>
+              {/* Field 2: Details / Number Input */}
+              <div className={`custom-form-item-wrapper ${hasVal(doc.approvalDetails) ? "has-value" : ""}`} style={{ position: "relative" }}>
+                <label>{doc.numberPlaceholder}</label>
+                <Input
+                  value={doc.approvalDetails}
+                  onChange={(e) => updateField(doc.key, "approvalDetails", e.target.value)}
+                  style={{ height: "40px", borderRadius: "6px", border: "1px solid #d1d5db" }}
+                  placeholder={doc.numberPlaceholder}
+                />
+              </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Form.Item name="electricityAvailability" label="Electricity">
-          <Select allowClear>
-            <Option value="YES">Yes</Option>
-            <Option value="NO">No</Option>
-            <Option value="NA">NA</Option>
-          </Select>
-        </Form.Item>
-
-        <Form.Item name="waterAvailability" label="Water">
-          <Select allowClear>
-            <Option value="YES">Yes</Option>
-            <Option value="NO">No</Option>
-            <Option value="NA">NA</Option>
-          </Select>
-        </Form.Item>
-
-        <Form.Item name="drainageAvailability" label="Drainage">
-          <Select allowClear>
-            <Option value="YES">Yes</Option>
-            <Option value="NO">No</Option>
-            <Option value="NA">NA</Option>
-          </Select>
-        </Form.Item>
-      </div>
-
-      {/* Document Plan Table */}
-      <h2 className="text-2xl font-bold mb-6 text-red-600">Property Plan</h2>
-
-      {!isMobile ? (
-        <Table
-          columns={columns}
-          dataSource={documents}
-          pagination={false}
-          bordered
-          rowKey="key"
-        />
-      ) : (
-        documents.map((record) => (
-          <div key={record.key} className="border p-3 rounded bg-gray-50 mb-4">
-            <p className="font-semibold mb-2">TYPE: {record.type}</p>
-            <div className="mb-2">
-              <label className="block text-sm font-medium">Approving Authority</label>
-              <Select
-                value={record.selectedApprovingAuthority || ""}
-                onChange={(value) => updateField(record.key, "selectedApprovingAuthority", value)}
-                className="w-full"
-                allowClear
-              >
-                {record.approvingAuthority.map((option) => (
-                  <Option key={option} value={option}>{option}</Option>
-                ))}
-              </Select>
-            </div>
-            <div className="mb-2">
-              <label className="block text-sm font-medium">Plan Number & Date</label>
-              <Input
-                value={record.approvalDate}
-                onChange={(e) => updateField(record.key, "approvalDate", e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium">Details</label>
-              <Input
-                value={record.approvalDetails}
-                onChange={(e) => updateField(record.key, "approvalDetails", e.target.value)}
-              />
+              {/* Field 3: Date Input with Calendar Icon Suffix */}
+              <div className={`custom-form-item-wrapper ${hasVal(doc.approvalDate) ? "has-value" : ""}`} style={{ position: "relative" }}>
+                <label>{doc.datePlaceholder}</label>
+                <Input
+                  value={doc.approvalDate}
+                  onChange={(e) => updateField(doc.key, "approvalDate", e.target.value)}
+                  placeholder={doc.datePlaceholder}
+                  suffix={<CalendarOutlined style={{ color: "#94a3b8", fontSize: "16px" }} />}
+                />
+              </div>
             </div>
           </div>
-        ))
-      )}
+        ))}
+      </div>
     </div>
   );
 };

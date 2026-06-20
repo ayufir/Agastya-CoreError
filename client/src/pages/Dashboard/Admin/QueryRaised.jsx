@@ -152,11 +152,15 @@ const QueryRaised = ({ selectedMonth }) => {
     },
     {
       name: "Date",
-      selector: (row) =>
-        new Date(row.createdAt).toLocaleString("en-IN", {
+      selector: (row) => {
+        if (!row.createdAt) return "N/A";
+        const date = new Date(row.createdAt);
+        if (isNaN(date.getTime())) return "N/A";
+        return date.toLocaleString("en-IN", {
           dateStyle: "short",
           timeStyle: "short",
-        }),
+        });
+      },
       sortable: true,
     },
     {

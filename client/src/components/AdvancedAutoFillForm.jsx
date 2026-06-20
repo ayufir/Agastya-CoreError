@@ -88,11 +88,11 @@ const FileChip = ({ file, onRemove, showDelete = true }) => {
   const isPdf = file.name?.toLowerCase().endsWith(".pdf");
   
   const formatFileSize = (bytes) => {
-    if (!bytes) return "Uploaded • 100%";
+    if (!bytes) return "Done ✓";
     const kb = bytes / 1024;
-    if (kb < 1024) return `${kb.toFixed(1)} KB | 100%`;
+    if (kb < 1024) return `${kb.toFixed(1)} KB`;
     const mb = kb / 1024;
-    return `${mb.toFixed(1)} MB | 100%`;
+    return `${mb.toFixed(1)} MB`;
   };
 
   return (
@@ -103,7 +103,12 @@ const FileChip = ({ file, onRemove, showDelete = true }) => {
         </div>
         <div className="min-w-0 flex-1">
           <div className="truncate text-[#1c2725] text-xs font-bold leading-none mb-1">{file.name}</div>
-          <div className="text-[10px] text-[#7a928e] font-semibold">{formatFileSize(file.size)}</div>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <span className="text-[10px] text-[#7a928e] font-semibold">{formatFileSize(file.size)}</span>
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.25 rounded-md text-[9px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-150">
+              Done ✓
+            </span>
+          </div>
         </div>
       </div>
       {showDelete && onRemove && (
@@ -187,7 +192,7 @@ const ACCENT_STYLES = {
 };
 
 // ─── Upload card ──────────────────────────────────────────────────────────────
-const UploadCard = ({ title, helper, files, onAddFiles, onRemoveFile, accent = "blue", accept = "image/*,.pdf", icon, loading = false, allowDelete = true, isFieldOfficer = false }) => {
+const UploadCard = ({ title, helper, files, onAddFiles, onRemoveFile, accent = "blue", accept = "image/*,.pdf", icon, loading = false, allowDelete = true, isFieldOfficer = false, isSubmitted = false }) => {
   const styles = ACCENT_STYLES[accent] || ACCENT_STYLES.blue;
 
   // accent → CTA button color
@@ -214,28 +219,37 @@ const UploadCard = ({ title, helper, files, onAddFiles, onRemoveFile, accent = "
             </div>
             <div className="mt-2 text-[11px] text-[#5c706c] font-semibold leading-relaxed">{helper}</div>
           </div>
-          <label className="flex flex-col items-center justify-center cursor-pointer rounded-[20px] border border-dashed border-[#d0e6df] bg-[#f4faf8]/35 hover:bg-[#eef7f4]/60 hover:border-[#3b6657] px-3 sm:px-4 py-6 sm:py-8 text-center transition-all duration-200 group">
-            {loading ? (
-              <Loader2 className="w-10 h-10 text-[#3b6657] mb-2.5 animate-spin" />
-            ) : (
-              <FileUp className="w-10 h-10 text-[#7a928e] group-hover:text-[#3b6657] mb-2.5 transition-all duration-300 group-hover:scale-110" />
-            )}
-            <span className="text-[11.5px] font-semibold text-[#5c706c] mb-1">
-              {loading ? "Uploading files, please wait..." : (
-                <>Drag and Drop file here or <span className="text-[#3b6657] font-extrabold underline decoration-2 cursor-pointer hover:text-[#1c2725] transition-all">Choose here</span></>
-              )}
-            </span>
-            <input type="file" multiple disabled={loading} accept={accept} className="hidden" onChange={(e) => { onAddFiles(e.target.files); e.target.value = ""; }} />
-          </label>
-          <div className="flex flex-wrap justify-between items-center gap-y-1 gap-x-2 text-[9px] text-[#7a928e] font-extrabold uppercase mt-2.5 px-1 tracking-wider">
-            <span>Supported formats: Images, PDF</span>
-            <span>Maximum size: 20 MB</span>
-          </div>
+          {isSubmitted ? (
+            <div className="flex flex-col items-center justify-center rounded-[20px] border border-dashed border-slate-200 bg-slate-50 px-3 sm:px-4 py-6 sm:py-8 text-center">
+              <CheckCircle2 className="w-8 h-8 text-emerald-500 mb-2" />
+              <span className="text-[11.5px] font-bold text-slate-500">Case Submitted - Upload Closed</span>
+            </div>
+          ) : (
+            <>
+              <label className="flex flex-col items-center justify-center cursor-pointer rounded-[20px] border border-dashed border-[#d0e6df] bg-[#f4faf8]/35 hover:bg-[#eef7f4]/60 hover:border-[#3b6657] px-3 sm:px-4 py-6 sm:py-8 text-center transition-all duration-200 group">
+                {loading ? (
+                  <Loader2 className="w-10 h-10 text-[#3b6657] mb-2.5 animate-spin" />
+                ) : (
+                  <FileUp className="w-10 h-10 text-[#7a928e] group-hover:text-[#3b6657] mb-2.5 transition-all duration-300 group-hover:scale-110" />
+                )}
+                <span className="text-[11.5px] font-semibold text-[#5c706c] mb-1">
+                  {loading ? "Uploading files, please wait..." : (
+                    <>Drag and Drop file here or <span className="text-[#3b6657] font-extrabold underline decoration-2 cursor-pointer hover:text-[#1c2725] transition-all">Choose here</span></>
+                  )}
+                </span>
+                <input type="file" multiple disabled={loading} accept={accept} className="hidden" onChange={(e) => { onAddFiles(e.target.files); e.target.value = ""; }} />
+              </label>
+              <div className="flex flex-wrap justify-between items-center gap-y-1 gap-x-2 text-[9px] text-[#7a928e] font-extrabold uppercase mt-2.5 px-1 tracking-wider">
+                <span>Supported formats: Images, PDF</span>
+                <span>Maximum size: 20 MB</span>
+              </div>
+            </>
+          )}
         </div>
         {files.length > 0 && (
           <div className="mt-4 space-y-2">
             {files.map((file, index) => (
-              <FileChip key={`${file.name}-${index}`} file={file} showDelete={allowDelete} onRemove={() => onRemoveFile(index)} />
+              <FileChip key={`${file.name}-${index}`} file={file} showDelete={!isSubmitted && allowDelete} onRemove={() => onRemoveFile(index)} />
             ))}
           </div>
         )}
@@ -428,7 +442,9 @@ const AdvancedAutoFillForm = ({
   emailFiles: propEmailFiles = [],
   fieldFormFiles: propFieldFormFiles = [],
   additionalFiles: propAdditionalFiles = [],
-  fetchData
+  fetchData,
+  onUploadingChange,
+  isSubmitted = false
 }) => {
   const user = useSelector((state) => state.auth.user);
   const isFieldOfficer = user?.role?.toLowerCase() === "fieldofficer";
@@ -453,6 +469,14 @@ const AdvancedAutoFillForm = ({
   const [uploadedAdditionalUrls, setUploadedAdditionalUrls] = useState([]);
 
   const [uploadingCategory, setUploadingCategory] = useState({});
+  const [deleteConfirm, setDeleteConfirm] = useState(null); // { doc, animating }
+
+  useEffect(() => {
+    const isUploading = uploadingAts || Object.values(uploadingCategory).some(Boolean);
+    if (typeof onUploadingChange === "function") {
+      onUploadingChange(isUploading);
+    }
+  }, [uploadingAts, uploadingCategory, onUploadingChange]);
 
   const updateParentState = (fieldName, updatedList) => {
     if (typeof setFormDataDirect === "function") {
@@ -675,6 +699,21 @@ const AdvancedAutoFillForm = ({
   };
 
   const handleGenericFileRemove = async (categoryKey, docToRemove) => {
+    // Optimistically update local UI state immediately
+    if (categoryKey === "gpsFiles") {
+      setUploadedGpsUrls((prev) => prev.filter((f) => f.fileId !== docToRemove.fileId && f.url !== docToRemove.url));
+    } else if (categoryKey === "emailFiles") {
+      setUploadedEmailUrls((prev) => prev.filter((f) => f.fileId !== docToRemove.fileId && f.url !== docToRemove.url));
+    } else if (categoryKey === "fieldFormFiles") {
+      setUploadedFieldFormUrls((prev) => prev.filter((f) => f.fileId !== docToRemove.fileId && f.url !== docToRemove.url));
+    } else if (categoryKey === "additionalFiles") {
+      setUploadedAdditionalUrls((prev) => prev.filter((f) => f.fileId !== docToRemove.fileId && f.url !== docToRemove.url));
+    } else if (categoryKey === "siteVisitVideo") {
+      setUploadedVideoUrls((prev) => prev.filter((f) => f.fileId !== docToRemove.fileId && f.url !== docToRemove.url));
+    } else if (categoryKey === "siteVisitPhotos") {
+      setUploadedPhotoUrls((prev) => prev.filter((f) => f.fileId !== docToRemove.fileId && f.url !== docToRemove.url));
+    }
+
     try {
       if (caseId) {
         let fieldName = categoryKey;
@@ -935,7 +974,23 @@ const AdvancedAutoFillForm = ({
     }
   };
 
+  // ── Delete with confirmation ───────────────────────────────────────────────
+  const requestAtsDelete = (docOrIndex) => {
+    // UploadCard passes index for generic files, but ATS passes doc object
+    const doc = typeof docOrIndex === "number" ? atsDocsList[docOrIndex] : docOrIndex;
+    if (!doc) return;
+    setDeleteConfirm({ doc, animating: true });
+    setTimeout(() => setDeleteConfirm((prev) => prev ? { ...prev, animating: false } : null), 10);
+  };
+
   const handleAtsDelete = async (docToDelete) => {
+    // Optimistically update local UI state immediately
+    setAtsDocsList((prev) => prev.filter((doc) => doc.fileId !== docToDelete.fileId && doc.url !== docToDelete.url));
+    setFilesByCategory((prev) => ({
+      ...prev,
+      atsFiles: prev.atsFiles.filter((f) => f.name !== docToDelete.name),
+    }));
+
     try {
       if (caseId) {
         const res = await fetch(`${import.meta.env.VITE_API_URL}/api/uploads/remove-ats-document`, {
@@ -946,6 +1001,9 @@ const AdvancedAutoFillForm = ({
         const resData = await res.json();
         if (!resData.success) {
           throw new Error(resData.error || "Failed to remove document");
+        }
+        if (fetchData) {
+          await fetchData();
         }
         message.success("Property paper removed successfully!");
       } else {
@@ -977,6 +1035,9 @@ const AdvancedAutoFillForm = ({
   };
 
   const handlePhotoDelete = async (photoToDelete) => {
+    // Optimistically update local UI state immediately
+    setUploadedPhotoUrls((prev) => prev.filter((photo) => photo.fileId !== photoToDelete.fileId && photo.url !== photoToDelete.url));
+
     try {
       if (caseId) {
         const normBank = selectedBank.toLowerCase();
@@ -1299,6 +1360,7 @@ const AdvancedAutoFillForm = ({
   };
 
   return (
+    <>
     <div className={`w-full max-w-full overflow-hidden rounded-3xl border border-slate-200 ${isFieldOfficer ? "bg-white p-4 sm:p-6 shadow-sm" : "bg-gradient-to-br from-indigo-50/20 via-white to-blue-50/15 p-4 sm:p-6 shadow-md relative backdrop-blur-md"}`}>
       {/* Decorative background glow elements */}
       {!isFieldOfficer && (
@@ -1421,21 +1483,25 @@ const AdvancedAutoFillForm = ({
           loading={uploadingCategory["gpsFiles"]}
           icon={<MapPin className="w-4 h-4 text-purple-600" />}
           isFieldOfficer={isFieldOfficer}
+          isSubmitted={isSubmitted}
         />
 
-        {/* Card 2: ATS / Sale Deed / Legal Docs (Show for Admin/SuperAdmin/FO) */}
-        <UploadCard
-          title="ATS / Sale Deed / Legal Docs"
-          helper="Sale deed, gift deed, registry, allotment letter, patta legal papers"
-          files={atsDocsList}
-          onAddFiles={handleAtsUpload}
-          onRemoveFile={handleAtsDelete}
-          accent="amber"
-          loading={uploadingAts}
-          icon={<FileText className="w-4 h-4 text-amber-600" />}
-          allowDelete={!isFieldOfficer}
-          isFieldOfficer={isFieldOfficer}
-        />
+        {/* Card 2: ATS / Sale Deed / Legal Docs (Show for Admin/SuperAdmin only) */}
+        {!isFieldOfficer && (
+          <UploadCard
+            title="ATS / Sale Deed / Legal Docs"
+            helper="Sale deed, gift deed, registry, allotment letter, patta legal papers"
+            files={atsDocsList}
+            onAddFiles={handleAtsUpload}
+            onRemoveFile={requestAtsDelete}
+            accent="amber"
+            loading={uploadingAts}
+            icon={<FileText className="w-4 h-4 text-amber-600" />}
+            allowDelete={!isFieldOfficer}
+            isFieldOfficer={isFieldOfficer}
+            isSubmitted={isSubmitted}
+          />
+        )}
 
         {/* Card 3: Email / MIS Screenshot (Show for Admin/SuperAdmin only) */}
         {!isFieldOfficer && (
@@ -1450,6 +1516,7 @@ const AdvancedAutoFillForm = ({
             icon={<Mail className="w-4 h-4 text-indigo-650" />}
             allowDelete={!isFieldOfficer}
             isFieldOfficer={isFieldOfficer}
+            isSubmitted={isSubmitted}
           />
         )}
 
@@ -1464,6 +1531,7 @@ const AdvancedAutoFillForm = ({
           loading={uploadingCategory["fieldFormFiles"]}
           icon={<ClipboardList className="w-4 h-4 text-blue-650" />}
           isFieldOfficer={isFieldOfficer}
+          isSubmitted={isSubmitted}
         />
 
         {/* Card 5: Additional Photos / Docs — HIDDEN */}
@@ -1479,6 +1547,7 @@ const AdvancedAutoFillForm = ({
             icon={<FolderPlus className="w-4 h-4 text-slate-600" />}
             allowDelete={!isFieldOfficer}
             isFieldOfficer={isFieldOfficer}
+            isSubmitted={isSubmitted}
           />
         )} */}
 
@@ -1493,6 +1562,7 @@ const AdvancedAutoFillForm = ({
           loading={uploadingCategory["siteVisitPhotos"]}
           icon={<Camera className="w-4 h-4 text-emerald-650" />}
           isFieldOfficer={isFieldOfficer}
+          isSubmitted={isSubmitted}
         />
 
         {/* Card 7: Site Visit Video */}
@@ -1507,6 +1577,7 @@ const AdvancedAutoFillForm = ({
           loading={uploadingCategory["siteVisitVideo"]}
           icon={<Video className="w-4 h-4 text-rose-650" />}
           isFieldOfficer={isFieldOfficer}
+          isSubmitted={isSubmitted}
         />
       </div>
 
@@ -1564,10 +1635,12 @@ const AdvancedAutoFillForm = ({
                             className="text-[10px] text-indigo-600 hover:underline font-bold flex items-center gap-0.5 border-none cursor-pointer">
                             View <ExternalLink className="w-2.5 h-2.5" />
                           </a>
-                          <button type="button" onClick={() => handleGenericFileRemove("gpsFiles", doc)}
-                            className="rounded-lg p-1.5 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 border border-slate-200 transition-colors cursor-pointer" title="Delete file">
-                            <Trash2 className="w-3 h-3" />
-                          </button>
+                          {!isSubmitted && (
+                            <button type="button" onClick={() => handleGenericFileRemove("gpsFiles", doc)}
+                              className="rounded-lg p-1.5 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 border border-slate-200 transition-colors cursor-pointer" title="Delete file">
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -1596,10 +1669,12 @@ const AdvancedAutoFillForm = ({
                             className="text-[10px] text-indigo-600 hover:underline font-bold flex items-center gap-0.5 border-none cursor-pointer">
                             View <ExternalLink className="w-2.5 h-2.5" />
                           </a>
-                          <button type="button" onClick={() => handleAtsDelete(doc)}
-                            className="rounded-lg p-1.5 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 border border-slate-200 transition-colors cursor-pointer" title="Delete file">
-                            <Trash2 className="w-3 h-3" />
-                          </button>
+                          {!isSubmitted && (
+                            <button type="button" onClick={() => handleAtsDelete(doc)}
+                              className="rounded-lg p-1.5 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 border border-slate-200 transition-colors cursor-pointer" title="Delete file">
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -1628,10 +1703,12 @@ const AdvancedAutoFillForm = ({
                             className="text-[10px] text-indigo-600 hover:underline font-bold flex items-center gap-0.5 border-none cursor-pointer">
                             View <ExternalLink className="w-2.5 h-2.5" />
                           </a>
-                          <button type="button" onClick={() => handleGenericFileRemove("fieldFormFiles", doc)}
-                            className="rounded-lg p-1.5 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 border border-slate-200 transition-colors cursor-pointer" title="Delete file">
-                            <Trash2 className="w-3 h-3" />
-                          </button>
+                          {!isSubmitted && (
+                            <button type="button" onClick={() => handleGenericFileRemove("fieldFormFiles", doc)}
+                              className="rounded-lg p-1.5 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 border border-slate-200 transition-colors cursor-pointer" title="Delete file">
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -1657,10 +1734,12 @@ const AdvancedAutoFillForm = ({
                           </a>
                         </div>
                         <div className="mt-1.5 text-[10px] font-bold text-slate-600 truncate px-0.5" title={photo.name}>{photo.name}</div>
-                        <button type="button" onClick={() => handlePhotoDelete(photo)}
-                          className="mt-1 w-full rounded-lg bg-red-50 hover:bg-red-100 text-red-500 py-1 text-[10px] font-bold cursor-pointer border-none flex items-center justify-center gap-1">
-                          <Trash2 className="w-2.5 h-2.5" /> Delete
-                        </button>
+                        {!isSubmitted && (
+                          <button type="button" onClick={() => handlePhotoDelete(photo)}
+                            className="mt-1 w-full rounded-lg bg-red-50 hover:bg-red-100 text-red-500 py-1 text-[10px] font-bold cursor-pointer border-none flex items-center justify-center gap-1">
+                            <Trash2 className="w-2.5 h-2.5" /> Delete
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -1688,10 +1767,12 @@ const AdvancedAutoFillForm = ({
                             className="text-[10px] text-indigo-650 hover:underline font-bold flex items-center gap-0.5 border-none cursor-pointer">
                             Play <ExternalLink className="w-2.5 h-2.5" />
                           </a>
-                          <button type="button" onClick={() => handleVideoDelete(video)}
-                            className="rounded-lg p-1.5 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 border border-slate-200 transition-colors cursor-pointer" title="Delete video">
-                            <Trash2 className="w-3 h-3" />
-                          </button>
+                          {!isSubmitted && (
+                            <button type="button" onClick={() => handleVideoDelete(video)}
+                              className="rounded-lg p-1.5 bg-white hover:bg-red-50 text-slate-400 hover:text-red-500 border border-slate-200 transition-colors cursor-pointer" title="Delete video">
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -1819,7 +1900,7 @@ const AdvancedAutoFillForm = ({
                     {!isFieldOfficer && (
                       <button
                         type="button"
-                        onClick={() => handleAtsDelete(doc)}
+                        onClick={() => requestAtsDelete(doc)}
                         className="rounded-lg p-1.5 bg-slate-50 hover:bg-red-50 text-slate-400 hover:text-red-650 transition-colors duration-155 cursor-pointer shrink-0 border-none flex items-center justify-center"
                         title="Delete document"
                       >
@@ -2062,6 +2143,126 @@ const AdvancedAutoFillForm = ({
         </div>
       )}
     </div>
+
+      {/* ── Delete Confirmation Modal ── */}
+      {deleteConfirm && (
+        <div
+          style={{
+            position: "fixed", inset: 0,
+            background: "rgba(15,23,42,0.65)",
+            backdropFilter: "blur(6px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            zIndex: 99999,
+            padding: 20,
+            animation: "ats-overlay-in 0.2s ease-out",
+          }}
+          onClick={() => setDeleteConfirm(null)}
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 20,
+              padding: "32px 28px 24px",
+              maxWidth: 400,
+              width: "100%",
+              boxShadow: "0 30px 60px -10px rgba(0,0,0,0.3), 0 0 0 1px rgba(0,0,0,0.06)",
+              transform: deleteConfirm.animating ? "scale(0.85) translateY(24px)" : "scale(1) translateY(0)",
+              opacity: deleteConfirm.animating ? 0 : 1,
+              transition: "transform 0.3s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s ease",
+              textAlign: "center",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Animated warning icon */}
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+              <div style={{
+                width: 72, height: 72, borderRadius: "50%",
+                background: "linear-gradient(135deg, #fef3c7, #fde68a)",
+                border: "3px solid #f59e0b",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                animation: "ats-pulse 1.5s ease-in-out infinite",
+              }}>
+                <svg width="32" height="32" fill="none" stroke="#d97706" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+              </div>
+            </div>
+
+            <h3 style={{ fontSize: 18, fontWeight: 800, color: "#0f172a", margin: "0 0 8px" }}>
+              Delete This Document?
+            </h3>
+            <p style={{ fontSize: 13, color: "#64748b", margin: "0 0 6px", lineHeight: 1.5 }}>
+              Aap sure hain ki yeh document delete karna chahte hain?
+            </p>
+            <div style={{
+              background: "#fef9ec",
+              border: "1px solid #fde68a",
+              borderRadius: 10,
+              padding: "10px 14px",
+              margin: "12px 0 24px",
+              display: "flex", alignItems: "center", gap: 8,
+            }}>
+              <svg width="16" height="16" fill="none" stroke="#b45309" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6M9 16h6M9 8h6M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
+              </svg>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "#92400e", wordBreak: "break-all", textAlign: "left" }}>
+                {deleteConfirm.doc?.name || "Document"}
+              </span>
+            </div>
+
+            <div style={{ display: "flex", gap: 12 }}>
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                style={{
+                  flex: 1, padding: "12px 0",
+                  background: "#f8fafc",
+                  border: "1.5px solid #e2e8f0",
+                  borderRadius: 12,
+                  fontSize: 14, fontWeight: 700, color: "#475569",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                }}
+                onMouseOver={e => e.currentTarget.style.background = "#f1f5f9"}
+                onMouseOut={e => e.currentTarget.style.background = "#f8fafc"}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  const doc = deleteConfirm.doc;
+                  setDeleteConfirm(null);
+                  await handleAtsDelete(doc);
+                }}
+                style={{
+                  flex: 1, padding: "12px 0",
+                  background: "linear-gradient(135deg, #ef4444, #dc2626)",
+                  border: "none",
+                  borderRadius: 12,
+                  fontSize: 14, fontWeight: 700, color: "#fff",
+                  cursor: "pointer",
+                  boxShadow: "0 4px 12px rgba(239,68,68,0.35)",
+                  transition: "all 0.15s ease",
+                }}
+                onMouseOver={e => { e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(239,68,68,0.45)"; }}
+                onMouseOut={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(239,68,68,0.35)"; }}
+              >
+                🗑️ Haan, Delete Karo
+              </button>
+            </div>
+          </div>
+
+          <style>{`
+            @keyframes ats-overlay-in {
+              from { opacity: 0; } to { opacity: 1; }
+            }
+            @keyframes ats-pulse {
+              0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245,158,11,0.4); }
+              50% { transform: scale(1.06); box-shadow: 0 0 0 10px rgba(245,158,11,0); }
+            }
+          `}</style>
+        </div>
+      )}
+    </>
   );
 };
 

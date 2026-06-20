@@ -311,6 +311,184 @@ const ImageUploader = ({
     );
   }
 
+  if (url === "first-bank") {
+    return (
+      <div className="w-full">
+        <style>{`
+          .custom-upload-wrapper .ant-upload-select {
+            width: 100% !important;
+            height: auto !important;
+            background: transparent !important;
+            border: none !important;
+          }
+          .custom-upload-dragger {
+            border: 2px dashed #0056b3 !important;
+            background-color: #f8fafc !important;
+            border-radius: 12px !important;
+            padding: 32px 16px !important;
+            text-align: center !important;
+            cursor: pointer !important;
+            transition: all 0.15s ease !important;
+            width: 100% !important;
+          }
+          .custom-upload-dragger:hover {
+            border-color: #004494 !important;
+            background-color: #eff6ff !important;
+          }
+          .custom-upload-btn {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            padding: 8px 24px !important;
+            border-radius: 999px !important;
+            border: 1.5px solid #0056b3 !important;
+            background: transparent !important;
+            color: #0056b3 !important;
+            font-weight: 600 !important;
+            font-size: 14px !important;
+            height: 42px !important;
+            cursor: pointer !important;
+            box-shadow: none !important;
+            margin-top: 16px !important;
+            transition: all 0.15s !important;
+          }
+          .custom-upload-btn:hover {
+            background-color: #eff6ff !important;
+            border-color: #004494 !important;
+            color: #004494 !important;
+          }
+        `}</style>
+
+        <div className="custom-upload-wrapper w-full mb-4">
+          <Upload
+            accept="image/*"
+            capture="environment"
+            multiple
+            beforeUpload={(file) => {
+              updateImages((prev) => [
+                ...(Array.isArray(prev) ? prev : []),
+                {
+                  uid: file.uid,
+                  name: file.name,
+                  originFileObj: file,
+                },
+              ]);
+              handleCapture(file);
+              return false;
+            }}
+            fileList={currentImages.filter((item) => item.originFileObj)}
+            showUploadList={true}
+            onRemove={(file) => {
+              updateImages((prev) =>
+                (Array.isArray(prev) ? prev : []).filter((item) => item.uid !== file.uid)
+              );
+            }}
+            onPreview={handlePreview}
+            listType="picture"
+          >
+            <div className="custom-upload-dragger">
+              <CloudUploadOutlined style={{ fontSize: "42px", color: "#0056b3", marginBottom: "8px" }} />
+              <div className="text-base font-extrabold text-slate-800">Upload Site Photographs</div>
+              <div className="text-xs text-slate-500 font-semibold mt-1">Click to browse or upload multiple images</div>
+            </div>
+          </Upload>
+        </div>
+
+        <div className="flex gap-4 items-center">
+          <Upload
+            accept="image/*"
+            capture="environment"
+            multiple
+            beforeUpload={(file) => {
+              updateImages((prev) => [
+                ...(Array.isArray(prev) ? prev : []),
+                {
+                  uid: file.uid,
+                  name: file.name,
+                  originFileObj: file,
+                },
+              ]);
+              handleCapture(file);
+              return false;
+            }}
+            fileList={currentImages.filter((item) => item.originFileObj)}
+            showUploadList={false}
+          >
+            <button type="button" className="custom-upload-btn">
+              <CloudUploadOutlined style={{ fontSize: "16px" }} />
+              Upload Site Photographs
+            </button>
+          </Upload>
+
+          {currentImages.filter((item) => item.originFileObj).length > 0 && (
+            <button
+              type="button"
+              onClick={handleUploadToServer}
+              className="mt-4 px-6 py-2 bg-emerald-600 text-white rounded-full font-bold text-sm hover:bg-emerald-700 transition-colors"
+            >
+              Upload to Server
+            </button>
+          )}
+        </div>
+
+        <Modal
+          open={previewVisible}
+          footer={null}
+          onCancel={() => setPreviewVisible(false)}
+          closable
+          centered
+          width="auto"
+        >
+          <img alt="Preview" style={{ maxWidth: "100%", maxHeight: "80vh", objectFit: "contain" }} src={previewImage} />
+        </Modal>
+
+        {/* Existing uploaded images list */}
+        {uploadedImages?.length > 0 && (
+          <div className="mt-6">
+            <h3 className="text-sm font-extrabold text-gray-800 mb-3 uppercase tracking-wider">
+              Uploaded Images ({uploadedImages.length})
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {uploadedImages.map((imageItem, index) => (
+                <div
+                  key={getAssetKey(imageItem) || index}
+                  className="relative group rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <img
+                    src={getAssetUrl(imageItem)}
+                    alt={`uploaded-${index}`}
+                    className="w-full h-32 object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <Button
+                      type="primary"
+                      shape="circle"
+                      icon={<EyeOutlined />}
+                      size="small"
+                      onClick={() => handlePreview({ url: getAssetUrl(imageItem) })}
+                    />
+                    <Button
+                      danger
+                      shape="circle"
+                      icon={<DeleteOutlined />}
+                      size="small"
+                      onClick={() =>
+                        handleRemoveImage(
+                          imageItem?.fileId || getAssetUrl(imageItem),
+                          imageItem
+                        )
+                      }
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="image-uploader-container p-4">
       {caseId ? (

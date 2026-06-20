@@ -13,7 +13,11 @@ const QueryPage = () => {
           notes?.map((note) => (
             <li key={note._id} className='p-3 border rounded shadow'>
               <div className='text-sm text-gray-500'>
-                {note.role} - {new Date(note.createdAt).toLocaleString()}
+                {note.role} - {(() => {
+                  if (!note.createdAt) return "N/A";
+                  const d = new Date(note.createdAt);
+                  return isNaN(d.getTime()) ? "N/A" : d.toLocaleString();
+                })()}
               </div>
               <div>
                 <strong>{note.addedBy?.name}</strong>: {note.message}

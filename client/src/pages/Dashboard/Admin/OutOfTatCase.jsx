@@ -125,16 +125,17 @@ const OutOfTATCase = ({ selectedMonth }) => {
       key: "createdAt",
       render: (_, record) => {
         const date = getCaseDate(record);
+        if (!date) return "N/A";
+        const dObj = new Date(date);
+        if (isNaN(dObj.getTime())) return "N/A";
 
-        return date
-          ? new Date(date).toLocaleString("en-IN", {
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          : "N/A";
+        return dObj.toLocaleString("en-IN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
       },
     },
     {

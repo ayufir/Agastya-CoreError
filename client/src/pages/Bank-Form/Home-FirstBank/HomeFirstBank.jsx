@@ -28,9 +28,9 @@ const SidebarItem = ({ id, label, isActive, onClick }) => (
     style={{
       display: "flex",
       alignItems: "center",
-      gap: 12,
+      gap: 16,
       width: "100%",
-      padding: "10px 16px",
+      padding: "12px 16px",
       background: isActive ? "#eff6ff" : "transparent",
       border: "none",
       borderLeft: isActive ? "3px solid #1d4ed8" : "3px solid transparent",
@@ -41,16 +41,11 @@ const SidebarItem = ({ id, label, isActive, onClick }) => (
   >
     <span
       style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: 28,
-        height: 28,
-        borderRadius: "50%",
-        background: isActive ? "#1d4ed8" : "#6b7280",
-        color: "#fff",
-        fontSize: 12,
-        fontWeight: 700,
+        fontSize: 13,
+        fontWeight: isActive ? 700 : 600,
+        color: isActive ? "#1d4ed8" : "#4b5563",
+        width: 16,
+        textAlign: "center",
         flexShrink: 0,
       }}
     >
@@ -59,7 +54,7 @@ const SidebarItem = ({ id, label, isActive, onClick }) => (
     <span
       style={{
         fontSize: 13,
-        fontWeight: isActive ? 700 : 500,
+        fontWeight: isActive ? 600 : 500,
         color: isActive ? "#1d4ed8" : "#374151",
         lineHeight: 1.35,
       }}
@@ -88,7 +83,16 @@ const HomeFirstBank = () => {
   const [showJsonModal, setShowJsonModal] = useState(false);
   const [jsonOutputData, setJsonOutputData] = useState(null);
   const [onModalCloseAction, setOnModalCloseAction] = useState(null);
-  const [isAutofillOpen, setIsAutofillOpen] = useState(false);
+  const [isAutofillOpen, setIsAutofillOpen] = useState(true);
+  const [isPropertyDetailsOpen, setIsPropertyDetailsOpen] = useState(false);
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
+
+  const handleTopInputChange = (field, val) => {
+    setIsEdit((prev) => ({
+      ...prev,
+      [field]: val,
+    }));
+  };
 
   const isFieldOfficer = user?.role === "FieldOfficer";
   const canFinalSubmit = id && (user?.role === "Admin" || user?.role === "SuperAdmin");
@@ -238,7 +242,14 @@ const HomeFirstBank = () => {
   };
 
   useEffect(() => {
-    if (id) fetchEditData(id);
+    if (id) {
+      fetchEditData(id);
+    } else {
+      setIsEdit({});
+      setCollectedData({});
+      setExtractedData({});
+      setActiveSection(1);
+    }
   }, [id]);
 
 
@@ -248,22 +259,35 @@ const HomeFirstBank = () => {
       console.log("Auto data received:", extractedData);
       
       setIsEdit((prev) => {
+        const mergeUniqueFiles = (existing = [], incoming = []) => {
+          const seen = new Set(existing.map(f => typeof f === "string" ? f : (f?.url || "")));
+          const result = [...existing];
+          incoming.forEach(f => {
+            const url = typeof f === "string" ? f : (f?.url || "");
+            if (url && !seen.has(url)) {
+              result.push(f);
+              seen.add(url);
+            }
+          });
+          return result;
+        };
+
         const schemaMapped = mapExtractedDataToHFSchema(extractedData, prev);
         const updated = {
           ...prev,
           ...extractedData,
           ...schemaMapped,
           imageUrls: extractedData.imageUrls
-            ? [...(prev?.imageUrls || []), ...extractedData.imageUrls]
+            ? mergeUniqueFiles(prev?.imageUrls || [], extractedData.imageUrls)
             : prev?.imageUrls,
           siteVisitVideo: extractedData.siteVisitVideo
-            ? [...(prev?.siteVisitVideo || []), ...extractedData.siteVisitVideo]
+            ? mergeUniqueFiles(prev?.siteVisitVideo || [], extractedData.siteVisitVideo)
             : prev?.siteVisitVideo,
           atsDocuments: extractedData.atsDocuments
-            ? [...(prev?.atsDocuments || []), ...extractedData.atsDocuments]
+            ? mergeUniqueFiles(prev?.atsDocuments || [], extractedData.atsDocuments)
             : prev?.atsDocuments,
           AttachDocuments: extractedData.atsDocuments
-            ? [...(prev?.AttachDocuments || []), ...extractedData.atsDocuments]
+            ? mergeUniqueFiles(prev?.AttachDocuments || [], extractedData.atsDocuments)
             : prev?.AttachDocuments,
         };
 
@@ -274,6 +298,7 @@ const HomeFirstBank = () => {
             .then((res) => {
               if (res) {
                 setIsEdit(res);
+                setExtractedData({});
               }
               toast.success("AI extracted data saved successfully!");
             })
@@ -292,7 +317,7 @@ const HomeFirstBank = () => {
     sectionSubmittersRef.current[sectionId] = submitter;
   };
 
-  const allSections = [
+  const allSections = React.useMemo(() => [
     {
       id: 1,
       label: "General Details",
@@ -306,12 +331,10 @@ const HomeFirstBank = () => {
             registerSectionSubmitter={registerSectionSubmitter}
             extractedData={extractedData}
             fetchData={() => fetchEditData(id)}
+            onNext={handleSaveAndProceed}
+            onBack={handleBack}
           />
-          <div className="mt-5 space-y-5">
-            <div>
-              <AutoFillForm setFormData={setExtractedData} />
-            </div>
-          </div>
+
 
         </>
       ),
@@ -328,6 +351,8 @@ const HomeFirstBank = () => {
           registerSectionSubmitter={registerSectionSubmitter}
           extractedData={extractedData}
           fetchData={() => fetchEditData(id)}
+          onNext={handleSaveAndProceed}
+          onBack={handleBack}
         />
       ),
     },
@@ -343,6 +368,8 @@ const HomeFirstBank = () => {
           registerSectionSubmitter={registerSectionSubmitter}
           extractedData={extractedData}
           fetchData={() => fetchEditData(id)}
+          onNext={handleSaveAndProceed}
+          onBack={handleBack}
         />
       ),
     },
@@ -357,6 +384,8 @@ const HomeFirstBank = () => {
           showActionButtons={false}
           registerSectionSubmitter={registerSectionSubmitter}
           extractedData={extractedData}
+          onNext={handleSaveAndProceed}
+          onBack={handleBack}
         />
       ),
     },
@@ -371,6 +400,8 @@ const HomeFirstBank = () => {
           showActionButtons={false}
           registerSectionSubmitter={registerSectionSubmitter}
           extractedData={extractedData}
+          onNext={handleSaveAndProceed}
+          onBack={handleBack}
         />
       ),
     },
@@ -385,6 +416,8 @@ const HomeFirstBank = () => {
           showActionButtons={false}
           registerSectionSubmitter={registerSectionSubmitter}
           extractedData={extractedData}
+          onNext={handleSaveAndProceed}
+          onBack={handleBack}
         />
       ),
     },
@@ -399,6 +432,8 @@ const HomeFirstBank = () => {
           showActionButtons={false}
           registerSectionSubmitter={registerSectionSubmitter}
           extractedData={extractedData}
+          onNext={handleSaveAndProceed}
+          onBack={handleBack}
         />
       ),
     },
@@ -413,6 +448,8 @@ const HomeFirstBank = () => {
           showActionButtons={false}
           registerSectionSubmitter={registerSectionSubmitter}
           extractedData={extractedData}
+          onNext={handleSaveAndProceed}
+          onBack={handleBack}
         />
       ),
     },
@@ -426,12 +463,14 @@ const HomeFirstBank = () => {
           showActionButtons={false}
           registerSectionSubmitter={registerSectionSubmitter}
           extractedData={extractedData}
+          onNext={handleSaveAndProceed}
+          onBack={handleBack}
         />
       ),
     },
     {
       id: 10,
-      label: "Valuation Details",
+      label: "Valuation",
       component: (
         <ValuationDetails
           isEdit={isEdit}
@@ -439,6 +478,8 @@ const HomeFirstBank = () => {
           showActionButtons={false}
           registerSectionSubmitter={registerSectionSubmitter}
           extractedData={extractedData}
+          onNext={handleSaveAndProceed}
+          onBack={handleBack}
         />
       ),
     },
@@ -452,6 +493,8 @@ const HomeFirstBank = () => {
           showActionButtons={false}
           registerSectionSubmitter={registerSectionSubmitter}
           extractedData={extractedData}
+          onNext={handleSaveAndProceed}
+          onBack={handleBack}
         />
       ),
     },
@@ -465,6 +508,8 @@ const HomeFirstBank = () => {
           sectionId={12}
           registerSectionSubmitter={registerSectionSubmitter}
           fetchData={() => fetchEditData(id)}
+          onNext={handleSaveAndProceed}
+          onBack={handleBack}
         />
       ),
     },
@@ -478,6 +523,8 @@ const HomeFirstBank = () => {
           sectionId={13}
           registerSectionSubmitter={registerSectionSubmitter}
           fetchData={() => fetchEditData(id)}
+          onNext={handleSaveAndProceed}
+          onBack={handleBack}
         />
       ),
     },
@@ -491,49 +538,12 @@ const HomeFirstBank = () => {
           sectionId={14}
           registerSectionSubmitter={registerSectionSubmitter}
           fetchData={() => fetchEditData(id)}
+          onNext={handleSaveAndProceed}
+          onBack={handleBack}
         />
       ),
     },
-    {
-      id: 15,
-      label: "Documents",
-      component: (
-        <HomeFirstPortalSections
-          mode="documents"
-          isEdit={isEdit}
-          sectionId={15}
-          registerSectionSubmitter={registerSectionSubmitter}
-          fetchData={() => fetchEditData(id)}
-        />
-      ),
-    },
-    {
-      id: 16,
-      label: "Site Video",
-      component: (
-        <HomeFirstPortalSections
-          mode="videos"
-          isEdit={isEdit}
-          sectionId={16}
-          registerSectionSubmitter={registerSectionSubmitter}
-          fetchData={() => fetchEditData(id)}
-        />
-      ),
-    },
-    ...(id ? [{
-      id: 17,
-      label: "📋 Field Officer Uploads",
-      component: (
-        <HomeFirstPortalSections
-          mode="fieldUploads"
-          isEdit={isEdit}
-          sectionId={17}
-          registerSectionSubmitter={registerSectionSubmitter}
-          fetchData={() => fetchEditData(id)}
-        />
-      ),
-    }] : []),
-  ];
+  ], [isEdit, extractedData, id, savedCity]);
 
   const sections = allSections;
 
@@ -551,7 +561,7 @@ const HomeFirstBank = () => {
     return latestData;
   };
 
-  const handleSaveAndProceed = async () => {
+  async function handleSaveAndProceed() {
     try {
       if (isFieldOfficer) {
         if (id) {
@@ -588,23 +598,31 @@ const HomeFirstBank = () => {
         }
       }
 
-      const nextId = activeSection + 1;
-      const nextSection = sections.find((s) => s.id === nextId);
-      if (nextSection) {
-        setActiveSection(nextId);
+      const currentIndex = sections.findIndex((s) => s.id === activeSection);
+      if (currentIndex !== -1 && currentIndex < sections.length - 1) {
+        const nextSection = sections[currentIndex + 1];
+        setActiveSection(nextSection.id);
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     } catch (err) {
-      toast.error("Please complete the required fields");
+      console.error("Save & Proceed validation/API error details:", err);
+      if (err?.errorFields) {
+        const fieldNames = err.errorFields.map(f => f.name.join(".")).join(", ");
+        toast.error(`Required fields missing: ${fieldNames}`);
+      } else {
+        toast.error(err?.message || "Please complete the required fields");
+      }
     }
-  };
+  }
 
-  const handleBack = () => {
-    if (activeSection > 1) {
-      setActiveSection(activeSection - 1);
+  function handleBack() {
+    const currentIndex = sections.findIndex((s) => s.id === activeSection);
+    if (currentIndex > 0) {
+      const prevSection = sections[currentIndex - 1];
+      setActiveSection(prevSection.id);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-  };
+  }
 
 
 
@@ -626,17 +644,14 @@ const HomeFirstBank = () => {
       console.log("FINAL PAYLOAD BEFORE UPDATE:", finalPayload);
 
       if (isFieldOfficer) {
-        const payload = { ...finalPayload, isReportSubmitted: true };
-        let res;
+        const payload = { ...isEdit, ...extractedData, city: savedCity, isReportSubmitted: true };
         if (id) {
-          res = await dispatch(updateDetails({ id, ...payload })).unwrap();
+          await dispatch(updateDetails({ id, ...payload })).unwrap();
         } else {
-          res = await dispatch(createHFBanks(payload)).unwrap();
+          await dispatch(createHFBanks(payload)).unwrap();
         }
         toast.success("Form submitted successfully");
-        setJsonOutputData(res?.updatedJob || res?.data || res || payload);
-        setOnModalCloseAction(() => () => navigate("/"));
-        setShowJsonModal(true);
+        navigate("/");
         return;
       }
 
@@ -677,7 +692,7 @@ const HomeFirstBank = () => {
 
       const res = await dispatch(updateDetails({ id, ...finalPayload })).unwrap();
       await dispatch(
-        finalUpdate({ id, bankName: "HomeFirstBank", updateData: finalPayload })
+        finalUpdate({ id, bankName: "home-first", updateData: finalPayload })
       ).unwrap();
 
       toast.success("Case final submitted successfully!");
@@ -712,9 +727,12 @@ const HomeFirstBank = () => {
     }
   };
 
+  const handleJustCloseModal = () => {
+    setShowJsonModal(false);
+  };
+
   const handleCloseJsonModal = () => {
     setShowJsonModal(false);
-
     if (onModalCloseAction) {
       onModalCloseAction();
     }
@@ -785,7 +803,11 @@ const HomeFirstBank = () => {
         jsonFilename: "complete_application_data.json",
       }, { responseType: "blob" });
 
-      saveAs(res.data, `HFB_all_files_${id || "new"}.zip`);
+      const applicantName = (dataSource.customerName || "Applicant").trim().replace(/[^a-zA-Z0-9]/g, "_");
+      const propertyCode = (dataSource.refNo || dataSource.clContractNo || id || "Case").trim().replace(/[^a-zA-Z0-9]/g, "_");
+      const zipFilename = `${applicantName}_${propertyCode}.zip`;
+
+      saveAs(res.data, zipFilename);
       toast.success(
         urls.length > 0
           ? `Downloaded ${urls.length} file(s) + form data ✓`
@@ -811,27 +833,11 @@ const HomeFirstBank = () => {
       {/* ── Top Header ── */}
       <header className="form-sub-header">
         <div className="form-sub-header-title-container">
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              background: "linear-gradient(135deg, #1e3a8a, #2563eb)",
-              borderRadius: 8,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            <svg width="18" height="18" fill="white" viewBox="0 0 24 24">
-              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-              <polyline points="9 22 9 12 15 12 15 22" stroke="white" strokeWidth="1.5" fill="none" />
-            </svg>
-          </div>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Home First Bank</div>
-            <div style={{ fontSize: 11, color: "#6b7280" }} className="form-sub-header-subtitle">Property Valuation Report</div>
-          </div>
+          <img
+            src="/assets/images/banks-img/homefrist.png"
+            alt="Home First Bank"
+            style={{ height: 72, maxWidth: 200, objectFit: "contain", display: "block" }}
+          />
         </div>
 
         {/* Date picker */}
@@ -852,148 +858,287 @@ const HomeFirstBank = () => {
         </div>
       </header>
 
-      {/* ── Advanced Autofill Section (Collapsible Accordion) ── */}
-      <div className="top-advanced-autofill-section" style={{ maxWidth: 1280, margin: "16px auto 0", padding: "0 16px" }}>
+      {/* ── AI Advanced Auto Fill (Admin/SuperAdmin only) ── */}
+      {!isFieldOfficer && (
+        <div style={{ maxWidth: 1280, margin: "20px auto 0", padding: "0 16px" }}>
+          <div style={{
+            background: "#ffffff",
+            borderRadius: 12,
+            border: "1px solid #e5e7eb",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+            overflow: "hidden",
+          }}>
+            {/* Collapsible Header */}
+            <div
+              onClick={() => setIsAutofillOpen(!isAutofillOpen)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "14px 20px",
+                background: "linear-gradient(135deg, #f0f7ff, #e8f0fe)",
+                borderBottom: isAutofillOpen ? "1px solid #e5e7eb" : "none",
+                cursor: "pointer",
+                userSelect: "none",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{
+                  width: 30, height: 30, borderRadius: 8,
+                  background: "linear-gradient(135deg, #3b82f6, #6366f1)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
+                }}>
+                  <svg width="16" height="16" fill="none" stroke="white" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                </div>
+                <span style={{ fontSize: 14, fontWeight: 700, color: "#1e40af" }}>AI Advanced Auto Fill</span>
+                <span style={{
+                  fontSize: 11, fontWeight: 500, color: "#6366f1",
+                  background: "#ede9fe", borderRadius: 6, padding: "2px 8px"
+                }}>AI Powered</span>
+
+                {/* Download All ZIP Button next to the title */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDownloadAll();
+                  }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    marginLeft: 12,
+                    padding: "6px 12px",
+                    background: "linear-gradient(135deg, #10b981, #059669)",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: 8,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    boxShadow: "0 2px 6px rgba(16, 185, 129, 0.25)",
+                    transition: "all 0.15s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                    e.currentTarget.style.boxShadow = "0 4px 10px rgba(16, 185, 129, 0.35)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "0 2px 6px rgba(16, 185, 129, 0.25)";
+                  }}
+                >
+                  <Download size={12} /> Download All (ZIP)
+                </button>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{
+                  fontSize: 11, fontWeight: 600,
+                  color: isAutofillOpen ? "#dc2626" : "#16a34a",
+                  background: isAutofillOpen ? "#fef2f2" : "#f0fdf4",
+                  border: `1px solid ${isAutofillOpen ? "#fecaca" : "#bbf7d0"}`,
+                  borderRadius: 6, padding: "3px 10px",
+                }}>
+                  {isAutofillOpen ? "Hide" : "Show"}
+                </span>
+                <svg
+                  width="14" height="14" fill="none" stroke="#64748b" strokeWidth="2.5" viewBox="0 0 24 24"
+                  style={{ transform: isAutofillOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.25s ease" }}
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Collapsible Content */}
+            {isAutofillOpen && (
+              <div style={{ padding: "16px" }}>
+                <AdvancedAutoFillForm
+                  bankName="HomeFirst Bank"
+                  setFormData={setExtractedData}
+                  atsDocuments={
+                    isEdit?.atsDocuments && isEdit.atsDocuments.length > 0
+                      ? isEdit.atsDocuments
+                      : (isEdit?.AttachDocuments || [])
+                  }
+                  imageUrls={isEdit?.imageUrls || []}
+                  siteVisitVideo={isEdit?.siteVisitVideo || []}
+                  gpsFiles={isEdit?.gpsFiles || []}
+                  emailFiles={isEdit?.emailFiles || []}
+                  fieldFormFiles={isEdit?.fieldFormFiles || []}
+                  additionalFiles={isEdit?.additionalFiles || []}
+                  fetchData={() => id && fetchEditData(id)}
+                  onUploadingChange={setIsUploadingFiles}
+                  isSubmitted={isEdit?.isReportSubmitted}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Technical Individual Assignment Title & Collapsible Property Details ── */}
+      <div style={{ maxWidth: 1280, margin: "20px auto 0", padding: "0 16px" }}>
+        <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#0f172a", marginBottom: "16px" }}>
+          Technical Individual Assignment
+        </h1>
+
+        {/* Collapsible Property Details Panel */}
         <div style={{
           background: "#ffffff",
           borderRadius: 12,
           border: "1px solid #e5e7eb",
           boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-          overflow: "hidden",
-          transition: "all 0.3s ease"
+          overflow: "hidden"
         }}>
-          {/* Accordion Trigger Bar */}
           {/* Accordion Header Row */}
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "10px 14px",
-            background: "linear-gradient(135deg, #f5f3ff, #ede9fe)",
-            borderBottom: isAutofillOpen ? "1px solid #e2e8f0" : "none",
-            gap: 8,
-            flexWrap: "wrap"
-          }}>
-            {/* Left: Toggle trigger */}
+          <div 
+            onClick={() => setIsPropertyDetailsOpen(!isPropertyDetailsOpen)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "16px 24px",
+              background: "#ffffff",
+              borderBottom: isPropertyDetailsOpen ? "1px solid #e5e7eb" : "none",
+              cursor: "pointer",
+              userSelect: "none"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "14px", fontWeight: 600, color: "#1e293b" }}>Property Details</span>
+              {(isEdit?.customerName || isEdit?.clContractNo || isEdit?.refNo) && (
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "12px", color: "#64748b", fontWeight: 500 }}>
+                  {isEdit?.customerName && (
+                    <>
+                      <span style={{ color: "#cbd5e1" }}>|</span>
+                      <span>Applicant <strong style={{ color: "#0f172a", fontWeight: 600 }}>{isEdit.customerName}</strong></span>
+                    </>
+                  )}
+                  {isEdit?.clContractNo && (
+                    <>
+                      <span style={{ color: "#cbd5e1" }}>|</span>
+                      <span>Loan Code <strong style={{ color: "#0f172a", fontWeight: 600 }}>{isEdit.clContractNo}</strong></span>
+                    </>
+                  )}
+                  {isEdit?.refNo && (
+                    <>
+                      <span style={{ color: "#cbd5e1" }}>|</span>
+                      <span>Property <strong style={{ color: "#0f172a", fontWeight: 600 }}>{isEdit.refNo}</strong></span>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
             <button
-              onClick={() => setIsAutofillOpen(!isAutofillOpen)}
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                flex: 1,
                 background: "none",
                 border: "none",
                 cursor: "pointer",
-                textAlign: "left",
                 padding: 0,
-                minWidth: 0,
+                transform: isPropertyDetailsOpen ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "transform 0.2s ease"
               }}
             >
-              <span style={{ fontSize: "16px", flexShrink: 0 }}>✨</span>
-              <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8, minWidth: 0 }}>
-                <span style={{ fontSize: "13px", fontWeight: 700, color: "#5b21b6", whiteSpace: "nowrap" }}>
-                  AI Advanced Auto Fill
-                </span>
-                <span style={{ fontSize: "11px", color: "#7c3aed", fontWeight: 500 }} className="desktop-only-text">
-                  — Upload site photos &amp; docs to auto-populate form fields
-                </span>
-              </div>
+              <svg width="14" height="14" fill="none" stroke="#64748b" strokeWidth="2.5" viewBox="0 0 24 24" style={{ transform: isPropertyDetailsOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
             </button>
-
-            {/* Right: Download All + Show/Hide Toggle */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-
-              {/* ── Download All Button ── */}
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleDownloadAll(); }}
-                  title="Download all uploaded images, PDFs and application data as ZIP"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    padding: "5px 14px",
-                    background: "linear-gradient(135deg, #0f172a, #1e40af)",
-                    color: "#ffffff",
-                    border: "none",
-                    borderRadius: 20,
-                    fontSize: "11px",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    boxShadow: "0 2px 6px rgba(30,64,175,0.35)",
-                    letterSpacing: "0.02em",
-                    transition: "all 0.2s ease",
-                    whiteSpace: "nowrap",
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "linear-gradient(135deg, #1e3a8a, #2563eb)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(37,99,235,0.45)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "linear-gradient(135deg, #0f172a, #1e40af)"; e.currentTarget.style.boxShadow = "0 2px 6px rgba(30,64,175,0.35)"; }}
-                >
-                  <Download size={13} />
-                  Download All
-                </button>
-
-              {/* ── Show / Hide Toggle ── */}
-              <button
-                onClick={() => setIsAutofillOpen(!isAutofillOpen)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 5,
-                  padding: "4px 10px",
-                  background: "#7c3aed",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 12,
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                  transition: "background 0.15s ease",
-                }}
-              >
-                {isAutofillOpen ? "Hide" : "Show"}
-                <svg
-                  width="13" height="13"
-                  fill="none" stroke="#fff" strokeWidth="2.5"
-                  viewBox="0 0 24 24"
-                  style={{
-                    transform: isAutofillOpen ? "rotate(180deg)" : "rotate(0deg)",
-                    transition: "transform 0.2s ease"
-                  }}
-                >
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
-              </button>
-            </div>
           </div>
 
           {/* Accordion Content Panel */}
-          <div style={{
-            maxHeight: isAutofillOpen ? "2000px" : "0px",
-            overflow: "hidden",
-            transition: "max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
-          }}>
-            <div style={{ padding: "16px" }}>
-              <AdvancedAutoFillForm
-                bankName="HomeFirst Bank"
-                setFormData={setExtractedData}
-                atsDocuments={
-                  isEdit?.atsDocuments && isEdit.atsDocuments.length > 0
-                    ? isEdit.atsDocuments
-                    : (isEdit?.AttachDocuments || [])
-                }
-                imageUrls={isEdit?.imageUrls || []}
-                siteVisitVideo={isEdit?.siteVisitVideo || []}
-                gpsFiles={isEdit?.gpsFiles || []}
-                emailFiles={isEdit?.emailFiles || []}
-                fieldFormFiles={isEdit?.fieldFormFiles || []}
-                additionalFiles={isEdit?.additionalFiles || []}
-                fetchData={() => fetchEditData(id)}
-              />
+          {isPropertyDetailsOpen && (
+            <div style={{ padding: "20px 24px" }}>
+              {/* Row 1 */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px", marginBottom: "16px" }}>
+                <div>
+                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Applicant Name</div>
+                  <input
+                    value={isEdit?.customerName || ""}
+                    onChange={(e) => handleTopInputChange("customerName", e.target.value)}
+                    disabled={isFieldOfficer && isEdit?.isReportSubmitted}
+                    style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                  />
+                </div>
+                <div>
+                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Loan Code</div>
+                  <input
+                    value={isEdit?.clContractNo || ""}
+                    onChange={(e) => handleTopInputChange("clContractNo", e.target.value)}
+                    disabled={isFieldOfficer && isEdit?.isReportSubmitted}
+                    style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                  />
+                </div>
+                <div>
+                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Property Code</div>
+                  <input
+                    value={isEdit?.refNo || ""}
+                    onChange={(e) => handleTopInputChange("refNo", e.target.value)}
+                    disabled={isFieldOfficer && isEdit?.isReportSubmitted}
+                    style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                  />
+                </div>
+                <div>
+                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Contact No.</div>
+                  <input
+                    value={isEdit?.customerNo || ""}
+                    onChange={(e) => handleTopInputChange("customerNo", e.target.value)}
+                    disabled={isFieldOfficer && isEdit?.isReportSubmitted}
+                    style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                  />
+                </div>
+              </div>
+
+              {/* Row 2 */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px", marginBottom: "16px" }}>
+                <div>
+                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Property Name</div>
+                  <input
+                    value={isEdit?.propertyName || ""}
+                    onChange={(e) => handleTopInputChange("propertyName", e.target.value)}
+                    disabled={isFieldOfficer && isEdit?.isReportSubmitted}
+                    style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                  />
+                </div>
+                <div>
+                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Builder Name</div>
+                  <input
+                    value={isEdit?.projectName || ""}
+                    onChange={(e) => handleTopInputChange("projectName", e.target.value)}
+                    disabled={isFieldOfficer && isEdit?.isReportSubmitted}
+                    style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                  />
+                </div>
+                <div>
+                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Plot ID</div>
+                  <input
+                    value={isEdit?.plotArea || ""}
+                    onChange={(e) => handleTopInputChange("plotArea", e.target.value)}
+                    disabled={isFieldOfficer && isEdit?.isReportSubmitted}
+                    style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                  />
+                </div>
+                <div style={{ visibility: "hidden" }}></div>
+              </div>
+
+              {/* Row 3: Address */}
+              <div>
+                <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Address</div>
+                <input
+                  value={isEdit?.addressSite || isEdit?.addressLegal || ""}
+                  onChange={(e) => handleTopInputChange("addressSite", e.target.value)}
+                  disabled={isFieldOfficer && isEdit?.isReportSubmitted}
+                  style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                />
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
+
+
 
 
       {/* ── Body: Sidebar + Content ── */}
@@ -1042,13 +1187,13 @@ const HomeFirstBank = () => {
 
             {/* Nav items */}
             <nav className="form-sidebar-nav" style={{ padding: "8px 0" }}>
-              {sections.map((section) => (
+              {sections.map((section, idx) => (
                 <SidebarItem
                   key={section.id}
-                  id={section.id}
+                  id={idx + 1}
                   label={section.label}
                   isActive={activeSection === section.id}
-                  onClick={setActiveSection}
+                  onClick={() => setActiveSection(section.id)}
                 />
               ))}
             </nav>
@@ -1093,6 +1238,8 @@ const HomeFirstBank = () => {
                   fieldFormFiles={isEdit?.fieldFormFiles || []}
                   additionalFiles={isEdit?.additionalFiles || []}
                   fetchData={() => fetchEditData(id)}
+                  onUploadingChange={setIsUploadingFiles}
+                  isSubmitted={isEdit?.isReportSubmitted}
                 />
               </div>
             ) : (
@@ -1106,35 +1253,35 @@ const HomeFirstBank = () => {
               <button
                 type="button"
                 onClick={handlePrimaryAction}
-                disabled={loading}
+                disabled={loading || isUploadingFiles || (isFieldOfficer && isEdit?.isReportSubmitted)}
                 style={{
                   width: "100%",
                   padding: "12px 24px",
                   borderRadius: 20,
-                  background: loading ? "#9ca3af" : "#2563eb",
+                  background: (loading || isUploadingFiles || (isFieldOfficer && isEdit?.isReportSubmitted)) ? "#9ca3af" : "#2563eb",
                   color: "#fff",
                   fontWeight: 700,
                   fontSize: 14,
                   border: "none",
-                  cursor: loading ? "not-allowed" : "pointer",
+                  cursor: (loading || isUploadingFiles || (isFieldOfficer && isEdit?.isReportSubmitted)) ? "not-allowed" : "pointer",
                   transition: "all 0.2s ease",
                   textAlign: "center",
                   boxShadow: "0 4px 10px rgba(37, 99, 235, 0.15)",
                 }}
                 onMouseEnter={(e) => {
-                  if (!loading) {
+                  if (!loading && !isUploadingFiles && !(isFieldOfficer && isEdit?.isReportSubmitted)) {
                     e.currentTarget.style.background = "#1d4ed8";
                     e.currentTarget.style.boxShadow = "0 6px 15px rgba(37, 99, 235, 0.25)";
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (!loading) {
+                  if (!loading && !isUploadingFiles && !(isFieldOfficer && isEdit?.isReportSubmitted)) {
                     e.currentTarget.style.background = "#2563eb";
                     e.currentTarget.style.boxShadow = "0 4px 10px rgba(37, 99, 235, 0.15)";
                   }
                 }}
               >
-                {loading ? "Processing..." : "Submit"}
+                {isFieldOfficer && isEdit?.isReportSubmitted ? "Already Submitted" : isUploadingFiles ? "Uploading Files..." : loading ? "Processing..." : "Submit"}
               </button>
             ) : (
               <>
@@ -1173,103 +1320,71 @@ const HomeFirstBank = () => {
                       Back
                     </button>
                   )}
-
-                  <button
-                    type="button"
-                    className="form-footer-save-btn"
-                    onClick={handleSaveAndProceed}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                      padding: "9px 20px",
-                      background: "#fff",
-                      border: "2px solid #2563eb",
-                      borderRadius: 20,
-                      color: "#2563eb",
-                      fontWeight: 600,
-                      fontSize: 13,
-                      cursor: "pointer",
-                      transition: "all 0.15s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "#eff6ff";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "#fff";
-                    }}
-                  >
-                    <svg width="16" height="16" fill="none" stroke="#2563eb" strokeWidth="2" viewBox="0 0 24 24">
-                      <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
-                      <polyline points="17 21 17 13 7 13 7 21" />
-                      <polyline points="7 3 7 8 15 8" />
-                    </svg>
-                    Save &amp; Proceed
-                  </button>
                 </div>
 
                 {/* Submit / Update / Final Submit buttons */}
-                <div className="form-footer-actions-group">
-                  <button
-                    type="button"
-                    onClick={handlePrimaryAction}
-                    disabled={loading}
-                    style={{
-                      padding: "9px 20px",
-                      borderRadius: 8,
-                      background: loading ? "#9ca3af" : "#2563eb",
-                      color: "#fff",
-                      fontWeight: 600,
-                      fontSize: 13,
-                      border: "none",
-                      cursor: loading ? "not-allowed" : "pointer",
-                      transition: "background 0.15s",
-                    }}
-                  >
-                    {loading ? "Processing..." : primaryActionLabel}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handlePrimaryAction("final")}
-                    disabled={loading}
-                    style={{
-                      padding: "9px 20px",
-                      borderRadius: 8,
-                      background: loading ? "#9ca3af" : "#2563eb",
-                      color: "#fff",
-                      fontWeight: 600,
-                      fontSize: 13,
-                      border: "none",
-                      cursor: loading ? "not-allowed" : "pointer",
-                      transition: "background 0.15s",
-                    }}
-                  >
-                    {loading ? "Processing..." : "Final Submit"}
-                  </button>
-
-                  {canFinalSubmit && (
+                {activeSection === sections[sections.length - 1]?.id && (
+                  <div className="form-footer-actions-group">
                     <button
                       type="button"
-                      onClick={handleFinalSubmit}
-                      disabled={finalSubmitting || loading}
+                      onClick={handlePrimaryAction}
+                      disabled={loading || isUploadingFiles}
                       style={{
                         padding: "9px 20px",
                         borderRadius: 8,
-                        background: finalSubmitting || loading ? "#9ca3af" : "#dc2626",
+                        background: (loading || isUploadingFiles) ? "#9ca3af" : "#2563eb",
                         color: "#fff",
                         fontWeight: 600,
                         fontSize: 13,
                         border: "none",
-                        cursor: finalSubmitting || loading ? "not-allowed" : "pointer",
+                        cursor: (loading || isUploadingFiles) ? "not-allowed" : "pointer",
                         transition: "background 0.15s",
                       }}
                     >
-                      {finalSubmitting ? "Finalizing..." : "Final Submit"}
+                      {isUploadingFiles ? "Uploading Files..." : loading ? "Processing..." : primaryActionLabel}
                     </button>
-                  )}
-                </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handlePrimaryAction("final")}
+                      disabled={loading || isUploadingFiles}
+                      style={{
+                        padding: "9px 20px",
+                        borderRadius: 8,
+                        background: (loading || isUploadingFiles) ? "#9ca3af" : "#2563eb",
+                        color: "#fff",
+                        fontWeight: 600,
+                        fontSize: 13,
+                        border: "none",
+                        cursor: (loading || isUploadingFiles) ? "not-allowed" : "pointer",
+                        transition: "background 0.15s",
+                      }}
+                    >
+                      {isUploadingFiles ? "Uploading..." : loading ? "Processing..." : "Final Submit"}
+                    </button>
+
+                    {canFinalSubmit && (
+                      <button
+                        type="button"
+                        onClick={handleFinalSubmit}
+                        disabled={finalSubmitting || loading || isUploadingFiles}
+                        style={{
+                          padding: "9px 20px",
+                          borderRadius: 8,
+                          background: finalSubmitting || loading || isUploadingFiles ? "#9ca3af" : "#dc2626",
+                          color: "#fff",
+                          fontWeight: 600,
+                          fontSize: 13,
+                          border: "none",
+                          cursor: finalSubmitting || loading || isUploadingFiles ? "not-allowed" : "pointer",
+                          transition: "background 0.15s",
+                        }}
+                      >
+                        {finalSubmitting ? "Finalizing..." : "Final Submit"}
+                      </button>
+                    )}
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -1326,10 +1441,44 @@ const HomeFirstBank = () => {
                 <div className="json-modal-title">
                   <span style={{ fontSize: "20px" }}>📋</span> Final JSON Output Generated
                 </div>
-                <button className="json-modal-close-btn" onClick={handleCloseJsonModal}>
+                <button className="json-modal-close-btn" onClick={handleJustCloseModal}>
                   <X size={20} />
                 </button>
               </div>
+
+              {/* Success Summary Banner */}
+              <div style={{
+                background: "linear-gradient(135deg, #ecfdf5, #d1fae5)",
+                border: "1px solid #6ee7b7",
+                borderRadius: 10,
+                margin: "16px 20px 0",
+                padding: "14px 18px",
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+              }}>
+                <div style={{
+                  width: 40, height: 40, borderRadius: "50%",
+                  background: "#10b981",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
+                }}>
+                  <svg width="20" height="20" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#065f46" }}>Form Submitted Successfully!</div>
+                  <div style={{ fontSize: 12, color: "#047857", marginTop: 2 }}>
+                    Case ID: <strong>{jsonOutputData?._id || id || "—"}</strong>
+                    &nbsp;·&nbsp;
+                    Status: <strong>{jsonOutputData?.status || "Submitted"}</strong>
+                    &nbsp;·&nbsp;
+                    Images: <strong>{(jsonOutputData?.imageUrls?.length || jsonOutputData?.gpsFiles?.length || 0)}</strong>
+                  </div>
+                </div>
+              </div>
+
               <div className="json-modal-body">
                 <pre className="json-code-block">
                   {JSON.stringify(jsonOutputData, null, 2)}
@@ -1343,7 +1492,7 @@ const HomeFirstBank = () => {
                   <Download size={16} /> Download JSON
                 </button>
                 <button className="json-btn json-btn-close" onClick={handleCloseJsonModal}>
-                  Close & Go to Dashboard
+                  Close &amp; Go to Dashboard
                 </button>
               </div>
             </div>
@@ -1505,16 +1654,17 @@ const HomeFirstBank = () => {
         /* Responsive Header & Content classes */
 
         .form-sub-header {
-          background: #fff;
-          border-bottom: 1px solid #e5e7eb;
+          background: #ffffff;
+          border-bottom: 3px solid #00a3ad;
           position: sticky;
-          top: 0; /* Align right at top of scroll container (0px) */
+          top: 0;
           z-index: 30;
-          padding: 10px 24px;
+          padding: 12px 32px;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+          box-shadow: 0 2px 12px rgba(0, 163, 173, 0.10), 0 1px 4px rgba(0,0,0,0.07);
+          min-height: 80px;
         }
         .form-sub-header-title-container {
           display: flex;

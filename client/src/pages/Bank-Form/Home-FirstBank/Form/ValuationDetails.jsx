@@ -94,7 +94,11 @@ const buildDefaultRemarks = (extracted = {}, formData = {}) => {
 };
 
 const performCalculation = (values) => {
-  const n = (k) => parseFloat(values?.[k]) || 0;
+  const n = (k) => {
+    const val = values?.[k];
+    if (val === "" || val === undefined || val === null) return 0;
+    return parseFloat(val) || 0;
+  };
 
   const l1 = n("landDocumentArea");
   const l2 = n("landPlanArea");
@@ -115,64 +119,61 @@ const performCalculation = (values) => {
 
   let activeRate = n("landSiteRate") || n("landPlanRate") || n("landDocumentRate") || n("marketRatePerSqft") || 0;
 
-  const landDocumentRate = minAreaName === "landDocument" ? activeRate : 0.0;
-  const landPlanRate = minAreaName === "landPlan" ? activeRate : 0.0;
-  const landSiteRate = minAreaName === "landSite" ? activeRate : 0.0;
+  const landDocumentRate = minAreaName === "landDocument" && activeRate ? activeRate : "";
+  const landPlanRate = minAreaName === "landPlan" && activeRate ? activeRate : "";
+  const landSiteRate = minAreaName === "landSite" && activeRate ? activeRate : "";
 
-  const landDocumentValuation = minAreaName === "landDocument" ? l1 * activeRate : 0.0;
-  const landPlanValuation = minAreaName === "landPlan" ? l2 * activeRate : 0.0;
-  const landSiteValuation = minAreaName === "landSite" ? l3 * activeRate : 0.0;
+  const landDocumentValuation = minAreaName === "landDocument" && l1 && activeRate ? l1 * activeRate : 0;
+  const landPlanValuation = minAreaName === "landPlan" && l2 && activeRate ? l2 * activeRate : 0;
+  const landSiteValuation = minAreaName === "landSite" && l3 && activeRate ? l3 * activeRate : 0;
 
   const landValue = minAreaVal * activeRate;
 
   const c2Area = n("constructionPlanArea");
-  const c2Rate = 1400;
-  const c2Valuation = c2Area * c2Rate;
+  const c2Rate = values?.constructionPlanRate !== undefined && values?.constructionPlanRate !== "" ? values.constructionPlanRate : "";
+  const c2Valuation = c2Area && parseFloat(c2Rate) ? c2Area * parseFloat(c2Rate) : 0;
 
-  const realizableValue = landValue;
-  const valuationAtPresentStage = landValue;
+  const realizableValue = landValue || 0;
+  const valuationAtPresentStage = landValue || 0;
 
   return {
-    landDocumentArea: l1 || "",
+    landDocumentArea: (values?.landDocumentArea !== undefined && values?.landDocumentArea !== null) ? values.landDocumentArea : 0,
     landDocumentRate,
-    landDocumentValuation: landDocumentValuation || "",
-    landPlanArea: l2 || "",
+    landDocumentValuation: landDocumentValuation || 0,
+    landPlanArea: (values?.landPlanArea !== undefined && values?.landPlanArea !== null) ? values.landPlanArea : 0,
     landPlanRate,
-    landPlanValuation: landPlanValuation || "",
-    landSiteArea: l3 || "",
+    landPlanValuation: landPlanValuation || 0,
+    landSiteArea: (values?.landSiteArea !== undefined && values?.landSiteArea !== null) ? values.landSiteArea : 0,
     landSiteRate,
-    landSiteValuation: landSiteValuation || "",
+    landSiteValuation: landSiteValuation || 0,
 
-    constructionDocumentArea: 0,
-    constructionDocumentRate: 0.0,
-    constructionDocumentValuation: "",
-    constructionSiteArea: 0,
-    constructionSiteRate: 0.0,
-    constructionSiteValuation: "",
+    constructionDocumentArea: (values?.constructionDocumentArea !== undefined && values?.constructionDocumentArea !== null) ? values.constructionDocumentArea : 0,
+    constructionDocumentRate: values?.constructionDocumentRate || "",
+    constructionDocumentValuation: values?.constructionDocumentValuation || 0,
+    constructionSiteArea: (values?.constructionSiteArea !== undefined && values?.constructionSiteArea !== null) ? values.constructionSiteArea : 0,
+    constructionSiteRate: values?.constructionSiteRate || "",
+    constructionSiteValuation: values?.constructionSiteValuation || 0,
     
-    constructionPlanArea: c2Area || "",
+    constructionPlanArea: (values?.constructionPlanArea !== undefined && values?.constructionPlanArea !== null) ? values.constructionPlanArea : 0,
     constructionPlanRate: c2Rate,
-    constructionPlanValuation: c2Valuation || "",
+    constructionPlanValuation: c2Valuation || 0,
 
-    amenitiesDetails: "NA",
-    amenitiesValue: 0,
-    liftAvailable: "NO",
-    buildingHeight: 0,
-    realizableValue: realizableValue || "",
-    constructionStage: "Foundation",
-    constructionStatus: "0%",
-    ValuationatPresentStage: valuationAtPresentStage || "",
-    constructionEstimateByCustomer: 0,
-    estimateRecommendedByValuer: 0,
-    marketRatePerSqft: 1400,
-    constructionAsPerPlan: "Yes",
-    ValuationasperGovtGuideline: values?.ValuationasperGovtGuideline || "",
+    amenitiesDetails: (values?.amenitiesDetails !== undefined && values?.amenitiesDetails !== null && values?.amenitiesDetails !== "") ? values.amenitiesDetails : undefined,
+    amenitiesValue: (values?.amenitiesValue !== undefined && values?.amenitiesValue !== null) ? values.amenitiesValue : 0,
+    liftAvailable: (values?.liftAvailable !== undefined && values?.liftAvailable !== null && values?.liftAvailable !== "") ? values.liftAvailable : undefined,
+    buildingHeight: (values?.buildingHeight !== undefined && values?.buildingHeight !== null) ? values.buildingHeight : 0,
+    realizableValue: realizableValue,
+    constructionStage: (values?.constructionStage !== undefined && values?.constructionStage !== null && values?.constructionStage !== "") ? values.constructionStage : undefined,
+    constructionStatus: values?.constructionStatus || "0%",
+    ValuationatPresentStage: valuationAtPresentStage,
+    constructionEstimateByCustomer: (values?.constructionEstimateByCustomer !== undefined && values?.constructionEstimateByCustomer !== null) ? values.constructionEstimateByCustomer : 0,
+    estimateRecommendedByValuer: (values?.estimateRecommendedByValuer !== undefined && values?.estimateRecommendedByValuer !== null) ? values.estimateRecommendedByValuer : 0,
+    marketRatePerSqft: (values?.marketRatePerSqft !== undefined && values?.marketRatePerSqft !== null && values?.marketRatePerSqft !== "") ? values.marketRatePerSqft : undefined,
+    constructionAsPerPlan: (values?.constructionAsPerPlan !== undefined && values?.constructionAsPerPlan !== null && values?.constructionAsPerPlan !== "") ? values.constructionAsPerPlan : undefined,
+    ValuationasperGovtGuideline: (values?.ValuationasperGovtGuideline !== undefined && values?.ValuationasperGovtGuideline !== null) ? values.ValuationasperGovtGuideline : 0,
   };
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// Analysis data builder
-// ═══════════════════════════════════════════════════════════════════════════
 const buildAnalysis = (extracted = {}, formData = {}) => {
   if (!extracted || Object.keys(extracted).length === 0) return null;
 
@@ -219,23 +220,8 @@ const InfoCard = ({ label, value, className = "" }) => (
     <span className="text-gray-800">{value}</span>
   </div>
 );
-// "#000000",
-// "#0000FF",
-//   "#008000",
-//   "#FFA500",
-//   "#800080",
-//   "#A52A2A",
-//   "#FFC0CB",
-//   "#808080",
-//   "#00FFFF",
-//   "#FF00FF",
-//   "#FFD700",
 
-const REMARK_COLORS = [
-
-  "#FF0000",
-
-];
+const REMARK_COLORS = ["#FF0000"];
 
 const RemarkEditor = ({ index, value, onChange, onRemove, canRemove }) => {
   const editorRef = useRef(null);
@@ -320,8 +306,7 @@ const RemarkEditor = ({ index, value, onChange, onRemove, canRemove }) => {
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => applyColor(color)}
-                    className={`w-6 h-6 rounded border ${selectedColor === color ? "ring-2 ring-blue-400" : ""
-                      }`}
+                    className={`w-6 h-6 rounded border ${selectedColor === color ? "ring-2 ring-blue-400" : ""}`}
                     style={{ backgroundColor: color }}
                     title={color}
                   />
@@ -340,8 +325,6 @@ const RemarkEditor = ({ index, value, onChange, onRemove, canRemove }) => {
                     style={{ background: "transparent" }}
                   />
                 </label>
-
-
               </div>
             </div>
 
@@ -367,8 +350,6 @@ const RemarkEditor = ({ index, value, onChange, onRemove, canRemove }) => {
             className="w-full min-h-[88px] rounded-md border border-gray-300 px-3 py-2 bg-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-sm leading-7 whitespace-pre-wrap overflow-auto"
             style={{ wordBreak: "break-word" }}
           />
-
-
         </div>
       </div>
     </div>
@@ -386,6 +367,8 @@ const ValuationDetails = ({
 }) => {
   const [form] = Form.useForm();
   const [remarks, setRemarks] = useState([]);
+  const formValues = Form.useWatch([], form) || {};
+  const hasValue = (name) => formValues[name] !== undefined && formValues[name] !== null && formValues[name] !== "";
 
   useEffect(() => {
     const currentValues = form.getFieldsValue();
@@ -487,26 +470,80 @@ const ValuationDetails = ({
     };
   }, [registerSectionSubmitter, sectionId, form, remarks]);
 
-  const AreaRateRow = ({ prefix, labelPrefix }) => (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3 p-3 bg-gray-50 rounded">
-      <Form.Item label={`${labelPrefix} Area (sq.ft)`} name={`${prefix}Area`} className="mb-0">
-        <Input type="number" placeholder="0" />
-      </Form.Item>
-      <Form.Item label="Rate per sq.ft" name={`${prefix}Rate`} className="mb-0">
-        <Input type="number" placeholder="0" />
-      </Form.Item>
-      <Form.Item label="Valuation (auto)" name={`${prefix}Valuation`} className="mb-0">
-        <Input type="number" disabled />
-      </Form.Item>
-    </div>
-  );
-
   const analysis = buildAnalysis(extractedData, isEdit);
   const hasExtracted = !!analysis;
 
   return (
     <div className="max-w-5xl mx-auto p-4 bg-white rounded shadow">
-      <h2 className="text-2xl font-bold mb-6 text-red-600">Valuation Details</h2>
+      <style>{`
+        .custom-form-item-wrapper .custom-label {
+          position: absolute;
+          top: -8px;
+          left: 10px;
+          background: #fff;
+          padding: 0 6px;
+          font-size: 11px;
+          color: #475569;
+          font-weight: 600;
+          z-index: 2;
+          opacity: 0;
+          transform: translateY(12px);
+          transition: opacity 0.15s ease, transform 0.15s ease;
+          pointer-events: none;
+        }
+        .custom-form-item-wrapper:focus-within .custom-label,
+        .custom-form-item-wrapper:has(.ant-form-item-has-error) .custom-label,
+        .custom-form-item-wrapper.has-value .custom-label {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        .custom-form-item-wrapper .ant-select-selector {
+          height: 40px !important;
+          border-radius: 6px !important;
+          display: flex !important;
+          align-items: center !important;
+          border: 1px solid #d1d5db !important;
+          box-shadow: none !important;
+        }
+        .custom-form-item-wrapper .ant-select-selection-placeholder {
+          line-height: 38px !important;
+        }
+        .custom-form-item-wrapper .ant-select-selection-item {
+          line-height: 38px !important;
+          color: #0f172a !important;
+          font-weight: 500 !important;
+        }
+        .custom-form-item-wrapper .ant-input {
+          color: #0f172a !important;
+          font-weight: 500 !important;
+        }
+        .custom-form-item-wrapper:has(.ant-form-item-has-error) .custom-label {
+          color: #ff4d4f !important;
+        }
+        .custom-form-item-wrapper:has(.ant-form-item-has-error) .ant-select-selector,
+        .custom-form-item-wrapper:has(.ant-form-item-has-error) .ant-input,
+        .custom-form-item-wrapper:has(.ant-form-item-has-error) .ant-input-affix-wrapper {
+          border-color: #ff4d4f !important;
+        }
+        .custom-form-item-wrapper .ant-form-item-explain-error {
+          color: #ff4d4f !important;
+          font-size: 12px;
+          margin-top: 4px;
+        }
+        .valuation-table th {
+          font-weight: 600;
+          color: #475569;
+          background-color: #f8fafc;
+          border-bottom: 1px solid #e2e8f0;
+          padding: 10px;
+        }
+        .valuation-table td {
+          padding: 8px 10px;
+          border-bottom: 1px solid #f1f5f9;
+        }
+      `}</style>
+
+      <h2 className="text-xl font-bold mb-6 text-slate-800">Valuation</h2>
 
       <Form
         layout="vertical"
@@ -514,211 +551,322 @@ const ValuationDetails = ({
         onFinish={handleSubmit}
         onValuesChange={handleValuesChange}
       >
-        <Divider orientation="left">Land</Divider>
-        <p className="font-semibold mb-1 text-gray-600">As per Document (L1)</p>
-        <AreaRateRow prefix="landDocument" labelPrefix="Document" />
-        <p className="font-semibold mb-1 text-gray-600">Plan (L2)</p>
-        <AreaRateRow prefix="landPlan" labelPrefix="Plan" />
-        <p className="font-semibold mb-1 text-gray-600">Site (L3)</p>
-        <AreaRateRow prefix="landSite" labelPrefix="Site" />
+        {/* Table representation for Land & Construction */}
+        <div className="border border-slate-200 rounded-lg overflow-hidden mb-8 bg-white">
+          <table className="w-full text-left border-collapse valuation-table">
+            <thead>
+              <tr>
+                <th style={{ width: "15%" }}></th>
+                <th style={{ width: "20%" }}>As per</th>
+                <th style={{ width: "20%" }}>Area</th>
+                <th style={{ width: "25%" }}>Rate per sq.ft</th>
+                <th style={{ width: "20%" }}>Valuation</th>
+              </tr>
+            </thead>
+            <tbody>
+              {/* Land rows */}
+              <tr>
+                <td rowSpan={3} className="font-bold text-slate-800 border-r border-slate-200 align-top text-center bg-slate-50 pt-4">
+                  Land
+                </td>
+                <td className="text-slate-600 align-middle pl-4">Document (L1)</td>
+                <td>
+                  <Form.Item name="landDocumentArea" style={{ margin: 0 }}>
+                    <Input style={{ height: "40px", borderRadius: "6px" }} placeholder="0" />
+                  </Form.Item>
+                </td>
+                <td>
+                  <Form.Item name="landDocumentRate" style={{ margin: 0 }}>
+                    <Input style={{ height: "40px", borderRadius: "6px" }} placeholder="" />
+                  </Form.Item>
+                </td>
+                <td>
+                  <Form.Item name="landDocumentValuation" style={{ margin: 0 }}>
+                    <Input style={{ height: "40px", borderRadius: "6px" }} placeholder="0" disabled />
+                  </Form.Item>
+                </td>
+              </tr>
+              <tr>
+                <td className="text-slate-600 align-middle pl-4">Plan (L2)</td>
+                <td>
+                  <Form.Item name="landPlanArea" style={{ margin: 0 }}>
+                    <Input style={{ height: "40px", borderRadius: "6px" }} placeholder="0" />
+                  </Form.Item>
+                </td>
+                <td>
+                  <Form.Item name="landPlanRate" style={{ margin: 0 }}>
+                    <Input style={{ height: "40px", borderRadius: "6px" }} placeholder="" />
+                  </Form.Item>
+                </td>
+                <td>
+                  <Form.Item name="landPlanValuation" style={{ margin: 0 }}>
+                    <Input style={{ height: "40px", borderRadius: "6px" }} placeholder="0" disabled />
+                  </Form.Item>
+                </td>
+              </tr>
+              <tr>
+                <td className="text-slate-600 align-middle pl-4 border-b border-slate-200">Site (L3)</td>
+                <td className="border-b border-slate-200">
+                  <Form.Item name="landSiteArea" style={{ margin: 0 }}>
+                    <Input style={{ height: "40px", borderRadius: "6px" }} placeholder="0" />
+                  </Form.Item>
+                </td>
+                <td className="border-b border-slate-200">
+                  <Form.Item name="landSiteRate" style={{ margin: 0 }}>
+                    <Input style={{ height: "40px", borderRadius: "6px" }} placeholder="" />
+                  </Form.Item>
+                </td>
+                <td className="border-b border-slate-200">
+                  <Form.Item name="landSiteValuation" style={{ margin: 0 }}>
+                    <Input style={{ height: "40px", borderRadius: "6px" }} placeholder="0" disabled />
+                  </Form.Item>
+                </td>
+              </tr>
 
-        <Divider orientation="left">Construction</Divider>
-        <p className="font-semibold mb-1 text-gray-600">As per Document (L1)</p>
-        <AreaRateRow prefix="constructionDocument" labelPrefix="Document" />
-        <p className="font-semibold mb-1 text-gray-600">Plan (L2)</p>
-        <AreaRateRow prefix="constructionPlan" labelPrefix="Plan" />
-        <p className="font-semibold mb-1 text-gray-600">Site (L3)</p>
-        <AreaRateRow prefix="constructionSite" labelPrefix="Site" />
-
-        <Divider orientation="left">Summary</Divider>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Form.Item label="Amenities (Mention Details)" name="amenitiesDetails">
-            <Input />
-          </Form.Item>
-          <Form.Item label="Value of Amenities (A)" name="amenitiesValue">
-            <Input type="number" />
-          </Form.Item>
-          <Form.Item label="Lift Available? (Yes / No)" name="liftAvailable">
-            <Select allowClear>
-              <Option value="YES">Yes</Option>
-              <Option value="NO">No</Option>
-              <Option value="NA">NA</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item label="Height of the Building (in Meters)" name="buildingHeight">
-            <Input type="number" />
-          </Form.Item>
-          <Form.Item
-            label="Realizable Value after Completion (L3 + C3 + A)"
-            name="realizableValue"
-            className="md:col-span-2"
-          >
-            <Input type="number" disabled />
-          </Form.Item>
-          <Form.Item
-            label="Construction Stage"
-            name="constructionStage"
-            className="md:col-span-2"
-          >
-            <Select allowClear>
-              {[
-                "Foundation",
-                "Plinth",
-                "Brick Work",
-                "RCC",
-                "Plaster",
-                "Tiling",
-                "Internal Finishing",
-                "Completed",
-                "G.F PROPOSED",
-                "OPEN PLOT",
-              ].map((v) => (
-                <Option key={v} value={v}>{v}</Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item label="Construction %" name="constructionStatus">
-            <Input placeholder="e.g. 0%" />
-          </Form.Item>
-          <Form.Item label="Valuation at Current Stage" name="ValuationatPresentStage">
-            <Input type="number" />
-          </Form.Item>
-          <Form.Item
-            label="Valuation as per Govt. Guideline"
-            name="ValuationasperGovtGuideline"
-          >
-            <Input type="number" />
-          </Form.Item>
-          <Form.Item
-            label="Construction Estimate Shared by Customer"
-            name="constructionEstimateByCustomer"
-          >
-            <Input type="number" />
-          </Form.Item>
-          <Form.Item
-            label="Estimate Recommended (by Valuer)"
-            name="estimateRecommendedByValuer"
-          >
-            <Input type="number" />
-          </Form.Item>
-          <Form.Item
-            label="Market Rate for Similar Properties (Rs/sq.ft)"
-            name="marketRatePerSqft"
-          >
-            <Input placeholder="e.g. 1600-1700" />
-          </Form.Item>
-          <Form.Item
-            label="Whether Construction is as per Plan / Permission / By-Laws"
-            name="constructionAsPerPlan"
-          >
-            <Select allowClear>
-              <Option value="Yes">Yes</Option>
-              <Option value="No">No</Option>
-              <Option value="NA">NA</Option>
-            </Select>
-          </Form.Item>
+              {/* Construction rows */}
+              <tr>
+                <td rowSpan={3} className="font-bold text-slate-800 border-r border-slate-200 align-top text-center bg-slate-50 pt-4">
+                  Construction
+                </td>
+                <td className="text-slate-600 align-middle pl-4">Document (C1)</td>
+                <td>
+                  <Form.Item name="constructionDocumentArea" style={{ margin: 0 }}>
+                    <Input style={{ height: "40px", borderRadius: "6px" }} placeholder="0" />
+                  </Form.Item>
+                </td>
+                <td>
+                  <Form.Item name="constructionDocumentRate" style={{ margin: 0 }}>
+                    <Input style={{ height: "40px", borderRadius: "6px" }} placeholder="" />
+                  </Form.Item>
+                </td>
+                <td>
+                  <Form.Item name="constructionDocumentValuation" style={{ margin: 0 }}>
+                    <Input style={{ height: "40px", borderRadius: "6px" }} placeholder="0" disabled />
+                  </Form.Item>
+                </td>
+              </tr>
+              <tr>
+                <td className="text-slate-600 align-middle pl-4">Plan (C2)</td>
+                <td>
+                  <Form.Item name="constructionPlanArea" style={{ margin: 0 }}>
+                    <Input style={{ height: "40px", borderRadius: "6px" }} placeholder="0" />
+                  </Form.Item>
+                </td>
+                <td>
+                  <Form.Item name="constructionPlanRate" style={{ margin: 0 }}>
+                    <Input style={{ height: "40px", borderRadius: "6px" }} placeholder="" />
+                  </Form.Item>
+                </td>
+                <td>
+                  <Form.Item name="constructionPlanValuation" style={{ margin: 0 }}>
+                    <Input style={{ height: "40px", borderRadius: "6px" }} placeholder="0" disabled />
+                  </Form.Item>
+                </td>
+              </tr>
+              <tr>
+                <td className="text-slate-600 align-middle pl-4">Site (C3)</td>
+                <td>
+                  <Form.Item name="constructionSiteArea" style={{ margin: 0 }}>
+                    <Input style={{ height: "40px", borderRadius: "6px" }} placeholder="0" />
+                  </Form.Item>
+                </td>
+                <td>
+                  <Form.Item name="constructionSiteRate" style={{ margin: 0 }}>
+                    <Input style={{ height: "40px", borderRadius: "6px" }} placeholder="" />
+                  </Form.Item>
+                </td>
+                <td>
+                  <Form.Item name="constructionSiteValuation" style={{ margin: 0 }}>
+                    <Input style={{ height: "40px", borderRadius: "6px" }} placeholder="0" disabled />
+                  </Form.Item>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        <Divider orientation="left">
-          <span className="font-bold text-2xl  text-red-600">Observations / Remarks — Section 11</span>
-        </Divider>
-
-        {hasExtracted && (
-          <div className="bg-blue-50 border border-blue-300 rounded-lg p-3 mb-4 text-sm text-blue-800 flex gap-2">
-            <span className="text-lg">✅</span>
-            <span>
-              <b>Document se auto-fill ho gaya:</b> Seller/buyer names, person met,
-              contact no., land area aur rate remarks mein inject ho gaye hain.
-            </span>
+        <h3 className="text-lg font-bold mb-4 text-slate-800">Other Details</h3>
+        
+        {/* Row 1: Amenities & Value of Amenities */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-4">
+          <div className={`custom-form-item-wrapper ${hasValue("amenitiesDetails") ? "has-value" : ""}`} style={{ position: "relative", marginTop: "8px" }}>
+            <span className="custom-label">Amenities</span>
+            <Form.Item name="amenitiesDetails" style={{ margin: 0 }}>
+              <Input style={{ height: "40px", borderRadius: "6px", border: "1px solid #d1d5db" }} placeholder="Amenities" />
+            </Form.Item>
           </div>
-        )}
 
-        <div className="border rounded-lg p-4 bg-gray-50 mb-4">
-          {remarks.map((remark, index) => (
-            <RemarkEditor
-              key={index}
-              index={index}
-              value={remark}
-              onChange={handleRemarkChange}
-              onRemove={removeRemarkField}
-              canRemove={index >= 1}
-            />
-          ))}
+          <div className={`custom-form-item-wrapper ${hasValue("amenitiesValue") ? "has-value" : ""}`} style={{ position: "relative", marginTop: "8px" }}>
+            <span className="custom-label">Value of Amenities (D)</span>
+            <Form.Item name="amenitiesValue" style={{ margin: 0 }}>
+              <Input style={{ height: "40px", borderRadius: "6px", border: "1px solid #d1d5db" }} placeholder="Value of Amenities (D)" />
+            </Form.Item>
+          </div>
+        </div>
 
+        {/* Row 2: Lift Available? & Height of Building */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-4">
+          <div className={`custom-form-item-wrapper ${hasValue("liftAvailable") ? "has-value" : ""}`} style={{ position: "relative", marginTop: "8px" }}>
+            <span className="custom-label">Lift Available?</span>
+            <Form.Item name="liftAvailable" style={{ margin: 0 }}>
+              <Select allowClear className="w-full" placeholder="Lift Available?">
+                <Option value="YES">Yes</Option>
+                <Option value="NO">No</Option>
+              </Select>
+            </Form.Item>
+          </div>
+
+          <div className={`custom-form-item-wrapper ${hasValue("buildingHeight") ? "has-value" : ""}`} style={{ position: "relative", marginTop: "8px" }}>
+            <span className="custom-label">Height of Building (in m.)</span>
+            <Form.Item name="buildingHeight" style={{ margin: 0 }}>
+              <Input style={{ height: "40px", borderRadius: "6px", border: "1px solid #d1d5db" }} placeholder="Height of Building (in m.)" />
+            </Form.Item>
+          </div>
+        </div>
+
+        {/* Row 3: Realizable Value & Construction Stage */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-4">
+          <div className={`custom-form-item-wrapper ${hasValue("realizableValue") ? "has-value" : ""}`} style={{ position: "relative", marginTop: "8px" }}>
+            <span className="custom-label">Realizable Value after completion</span>
+            <Form.Item name="realizableValue" style={{ margin: 0 }}>
+              <Input style={{ height: "40px", borderRadius: "6px", border: "1px solid #d1d5db" }} placeholder="Realizable Value after completion" disabled />
+            </Form.Item>
+          </div>
+
+          <div className={`custom-form-item-wrapper ${hasValue("constructionStage") ? "has-value" : ""}`} style={{ position: "relative", marginTop: "8px" }}>
+            <span className="custom-label">Construction Stage</span>
+            <Form.Item name="constructionStage" style={{ margin: 0 }}>
+              <Select allowClear className="w-full" placeholder="Construction Stage">
+                {[
+                  "Foundation",
+                  "Plinth",
+                  "RCC",
+                  "Brick Work",
+                  "Plaster",
+                  "Tiling",
+                  "Internal Finishing",
+                  "Completed",
+                ].map((v) => (
+                  <Option key={v} value={v}>{v}</Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </div>
+        </div>
+
+        {/* Row 4: Construction % & Valuation at current stage */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-4">
+          <div className={`custom-form-item-wrapper ${hasValue("constructionStatus") ? "has-value" : ""}`} style={{ position: "relative", marginTop: "8px" }}>
+            <span className="custom-label">Construction %</span>
+            <Form.Item name="constructionStatus" style={{ margin: 0 }}>
+              <Select allowClear className="w-full" placeholder="Construction %">
+                {["0%", "10%", "20%", "30%", "40%", "50%", "60%", "70%", "80%", "90%", "100%"].map((pct) => (
+                  <Option key={pct} value={pct}>{pct}</Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </div>
+
+          <div className={`custom-form-item-wrapper ${hasValue("ValuationatPresentStage") ? "has-value" : ""}`} style={{ position: "relative", marginTop: "8px" }}>
+            <span className="custom-label">Valuation at current stage</span>
+            <Form.Item name="ValuationatPresentStage" style={{ margin: 0 }}>
+              <Input style={{ height: "40px", borderRadius: "6px", border: "1px solid #d1d5db" }} placeholder="Valuation at current stage" />
+            </Form.Item>
+          </div>
+        </div>
+
+        {/* Row 5: Valuation as per Govt. guideline & Estimate Amount shared by customer */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-4">
+          <div className={`custom-form-item-wrapper ${hasValue("ValuationasperGovtGuideline") ? "has-value" : ""}`} style={{ position: "relative", marginTop: "8px" }}>
+            <span className="custom-label">Valuation as per Govt. guideline</span>
+            <Form.Item name="ValuationasperGovtGuideline" style={{ margin: 0 }}>
+              <Input style={{ height: "40px", borderRadius: "6px", border: "1px solid #d1d5db" }} placeholder="Valuation as per Govt. guideline" />
+            </Form.Item>
+          </div>
+
+          <div className={`custom-form-item-wrapper ${hasValue("constructionEstimateByCustomer") ? "has-value" : ""}`} style={{ position: "relative", marginTop: "8px" }}>
+            <span className="custom-label">Estimate Amount shared by customer</span>
+            <Form.Item name="constructionEstimateByCustomer" style={{ margin: 0 }}>
+              <Input style={{ height: "40px", borderRadius: "6px", border: "1px solid #d1d5db" }} placeholder="Estimate Amount shared by customer" />
+            </Form.Item>
+          </div>
+        </div>
+
+        {/* Row 6: Estimate recommended (by valuer) & Market rate for similar properties */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-4">
+          <div className={`custom-form-item-wrapper ${hasValue("estimateRecommendedByValuer") ? "has-value" : ""}`} style={{ position: "relative", marginTop: "8px" }}>
+            <span className="custom-label">Estimate recommended (by valuer)</span>
+            <Form.Item name="estimateRecommendedByValuer" style={{ margin: 0 }}>
+              <Input style={{ height: "40px", borderRadius: "6px", border: "1px solid #d1d5db" }} placeholder="Estimate recommended (by valuer)" />
+            </Form.Item>
+          </div>
+
+          <div className={`custom-form-item-wrapper ${hasValue("marketRatePerSqft") ? "has-value" : ""}`} style={{ position: "relative", marginTop: "8px" }}>
+            <span className="custom-label">Market rate for similar properties (Rs/sq.ft)</span>
+            <Form.Item name="marketRatePerSqft" style={{ margin: 0 }}>
+              <Input style={{ height: "40px", borderRadius: "6px", border: "1px solid #d1d5db" }} placeholder="Market rate for similar properties (Rs/sq.ft)" />
+            </Form.Item>
+          </div>
+        </div>
+
+        {/* Row 7: Construction as per plan / by laws? */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-4">
+          <div className={`custom-form-item-wrapper ${hasValue("constructionAsPerPlan") ? "has-value" : ""}`} style={{ position: "relative", marginTop: "8px" }}>
+            <span className="custom-label">Construction as per plan / by laws?</span>
+            <Form.Item name="constructionAsPerPlan" style={{ margin: 0 }}>
+              <Select allowClear className="w-full" placeholder="Construction as per plan / by laws?">
+                <Option value="Yes">Yes</Option>
+                <Option value="No">No</Option>
+              </Select>
+            </Form.Item>
+          </div>
+        </div>
+
+
+
+
+
+        {/* Save & Proceed Button */}
+        <div style={{ marginTop: "24px" }}>
           <Button
-            type="dashed"
-            onClick={addRemarkField}
-            icon={<PlusOutlined />}
-            className="mt-1"
+            htmlType="submit"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "8px 24px",
+              borderRadius: "999px",
+              border: "2px solid #0056b3",
+              background: "transparent",
+              color: "#0056b3",
+              fontWeight: 600,
+              fontSize: "14px",
+              height: "42px",
+              cursor: "pointer",
+              boxShadow: "none"
+            }}
           >
-            Add Remark
+            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+              <polyline points="17 21 17 13 7 13 7 21" />
+              <polyline points="7 3 7 8 15 8" />
+            </svg>
+            Save & Proceed
           </Button>
         </div>
 
-        {analysis && (
-          <>
-            <Divider orientation="left">
-              <span className="font-bold text-orange-600">Analysis — Extracted Document Data</span>
-            </Divider>
-
-            <div className="border border-orange-200 rounded-lg overflow-hidden mb-6">
-              <div className="bg-orange-500 text-white px-4 py-2 text-sm font-semibold flex flex-wrap gap-4">
-                <span>📄 {analysis.docType}</span>
-                <span>| Reg No: {analysis.regNo}</span>
-                <span>| Date: {analysis.regDate}</span>
-              </div>
-
-              <div className="p-4 space-y-2">
-                {[
-                  { q: "As per doc plot area", a: `${analysis.plotArea}${analysis.plotDim !== "—" ? ` (${analysis.plotDim})` : ""}` },
-                  { q: "What is land uses of property", a: analysis.propUse },
-                  { q: "The property is Leasehold or Freehold", a: analysis.docType === "Conveyance" ? "Freehold (Conveyance deed)" : "Check document" },
-                  { q: "What is the issue in this property", a: "To be filled by valuer after inspection" },
-                  { q: "What is uses of this property", a: `${analysis.propType} — ${analysis.propUse}` },
-                  { q: "Which kind of documents I received", a: `${analysis.docType} (Reg: ${analysis.regNo}, Date: ${analysis.regDate})` },
-                ].map(({ q, a }, i) => (
-                  <div key={i} className="flex gap-3 p-3 bg-orange-50 rounded">
-                    <span className="text-orange-500 font-bold min-w-[20px] mt-0.5">→</span>
-                    <div className="text-sm">
-                      <b className="text-orange-700">{q}:</b>
-                      <span className="ml-2 text-gray-800">{a}</span>
-                    </div>
-                  </div>
-                ))}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3 pt-3 border-t border-orange-200">
-                  <InfoCard label="SELLER" value={analysis.sellers} />
-                  <InfoCard label="BUYER" value={analysis.buyers} />
-                  {analysis.address && <InfoCard label="ADDRESS" value={analysis.address} className="md:col-span-2" />}
-                  {analysis.boundaries && <InfoCard label="BOUNDARIES" value={analysis.boundaries} className="md:col-span-2" />}
-                </div>
-
-                <details className="mt-3">
-                  <summary className="cursor-pointer text-xs text-orange-600 font-semibold hover:underline">
-                    View full extracted JSON ▼
-                  </summary>
-                  <pre className="mt-2 text-xs bg-gray-50 border rounded p-3 overflow-auto max-h-64 text-gray-600 leading-relaxed">
-                    {JSON.stringify(analysis.raw, null, 2)}
-                  </pre>
-                </details>
-              </div>
-            </div>
-          </>
-        )}
-
+        {/* Actions */}
         {showActionButtons && (
-          <Form.Item className="lg:col-span-2 text-end">
+          <div className="text-right mt-4 border-t pt-4">
             {onBack && (
-              <Button
-                type="default"
-                onClick={onBack}
-                className="mr-2 px-4 py-2 bg-gray-500 text-white rounded"
-              >
+              <Button onClick={onBack} className="mr-2">
                 Back
               </Button>
             )}
-            <Button type="primary" htmlType="submit">Submit</Button>
-          </Form.Item>
+            <Button type="primary" htmlType="submit">
+              Submit
+            </Button>
+          </div>
         )}
       </Form>
     </div>
