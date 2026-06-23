@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
-import { Edit3, Trash2, Plus } from "lucide-react";
+import { Edit3, Trash2, Plus, AlertCircle } from "lucide-react";
 
 import { fetchPendingCases } from "../../redux/features/assignedCase/assignedCasesThunk";
 import { assignCase, deletedCases } from "../../redux/features/case/caseThunks";
@@ -170,6 +170,7 @@ const Pending = ({ selectedMonth }) => {
       title: "Bank",
       dataIndex: "bankName",
       key: "bankName",
+      width: 120,
       render: (bankName) => (
         <Tag color={getBankTagColor(bankName)}>{bankName}</Tag>
       ),
@@ -177,10 +178,11 @@ const Pending = ({ selectedMonth }) => {
     {
       title: "Customer Name",
       key: "displayCustomerName",
+      width: 180,
       render: (_, record) => (
         <Link
           to={`/bank/${getBankRoute(record)}/${record._id}`}
-          className="text-blue-600 hover:underline"
+          className="text-blue-600 hover:text-blue-800 font-semibold hover:underline"
         >
           {getDisplayCustomerName(record)}
         </Link>
@@ -189,32 +191,111 @@ const Pending = ({ selectedMonth }) => {
     {
       title: "Address as per Legal Document",
       key: "addressLegal",
-      render: (_, record) => getDisplayAddress(record),
+      width: 250,
+      render: (_, record) => (
+        <div style={{ wordBreak: "break-word", whiteSpace: "normal", fontSize: "12px", color: "#475569", lineHeight: "1.4" }}>
+          {getDisplayAddress(record)}
+        </div>
+      ),
     },
     {
       title: "Contact",
       key: "customerNo",
-      render: (_, record) => getDisplayContact(record),
+      width: 130,
+      render: (_, record) => (
+        <span style={{ fontSize: "12px", color: "#334155", fontWeight: 500 }}>
+          {getDisplayContact(record)}
+        </span>
+      ),
     },
     {
       title: "Date Added",
       key: "createdAt",
+      width: 130,
       render: (_, record) => {
         const date = getCaseDate(record);
-        return date ? dayjs(date).format("DD/MM/YYYY hh:mm A") : "N/A";
+        return date ? (
+          <div style={{ fontSize: "12px", color: "#475569" }}>
+            <div style={{ fontWeight: 500 }}>{dayjs(date).format("DD/MM/YYYY")}</div>
+            <div style={{ fontSize: "10px", color: "#94a3b8", marginTop: "2px" }}>{dayjs(date).format("hh:mm A")}</div>
+          </div>
+        ) : (
+          <span className="text-gray-400 text-xs">—</span>
+        );
+      },
+    },
+    {
+      title: "FO Declined",
+      key: "declineReason",
+      width: 220,
+      render: (_, record) => {
+        const isDeclined = record.approvalStatus === "Declined";
+        if (!isDeclined || !record.declineReason) {
+          return <span className="text-gray-400 text-xs italic">—</span>;
+        }
+        return (
+          <div
+            style={{
+              background: "#fff1f2",
+              border: "1px solid #ffe4e6",
+              borderRadius: 8,
+              padding: "8px 12px",
+              maxWidth: 200,
+              boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.02)"
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 5,
+                marginBottom: 4,
+              }}
+            >
+              <AlertCircle size={13} color="#e11d48" />
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: "#e11d48",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                FO Denied
+              </span>
+            </div>
+            <p
+              style={{
+                fontSize: 12,
+                color: "#9f1239",
+                fontWeight: 500,
+                margin: 0,
+                lineHeight: 1.4,
+                wordBreak: "break-word",
+                whiteSpace: "normal",
+                overflowWrap: "anywhere",
+              }}
+            >
+              {record.declineReason}
+            </p>
+          </div>
+        );
       },
     },
     {
       title: "Assigned",
       key: "assigned",
-      render: (record) => {
+      width: 170,
+      render: (_, record) => {
         const assignedFO = fieldOfficers.find(
           (fieldOfficer) => fieldOfficer._id === record.assignedTo
         );
 
         return record.status === "Work in Progress" ? (
-          <div className="text-green-700 font-semibold">
-            Assigned to: {assignedFO?.name || "Unknown"}
+          <div className="flex items-center gap-1.5 text-emerald-700 font-medium bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1 text-xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>FO: {assignedFO?.name || "Unknown"}</span>
           </div>
         ) : (
           <Button
@@ -223,8 +304,9 @@ const Pending = ({ selectedMonth }) => {
               setCurrentCase(record);
               setIsModalVisible(true);
             }}
+            className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 border-none rounded-lg shadow-sm font-medium text-xs h-8"
           >
-            Assign <Plus size={20} />
+            Assign <Plus size={14} />
           </Button>
         );
       },
@@ -232,13 +314,15 @@ const Pending = ({ selectedMonth }) => {
     {
       title: "Action",
       key: "action",
+      width: 100,
       render: (record) => (
-        <div className="flex gap-4 items-center">
+        <div className="flex gap-2 items-center justify-center">
           <Link
             to={`/bank/${getBankRoute(record)}/edit/${record._id}`}
-            className="!text-green-600 hover:underline border p-1"
+            className="flex items-center justify-center w-8 h-8 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 transition-colors shadow-sm"
+            title="Edit Case"
           >
-            <Edit3 size={38} />
+            <Edit3 size={15} />
           </Link>
 
           <Popconfirm
@@ -248,9 +332,12 @@ const Pending = ({ selectedMonth }) => {
             cancelText="No"
           >
             <Button
-              className="!text-red-600 hover:underline"
+              type="text"
+              danger
+              className="flex items-center justify-center w-8 h-8 rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 transition-colors shadow-sm p-0"
+              title="Delete Case"
             >
-              <Trash2 size={18} />
+              <Trash2 size={15} />
             </Button>
           </Popconfirm>
         </div>
@@ -259,27 +346,33 @@ const Pending = ({ selectedMonth }) => {
     {
       title: "Upload Document",
       key: "upload",
+      width: 150,
       render: (record) => (
-        <ImageUploader
-          caseId={record._id}
-          bankName={record.bankName}
-          fetchData={fetchPendingList}
-        />
+        <div className="compact-uploader">
+          <ImageUploader
+            caseId={record._id}
+            bankName={record.bankName}
+            fetchData={fetchPendingList}
+          />
+        </div>
       ),
     },
     {
       title: "Attachments",
       key: "AttachDocuments",
+      width: 160,
       render: (record) => {
         const attachments = [
           ...(record.AttachDocuments || []),
           ...(record.atsDocuments || []),
         ];
 
-        if (!attachments || attachments.length === 0) return "No Attachments";
+        if (!attachments || attachments.length === 0) {
+          return <span className="text-gray-400 text-xs italic">No Attachments</span>;
+        }
 
         return (
-          <div className="flex gap-1">
+          <div className="flex flex-col gap-1">
             {attachments.map((attachment, index) => {
               const attachmentUrl = attachment?.url || attachment;
               const fileName = attachmentUrl?.split("/").pop();
@@ -291,9 +384,11 @@ const Pending = ({ selectedMonth }) => {
                   download
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:underline !flex"
+                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline bg-blue-50 border border-blue-100 rounded-md px-2 py-0.5 max-w-[140px]"
+                  title={fileName}
                 >
-                  📄 {fileName?.slice(0, 12) || `Attachment ${index + 1}`}
+                  <span style={{ fontSize: "10px" }}>📄</span>
+                  <span className="truncate" style={{ fontSize: "11px" }}>{fileName || `Doc ${index + 1}`}</span>
                 </a>
               );
             })}
@@ -304,45 +399,93 @@ const Pending = ({ selectedMonth }) => {
   ];
 
   return (
-    <div className="bg-gray-100 p-6 rounded-xl shadow-md min-h-screen">
-      <div className="flex items-center gap-2 mb-4 flex-wrap">
-        <Select
-          mode="multiple"
-          style={{ minWidth: 200 }}
-          placeholder="Filter by Bank"
-          value={selectedBanks}
-          onChange={(values) => {
-            setSelectedBanks(values);
-            setCurrentPage(1);
-          }}
-          allowClear
-          maxTagCount={2}
-        >
-          {(pendingFilterOptions?.banks || []).map((bank) => (
-            <Option key={bank} value={bank}>
-              {bank}
-            </Option>
-          ))}
-        </Select>
+    <div className="bg-gray-50 p-6 rounded-2xl shadow-sm min-h-screen">
+      <style>{`
+        /* Premium Antd Table Styles */
+        .premium-table .ant-table {
+          background: #ffffff !important;
+          border-radius: 12px !important;
+        }
+        .premium-table .ant-table-thead > tr > th {
+          background: #f8fafc !important;
+          color: #475569 !important;
+          font-weight: 600 !important;
+          font-size: 13px !important;
+          border-bottom: 1px solid #e2e8f0 !important;
+          padding: 12px 14px !important;
+          white-space: nowrap;
+        }
+        .premium-table .ant-table-tbody > tr > td {
+          padding: 12px 14px !important;
+          border-bottom: 1px solid #f1f5f9 !important;
+          vertical-align: middle !important;
+        }
+        .premium-table .ant-table-tbody > tr:hover > td {
+          background: #f8fafc !important;
+        }
+        .premium-table .ant-table-container {
+          border-radius: 12px !important;
+          overflow: hidden;
+          border: 1px solid #e2e8f0 !important;
+        }
+        .premium-table .ant-table-pagination.ant-pagination {
+          margin: 16px 0 !important;
+        }
+        .compact-uploader .image-uploader-container {
+          padding: 0 !important;
+          margin: 0 !important;
+        }
+        .compact-uploader .ant-btn {
+          height: 32px !important;
+          padding: 4px 12px !important;
+          font-size: 12px !important;
+          border-radius: 6px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          gap: 6px !important;
+        }
+      `}</style>
 
-        <Select
-          mode="multiple"
-          style={{ minWidth: 200 }}
-          placeholder="Filter by Status"
-          value={selectedStatuses}
-          onChange={(values) => {
-            setSelectedStatuses(values);
-            setCurrentPage(1);
-          }}
-          allowClear
-          maxTagCount={2}
-        >
-          {(pendingFilterOptions?.statuses || []).map((status) => (
-            <Option key={status} value={status}>
-              {status}
-            </Option>
-          ))}
-        </Select>
+      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between gap-4 mb-6 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
+          <Select
+            mode="multiple"
+            style={{ minWidth: 220 }}
+            placeholder="Filter by Bank"
+            value={selectedBanks}
+            onChange={(values) => {
+              setSelectedBanks(values);
+              setCurrentPage(1);
+            }}
+            allowClear
+            maxTagCount={2}
+          >
+            {(pendingFilterOptions?.banks || []).map((bank) => (
+              <Option key={bank} value={bank}>
+                {bank}
+              </Option>
+            ))}
+          </Select>
+
+          <Select
+            mode="multiple"
+            style={{ minWidth: 200 }}
+            placeholder="Filter by Status"
+            value={selectedStatuses}
+            onChange={(values) => {
+              setSelectedStatuses(values);
+              setCurrentPage(1);
+            }}
+            allowClear
+            maxTagCount={2}
+          >
+            {(pendingFilterOptions?.statuses || []).map((status) => (
+              <Option key={status} value={status}>
+                {status}
+              </Option>
+            ))}
+          </Select>
+        </div>
 
         <Search
           placeholder="Search customer names, addresses..."
@@ -352,14 +495,14 @@ const Pending = ({ selectedMonth }) => {
             setCurrentPage(1);
           }}
           value={searchText}
-          style={{ width: 300 }}
+          style={{ width: 320 }}
         />
       </div>
 
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold">All Bank Valuation Reports</h2>
-        <span className="text-sm text-gray-500">
-          Showing {monthFilteredPendingCases.length} records (newest first)
+        <h2 className="text-xl font-bold text-gray-800 tracking-tight">All Bank Valuation Reports</h2>
+        <span className="text-sm font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+          {monthFilteredPendingCases.length} records (newest first)
         </span>
       </div>
 
@@ -382,9 +525,8 @@ const Pending = ({ selectedMonth }) => {
             setCurrentPage(1);
           }
         }}
-        bordered
-        className="rounded-xl"
-        scroll={{ x: true }}
+        className="premium-table"
+        scroll={{ x: 1600 }}
       />
 
       <Modal

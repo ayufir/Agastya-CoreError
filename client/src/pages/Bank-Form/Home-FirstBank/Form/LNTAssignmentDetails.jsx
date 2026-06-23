@@ -32,18 +32,18 @@ const LNTAssignmentDetails = ({
   const initialValues = {
     personMetDuringVisit: "",
     personContactNo: "",
-    relationshipOfPersonMet: "",
+    relationshipOfPersonMet: "SELF",
     propertyOwnerName: "",
-    howFoundOwnerName: "",
-    typeOfLoan: "BT + TopUp",
+    howFoundOwnerName: "SALE DEED",
+    typeOfLoan: "OWN PLOT + SECO",
     dateOfReport: null,
     dateOfVisit: null,
-    vendorName: "Unique Engineering and Associate - Bhopal",
+    vendorName: "UNIQUE ENGINEERING AND ASSOCIATE",
     clContractNo: "",
     refNo: "N/A",
     evaluationType: "N/A",
-    unitType: undefined,
-    propertyCategory: undefined,
+    unitType: "Row House",
+    propertyCategory: "INDIVIDUAL",
     propertyLocation: undefined,
     populationCensus2011: "",
     ruralUrban: undefined,
@@ -51,17 +51,49 @@ const LNTAssignmentDetails = ({
     propertyAreaLimits: undefined,
     eraApplicable: "",
     projectName: "",
-    documentsAvailable: undefined,
+    documentsAvailable: "YES",
     nameOnSocietyBoard: "",
     addressLegal: "",
     addressSite: "",
     nameOnDoor: "",
     nearbyLandmark: "",
-    statusOfOccupancy: undefined,
-    occupiedBy: undefined,
-    usageOfProperty: undefined,
-    propertyEasilyIdentifiable: undefined,
+    statusOfOccupancy: "VACANT",
+    occupiedBy: "NA",
+    usageOfProperty: "RESIDENTIAL",
+    propertyEasilyIdentifiable: "YES",
   };
+
+  const addressLegal = formValues.addressLegal;
+  const ruralUrban = formValues.ruralUrban;
+  const statusOfOccupancy = formValues.statusOfOccupancy;
+
+  // Sync addressLegal to addressSite automatically and extract pin code
+  useEffect(() => {
+    if (addressLegal) {
+      const updates = { addressSite: addressLegal };
+      const pinCodeMatch = addressLegal.match(/\b\d{6}\b/);
+      if (pinCodeMatch) {
+        updates.projectPinCode = pinCodeMatch[0];
+      }
+      form.setFieldsValue(updates);
+    }
+  }, [addressLegal, form]);
+
+  // Sync ruralUrban to populationCensus2011 automatically
+  useEffect(() => {
+    if (ruralUrban === "URBAN") {
+      form.setFieldsValue({ populationCensus2011: "100000" });
+    } else if (ruralUrban === "RURAL") {
+      form.setFieldsValue({ populationCensus2011: "10000" });
+    }
+  }, [ruralUrban, form]);
+
+  // Sync statusOfOccupancy to occupiedBy automatically
+  useEffect(() => {
+    if (statusOfOccupancy === "VACANT") {
+      form.setFieldsValue({ occupiedBy: "NA" });
+    }
+  }, [statusOfOccupancy, form]);
 
   useEffect(() => {
     const currentValues = form.getFieldsValue();
@@ -69,7 +101,7 @@ const LNTAssignmentDetails = ({
 
     let locCat = "";
     let customerName = isEdit?.customerName || "";
-    let statusOfOccupancy = isEdit?.statusOfOccupancy || "Vacant";
+    let statusOfOccupancyVal = isEdit?.statusOfOccupancy || "VACANT";
 
     if (extractedData && Object.keys(extractedData).length > 0) {
       const p = extractedData.property || {};
@@ -81,7 +113,8 @@ const LNTAssignmentDetails = ({
 
       locCat = extractedData.locationCategory || loc.property_falling_within || "";
       customerName = p.applicant_name || p.owner_name || extractedData.customerName || customerName;
-      statusOfOccupancy = propDet.occupancy || loc.occupancy_level || statusOfOccupancy;
+      statusOfOccupancyVal = propDet.occupancy || loc.occupancy_level || statusOfOccupancyVal;
+      if (statusOfOccupancyVal) statusOfOccupancyVal = statusOfOccupancyVal.toUpperCase();
 
       const docPersonMet = p.contact_person || extractedData.personMetDuringVisit || "";
       const docRelation = p.relationship_met_at_site || extractedData.relationshipOfPersonMet || "";
@@ -89,33 +122,33 @@ const LNTAssignmentDetails = ({
       let finalPersonMet = "N/A";
       let finalRelation = "SELF";
 
-      if (statusOfOccupancy === "Vacant" && !docPersonMet) {
+      if (statusOfOccupancyVal === "VACANT" && !docPersonMet) {
         finalPersonMet = "";
         finalRelation = "";
       } else if (docPersonMet && docRelation && docRelation !== "N/A" && docRelation !== "SELF") {
         finalPersonMet = docPersonMet;
-        finalRelation = docRelation;
+        finalRelation = docRelation.toUpperCase();
       } else if (docPersonMet) {
         finalPersonMet = docPersonMet;
-        finalRelation = "Representative";
+        finalRelation = "REPRESENTATIVE";
       } else {
         finalPersonMet = customerName || "N/A";
         finalRelation = "SELF";
       }
 
-      let finalPropLoc = "Town";
-      let finalAreaLim = "Town Planning";
+      let finalPropLoc = "TOWN";
+      let finalAreaLim = "MUNICIPAL-TP";
 
       const normalizedLocCat = String(locCat).toLowerCase();
       if (normalizedLocCat.includes("municipal") || normalizedLocCat.includes("mc") || normalizedLocCat.includes("corporation")) {
-        finalPropLoc = "City";
-        finalAreaLim = "Municipal";
+        finalPropLoc = "CITY";
+        finalAreaLim = "MUNICIPAL";
       } else if (normalizedLocCat.includes("nagar") || normalizedLocCat.includes("palika") || normalizedLocCat.includes("planning") || normalizedLocCat.includes("tp")) {
-        finalPropLoc = "Town";
-        finalAreaLim = "Town Planning";
+        finalPropLoc = "TOWN";
+        finalAreaLim = "MUNICIPAL-TP";
       } else if (normalizedLocCat.includes("gram") || normalizedLocCat.includes("panchayat") || normalizedLocCat.includes("gp")) {
-        finalPropLoc = "Village";
-        finalAreaLim = "Gram Panchayat";
+        finalPropLoc = "VILLAGE";
+        finalAreaLim = "GP";
       }
 
       const addrLegal = addr.full_address || extractedData.addressLegal || "";
@@ -134,9 +167,9 @@ const LNTAssignmentDetails = ({
         addressLegal: addrLegal,
         addressSite: addrSite,
         nearbyLandmark: loc.landmark || extractedData.nearbyLandmark,
-        statusOfOccupancy,
-        occupiedBy: propDet.occupied_by || "Vacant",
-        usageOfProperty: p.property_use || "Residential",
+        statusOfOccupancy: statusOfOccupancyVal,
+        occupiedBy: (propDet.occupied_by || "NA").toUpperCase(),
+        usageOfProperty: (p.property_use || "RESIDENTIAL").toUpperCase(),
         latitude: p.latitude || extractedData.latitude,
         longitude: p.longitude || extractedData.longitude,
         propertyLocation: finalPropLoc,
@@ -180,18 +213,18 @@ const LNTAssignmentDetails = ({
         propertyName: safeVal("propertyName"),
         personMetDuringVisit: safeVal("personMetDuringVisit", ""),
         personContactNo: safeVal("personContactNo", ""),
-        relationshipOfPersonMet: safeVal("relationshipOfPersonMet", ""),
+        relationshipOfPersonMet: safeVal("relationshipOfPersonMet", "SELF"),
         propertyOwnerName: safeVal("propertyOwnerName"),
-        howFoundOwnerName: safeVal("howFoundOwnerName", ""),
-        typeOfLoan: safeVal("typeOfLoan", "BT + TopUp"),
+        howFoundOwnerName: safeVal("howFoundOwnerName", "SALE DEED"),
+        typeOfLoan: safeVal("typeOfLoan", "OWN PLOT + SECO"),
         dateOfReport: parsedDate,
         dateOfVisit: parsedVisitDate,
-        vendorName: safeVal("vendorName", "Unique Engineering and Associate - Bhopal"),
+        vendorName: safeVal("vendorName", "UNIQUE ENGINEERING AND ASSOCIATE"),
         clContractNo: safeVal("clContractNo", ""),
         refNo: safeVal("refNo", "N/A"),
         evaluationType: safeVal("evaluationType", "N/A"),
-        unitType: safeVal("unitType") || undefined,
-        propertyCategory: safeVal("propertyCategory") || undefined,
+        unitType: safeVal("unitType", "Row House") || undefined,
+        propertyCategory: safeVal("propertyCategory", "INDIVIDUAL") || undefined,
         propertyLocation: safeVal("propertyLocation") || undefined,
         populationCensus2011: safeVal("populationCensus2011", ""),
         ruralUrban: safeVal("ruralUrban") || undefined,
@@ -199,16 +232,16 @@ const LNTAssignmentDetails = ({
         propertyAreaLimits: safeVal("propertyAreaLimits") || undefined,
         eraApplicable: safeVal("eraApplicable", ""),
         projectName: safeVal("projectName", ""),
-        documentsAvailable: safeVal("documentsAvailable") || undefined,
+        documentsAvailable: safeVal("documentsAvailable", "YES"),
         nameOnSocietyBoard: safeVal("nameOnSocietyBoard", ""),
         addressLegal: safeVal("addressLegal"),
         addressSite: safeVal("addressSite") || safeVal("addressLegal"),
         nameOnDoor: safeVal("nameOnDoor", ""),
         nearbyLandmark: safeVal("nearbyLandmark"),
-        statusOfOccupancy: safeVal("statusOfOccupancy") || undefined,
-        occupiedBy: safeVal("occupiedBy") || undefined,
-        usageOfProperty: safeVal("usageOfProperty") || undefined,
-        propertyEasilyIdentifiable: safeVal("propertyEasilyIdentifiable") || undefined,
+        statusOfOccupancy: safeVal("statusOfOccupancy", "VACANT"),
+        occupiedBy: safeVal("occupiedBy", "NA"),
+        usageOfProperty: safeVal("usageOfProperty", "RESIDENTIAL"),
+        propertyEasilyIdentifiable: safeVal("propertyEasilyIdentifiable", "YES"),
         latitude: safeVal("latitude"),
         longitude: safeVal("longitude"),
       });
@@ -360,7 +393,14 @@ const LNTAssignmentDetails = ({
                     <label style={{ position: "absolute", top: "-8px", left: "10px", background: "#fff", padding: "0 6px", fontSize: "11px", color: "#94a3b8", fontWeight: 500, zIndex: 2 }}>
                       Project Pin Code
                     </label>
-                    <Form.Item name="projectPinCode" style={{ margin: 0 }}>
+                    <Form.Item
+                      name="projectPinCode"
+                      rules={[
+                        { required: true, message: "Pin Code is required" },
+                        { pattern: /^[0-9]{6}$/, message: "Pin Code must be exactly 6 digits" }
+                      ]}
+                      style={{ margin: 0 }}
+                    >
                       <Input style={{ height: "40px", borderRadius: "6px", border: "1px solid #d1d5db" }} />
                     </Form.Item>
                   </div>
@@ -379,7 +419,23 @@ const LNTAssignmentDetails = ({
                   <label style={{ position: "absolute", top: "-8px", left: "10px", background: "#fff", padding: "0 6px", fontSize: "11px", color: "#94a3b8", fontWeight: 500, zIndex: 2 }}>
                     Latitude
                   </label>
-                  <Form.Item name="latitude" extra={<span style={{ fontSize: "11px", color: "#6b7280" }}>Example: 19.0760</span>} style={{ margin: 0 }}>
+                  <Form.Item
+                    name="latitude"
+                    rules={[
+                      { required: true, message: "Latitude is required" },
+                      {
+                        validator: (_, value) => {
+                          const num = parseFloat(value);
+                          if (isNaN(num) || num < -90 || num > 90) {
+                            return Promise.reject("Latitude must be between -90 and 90");
+                          }
+                          return Promise.resolve();
+                        }
+                      }
+                    ]}
+                    extra={<span style={{ fontSize: "11px", color: "#6b7280" }}>Example: 19.0760</span>}
+                    style={{ margin: 0 }}
+                  >
                     <Input style={{ height: "40px", borderRadius: "6px", border: "1px solid #d1d5db" }} />
                   </Form.Item>
                 </div>
@@ -387,7 +443,27 @@ const LNTAssignmentDetails = ({
                   <label style={{ position: "absolute", top: "-8px", left: "10px", background: "#fff", padding: "0 6px", fontSize: "11px", color: "#94a3b8", fontWeight: 500, zIndex: 2 }}>
                     Longitude
                   </label>
-                  <Form.Item name="longitude" extra={<span style={{ fontSize: "11px", color: "#6b7280" }}>Example: 72.8777</span>} style={{ margin: 0 }}>
+                  <Form.Item
+                    name="longitude"
+                    rules={[
+                      { required: true, message: "Longitude is required" },
+                      {
+                        validator: (_, value) => {
+                          const num = parseFloat(value);
+                          if (isNaN(num) || num < -180 || num > 180) {
+                            return Promise.reject("Longitude must be between -180 and 180");
+                          }
+                          const lat = parseFloat(form.getFieldValue("latitude"));
+                          if (!isNaN(lat) && num === lat) {
+                            return Promise.reject("Longitude cannot equal Latitude");
+                          }
+                          return Promise.resolve();
+                        }
+                      }
+                    ]}
+                    extra={<span style={{ fontSize: "11px", color: "#6b7280" }}>Example: 72.8777</span>}
+                    style={{ margin: 0 }}
+                  >
                     <Input style={{ height: "40px", borderRadius: "6px", border: "1px solid #d1d5db" }} />
                   </Form.Item>
                 </div>
@@ -440,8 +516,9 @@ const LNTAssignmentDetails = ({
                   style={{ margin: 0 }}
                 >
                   <Select allowClear className="w-full" placeholder="Property Category">
-                    <Option value="PROJECT">Project</Option>
-                    <Option value="INDIVIDUAL">Individual</Option>
+                    <Option value="PROJECT">PROJECT</Option>
+                    <Option value="INDIVIDUAL">INDIVIDUAL</Option>
+                    <Option value="OTHER">OTHER</Option>
                   </Select>
                 </Form.Item>
               </div>
@@ -470,8 +547,15 @@ const LNTAssignmentDetails = ({
                 <label>
                   Type of Loan
                 </label>
-                <Form.Item name="typeOfLoan" style={{ margin: 0 }}>
-                  <Input readOnly style={{ height: "40px", borderRadius: "6px", border: "1px solid #e5e7eb", backgroundColor: "#f9fafb", color: "#6b7280", cursor: "not-allowed" }} placeholder="Type of Loan" />
+                <Form.Item
+                  name="typeOfLoan"
+                  rules={[{ required: true, message: "Type of Loan is required" }]}
+                  style={{ margin: 0 }}
+                >
+                  <Select allowClear className="w-full" placeholder="Type of Loan">
+                    <Option value="PLOT + SECO">PLOT + SECO</Option>
+                    <Option value="OWN PLOT + SECO">OWN PLOT + SECO</Option>
+                  </Select>
                 </Form.Item>
               </div>
 
@@ -484,9 +568,9 @@ const LNTAssignmentDetails = ({
                   style={{ margin: 0 }}
                 >
                   <Select allowClear className="w-full" placeholder="Property Location">
-                    <Option value="Metro">Metro</Option>
-                    <Option value="Town">Town</Option>
-                    <Option value="Village">Village</Option>
+                    <Option value="CITY">CITY</Option>
+                    <Option value="TOWN">TOWN</Option>
+                    <Option value="VILLAGE">VILLAGE</Option>
                   </Select>
                 </Form.Item>
               </div>
@@ -515,8 +599,8 @@ const LNTAssignmentDetails = ({
                   style={{ margin: 0 }}
                 >
                   <Select allowClear className="w-full" placeholder="Rural / Urban (>10K = Urban)">
-                    <Option value="RURAL">Rural</Option>
-                    <Option value="URBAN">Urban</Option>
+                    <Option value="RURAL">RURAL</Option>
+                    <Option value="URBAN">URBAN</Option>
                   </Select>
                 </Form.Item>
               </div>
@@ -532,11 +616,12 @@ const LNTAssignmentDetails = ({
                   style={{ margin: 0 }}
                 >
                   <Select allowClear className="w-full" placeholder="Zone">
-                    <Option value="Residential">Residential</Option>
-                    <Option value="Agriculture">Agriculture</Option>
-                    <Option value="Industrial">Industrial</Option>
-                    <Option value="Mixed">Mixed</Option>
-                    <Option value="Commercial">Commercial</Option>
+                    <Option value="RESIDENTIAL">RESIDENTIAL</Option>
+                    <Option value="COMMERCIAL">COMMERCIAL</Option>
+                    <Option value="INDUSTRIAL">INDUSTRIAL</Option>
+                    <Option value="AGRICULTURAL">AGRICULTURAL</Option>
+                    <Option value="MIXED">MIXED</Option>
+                    <Option value="OTHER">OTHER</Option>
                   </Select>
                 </Form.Item>
               </div>
@@ -547,9 +632,11 @@ const LNTAssignmentDetails = ({
                 </label>
                 <Form.Item name="propertyAreaLimits" style={{ margin: 0 }}>
                   <Select allowClear className="w-full" placeholder="Property Area Limits">
-                    <Option value="Municipal-TP">Municipal-TP</Option>
-                    <Option value="Collector-ZP">Collector-ZP</Option>
                     <Option value="GP">GP</Option>
+                    <Option value="MUNICIPAL">MUNICIPAL</Option>
+                    <Option value="MUNICIPAL-TP">MUNICIPAL-TP</Option>
+                    <Option value="ZP">ZP</Option>
+                    <Option value="OTHER">OTHER</Option>
                   </Select>
                 </Form.Item>
               </div>
@@ -627,8 +714,21 @@ const LNTAssignmentDetails = ({
 
               <div className={`custom-form-item-wrapper ${hasValue("relationshipOfPersonMet") ? "has-value" : ""}`} style={{ position: "relative", marginTop: "6px" }}>
                 <label>Relationship of person met and property</label>
-                <Form.Item name="relationshipOfPersonMet" style={{ margin: 0 }}>
-                  <Input style={{ height: "40px", borderRadius: "6px", border: "1px solid #d1d5db" }} placeholder="Relationship of person met and property" />
+                <Form.Item
+                  name="relationshipOfPersonMet"
+                  rules={[{ required: true, message: "Relationship is required" }]}
+                  style={{ margin: 0 }}
+                >
+                  <Select allowClear className="w-full" placeholder="Relationship of person met and property">
+                    <Option value="SELF">SELF</Option>
+                    <Option value="SPOUSE">SPOUSE</Option>
+                    <Option value="RELATIVE">RELATIVE</Option>
+                    <Option value="SELLER">SELLER</Option>
+                    <Option value="BUYER">BUYER</Option>
+                    <Option value="COLONISER">COLONISER</Option>
+                    <Option value="BROKER">BROKER</Option>
+                    <Option value="OTHER">OTHER</Option>
+                  </Select>
                 </Form.Item>
               </div>
 
@@ -641,9 +741,16 @@ const LNTAssignmentDetails = ({
               </div>
 
               <div className={`custom-form-item-wrapper ${hasValue("howFoundOwnerName") ? "has-value" : ""}`} style={{ position: "relative", marginTop: "6px" }}>
-                <label>How did you find out property owner's name?</label>
-                <Form.Item name="howFoundOwnerName" style={{ margin: 0 }}>
-                  <Input style={{ height: "40px", borderRadius: "6px", border: "1px solid #d1d5db" }} placeholder="How did you find out property owner's name?" />
+                <label>Owner Name Source</label>
+                <Form.Item
+                  name="howFoundOwnerName"
+                  rules={[{ required: true, message: "Owner Name Source is required" }]}
+                  style={{ margin: 0 }}
+                >
+                  <Select allowClear className="w-full" placeholder="Owner Name Source">
+                    <Option value="SALE DEED">SALE DEED</Option>
+                    <Option value="ATS DRAFT">ATS DRAFT</Option>
+                  </Select>
                 </Form.Item>
               </div>
 
@@ -652,8 +759,8 @@ const LNTAssignmentDetails = ({
                 <label>Property Documents Available?</label>
                 <Form.Item name="documentsAvailable" style={{ margin: 0 }}>
                   <Select allowClear className="w-full" placeholder="Property Documents Available?">
-                    <Option value="YES">Yes</Option>
-                    <Option value="NO">No</Option>
+                    <Option value="YES">YES</Option>
+                    <Option value="NO">NO</Option>
                   </Select>
                 </Form.Item>
               </div>
@@ -700,21 +807,38 @@ const LNTAssignmentDetails = ({
                 <label>Occupancy Status</label>
                 <Form.Item name="statusOfOccupancy" style={{ margin: 0 }}>
                   <Select allowClear className="w-full" placeholder="Occupancy Status">
-                    <Option value="Vacant">Vacant</Option>
-                    <Option value="Occupied">Occupied</Option>
-                    <Option value="Partially Occupied">Partially Occupied</Option>
+                    <Option value="VACANT">VACANT</Option>
+                    <Option value="OCCUPIED">OCCUPIED</Option>
+                    <Option value="PARTLY OCCUPIED">PARTLY OCCUPIED</Option>
+                    <Option value="OTHER">OTHER</Option>
                   </Select>
                 </Form.Item>
               </div>
 
               <div className={`custom-form-item-wrapper ${hasValue("occupiedBy") ? "has-value" : ""}`} style={{ position: "relative", marginTop: "6px" }}>
                 <label>Occupied By</label>
-                <Form.Item name="occupiedBy" style={{ margin: 0 }}>
+                <Form.Item
+                  name="occupiedBy"
+                  rules={[
+                    {
+                      validator: (_, value) => {
+                        const occStatus = form.getFieldValue("statusOfOccupancy");
+                        if (occStatus !== "VACANT" && (!value || value === "NA")) {
+                          return Promise.reject("Required when occupancy is not VACANT");
+                        }
+                        return Promise.resolve();
+                      }
+                    }
+                  ]}
+                  style={{ margin: 0 }}
+                >
                   <Select allowClear className="w-full" placeholder="Occupied By">
-                    <Option value="Self">Self</Option>
-                    <Option value="Tenants">Tenants</Option>
-                    <Option value="Self + Tenants">Self + Tenants</Option>
-                    <Option value="Seller">Seller</Option>
+                    <Option value="OWNER">OWNER</Option>
+                    <Option value="TENANT">TENANT</Option>
+                    <Option value="THIRD PARTY">THIRD PARTY</Option>
+                    <Option value="ENCROACHER">ENCROACHER</Option>
+                    <Option value="OTHER">OTHER</Option>
+                    <Option value="NA">NA</Option>
                   </Select>
                 </Form.Item>
               </div>
@@ -724,9 +848,12 @@ const LNTAssignmentDetails = ({
                 <label>Usage of property</label>
                 <Form.Item name="usageOfProperty" style={{ margin: 0 }}>
                   <Select allowClear className="w-full" placeholder="Usage of property">
-                    <Option value="Residential">Residential</Option>
-                    <Option value="Commercial">Commercial</Option>
-                    <Option value="Mixed">Mixed</Option>
+                    <Option value="VACANT PLOT">VACANT PLOT</Option>
+                    <Option value="RESIDENTIAL">RESIDENTIAL</Option>
+                    <Option value="COMMERCIAL">COMMERCIAL</Option>
+                    <Option value="AGRICULTURAL">AGRICULTURAL</Option>
+                    <Option value="MIXED">MIXED</Option>
+                    <Option value="OTHER">OTHER</Option>
                   </Select>
                 </Form.Item>
               </div>
@@ -735,8 +862,8 @@ const LNTAssignmentDetails = ({
                 <label>Property easily identifiable?</label>
                 <Form.Item name="propertyEasilyIdentifiable" style={{ margin: 0 }}>
                   <Select allowClear className="w-full" placeholder="Property easily identifiable?">
-                    <Option value="YES">Yes</Option>
-                    <Option value="NO">No</Option>
+                    <Option value="YES">YES</Option>
+                    <Option value="NO">NO</Option>
                   </Select>
                 </Form.Item>
               </div>

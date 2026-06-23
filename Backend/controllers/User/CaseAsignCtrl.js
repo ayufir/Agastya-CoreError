@@ -626,7 +626,7 @@ exports.acceptCase = async (req, res) => {
 
 exports.declineCase = async (req, res) => {
   const { id } = req.params;
-  const { bankName } = req.body;
+  const { bankName, declineReason } = req.body;
   if (!bankName) {
     return res.status(400).json({ error: "Bank name is required." });
   }
@@ -638,14 +638,30 @@ exports.declineCase = async (req, res) => {
   }
 
   try {
+    const updatePayload = {
+      approvalStatus: "Declined",
+      status: "Pending",
+      $unset: { assignedTo: "" },
+    };
+
+    // Save the decline reason if provided
+    if (declineReason && declineReason.trim()) {
+      updatePayload.declineReason = declineReason.trim();
+      // Also push to timeline if the model supports it
+      updatePayload.$push = {
+        timeline: {
+          status: "Declined",
+          updatedAt: new Date(),
+          updatedBy: req.user._id,
+          note: `Declined by Field Officer. Reason: ${declineReason.trim()}`,
+        },
+      };
+    }
+
     const updatedCase = await Model.findByIdAndUpdate(
       id,
-      { 
-        approvalStatus: "Declined",
-        status: "Pending",
-        $unset: { assignedTo: "" }
-      },
-      { new: true }
+      updatePayload,
+      { new: true, strict: false }
     );
 
     if (!updatedCase) {
@@ -1096,7 +1112,7 @@ exports.getSummaryData = async (req, res) => {
         const { key: modelKey, displayName, model: Model } = bankConfig;
         const baseQuery = buildRoleAwareQuery(user);
         const allCases = await Model.find({ ...baseQuery, ...monthFilter })
-          .select("_id status createdAt uploadDate customerName visitedPersonName applicantName applicantsName clientName basicDetails.nameOfClient propertyInfo.applicantName summary.applicantName header.contactedPerson addressLegal legalAddress addressSite propertyAddress address locationDetails.propertyAddressAsVisit locationDetails.propertyAddressAsDocs locationDetails.propertyAddressAsTRF propertyInfo.addressAtSite propertyInfo.addressAsPerDocument summary.propertyAddress customerNo contactNumber mobileNo personContactNo personContact contactPerson contactPersonNumber propertyCity city propertyLocation nearestCityTown locationDetails.mainLocality basicDetails.city propertyInfo.city summary.city assignedTo createdBy AttachDocuments atsDocuments route")
+          .select("_id status approvalStatus declineReason createdAt uploadDate customerName visitedPersonName applicantName applicantsName clientName basicDetails.nameOfClient propertyInfo.applicantName summary.applicantName header.contactedPerson addressLegal legalAddress addressSite propertyAddress address locationDetails.propertyAddressAsVisit locationDetails.propertyAddressAsDocs locationDetails.propertyAddressAsTRF propertyInfo.addressAtSite propertyInfo.addressAsPerDocument summary.propertyAddress customerNo contactNumber mobileNo personContactNo personContact contactPerson contactPersonNumber propertyCity city propertyLocation nearestCityTown locationDetails.mainLocality basicDetails.city propertyInfo.city summary.city assignedTo createdBy AttachDocuments atsDocuments route")
           .populate("assignedTo");
         return {
           modelKey,

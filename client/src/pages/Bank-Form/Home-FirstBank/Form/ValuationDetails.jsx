@@ -133,8 +133,15 @@ const performCalculation = (values) => {
   const c2Rate = values?.constructionPlanRate !== undefined && values?.constructionPlanRate !== "" ? values.constructionPlanRate : "";
   const c2Valuation = c2Area && parseFloat(c2Rate) ? c2Area * parseFloat(c2Rate) : 0;
 
-  const realizableValue = landValue || 0;
-  const valuationAtPresentStage = landValue || 0;
+  const c3Area = n("constructionSiteArea");
+  const c3Rate = values?.constructionSiteRate !== undefined && values?.constructionSiteRate !== "" ? values.constructionSiteRate : "";
+  const c3Valuation = c3Area && parseFloat(c3Rate) ? c3Area * parseFloat(c3Rate) : 0;
+
+  const amenitiesDetails = values?.amenitiesDetails || "NA";
+  const amenitiesValue = (amenitiesDetails === "NA" || amenitiesDetails === "None" || amenitiesDetails === "") ? 0 : (n("amenitiesValue") || 0);
+
+  const ValuationatPresentStage = landValue + c3Valuation + amenitiesValue;
+  const realizableValue = landValue + c2Valuation + amenitiesValue;
 
   return {
     landDocumentArea: (values?.landDocumentArea !== undefined && values?.landDocumentArea !== null) ? values.landDocumentArea : 0,
@@ -152,20 +159,20 @@ const performCalculation = (values) => {
     constructionDocumentValuation: values?.constructionDocumentValuation || 0,
     constructionSiteArea: (values?.constructionSiteArea !== undefined && values?.constructionSiteArea !== null) ? values.constructionSiteArea : 0,
     constructionSiteRate: values?.constructionSiteRate || "",
-    constructionSiteValuation: values?.constructionSiteValuation || 0,
+    constructionSiteValuation: c3Valuation || 0,
     
     constructionPlanArea: (values?.constructionPlanArea !== undefined && values?.constructionPlanArea !== null) ? values.constructionPlanArea : 0,
     constructionPlanRate: c2Rate,
     constructionPlanValuation: c2Valuation || 0,
 
-    amenitiesDetails: (values?.amenitiesDetails !== undefined && values?.amenitiesDetails !== null && values?.amenitiesDetails !== "") ? values.amenitiesDetails : undefined,
-    amenitiesValue: (values?.amenitiesValue !== undefined && values?.amenitiesValue !== null) ? values.amenitiesValue : 0,
+    amenitiesDetails,
+    amenitiesValue,
     liftAvailable: (values?.liftAvailable !== undefined && values?.liftAvailable !== null && values?.liftAvailable !== "") ? values.liftAvailable : undefined,
     buildingHeight: (values?.buildingHeight !== undefined && values?.buildingHeight !== null) ? values.buildingHeight : 0,
     realizableValue: realizableValue,
     constructionStage: (values?.constructionStage !== undefined && values?.constructionStage !== null && values?.constructionStage !== "") ? values.constructionStage : undefined,
     constructionStatus: values?.constructionStatus || "0%",
-    ValuationatPresentStage: valuationAtPresentStage,
+    ValuationatPresentStage: ValuationatPresentStage,
     constructionEstimateByCustomer: (values?.constructionEstimateByCustomer !== undefined && values?.constructionEstimateByCustomer !== null) ? values.constructionEstimateByCustomer : 0,
     estimateRecommendedByValuer: (values?.estimateRecommendedByValuer !== undefined && values?.estimateRecommendedByValuer !== null) ? values.estimateRecommendedByValuer : 0,
     marketRatePerSqft: (values?.marketRatePerSqft !== undefined && values?.marketRatePerSqft !== null && values?.marketRatePerSqft !== "") ? values.marketRatePerSqft : undefined,
@@ -710,8 +717,8 @@ const ValuationDetails = ({
             <span className="custom-label">Lift Available?</span>
             <Form.Item name="liftAvailable" style={{ margin: 0 }}>
               <Select allowClear className="w-full" placeholder="Lift Available?">
-                <Option value="YES">Yes</Option>
-                <Option value="NO">No</Option>
+                <Option value="YES">YES</Option>
+                <Option value="NO">NO</Option>
               </Select>
             </Form.Item>
           </div>
@@ -815,8 +822,11 @@ const ValuationDetails = ({
             <span className="custom-label">Construction as per plan / by laws?</span>
             <Form.Item name="constructionAsPerPlan" style={{ margin: 0 }}>
               <Select allowClear className="w-full" placeholder="Construction as per plan / by laws?">
-                <Option value="Yes">Yes</Option>
-                <Option value="No">No</Option>
+                <Option value="PROPOSED AS PER SUBMITTED PLAN">PROPOSED AS PER SUBMITTED PLAN</Option>
+                <Option value="EXISTING WORK MATCHES PLAN">EXISTING WORK MATCHES PLAN</Option>
+                <Option value="NO">NO</Option>
+                <Option value="CANNOT VERIFY">CANNOT VERIFY</Option>
+                <Option value="NA">NA</Option>
               </Select>
             </Form.Item>
           </div>

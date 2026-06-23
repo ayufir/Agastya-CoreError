@@ -277,22 +277,22 @@ const LocalityDetails = ({
         distanceFromRailwayStation: safeVal("distanceFromRailwayStation"),
         distanceFromBusStand: safeVal("distanceFromBusStand"),
         distanceFromHospital: safeVal("distanceFromHospital"),
-        occupancyPercentage: safeVal("occupancyPercentage") || undefined,
+        occupancyPercentage: safeVal("occupancyPercentage", "50%") || undefined,
         habitationPercentage: safeVal("habitationPercentage") || undefined,
         nallahRiverHighTension: safeVal("nallahRiverHighTension", ""),
-        seismicZone: safeVal("seismicZone") || undefined,
-        cycloneZone: safeVal("cycloneZone") || undefined,
-        landslideProneZone: safeVal("landslideProneZone") || undefined,
-        floodZone: safeVal("floodZone") || undefined,
-        crZone: safeVal("crZone") || undefined,
-        demolitionRisk: safeVal("localityDemolitionRisk") || safeVal("demolitionRisk") || undefined,
-        demolitionRiskDetails: safeVal("demolitionRiskDetails", ""),
-        followsNDMAGuidelines: safeVal("followsNDMAGuidelines") || undefined,
+        seismicZone: safeVal("seismicZone", "II") || undefined,
+        cycloneZone: safeVal("cycloneZone", "NO") || undefined,
+        landslideProneZone: safeVal("landslideProneZone", "NO") || undefined,
+        floodZone: safeVal("floodZone", "NO") || undefined,
+        crZone: safeVal("crZone", "NO") || undefined,
+        demolitionRisk: safeVal("localityDemolitionRisk") || safeVal("demolitionRisk", "LOW") || undefined,
+        demolitionRiskDetails: safeVal("demolitionRiskDetails", "NA"),
+        followsNDMAGuidelines: safeVal("followsNDMAGuidelines", "YES") || undefined,
         nearestCityTown: safeVal("nearestCityTown", ""),
         locationCategory: safeVal("locationCategory") || undefined,
-        electricityAvailability: safeVal("electricityAvailability") || undefined,
-        waterAvailability: safeVal("waterAvailability") || undefined,
-        drainageAvailability: safeVal("drainageAvailability") || undefined,
+        electricityAvailability: safeVal("electricityAvailability", "YES") || undefined,
+        waterAvailability: safeVal("waterAvailability", "YES") || undefined,
+        drainageAvailability: safeVal("drainageAvailability", "YES") || undefined,
       });
       if (merged.documents) setDocuments(merged.documents);
     }
@@ -418,10 +418,10 @@ const LocalityDetails = ({
                 <label>Location Category</label>
                 <Form.Item name="locationCategory" style={{ margin: 0 }}>
                   <Select allowClear className="w-full" placeholder="Location Category">
-                    <Option value="MC">MC</Option>
-                    <Option value="TP">TP</Option>
-                    <Option value="ZP">ZP</Option>
                     <Option value="GP">GP</Option>
+                    <Option value="MC">MC</Option>
+                    <Option value="MUNICIPAL-TP">MUNICIPAL-TP</Option>
+                    <Option value="OTHER">OTHER</Option>
                   </Select>
                 </Form.Item>
               </div>
@@ -475,9 +475,12 @@ const LocalityDetails = ({
                 <label>Approach Road Type</label>
                 <Form.Item name="approachRoadType" style={{ margin: 0 }}>
                   <Select allowClear className="w-full" placeholder="Approach Road Type">
-                    <Option value="RCC Road">RCC Road</Option>
-                    <Option value="Tar Road">Tar Road</Option>
-                    <Option value="Soil Road">Soil Road</Option>
+                    <Option value="RCC ROAD">RCC ROAD</Option>
+                    <Option value="TAR ROAD">TAR ROAD</Option>
+                    <Option value="PAVER BLOCK ROAD">PAVER BLOCK ROAD</Option>
+                    <Option value="SOIL ROAD">SOIL ROAD</Option>
+                    <Option value="GRAVEL ROAD">GRAVEL ROAD</Option>
+                    <Option value="OTHER">OTHER</Option>
                   </Select>
                 </Form.Item>
               </div>
@@ -487,9 +490,8 @@ const LocalityDetails = ({
                 <label>Occupancy in Project</label>
                 <Form.Item name="occupancyPercentage" style={{ margin: 0 }}>
                   <Select allowClear className="w-full" placeholder="Occupancy in Project">
-                    <Option value="100%">100%</Option>
                     <Option value="50%">50%</Option>
-                    <Option value="25%">25%</Option>
+                    <Option value="100%">100%</Option>
                   </Select>
                 </Form.Item>
               </div>
@@ -498,9 +500,9 @@ const LocalityDetails = ({
                 <label>Habitation of nearby area</label>
                 <Form.Item name="habitationPercentage" rules={[{ required: true, message: "Required!" }]} style={{ margin: 0 }}>
                   <Select allowClear className="w-full" placeholder="Habitation of nearby area">
-                    <Option value="Dense">Dense</Option>
-                    <Option value="Medium">Medium</Option>
-                    <Option value="Low">Low</Option>
+                    <Option value="LOW">LOW</Option>
+                    <Option value="MEDIUM">MEDIUM</Option>
+                    <Option value="DENSE">DENSE</Option>
                   </Select>
                 </Form.Item>
               </div>
@@ -525,8 +527,8 @@ const LocalityDetails = ({
                 <label>Electricity Supply</label>
                 <Form.Item name="electricityAvailability" rules={[{ required: true, message: "Required!" }]} style={{ margin: 0 }}>
                   <Select allowClear className="w-full" placeholder="Electricity Supply">
-                    <Option value="YES">Yes</Option>
-                    <Option value="NO">No</Option>
+                    <Option value="YES">YES</Option>
+                    <Option value="NO">NO</Option>
                   </Select>
                 </Form.Item>
               </div>
@@ -535,8 +537,8 @@ const LocalityDetails = ({
                 <label>Water Supply</label>
                 <Form.Item name="waterAvailability" rules={[{ required: true, message: "Required!" }]} style={{ margin: 0 }}>
                   <Select allowClear className="w-full" placeholder="Water Supply">
-                    <Option value="YES">Yes</Option>
-                    <Option value="NO">No</Option>
+                    <Option value="YES">YES</Option>
+                    <Option value="NO">NO</Option>
                   </Select>
                 </Form.Item>
               </div>
@@ -546,8 +548,8 @@ const LocalityDetails = ({
                 <label>Drainage Line / Connection</label>
                 <Form.Item name="drainageAvailability" rules={[{ required: true, message: "Required!" }]} style={{ margin: 0 }}>
                   <Select allowClear className="w-full" placeholder="Drainage Line / Connection">
-                    <Option value="YES">Yes</Option>
-                    <Option value="NO">No</Option>
+                    <Option value="YES">YES</Option>
+                    <Option value="NO">NO</Option>
                   </Select>
                 </Form.Item>
               </div>
@@ -631,6 +633,7 @@ const LocalityDetails = ({
                 <label>Property Falls under Seismic Zone</label>
                 <Form.Item name="seismicZone" style={{ margin: 0 }}>
                   <Select allowClear className="w-full" placeholder="Property Falls under Seismic Zone">
+                    <Option value="I">I</Option>
                     <Option value="II">II</Option>
                     <Option value="III">III</Option>
                     <Option value="IV">IV</Option>
@@ -643,8 +646,8 @@ const LocalityDetails = ({
                 <label>Property Falls under Flood Zone</label>
                 <Form.Item name="floodZone" style={{ margin: 0 }}>
                   <Select allowClear className="w-full" placeholder="Property Falls under Flood Zone">
-                    <Option value="YES">Yes</Option>
-                    <Option value="NO">No</Option>
+                    <Option value="YES">YES</Option>
+                    <Option value="NO">NO</Option>
                   </Select>
                 </Form.Item>
               </div>
@@ -653,8 +656,8 @@ const LocalityDetails = ({
                 <label>Property Falls under Cyclone Zone</label>
                 <Form.Item name="cycloneZone" style={{ margin: 0 }}>
                   <Select allowClear className="w-full" placeholder="Property Falls under Cyclone Zone">
-                    <Option value="Yes">Yes</Option>
-                    <Option value="No">No</Option>
+                    <Option value="YES">YES</Option>
+                    <Option value="NO">NO</Option>
                   </Select>
                 </Form.Item>
               </div>
@@ -663,8 +666,8 @@ const LocalityDetails = ({
                 <label>Property Falls under Landslide Prone Zone</label>
                 <Form.Item name="landslideProneZone" style={{ margin: 0 }}>
                   <Select allowClear className="w-full" placeholder="Property Falls under Landslide Prone Zone">
-                    <Option value="Yes">Yes</Option>
-                    <Option value="No">No</Option>
+                    <Option value="YES">YES</Option>
+                    <Option value="NO">NO</Option>
                   </Select>
                 </Form.Item>
               </div>
@@ -673,8 +676,8 @@ const LocalityDetails = ({
                 <label>Property Falls in CR Zone</label>
                 <Form.Item name="crZone" style={{ margin: 0 }}>
                   <Select allowClear className="w-full" placeholder="Property Falls in CR Zone">
-                    <Option value="YES">Yes</Option>
-                    <Option value="NO">No</Option>
+                    <Option value="YES">YES</Option>
+                    <Option value="NO">NO</Option>
                   </Select>
                 </Form.Item>
               </div>
@@ -683,10 +686,10 @@ const LocalityDetails = ({
                 <label>Property Falls under Demolition Risk</label>
                 <Form.Item name="demolitionRisk" style={{ margin: 0 }}>
                   <Select allowClear className="w-full" placeholder="Property Falls under Demolition Risk">
-                    <Option value="HIGH">High</Option>
-                    <Option value="MEDIUM">Medium</Option>
-                    <Option value="LOW">Low</Option>
-                    <Option value="NO">No</Option>
+                    <Option value="HIGH">HIGH</Option>
+                    <Option value="MEDIUM">MEDIUM</Option>
+                    <Option value="LOW">LOW</Option>
+                    <Option value="NO">NO</Option>
                   </Select>
                 </Form.Item>
               </div>
@@ -709,8 +712,8 @@ const LocalityDetails = ({
                 <label>Property Follows NDMA Guidelines</label>
                 <Form.Item name="followsNDMAGuidelines" style={{ margin: 0 }}>
                   <Select allowClear className="w-full" placeholder="Property Follows NDMA Guidelines">
-                    <Option value="YES">Yes</Option>
-                    <Option value="NO">No</Option>
+                    <Option value="YES">YES</Option>
+                    <Option value="NO">NO</Option>
                   </Select>
                 </Form.Item>
               </div>

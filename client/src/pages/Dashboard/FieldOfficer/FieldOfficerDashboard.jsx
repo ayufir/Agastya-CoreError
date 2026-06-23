@@ -29,13 +29,15 @@ import {
   ArrowRight, 
   Calendar, 
   AlertCircle,
-  Copy
+  Copy,
+  FileSpreadsheet
 } from "lucide-react";
 import {
   getBankRoute,
   getDisplayAddress,
   getDisplayContact,
   getDisplayCustomerName,
+  getDisplayCity,
 } from "../../../utils/dashboardRecord";
 import socket from "../../../config/socket";
 import axiosInstance from "../../../config/axios";
@@ -54,6 +56,77 @@ const formatShortDate = (dateString) => {
   return dayjs(dateString).format("DD MMM YYYY");
 };
 
+// ─── Allowance Sheet export helpers ─────────────────────────────────────────
+
+/**
+ * Build a flat row object from a case record for the Allowance Sheet.
+ * Columns: Bank | Customer Name | Assign Date | Visit Date | Submitted Date
+ *          | Property Address | City | Latitude | Longitude | Distance (km)
+ */
+const buildAllowanceRow = (record) => ({
+  "Bank": record.bankName || "N/A",
+  "Customer Name": getDisplayCustomerName(record),
+  "Assign Date": record.createdAt ? dayjs(record.createdAt).format("DD/MM/YYYY") : "N/A",
+  "Visit Date": record.dateOfVisit || (record.updatedAt ? dayjs(record.updatedAt).format("DD/MM/YYYY") : "N/A"),
+  "Submitted Date": record.isReportSubmitted && record.updatedAt
+    ? dayjs(record.updatedAt).format("DD/MM/YYYY")
+    : "N/A",
+  "Property Address": getDisplayAddress(record),
+  "City": getDisplayCity(record),
+  "Latitude": record.latitude || "N/A",
+  "Longitude": record.longitude || "N/A",
+  "Distance (km)": record.distanceFromCityCentre || record.distance || "N/A",
+});
+
+/** Export array of case records to a .csv file */
+const exportAllowanceCSV = (cases, filename = "allowance_sheet.csv") => {
+  if (!cases || cases.length === 0) { return; }
+  const rows = cases.map(buildAllowanceRow);
+  const headers = Object.keys(rows[0]);
+  const escape = (val) => `"${String(val ?? "").replace(/"/g, '""')}"`;
+  const csvContent = [
+    headers.map(escape).join(","),
+    ...rows.map((row) => headers.map((h) => escape(row[h])).join(",")),
+  ].join("\n");
+  const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+/** Export array of case records to a .xlsx file using SheetJS (CDN) */
+const exportAllowanceExcel = async (cases, filename = "allowance_sheet.xlsx") => {
+  if (!cases || cases.length === 0) { return; }
+  // Dynamically load xlsx from CDN if not already available
+  if (!window.XLSX) {
+    await new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = "https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js";
+      s.onload = resolve;
+      s.onerror = reject;
+      document.head.appendChild(s);
+    });
+  }
+  const XLSX = window.XLSX;
+  const rows = cases.map(buildAllowanceRow);
+  const ws = XLSX.utils.json_to_sheet(rows);
+  // Column widths
+  ws["!cols"] = [
+    { wch: 20 }, { wch: 26 }, { wch: 14 }, { wch: 14 },
+    { wch: 16 }, { wch: 40 }, { wch: 14 }, { wch: 14 },
+    { wch: 14 }, { wch: 14 },
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Allowance Sheet");
+  XLSX.writeFile(wb, filename);
+};
+
+
 const FieldOfficerDashboard = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
@@ -68,6 +141,12 @@ const FieldOfficerDashboard = () => {
   const [selectedBank, setSelectedBank] = useState(null);
   const [selectedCaseDocs, setSelectedCaseDocs] = useState([]);
   const [isDocsModalOpen, setIsDocsModalOpen] = useState(false);
+
+  // Deny reason modal state
+  const [isDenyModalOpen, setIsDenyModalOpen] = useState(false);
+  const [denyTargetCase, setDenyTargetCase] = useState(null); // { id, bankName }
+  const [denyReason, setDenyReason] = useState("");
+  const [isDenyLoading, setIsDenyLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -165,14 +244,36 @@ const FieldOfficerDashboard = () => {
     }
   };
 
-  const handleDecline = async (id, bankName) => {
+  const handleDecline = async (id, bankName, reason) => {
     try {
-      await dispatch(declineCaseById({ id, bankName })).unwrap();
+      await dispatch(declineCaseById({ id, bankName, declineReason: reason })).unwrap();
       toast.success("Case declined successfully");
       navigate(0);
     } catch (err) {
       console.log(err);
       toast.error("Failed to decline case");
+    }
+  };
+
+  // Opens the Deny Reason modal instead of directly declining
+  const openDenyModal = (id, bankName) => {
+    setDenyTargetCase({ id, bankName });
+    setDenyReason("");
+    setIsDenyModalOpen(true);
+  };
+
+  // Called when officer confirms the denial with a reason
+  const confirmDeny = async () => {
+    if (!denyReason.trim()) {
+      toast.error("Please provide a reason before denying.");
+      return;
+    }
+    setIsDenyLoading(true);
+    try {
+      await handleDecline(denyTargetCase.id, denyTargetCase.bankName, denyReason.trim());
+      setIsDenyModalOpen(false);
+    } finally {
+      setIsDenyLoading(false);
     }
   };
 
@@ -468,7 +569,7 @@ const FieldOfficerDashboard = () => {
                 Accept
               </Button>
               <Button
-                onClick={() => handleDecline(record._id, record.bankName)}
+                onClick={() => openDenyModal(record._id, record.bankName)}
                 className="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100 hover:border-rose-200 font-bold text-xs rounded-xl h-8 px-4 flex items-center justify-center cursor-pointer active:scale-95 transition-all"
               >
                 Deny
@@ -1296,7 +1397,7 @@ const FieldOfficerDashboard = () => {
                           <Check size={14} /> Accept
                         </button>
                         <button
-                          onClick={() => handleDecline(caseItem._id, caseItem.bankName)}
+                          onClick={() => openDenyModal(caseItem._id, caseItem.bankName)}
                           className="py-3 px-4 bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 font-bold text-xs rounded-xl border border-rose-100 transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                         >
                           <X size={14} /> Deny
@@ -1355,6 +1456,253 @@ const FieldOfficerDashboard = () => {
           </div>
         </>
       )}
+
+      {/* ─── Allowance Sheet Panel ─── shown below completed cases ─── */}
+      {!loading && selectedStatus === "COMPLETED" && sortedCases.length > 0 && (
+        <div className="mt-6 bg-white rounded-[24px] border border-emerald-200 shadow-sm overflow-hidden">
+          {/* Panel Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 py-4 bg-gradient-to-r from-[#1c2725] to-[#2e4a42] rounded-t-[24px]">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-[#eef68f]/20 rounded-xl flex items-center justify-center shrink-0">
+                <FileSpreadsheet size={18} className="text-[#eef68f]" />
+              </div>
+              <div>
+                <div className="text-white font-extrabold text-sm tracking-tight">Allowance Sheet</div>
+                <div className="text-[#7a928e] text-[10px] font-semibold mt-0.5">
+                  {sortedCases.length} completed {sortedCases.length === 1 ? "case" : "cases"} · Officer: {user?.name || "—"}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => exportAllowanceCSV(
+                  sortedCases,
+                  `allowance_${(user?.name || "officer").replace(/\s+/g, "_")}_${dayjs().format("DDMMYYYY")}.csv`
+                )}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-400/20 hover:bg-emerald-400/30 text-[#eef68f] border border-emerald-400/30 hover:border-emerald-400/60 font-bold text-xs rounded-xl transition-all cursor-pointer active:scale-95 shadow-sm"
+              >
+                <Download size={13} />
+                Export CSV
+              </button>
+              <button
+                onClick={() => exportAllowanceExcel(
+                  sortedCases,
+                  `allowance_${(user?.name || "officer").replace(/\s+/g, "_")}_${dayjs().format("DDMMYYYY")}.xlsx`
+                )}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-400/20 hover:bg-blue-400/30 text-blue-200 border border-blue-400/30 hover:border-blue-400/60 font-bold text-xs rounded-xl transition-all cursor-pointer active:scale-95 shadow-sm"
+              >
+                <FileSpreadsheet size={13} />
+                Export Excel
+              </button>
+            </div>
+          </div>
+
+          {/* Allowance Table — scrollable horizontally */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs font-outfit border-collapse">
+              <thead>
+                <tr className="bg-[#f4faf8] border-b-2 border-emerald-100">
+                  {[
+                    "Bank",
+                    "Customer Name",
+                    "Assign Date",
+                    "Visit Date",
+                    "Submitted Date",
+                    "Property Address",
+                    "City",
+                    "Latitude",
+                    "Longitude",
+                    "Distance (km)",
+                  ].map((col) => (
+                    <th
+                      key={col}
+                      className="px-4 py-3 text-left text-[10px] font-extrabold uppercase tracking-widest text-[#5c706c] whitespace-nowrap"
+                    >
+                      {col}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {sortedCases.map((record, idx) => {
+                  const row = buildAllowanceRow(record);
+                  const isEven = idx % 2 === 0;
+                  return (
+                    <tr
+                      key={record._id || idx}
+                      className={`border-b border-slate-50 hover:bg-emerald-50/40 transition-colors ${
+                        isEven ? "bg-white" : "bg-[#fafffe]"
+                      }`}
+                    >
+                      {/* Bank */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <Tag
+                          color={getBankTagColor(row["Bank"])}
+                          className="font-extrabold border-none rounded-lg px-2.5 py-0.5 text-[9px] uppercase tracking-wider shadow-sm"
+                        >
+                          {row["Bank"]}
+                        </Tag>
+                      </td>
+                      {/* Customer Name */}
+                      <td className="px-4 py-3 font-extrabold text-[#1c2725] whitespace-nowrap max-w-[160px] truncate">
+                        {row["Customer Name"]}
+                      </td>
+                      {/* Assign Date */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-slate-50 border border-slate-100 text-slate-600">
+                          <Calendar size={10} className="text-slate-400" />
+                          {row["Assign Date"]}
+                        </span>
+                      </td>
+                      {/* Visit Date */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-blue-50 border border-blue-100 text-blue-700">
+                          <MapPin size={10} className="text-blue-400" />
+                          {row["Visit Date"]}
+                        </span>
+                      </td>
+                      {/* Submitted Date */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-emerald-50 border border-emerald-100 text-emerald-700">
+                          <CheckCircle2 size={10} className="text-emerald-500" />
+                          {row["Submitted Date"]}
+                        </span>
+                      </td>
+                      {/* Property Address */}
+                      <td className="px-4 py-3 max-w-[220px]">
+                        <span
+                          className="text-[11px] text-slate-600 font-medium block truncate"
+                          title={row["Property Address"]}
+                        >
+                          {row["Property Address"]}
+                        </span>
+                      </td>
+                      {/* City */}
+                      <td className="px-4 py-3 whitespace-nowrap font-bold text-[#1b4d3e]">
+                        {row["City"]}
+                      </td>
+                      {/* Latitude */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="font-mono text-[10px] text-slate-500 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100">
+                          {row["Latitude"]}
+                        </span>
+                      </td>
+                      {/* Longitude */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="font-mono text-[10px] text-slate-500 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100">
+                          {row["Longitude"]}
+                        </span>
+                      </td>
+                      {/* Distance */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {row["Distance (km)"] !== "N/A" ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-50 border border-amber-100 text-amber-700">
+                            {row["Distance (km)"]} km
+                          </span>
+                        ) : (
+                          <span className="text-slate-300 text-[10px] italic">N/A</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Panel Footer */}
+          <div className="px-6 py-3 bg-[#f4faf8] border-t border-emerald-100 flex items-center justify-between">
+            <span className="text-[10px] text-slate-400 font-semibold">
+              Showing all {sortedCases.length} completed {sortedCases.length === 1 ? "case" : "cases"}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => exportAllowanceCSV(
+                  sortedCases,
+                  `allowance_${(user?.name || "officer").replace(/\s+/g, "_")}_${dayjs().format("DDMMYYYY")}.csv`
+                )}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] rounded-xl transition-all cursor-pointer active:scale-95 shadow-sm"
+              >
+                <Download size={11} /> CSV
+              </button>
+              <button
+                onClick={() => exportAllowanceExcel(
+                  sortedCases,
+                  `allowance_${(user?.name || "officer").replace(/\s+/g, "_")}_${dayjs().format("DDMMYYYY")}.xlsx`
+                )}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] rounded-xl transition-all cursor-pointer active:scale-95 shadow-sm"
+              >
+                <FileSpreadsheet size={11} /> Excel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Deny Reason Modal */}
+      <Modal
+        title={
+          <div className="flex items-center gap-2 pb-3 border-b border-rose-100 font-bold text-rose-700 text-lg">
+            <X className="w-5 h-5 text-rose-500" />
+            <span>Deny Case — Provide Reason</span>
+          </div>
+        }
+        open={isDenyModalOpen}
+        onCancel={() => !isDenyLoading && setIsDenyModalOpen(false)}
+        footer={null}
+        width={520}
+        className="rounded-2xl overflow-hidden font-outfit"
+        maskClosable={!isDenyLoading}
+      >
+        <div className="py-4">
+          <p className="text-sm font-semibold text-slate-600 mb-3 leading-relaxed">
+            Please fill in a <span className="font-extrabold text-rose-600">reason</span> for declining this case. This will be recorded for review.
+          </p>
+
+          <div className="mb-2">
+            <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-1.5">
+              Reason for Denial <span className="text-rose-500">*</span>
+            </label>
+            <textarea
+              rows={4}
+              value={denyReason}
+              onChange={(e) => setDenyReason(e.target.value)}
+              placeholder="e.g. Property documents incomplete, unable to verify address, customer unreachable..."
+              className="w-full border border-slate-200 focus:border-rose-400 focus:ring-2 focus:ring-rose-100 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 placeholder:text-slate-300 resize-none outline-none transition-all"
+              disabled={isDenyLoading}
+            />
+            {denyReason.trim().length === 0 && (
+              <p className="text-[10px] text-rose-400 font-bold mt-1 ml-1">⚠ Reason is required to proceed.</p>
+            )}
+          </div>
+
+          <div className="flex gap-2.5 mt-5 justify-end">
+            <button
+              onClick={() => setIsDenyModalOpen(false)}
+              disabled={isDenyLoading}
+              className="px-5 py-2.5 rounded-xl font-bold text-xs text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmDeny}
+              disabled={isDenyLoading || !denyReason.trim()}
+              className="px-5 py-2.5 rounded-xl font-bold text-xs text-white bg-rose-600 hover:bg-rose-700 border-none transition-all cursor-pointer active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {isDenyLoading ? (
+                <>
+                  <span className="w-3.5 h-3.5 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+                  Denying...
+                </>
+              ) : (
+                <>
+                  <X size={13} /> Confirm Deny
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Notes Modal */}
       <Modal

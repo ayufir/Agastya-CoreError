@@ -141,18 +141,49 @@ const PropertyDetails = ({
         plotArea: safeVal("plotArea"),
         linearDimension: safeVal("linearDimension"),
         marketability: safeVal("marketability") || undefined,
-        typeOfStructure: safeVal("typeOfStructure") || undefined,
-        typeOfRoof: safeVal("typeOfRoof") || undefined,
-        noOfFloorsPermissible: safeVal("noOfFloorsPermissible"),
-        noOfFloorsActual: safeVal("noOfFloorsActual"),
-        noOfUnitFlatOnEachFloor: safeVal("noOfUnitFlatOnEachFloor"),
-        qualityOfConstruction: safeVal("qualityOfConstruction") || undefined,
-        approxAgeOfProperty: safeVal("approxAgeOfProperty"),
-        residualAge: safeVal("residualAge"),
+        typeOfStructure: safeVal("typeOfStructure", "RCC") || undefined,
+        typeOfRoof: safeVal("typeOfRoof", "RCC") || undefined,
+        noOfFloorsPermissible: safeVal("noOfFloorsPermissible", "NA"),
+        noOfFloorsActual: safeVal("noOfFloorsActual", "NA"),
+        noOfUnitFlatOnEachFloor: safeVal("noOfUnitFlatOnEachFloor", "NA"),
+        qualityOfConstruction: safeVal("qualityOfConstruction", "Average") || undefined,
+        approxAgeOfProperty: safeVal("approxAgeOfProperty", "0"),
+        residualAge: safeVal("residualAge", "60"),
         landArea: safeVal("landArea"),
       });
     }
   }, [isEdit, extractedData, form]);
+
+  // S7: Boundaries Plan sync logic based on layout plan availability
+  useEffect(() => {
+    const docs = isEdit?.documents || [];
+    const layoutPlan = docs.find((d) => d.type === "Layout Plan");
+    const hasLayoutPlan = layoutPlan && layoutPlan.approvingAuthority && layoutPlan.approvingAuthority !== "NA";
+
+    const directions = form.getFieldValue("directions") || {};
+    let changed = false;
+    const updatedDirs = { ...directions };
+
+    ["North", "South", "East", "West"].forEach((dir) => {
+      const actualVal = directions[dir]?.actual || "";
+      const currentPlan = directions[dir]?.plan;
+
+      let targetPlan = "NA";
+      if (hasLayoutPlan) {
+        targetPlan = actualVal || "NA";
+      }
+
+      if (currentPlan !== targetPlan) {
+        if (!updatedDirs[dir]) updatedDirs[dir] = {};
+        updatedDirs[dir] = { ...updatedDirs[dir], plan: targetPlan };
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      form.setFieldsValue({ directions: updatedDirs });
+    }
+  }, [formValues.directions, isEdit.documents, form]);
 
   const handleFinish = (values) => {
     if (!onNext) return;
@@ -287,8 +318,10 @@ const PropertyDetails = ({
                 <label>Boundaries Matching</label>
                 <Form.Item name="boundariesMatching" rules={[{ required: true, message: "Required!" }]} style={{ margin: 0 }}>
                   <Select allowClear className="w-full" placeholder="Boundaries Matching">
-                    <Option value="YES">Yes</Option>
-                    <Option value="NO">No</Option>
+                    <Option value="YES">YES</Option>
+                    <Option value="PARTIAL">PARTIAL</Option>
+                    <Option value="NO">NO</Option>
+                    <Option value="CANNOT VERIFY">CANNOT VERIFY</Option>
                   </Select>
                 </Form.Item>
               </div>
@@ -297,16 +330,30 @@ const PropertyDetails = ({
                 <label>Marketability</label>
                 <Form.Item name="marketability" rules={[{ required: true, message: "Required!" }]} style={{ margin: 0 }}>
                   <Select allowClear className="w-full" placeholder="Marketability">
-                    <Option value="Good">Good</Option>
-                    <Option value="Average">Average</Option>
-                    <Option value="Poor">Poor</Option>
+                    <Option value="GOOD">GOOD</Option>
+                    <Option value="AVERAGE">AVERAGE</Option>
+                    <Option value="POOR">POOR</Option>
                   </Select>
                 </Form.Item>
               </div>
 
               <div className={`custom-form-item-wrapper ${hasValue("boundaryRemarks") ? "has-value" : ""}`} style={{ position: "relative", gridColumn: "1 / -1" }}>
                 <label>Boundary Remarks in Detail</label>
-                <Form.Item name="boundaryRemarks" style={{ margin: 0 }}>
+                <Form.Item
+                  name="boundaryRemarks"
+                  rules={[
+                    { required: true, message: "Required!" },
+                    {
+                      validator: (_, value) => {
+                        if (!value || (!value.startsWith("IDENTIFIED.") && !value.startsWith("UNIDENTIFIED."))) {
+                          return Promise.reject("Remarks must begin with 'IDENTIFIED.' or 'UNIDENTIFIED.'");
+                        }
+                        return Promise.resolve();
+                      }
+                    }
+                  ]}
+                  style={{ margin: 0 }}
+                >
                   <Input.TextArea style={{ borderRadius: "6px", border: "1px solid #d1d5db", minHeight: "80px" }} placeholder="Boundary Remarks in Detail" />
                 </Form.Item>
               </div>

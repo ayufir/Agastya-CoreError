@@ -38,9 +38,9 @@ const HomeFirstPortalSections = ({
 
     if (mode === "billing") {
       form.setFieldsValue({
-        charges: (isEdit.charges !== undefined && isEdit.charges !== null && isEdit.charges !== "") ? isEdit.charges : 0,
+        charges: (isEdit.charges !== undefined && isEdit.charges !== null && isEdit.charges !== "") ? isEdit.charges : 1800,
         baseRate: (isEdit.baseRate !== undefined && isEdit.baseRate !== null && isEdit.baseRate !== "") ? isEdit.baseRate : 1800,
-        totalAmount: (isEdit.totalAmount !== undefined && isEdit.totalAmount !== null && isEdit.totalAmount !== "") ? isEdit.totalAmount : 0,
+        totalAmount: (isEdit.totalAmount !== undefined && isEdit.totalAmount !== null && isEdit.totalAmount !== "") ? isEdit.totalAmount : 1800,
       });
     }
 

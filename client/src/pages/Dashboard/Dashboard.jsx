@@ -365,6 +365,12 @@ const Dashboard = () => {
         return s.includes("pending");
       }).length,
 
+      // Cases returned by FO with a decline reason
+      declined: filteredCases.filter((item) => {
+        const s = normalizeStatus(item.status);
+        return s.includes("pending") && item.approvalStatus === "Declined" && item.declineReason;
+      }).length,
+
       working: filteredCases.filter((item) => {
         const s = normalizeStatus(item.status);
         return (
@@ -431,6 +437,7 @@ const Dashboard = () => {
         title: "To Be Assigned / File Generated",
         total: cardCounts.pending,
         component: "Pending",
+        declinedCount: cardCounts.declined,
       },
       {
         title: "Total Assigned / Work in Progress",
@@ -702,6 +709,25 @@ const Dashboard = () => {
                       <div className="stat-card-value" style={{ color:m.color }}>
                         <CountUp end={Number(r.total)||0} duration={1.2} separator="," />
                       </div>
+                      {/* Show FO Declined sub-badge on "To Be Assigned" card */}
+                      {r.declinedCount > 0 && (
+                        <div style={{
+                          marginTop: 6,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                          background: "#fff1f2",
+                          border: "1px solid #fecdd3",
+                          borderRadius: 6,
+                          padding: "2px 7px",
+                          fontSize: 10,
+                          fontWeight: 700,
+                          color: "#e11d48",
+                          letterSpacing: "0.3px",
+                        }}>
+                          ⚠️ {r.declinedCount} FO Denied
+                        </div>
+                      )}
                       {isActive && <div style={{ position:"absolute", bottom:0, left:0, right:0, height:3, background:m.color, borderRadius:"0 0 16px 16px" }} />}
                     </div>
                   );
