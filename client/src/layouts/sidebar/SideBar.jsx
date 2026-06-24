@@ -75,6 +75,8 @@ const SideBar = ({ isCollapsed, setIsCollapsed }) => {
       <div className='hidden lg:flex h-screen '>
         {/* Collapsed Sidebar */}
         <div
+          onMouseEnter={() => setIsCollapsed(false)}
+          onMouseLeave={() => setIsCollapsed(true)}
           className={`${
             isCollapsed ? "w-20" : "w-64"
           } transition-all duration-300 bg-white shadow-[0_4px_30px_rgba(0,0,0,0.05)] rounded-r-2xl border-r border-gray-200`}

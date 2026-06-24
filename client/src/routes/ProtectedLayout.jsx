@@ -40,8 +40,16 @@ const ProtectedLayout = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (user && user?.role !== "SuperAdmin" && user?.assignedCity) {
-      dispatch(setZone(user.assignedCity));
+    if (user) {
+      const centralCities = ["Bhopal", "Gwalior", "Jabalpur"];
+      if (["SuperAdmin", "Admin"].includes(user?.role)) {
+        // SuperAdmin & Admin see all zones by default
+      } else if (["Coordinator"].includes(user?.role) && centralCities.includes(user?.assignedCity)) {
+        // Central staff see all central cities combined by default
+        dispatch(setZone(""));
+      } else if (user?.assignedCity) {
+        dispatch(setZone(user.assignedCity));
+      }
     }
   }, [user, dispatch]);
 

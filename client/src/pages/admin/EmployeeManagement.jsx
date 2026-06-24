@@ -8,7 +8,7 @@ import {
   deleteEmployee,
 } from "../../redux/features/auth/authThunks";
 
-const { Option } = Select;
+const { Option, OptGroup } = Select;
 
 function EmployeeManagement() {
   const [form] = Form.useForm();
@@ -75,7 +75,7 @@ function EmployeeManagement() {
       handleCancel();
       dispatch(fetchFieldOfficers()); // Refresh list
     } catch (err) {
-      message.error("Something went wrong");
+      message.error(err || "Something went wrong");
       console.error(err);
     }
   };
@@ -187,11 +187,17 @@ function EmployeeManagement() {
           <Form.Item name='assignedCity' label='Assigned City/Zone'>
             <Select placeholder='Select City (Leave empty for All)'>
               <Option value=''>All Cities</Option>
-              <Option value='Bhopal'>Bhopal</Option>
-              <Option value='Indore'>Indore</Option>
-              <Option value='Jabalpur'>Jabalpur</Option>
-              <Option value='Gwalior'>Gwalior</Option>
-              <Option value='Dehradun'>Dehradun</Option>
+              <OptGroup label="Central Portal (Bhopal, Jabalpur, Gwalior)">
+                <Option value='Bhopal'>Bhopal</Option>
+                <Option value='Jabalpur'>Jabalpur</Option>
+                <Option value='Gwalior'>Gwalior</Option>
+              </OptGroup>
+              <OptGroup label="Indore Portal">
+                <Option value='Indore'>Indore</Option>
+              </OptGroup>
+              <OptGroup label="Dehradun Portal">
+                <Option value='Dehradun'>Dehradun</Option>
+              </OptGroup>
             </Select>
           </Form.Item>
         </Form>

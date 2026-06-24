@@ -1,4 +1,4 @@
-import { Home, List, LogOut } from "lucide-react";
+import { Home, List, LogOut, Layers } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { App, Select } from "antd";
 import { MdAdminPanelSettings } from "react-icons/md";
@@ -25,15 +25,17 @@ const MenuItems = () => {
   const [selectedZoneLocal, setSelectedZoneLocal] = useState("--Select Zone--");
 
   const handleChange = (value) => {
-    setSelectedZoneLocal(value);
-    // Save selected city for report creation only (do NOT change dashboard filter)
-    dispatch(setSavedCity(value));
+    setSelectedZoneLocal(value || "--Select Zone--");
+    dispatch(setSavedCity(value || ""));
+    dispatch(setZone(value || ""));
   };
 
   // Sync Redux zone back to local state on mount
   useEffect(() => {
     if (selectedZone) {
       setSelectedZoneLocal(selectedZone);
+    } else {
+      setSelectedZoneLocal("--Select Zone--");
     }
   }, [selectedZone]);
 
@@ -51,6 +53,12 @@ const MenuItems = () => {
       path: "/",
       icon: <Home size={iconSize} />,
       isActive: currentPath === "/",
+    },
+    {
+      name: "Application Pipeline",
+      path: "/pipeline",
+      icon: <Layers size={iconSize} />,
+      isActive: currentPath === "/pipeline",
     },
     {
       name: "Banks",
@@ -90,10 +98,21 @@ const MenuItems = () => {
 
   const user = useSelector((state) => state.auth.user);
 
+  const isCentralStaff = ["Coordinator"].includes(user?.role) && ["Bhopal", "Gwalior", "Jabalpur"].includes(user?.assignedCity);
+  const showCitySelector = ["SuperAdmin", "Admin"].includes(user?.role) || isCentralStaff;
+  const allowedCities = isCentralStaff ? ["Bhopal", "Jabalpur", "Gwalior"] : cities;
+
   useEffect(() => {
-    // If not SuperAdmin, auto-set the zone to the user's assigned city
-    if (user && user.role !== "SuperAdmin") {
-      dispatch(setZone(user.assignedCity || ""));
+    if (user) {
+      const centralCities = ["Bhopal", "Gwalior", "Jabalpur"];
+      if (["SuperAdmin", "Admin"].includes(user.role)) {
+        // SuperAdmin & Admin see all zones by default
+      } else if (["Coordinator"].includes(user.role) && centralCities.includes(user.assignedCity)) {
+        // Central staff see Bhopal + Gwalior + Jabalpur combined by default
+        dispatch(setZone(""));
+      } else {
+        dispatch(setZone(user.assignedCity || ""));
+      }
     }
   }, [user, dispatch]);
 
@@ -123,44 +142,44 @@ const MenuItems = () => {
           </div>
         </div>
 
-        {user?.role === "SuperAdmin" ? (
-          <>
-            <div className='w-full max-w-sm mx-auto p-2'>
-              <label
-                htmlFor='city'
-                className='block text-sm font-medium text-gray-200 mb-1'
-              >
-                {/* Select City */}
-              </label>
-              
-              {/* ✅ UPDATED: Multiple Select for Zones */}
-              <Select
-                id='city'
-                value={selectedZoneLocal}
-                onChange={handleChange}
-                placeholder="--Select Zone--"
-                className='w-52'
-                allowClear
-              >
-                {cities.map((city, index) => (
-                  <Option key={index} value={city}>
-                    {city}
-                  </Option>
-                ))}
-              </Select>
-            </div>
-          </>
-        ) : (
+        {showCitySelector ? (
+        <>
           <div className='w-full max-w-sm mx-auto p-2'>
-            <div className={`px-4.5 py-2 border rounded-2xl text-xs font-bold transition-all ${
-              isFieldOfficer 
-                ? 'bg-[#eef7f4] border-[#d0e6df] text-[#1c2725]' 
-                : 'bg-gray-100 border-gray-300 text-gray-700'
-            }`}>
-              Zone: {user?.assignedCity || "All Zones"}
-            </div>
+            <label
+              htmlFor='city'
+              className='block text-sm font-medium text-gray-200 mb-1'
+            >
+              {/* Select City */}
+            </label>
+            
+            {/* ✅ UPDATED: Multiple Select for Zones */}
+            <Select
+              id='city'
+              value={selectedZoneLocal}
+              onChange={handleChange}
+              placeholder="--Select Zone--"
+              className='w-52'
+              allowClear
+            >
+              {allowedCities.map((city, index) => (
+                <Option key={index} value={city}>
+                  {city}
+                </Option>
+              ))}
+            </Select>
           </div>
-        )}
+        </>
+      ) : (
+        <div className='w-full max-w-sm mx-auto p-2'>
+          <div className={`px-4.5 py-2 border rounded-2xl text-xs font-bold transition-all ${
+            isFieldOfficer 
+              ? 'bg-[#eef7f4] border-[#d0e6df] text-[#1c2725]' 
+              : 'bg-gray-100 border-gray-300 text-gray-700'
+          }`}>
+            Zone: {user?.assignedCity || "All Zones"}
+          </div>
+        </div>
+      )}
       </div>
 
       {/* Menu Items */}

@@ -7,6 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Pending from "./Pending";
 import QueryRaised from "./Admin/QueryRaised";
 import AssignedCase from "./Admin/AssignedCase";
+import ApprovalPendingCases from "./Admin/ApprovalPendingCases";
 import MyWorklist from "./MyWorklist";
 import FinalSubmittedCase from "./Admin/FinalSubmittedCase";
 import CancelledCases from "./Admin/CancelledCases";
@@ -30,6 +31,13 @@ const readValue = (record, paths) => {
 
 const normalizeStatus = (status = "") =>
   status.toString().toLowerCase().trim().replace(/\s+/g, " ");
+
+const isApprovalPending = (item) => {
+  const s = normalizeStatus(item.status);
+  const isSubmitted = s.includes("submitted") || item.isReportSubmitted === true;
+  const isFinal = s.includes("final") || s.includes("done") || s.includes("complete");
+  return isSubmitted && !isFinal;
+};
 
 const getCurrentMonthValue = () => {
   const d = new Date();
@@ -362,16 +370,17 @@ const Dashboard = () => {
     return {
       pending: filteredCases.filter((item) => {
         const s = normalizeStatus(item.status);
-        return s.includes("pending");
+        return s.includes("pending") && !isApprovalPending(item);
       }).length,
 
       // Cases returned by FO with a decline reason
       declined: filteredCases.filter((item) => {
         const s = normalizeStatus(item.status);
-        return s.includes("pending") && item.approvalStatus === "Declined" && item.declineReason;
+        return s.includes("pending") && item.approvalStatus === "Declined" && item.declineReason && !isApprovalPending(item);
       }).length,
 
       working: filteredCases.filter((item) => {
+        if (isApprovalPending(item)) return false;
         const s = normalizeStatus(item.status);
         return (
           s.includes("working") ||
@@ -379,10 +388,11 @@ const Dashboard = () => {
           s.includes("progress") ||
           s.includes("visited") ||
           s.includes("reported") ||
-          s.includes("reviewed") ||
-          (s.includes("submitted") && !s.includes("final"))
+          s.includes("reviewed")
         );
       }).length,
+
+      approvalPending: filteredCases.filter(isApprovalPending).length,
 
       finalSubmitted: filteredCases.filter((item) => {
         const s = normalizeStatus(item.status);
@@ -432,45 +442,60 @@ const Dashboard = () => {
   }, [filteredCases]);
 
   const reports = useMemo(
-    () => [
-      {
-        title: "To Be Assigned / File Generated",
-        total: cardCounts.pending,
-        component: "Pending",
-        declinedCount: cardCounts.declined,
-      },
-      {
-        title: "Total Assigned / Work in Progress",
-        total: cardCounts.working,
-        component: "Assigned",
-      },
-      {
-        title: "Total Submission",
-        total: cardCounts.finalSubmitted,
-        component: "ReportSubmitted",
-      },
-      {
-        title: "Query Raised",
-        total: cardCounts.query,
-        component: "QueryRaised",
-      },
-      {
-        title: "Cancel Cases",
-        total: cardCounts.cancelled,
-        component: "CancelCases",
-      },
-      {
-        title: "Out Tat Cases",
-        total: cardCounts.outOfTat,
-        component: "Out_Tat_Cases",
-      },
-      {
-        title: "All Cases",
-        total: cardCounts.allCases,
-        component: "Summary",
-      },
-    ],
-    [cardCounts]
+    () => {
+      const baseReports = [
+        {
+          title: "To Be Assigned / File Generated",
+          total: cardCounts.pending,
+          component: "Pending",
+          declinedCount: cardCounts.declined,
+        },
+        {
+          title: "Total Assigned / Work in Progress",
+          total: cardCounts.working,
+          component: "Assigned",
+        },
+      ];
+
+      if (user?.role === "Admin" || user?.role === "SuperAdmin") {
+        baseReports.push({
+          title: "Approval Pending",
+          total: cardCounts.approvalPending,
+          component: "ApprovalPending",
+        });
+      }
+
+      baseReports.push(
+        {
+          title: "Total Submission",
+          total: cardCounts.finalSubmitted,
+          component: "ReportSubmitted",
+        },
+        {
+          title: "Query Raised",
+          total: cardCounts.query,
+          component: "QueryRaised",
+        },
+        {
+          title: "Cancel Cases",
+          total: cardCounts.cancelled,
+          component: "CancelCases",
+        },
+        {
+          title: "Out Tat Cases",
+          total: cardCounts.outOfTat,
+          component: "Out_Tat_Cases",
+        },
+        {
+          title: "All Cases",
+          total: cardCounts.allCases,
+          component: "Summary",
+        }
+      );
+
+      return baseReports;
+    },
+    [cardCounts, user]
   );
 
   const bankSummary = useMemo(() => getBankStats(filteredCases), [filteredCases]);
@@ -543,15 +568,16 @@ const Dashboard = () => {
   ].sort();
 
   /* ── icon map for stat cards ── */
-  const CARD_META = [
-    { icon: "📂", color: "#f59e0b", bg: "#fffbeb", border: "#fde68a" },
-    { icon: "⚙️", color: "#6366f1", bg: "#eef2ff", border: "#c7d2fe" },
-    { icon: "✅", color: "#10b981", bg: "#ecfdf5", border: "#a7f3d0" },
-    { icon: "❓", color: "#ef4444", bg: "#fff1f2", border: "#fecdd3" },
-    { icon: "🚫", color: "#6b7280", bg: "#f9fafb", border: "#e5e7eb" },
-    { icon: "⏱️", color: "#dc2626", bg: "#fef2f2", border: "#fecaca" },
-    { icon: "📊", color: "#0ea5e9", bg: "#f0f9ff", border: "#bae6fd" },
-  ];
+  const CARD_META_MAP = {
+    Pending: { icon: "📂", color: "#f59e0b", bg: "#fffbeb", border: "#fde68a" },
+    Assigned: { icon: "⚙️", color: "#6366f1", bg: "#eef2ff", border: "#c7d2fe" },
+    ApprovalPending: { icon: "⏳", color: "#ec4899", bg: "#fdf2f8", border: "#fbcfe8" },
+    ReportSubmitted: { icon: "✅", color: "#10b981", bg: "#ecfdf5", border: "#a7f3d0" },
+    QueryRaised: { icon: "❓", color: "#ef4444", bg: "#fff1f2", border: "#fecdd3" },
+    CancelCases: { icon: "🚫", color: "#6b7280", bg: "#f9fafb", border: "#e5e7eb" },
+    Out_Tat_Cases: { icon: "⏱️", color: "#dc2626", bg: "#fef2f2", border: "#fecaca" },
+    Summary: { icon: "📊", color: "#0ea5e9", bg: "#f0f9ff", border: "#bae6fd" },
+  };
 
   return (
     <div style={{ background: "#f4f6fb", padding: "0" }}>
@@ -697,8 +723,8 @@ const Dashboard = () => {
             {/* Stat Cards */}
             {!selectedBankView && (
               <div className="stat-cards-grid">
-                {reports.map((r, i) => {
-                  const m = CARD_META[i] || CARD_META[0];
+                 {reports.map((r, i) => {
+                  const m = CARD_META_MAP[r.component] || CARD_META_MAP.Pending;
                   const isActive = activeComponent === r.component;
                   return (
                     <div key={i} className={`stat-card ${isActive?"selected":""}`}
@@ -935,6 +961,7 @@ const Dashboard = () => {
 
             {activeComponent==="Pending"         && <Pending selectedMonth={selectedMonth} />}
             {activeComponent==="Assigned"        && <AssignedCase selectedMonth={selectedMonth} />}
+            {activeComponent==="ApprovalPending" && <ApprovalPendingCases selectedMonth={selectedMonth} />}
             {activeComponent==="QueryRaised"     && <QueryRaised selectedMonth={selectedMonth} />}
             {activeComponent==="ReportSubmitted" && <FinalSubmittedCase selectedMonth={selectedMonth} />}
             {activeComponent==="CancelCases"     && <CancelledCases selectedMonth={selectedMonth} />}

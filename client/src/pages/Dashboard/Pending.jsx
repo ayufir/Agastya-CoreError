@@ -343,59 +343,6 @@ const Pending = ({ selectedMonth }) => {
         </div>
       ),
     },
-    {
-      title: "Upload Document",
-      key: "upload",
-      width: 150,
-      render: (record) => (
-        <div className="compact-uploader">
-          <ImageUploader
-            caseId={record._id}
-            bankName={record.bankName}
-            fetchData={fetchPendingList}
-          />
-        </div>
-      ),
-    },
-    {
-      title: "Attachments",
-      key: "AttachDocuments",
-      width: 160,
-      render: (record) => {
-        const attachments = [
-          ...(record.AttachDocuments || []),
-          ...(record.atsDocuments || []),
-        ];
-
-        if (!attachments || attachments.length === 0) {
-          return <span className="text-gray-400 text-xs italic">No Attachments</span>;
-        }
-
-        return (
-          <div className="flex flex-col gap-1">
-            {attachments.map((attachment, index) => {
-              const attachmentUrl = attachment?.url || attachment;
-              const fileName = attachmentUrl?.split("/").pop();
-
-              return (
-                <a
-                  key={`${attachmentUrl}-${index}`}
-                  href={attachmentUrl}
-                  download
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline bg-blue-50 border border-blue-100 rounded-md px-2 py-0.5 max-w-[140px]"
-                  title={fileName}
-                >
-                  <span style={{ fontSize: "10px" }}>📄</span>
-                  <span className="truncate" style={{ fontSize: "11px" }}>{fileName || `Doc ${index + 1}`}</span>
-                </a>
-              );
-            })}
-          </div>
-        );
-      },
-    },
   ];
 
   return (

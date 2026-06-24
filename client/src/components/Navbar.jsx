@@ -45,11 +45,15 @@ const Header = () => {
 
   const navLinks = [
     { name: "Home", href: "#", icon: <Home size={16} /> },
-    {
-      name: "Application Pipeline",
-      href: "/pipeline",
-      icon: <Layers size={16} />,
-    },
+    ...(["Admin", "SuperAdmin"].includes(user?.role)
+      ? [
+          {
+            name: "Application Pipeline",
+            href: "/pipeline",
+            icon: <Layers size={16} />,
+          },
+        ]
+      : []),
     { name: "Help/FAQs", href: "/help", icon: <HelpCircle size={16} /> },
   ];
 
@@ -72,7 +76,15 @@ const Header = () => {
                 <a
                   key={link.name}
                   href={link.href}
-                  onClick={() => setActiveTab(link.name)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setActiveTab(link.name);
+                    if (link.href.startsWith("/")) {
+                      navigate(link.href);
+                    } else if (link.name === "Home") {
+                      handleLogoClick();
+                    }
+                  }}
                   className={`inline-flex items-center gap-1 px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ${
                     activeTab === link.name
                       ? "border-indigo-500 text-gray-900"
@@ -119,9 +131,15 @@ const Header = () => {
               <a
                 key={link.name}
                 href={link.href}
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
                   setActiveTab(link.name);
                   setIsMobileMenuOpen(false);
+                  if (link.href.startsWith("/")) {
+                    navigate(link.href);
+                  } else if (link.name === "Home") {
+                    handleLogoClick();
+                  }
                 }}
                 className={`flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium transition-colors duration-200 ${
                   activeTab === link.name

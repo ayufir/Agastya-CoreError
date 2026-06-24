@@ -29,8 +29,7 @@ exports.register = async (req, res, next) => {
       email,
       password: hashedPassword,
       role,
-      assignedCity:
-        req.user.role === "Admin" ? req.user.assignedCity : assignedCity,
+      assignedCity,
     });
     res.status(201).json({ user, token: generateToken(user._id, user.role) });
   } catch (error) {

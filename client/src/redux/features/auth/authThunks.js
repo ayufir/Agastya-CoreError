@@ -33,23 +33,44 @@ export const fetchFieldOfficers = createAsyncThunk(
   }
 );
 
-export const addEmployee = createAsyncThunk("employee/add", async (data) => {
-  const res = await axios.post(`/auth/add-user`, data);
-  return res.data;
-});
+export const addEmployee = createAsyncThunk(
+  "employee/add",
+  async (data, { rejectWithValue }) => {
+    try {
+      const res = await axios.post(`/auth/add-user`, data);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to add employee"
+      );
+    }
+  }
+);
 
 export const updateEmployee = createAsyncThunk(
   "employee/update",
-  async ({ id, data }) => {
-    const res = await axios.put(`/auth/${id}`, data);
-    return res.data;
+  async ({ id, data }, { rejectWithValue }) => {
+    try {
+      const res = await axios.put(`/auth/${id}`, data);
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to update employee"
+      );
+    }
   }
 );
 
 export const deleteEmployee = createAsyncThunk(
   "employee/delete",
-  async (id) => {
-    await axios.delete(`/auth/${id}`);
-    return id; // for filter
+  async (id, { rejectWithValue }) => {
+    try {
+      await axios.delete(`/auth/${id}`);
+      return id; // for filter
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to delete employee"
+      );
+    }
   }
 );

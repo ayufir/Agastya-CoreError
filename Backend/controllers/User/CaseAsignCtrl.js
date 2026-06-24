@@ -180,7 +180,23 @@ const fetchCasesAcrossBanks = async ({
   return results.flat();
 };
 
-const applyCommonCaseFilters = (cases, rawQuery = {}) => {
+const applyCommonCaseFilters = (cases, rawQuery = {}, user) => {
+  // Enforce regional visibility for non-SuperAdmins and non-Admins
+  if (user && user.role !== "SuperAdmin" && user.role !== "Admin") {
+    const userCity = (user.assignedCity || "").toLowerCase().trim();
+    const centralCities = ["bhopal", "gwalior", "jabalpur"];
+    if (userCity) {
+      cases = cases.filter((caseItem) => {
+        const caseCity = (getCaseDisplayCity(caseItem) || "").toLowerCase().trim();
+        if (centralCities.includes(userCity)) {
+          return centralCities.some(c => caseCity === c || caseCity.includes(c));
+        } else {
+          return caseCity === userCity || caseCity.includes(userCity);
+        }
+      });
+    }
+  }
+
   const selectedBanks = parseMultiValueParam(
     rawQuery.bankName || rawQuery.bank || rawQuery.bankNames
   ).map(normalizeText);
@@ -299,9 +315,9 @@ const paginateItems = (items, query = {}, defaultLimit = 10) => {
   };
 };
 
-const buildCaseListPayload = (cases, query = {}, defaultLimit = 10) => {
+const buildCaseListPayload = (cases, query = {}, defaultLimit = 10, user) => {
   const filteredCases = sortCasesNewestFirst(
-    applyCommonCaseFilters(cases, query)
+    applyCommonCaseFilters(cases, query, user)
   );
   const { items, pagination } = paginateItems(
     filteredCases,
@@ -568,7 +584,7 @@ exports.getCasesByRole = async (req, res) => {
         let query = {};
 
         // Role-based ownership filtering
-        if (user.role === "Coordinator" || user.role === "Admin") {
+        if (user.role === "Coordinator") {
           // Show cases created BY them OR assigned TO them
           query.$or = [
             { createdBy: user._id },
@@ -584,6 +600,22 @@ exports.getCasesByRole = async (req, res) => {
     );
 
     allCases = results.flat();
+
+    // City restriction for non-SuperAdmin and non-Admin users
+    if (user && user.role !== "SuperAdmin" && user.role !== "Admin" && user.assignedCity) {
+      const centralCities = ["bhopal", "gwalior", "jabalpur"];
+      const normalizedUserCity = user.assignedCity.toLowerCase().trim();
+      
+      allCases = allCases.filter((caseItem) => {
+        const caseCity = (getCaseDisplayCity(caseItem) || "").toLowerCase().trim();
+        if (centralCities.includes(normalizedUserCity)) {
+          return centralCities.some(c => caseCity === c || caseCity.includes(c));
+        } else {
+          return caseCity === normalizedUserCity || caseCity.includes(normalizedUserCity);
+        }
+      });
+    }
+
     res.json(allCases);
   } catch (err) {
     console.error("Error in getCasesByRole:", err);
@@ -822,7 +854,7 @@ exports.getAllAssignedCases = async (req, res) => {
       populate: "assignedTo createdBy",
     });
 
-    res.json(buildCaseListPayload(allCases, req.query));
+    res.json(buildCaseListPayload(allCases, req.query, 10, user));
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to fetch assigned cases." });
@@ -838,7 +870,7 @@ exports.getPendingCases = async (req, res) => {
       populate: "assignedTo createdBy",
     });
 
-    res.json(buildCaseListPayload(allPendingCases, req.query));
+    res.json(buildCaseListPayload(allPendingCases, req.query, 10, user));
   } catch (err) {
     console.error("Error in getPendingCases:", err);
     res.status(500).json({ error: "Failed to fetch pending cases." });
@@ -983,7 +1015,7 @@ exports.getFinalSubmittedCases = async (req, res) => {
       populate: "assignedTo createdBy",
     });
 
-    res.status(200).json(buildCaseListPayload(finalCases, req.query));
+    res.status(200).json(buildCaseListPayload(finalCases, req.query, 10, user));
   } catch (err) {
     console.error("Error fetching final submitted cases:", err);
     res.status(500).json({ message: "Failed to fetch final submitted cases." });
@@ -1003,7 +1035,7 @@ exports.getCancelledCases = async (req, res) => {
 
     res.json({
       message: "Cancelled cases fetched successfully.",
-      ...buildCaseListPayload(cancelledCases, req.query),
+      ...buildCaseListPayload(cancelledCases, req.query, 10, user),
     });
   } catch (err) {
     console.error("Error fetching cancelled cases:", err);
@@ -1038,7 +1070,7 @@ exports.getOutOfTATCases = async (req, res) => {
       populate: "assignedTo createdBy",
     });
 
-    const payload = buildCaseListPayload(outOfTatCases, req.query);
+    const payload = buildCaseListPayload(outOfTatCases, req.query, 10, user);
 
     return res.status(200).json({
       success: true,
@@ -1147,10 +1179,10 @@ exports.getSummaryData = async (req, res) => {
     }
 
     const filteredTotalSubmissions = sortCasesNewestFirst(
-      applyCommonCaseFilters(totalSubmissions, req.query)
+      applyCommonCaseFilters(totalSubmissions, req.query, user)
     );
 
-    const summaryTable = buildCaseListPayload(totalSubmissions, req.query);
+    const summaryTable = buildCaseListPayload(totalSubmissions, req.query, 10, user);
 
     res.json({
       counts: {

@@ -53,7 +53,7 @@ const isApprovalPending = (item) => {
   return isSubmitted && !isFinal;
 };
 
-const AssignedCase = ({ selectedMonth }) => {
+const ApprovalPendingCases = ({ selectedMonth }) => {
   const dispatch = useDispatch();
 
   const { user } = useSelector((state) => state.auth);
@@ -61,7 +61,6 @@ const AssignedCase = ({ selectedMonth }) => {
 
   const {
     data: cases,
-    assignedPagination,
     assignedFilterOptions,
     loading,
     selectedZone,
@@ -70,9 +69,8 @@ const AssignedCase = ({ selectedMonth }) => {
   const [searchText, setSearchText] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedBanks, setSelectedBanks] = useState([]);
-  const [selectedStatuses, setSelectedStatuses] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(1000);
+  const [pageSize, setPageSize] = useState(10);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCaseId, setSelectedCaseId] = useState(null);
@@ -82,11 +80,6 @@ const AssignedCase = ({ selectedMonth }) => {
 
   const bankFilter = useMemo(() => selectedBanks.join(","), [selectedBanks]);
 
-  const statusFilter = useMemo(
-    () => selectedStatuses.join(","),
-    [selectedStatuses]
-  );
-
   const queryParams = useMemo(
     () => ({
       page: 1,
@@ -95,17 +88,16 @@ const AssignedCase = ({ selectedMonth }) => {
       month: selectedMonth || undefined,
       search: debouncedSearch || undefined,
       bankName: bankFilter || undefined,
-      status: statusFilter || undefined,
     }),
-    [bankFilter, debouncedSearch, selectedMonth, selectedZone, statusFilter]
+    [bankFilter, debouncedSearch, selectedMonth, selectedZone]
   );
 
-  const fetchAssignedList = useCallback(async () => {
+  const fetchList = useCallback(async () => {
     try {
       await dispatch(fetchAssignedCases(queryParams)).unwrap();
     } catch (error) {
-      console.error("Failed to fetch assigned cases:", error);
-      toast.error("Failed to fetch assigned cases");
+      console.error("Failed to fetch cases:", error);
+      toast.error("Failed to fetch cases");
     }
   }, [dispatch, queryParams]);
 
@@ -122,22 +114,17 @@ const AssignedCase = ({ selectedMonth }) => {
   }, [dispatch]);
 
   useEffect(() => {
-    fetchAssignedList();
-  }, [fetchAssignedList]);
+    fetchList();
+  }, [fetchList]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedZone, selectedMonth, selectedBanks, selectedStatuses, debouncedSearch]);
+  }, [selectedZone, selectedMonth, selectedBanks, debouncedSearch]);
 
-  const monthFilteredAssignedCases = useMemo(() => {
+  const filteredCasesList = useMemo(() => {
     return (cases || []).filter((item) => {
       if (!isSameMonth(getCaseDate(item), selectedMonth)) return false;
-      if (isApprovalPending(item)) return false;
-      const status = (item.status || "").toLowerCase().trim();
-      if (status.includes("final") || status.includes("done") || status.includes("complete")) {
-        return false;
-      }
-      return true;
+      return isApprovalPending(item);
     });
   }, [cases, selectedMonth]);
 
@@ -145,7 +132,7 @@ const AssignedCase = ({ selectedMonth }) => {
     try {
       await axiosInstance.put(`/case/unassign-case/${recordId}`);
       toast.success("Assignment removed");
-      await fetchAssignedList();
+      await fetchList();
     } catch (error) {
       toast.error("Failed to remove assignment");
       console.error(error);
@@ -173,7 +160,7 @@ const AssignedCase = ({ selectedMonth }) => {
       setSelectedRoute(null);
       setSelectedCaseId(null);
 
-      await fetchAssignedList();
+      await fetchList();
     } catch (error) {
       console.error("Assignment error:", error.response?.data || error.message);
       toast.error(error.response?.data?.message || "Failed to update assignment");
@@ -186,31 +173,11 @@ const AssignedCase = ({ selectedMonth }) => {
       dataIndex: "bankName",
       render: (bankName, record) => {
         const color = getBankTagColor(bankName);
-
-        let indicatorColor = "";
-        const latestTimelineStatus = record.timeline && record.timeline.length > 0
-          ? record.timeline[record.timeline.length - 1]?.status
-          : record.timeline?.[0]?.status;
-
-        switch (latestTimelineStatus) {
-          case "submitted-by-fo":
-            indicatorColor = "red";
-            break;
-          case "submitted-by-tm":
-            indicatorColor = "yellow";
-            break;
-          case "complete":
-            indicatorColor = "green";
-            break;
-          default:
-            indicatorColor = "gray";
-        }
-
         return (
           <div className="flex items-center gap-2">
             <span
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: indicatorColor }}
+              className="w-3 h-3 rounded-full bg-rose-500 animate-pulse"
+              title="Approval Pending"
             />
             <Tag color={color}>{bankName}</Tag>
           </div>
@@ -222,7 +189,7 @@ const AssignedCase = ({ selectedMonth }) => {
       render: (record) => (
         <Link
           to={`/bank/${getBankRoute(record)}/${record._id}`}
-          className="text-blue-600"
+          className="text-blue-600 font-semibold hover:underline"
         >
           {getDisplayCustomerName(record)}
         </Link>
@@ -234,13 +201,12 @@ const AssignedCase = ({ selectedMonth }) => {
       render: (text, record) => (
         <div className="flex items-center gap-2">
           <span>{text || "Not Assigned"}</span>
-
-          {record.assignedTo && user.role === "Admin" && (
+          {record.assignedTo && (user?.role === "Admin" || user?.role === "SuperAdmin") && (
             <Popconfirm
               title="Remove assignment?"
               onConfirm={() => handleRemoveAssignment(record._id)}
             >
-              <button className="bg-red-300 px-2 rounded">R</button>
+              <button className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs hover:bg-red-200">Unassign</button>
             </Popconfirm>
           )}
         </div>
@@ -248,10 +214,9 @@ const AssignedCase = ({ selectedMonth }) => {
     },
     {
       title: "Status",
-      dataIndex: "status",
-      render: (status) => (
-        <span className="bg-green-600 text-white px-2 py-1 rounded">
-          {status}
+      render: (record) => (
+        <span className="bg-rose-100 text-rose-800 border border-rose-200 px-2 py-1 rounded font-semibold text-xs">
+          {record.status || "Submitted"}
         </span>
       ),
     },
@@ -275,21 +240,20 @@ const AssignedCase = ({ selectedMonth }) => {
       render: (record) => (
         <div className="flex gap-3">
           <Link to={`/bank/${getBankRoute(record)}/edit/${record._id}`}>
-            <Edit3 size={18} />
+            <Edit3 size={18} className="text-blue-600 hover:text-blue-800" />
           </Link>
-
           <Popconfirm
             title="Are you sure you want to delete this case?"
             onConfirm={async () => {
               await dispatch(deletedCases(record._id));
               toast.success("Deleted");
-              await fetchAssignedList();
+              await fetchList();
             }}
             okText="Yes"
             cancelText="No"
           >
-            <Button danger>
-              <Trash2 size={18} />
+            <Button danger size="small">
+              <Trash2 size={16} />
             </Button>
           </Popconfirm>
         </div>
@@ -299,8 +263,8 @@ const AssignedCase = ({ selectedMonth }) => {
 
   return (
     <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">
-        Assigned Cases ({monthFilteredAssignedCases.length})
+      <h2 className="text-xl font-bold mb-4 text-rose-700">
+        Approval Pending Cases ({filteredCasesList.length})
       </h2>
 
       <div className="flex gap-4 mb-4 flex-wrap">
@@ -323,27 +287,8 @@ const AssignedCase = ({ selectedMonth }) => {
           ))}
         </Select>
 
-        <Select
-          mode="multiple"
-          placeholder="Filter by Status"
-          style={{ minWidth: 200 }}
-          value={selectedStatuses}
-          onChange={(values) => {
-            setSelectedStatuses(values);
-            setCurrentPage(1);
-          }}
-          allowClear
-          maxTagCount={2}
-        >
-          {(assignedFilterOptions?.statuses || []).map((status) => (
-            <Option key={status} value={status}>
-              {status}
-            </Option>
-          ))}
-        </Select>
-
         <Search
-          placeholder="Search..."
+          placeholder="Search customer name..."
           size="large"
           allowClear
           value={searchText}
@@ -359,21 +304,20 @@ const AssignedCase = ({ selectedMonth }) => {
         <Spinner />
       ) : (
         <Table
-          dataSource={monthFilteredAssignedCases}
+          dataSource={filteredCasesList}
           columns={columns}
           rowKey="_id"
           bordered
           pagination={{
             current: currentPage,
             pageSize,
-            total: monthFilteredAssignedCases.length,
+            total: filteredCasesList.length,
             showSizeChanger: true,
           }}
           onChange={(pagination) => {
             if (pagination.current !== currentPage) {
               setCurrentPage(pagination.current);
             }
-
             if (pagination.pageSize !== pageSize) {
               setPageSize(pagination.pageSize);
               setCurrentPage(1);
@@ -405,4 +349,4 @@ const AssignedCase = ({ selectedMonth }) => {
   );
 };
 
-export default AssignedCase;
+export default ApprovalPendingCases;
