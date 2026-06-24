@@ -111,7 +111,7 @@ const MenuItems = () => {
     toast.success("Logged Out Successfully");
   };
 
-  const isCentralStaff = ["Coordinator"].includes(user?.role) && ["Bhopal", "Gwalior", "Jabalpur"].includes(user?.assignedCity);
+  const isCentralStaff = ["Bhopal", "Gwalior", "Jabalpur"].includes(user?.assignedCity);
   const showCitySelector = ["SuperAdmin", "Admin"].includes(user?.role) || isCentralStaff;
   const allowedCities = isCentralStaff ? ["Bhopal", "Jabalpur", "Gwalior"] : cities;
 
@@ -120,7 +120,7 @@ const MenuItems = () => {
       const centralCities = ["Bhopal", "Gwalior", "Jabalpur"];
       if (["SuperAdmin", "Admin"].includes(user.role)) {
         // SuperAdmin & Admin see all zones by default
-      } else if (["Coordinator"].includes(user.role) && centralCities.includes(user.assignedCity)) {
+      } else if (centralCities.includes(user.assignedCity)) {
         // Central staff see Bhopal + Gwalior + Jabalpur combined by default
         dispatch(setZone(""));
       } else {
