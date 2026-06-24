@@ -35,7 +35,7 @@ import { useEffect } from "react";
 import { setZone } from "../redux/features/assignedCase/assignedCasesSlice.js";
 
 const ProtectedLayout = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
