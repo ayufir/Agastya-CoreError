@@ -204,10 +204,97 @@
 
 
 import React, { useCallback, useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { Form, Input, Button, Select, Divider } from "antd";
 import GeneralDetails from "./GeneralDetails";
 
 const { Option } = Select;
+
+// Dropdown normalization helpers
+const normalizeYesNo = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.startsWith("Y") || s === "1" || s === "TRUE") return "YES";
+  if (s.startsWith("N") || s === "0" || s === "FALSE") return "NO";
+  return undefined;
+};
+
+const normalizeLocationCategory = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("GP") || s.includes("GRAM") || s.includes("PANCH")) return "GP";
+  if (s.includes("MC") || s.includes("CORP") || s.includes("MUNICIPAL")) return "MC";
+  if (s.includes("MUNICIPAL-TP") || s.includes("TP")) return "MUNICIPAL-TP";
+  return "OTHER";
+};
+
+const normalizeApproachRoadType = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("RCC")) return "RCC ROAD";
+  if (s.includes("TAR") || s.includes("PUCCA") || s.includes("ASPHALT")) return "TAR ROAD";
+  if (s.includes("PAVER") || s.includes("BLOCK")) return "PAVER BLOCK ROAD";
+  if (s.includes("SOIL") || s.includes("MUD") || s.includes("KUTCHA") || s.includes("DIRT")) return "SOIL ROAD";
+  if (s.includes("GRAVEL") || s.includes("WBM")) return "GRAVEL ROAD";
+  return "OTHER";
+};
+
+const normalizeOccupancyPercentage = (val) => {
+  if (!val) return undefined;
+  const s = String(val);
+  if (s.includes("100")) return "100%";
+  if (s.includes("25")) return "25%";
+  if (s.includes("50")) return "50%";
+  return "50%";
+};
+
+const normalizeHabitation = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("LOW") || s.includes("POOR")) return "LOW";
+  if (s.includes("DENSE") || s.includes("HIGH")) return "DENSE";
+  return "MEDIUM";
+};
+
+const normalizeSeismicZone = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("I")) {
+    if (s.includes("II")) {
+      if (s.includes("III")) {
+        if (s.includes("IV")) {
+          if (s.includes("V")) return "V";
+          return "IV";
+        }
+        return "III";
+      }
+      return "II";
+    }
+    return "I";
+  }
+  return "II";
+};
+
+const normalizeDemolitionRisk = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("HIGH")) return "HIGH";
+  if (s.includes("MED")) return "MEDIUM";
+  if (s.includes("LOW")) return "LOW";
+  if (s.includes("NO")) return "NO";
+  return "LOW";
+};
+
+const normalizeDemolitionRiskDetails = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toLowerCase();
+  if (s.includes("forest")) return "Forest Land";
+  if (s.includes("govt land") || s.includes("government land")) return "Govt Land";
+  if (s.includes("notification")) return "Govt Notification";
+  if (s.includes("widening")) return "Road Widening";
+  if (s.includes("demolition")) return "Demolition List";
+  return "NA";
+};
 
 const LocalityDetails = ({
   isEdit,
@@ -221,6 +308,7 @@ const LocalityDetails = ({
 }) => {
   const [form] = Form.useForm();
   const [documents, setDocuments] = useState([]); // will be filled by GeneralDetails
+  const savedCity = useSelector((state) => state.assignedCases?.savedCity || "");
   const formValues = Form.useWatch([], form) || {};
   const hasValue = (name) => formValues[name] !== undefined && formValues[name] !== null && formValues[name] !== "";
 
@@ -230,28 +318,42 @@ const LocalityDetails = ({
 
     if (extractedData && Object.keys(extractedData).length > 0) {
       const p = extractedData.property || {};
+      const addr = p.address || {};
       const loc = p.location_details || {};
       const struct = p.structural_engineering || {};
       const legal = p.legal_and_compliance || {};
       const infra = p.infrastructure_details || {};
 
       const mapped = {
-        nearestCityTown: loc.main_locality || loc.city || extractedData.nearestCityTown,
-        locationCategory: loc.property_falling_within || extractedData.locationCategory,
-        localityDevelopment: loc.micro_location || extractedData.localityDevelopment,
-        approachRoadType: loc.physical_approach || extractedData.approachRoadType,
-        approachRoadWidth: loc.width_approach_road || extractedData.approachRoadWidth,
-        distanceFromCityCentre: loc.distance_city_centre || extractedData.distanceFromCityCentre,
-        distanceFromRailwayStation: loc.distance_railway_station || extractedData.distanceFromRailwayStation,
-        distanceFromBusStand: loc.distance_bus_stop || extractedData.distanceFromBusStand,
-        occupancyPercentage: loc.occupancy_level || extractedData.occupancyPercentage,
-        nallahRiverHighTension: loc.adverse_factors || extractedData.nallahRiverHighTension,
-        seismicZone: struct.seismic_zone || extractedData.seismicZone,
-        floodZone: struct.flood_prone_area || extractedData.floodZone,
-        demolitionRisk: legal.risk_of_demolition || extractedData.demolitionRisk,
-        electricityAvailability: infra.electricity_available || extractedData.electricityAvailability,
-        waterAvailability: infra.water_supply || extractedData.waterAvailability,
-        drainageAvailability: infra.sewer_line_connected || extractedData.drainageAvailability,
+        nearestCityTown: String(
+          extractedData.nearestCityTown ||
+          extractedData.city ||
+          extractedData.tehsil ||
+          addr.tehsil ||
+          addr.district ||
+          loc.main_locality ||
+          loc.city ||
+          isEdit?.nearestCityTown ||
+          savedCity ||
+          isEdit?.city ||
+          ""
+        ).toUpperCase(),
+        locationCategory: normalizeLocationCategory(loc.property_falling_within || extractedData.locationCategory || isEdit?.locationCategory),
+        localityDevelopment: normalizeHabitation(loc.micro_location || extractedData.localityDevelopment || isEdit?.localityDevelopment || "Under Developed"),
+        approachRoadType: normalizeApproachRoadType(loc.physical_approach || extractedData.approachRoadType || isEdit?.approachRoadType),
+        approachRoadWidth: extractedData.approachRoadWidth || loc.width_approach_road || isEdit?.approachRoadWidth,
+        distanceFromCityCentre: extractedData.distanceFromCityCentre || loc.distance_city_centre || isEdit?.distanceFromCityCentre,
+        distanceFromRailwayStation: extractedData.distanceFromRailwayStation || loc.distance_railway_station || isEdit?.distanceFromRailwayStation,
+        distanceFromBusStand: extractedData.distanceFromBusStand || loc.distance_bus_stop || isEdit?.distanceFromBusStand,
+        occupancyPercentage: normalizeOccupancyPercentage(loc.occupancy_level || extractedData.occupancyPercentage || isEdit?.occupancyPercentage),
+        habitationPercentage: normalizeHabitation(extractedData.habitationPercentage || isEdit?.habitationPercentage || "MEDIUM"),
+        nallahRiverHighTension: loc.adverse_factors || extractedData.nallahRiverHighTension || isEdit?.nallahRiverHighTension,
+        seismicZone: normalizeSeismicZone(struct.seismic_zone || extractedData.seismicZone || isEdit?.seismicZone),
+        floodZone: normalizeYesNo(struct.flood_prone_area || extractedData.floodZone || isEdit?.floodZone),
+        demolitionRisk: normalizeDemolitionRisk(legal.risk_of_demolition || extractedData.demolitionRisk || isEdit?.demolitionRisk),
+        electricityAvailability: normalizeYesNo(infra.electricity_available || extractedData.electricityAvailability || isEdit?.electricityAvailability),
+        waterAvailability: normalizeYesNo(infra.water_supply || extractedData.waterAvailability || isEdit?.waterAvailability),
+        drainageAvailability: normalizeYesNo(infra.sewer_line_connected || extractedData.drainageAvailability || isEdit?.drainageAvailability),
       };
 
       Object.entries(mapped).forEach(([key, val]) => {
@@ -288,7 +390,7 @@ const LocalityDetails = ({
         demolitionRisk: safeVal("localityDemolitionRisk") || safeVal("demolitionRisk", "LOW") || undefined,
         demolitionRiskDetails: safeVal("demolitionRiskDetails", "NA"),
         followsNDMAGuidelines: safeVal("followsNDMAGuidelines", "YES") || undefined,
-        nearestCityTown: safeVal("nearestCityTown", ""),
+        nearestCityTown: safeVal("nearestCityTown", (savedCity || isEdit?.city || "").toUpperCase()),
         locationCategory: safeVal("locationCategory") || undefined,
         electricityAvailability: safeVal("electricityAvailability", "YES") || undefined,
         waterAvailability: safeVal("waterAvailability", "YES") || undefined,
@@ -490,6 +592,7 @@ const LocalityDetails = ({
                 <label>Occupancy in Project</label>
                 <Form.Item name="occupancyPercentage" style={{ margin: 0 }}>
                   <Select allowClear className="w-full" placeholder="Occupancy in Project">
+                    <Option value="25%">25%</Option>
                     <Option value="50%">50%</Option>
                     <Option value="100%">100%</Option>
                   </Select>

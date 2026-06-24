@@ -177,11 +177,42 @@ const buildFlatPayload = (rawResult = {}) => {
   const setbacks = property.setbacks || {};
   const amenities = property.surrounding_amenities || {};
   const riskFlags = property.risk_flags || {};
-  const formattedAddress = getValue(
+  const rawAddress = getValue(
     address.full_address,
     property.site_address,
     buildAddressString(address)
   );
+
+  const enhanceAddressWithLandDetails = (baseAddress = "", addrObj = {}) => {
+    let base = String(baseAddress || "").trim();
+    const khasra = addrObj.khasra_number || addrObj.survey_number || "";
+    const patwari = addrObj.patwari_halka_number || "";
+
+    if (patwari) {
+      const patwariLower = String(patwari).toLowerCase();
+      const baseLower = base.toLowerCase();
+      if (!baseLower.includes("patwari") && !baseLower.includes("halka") && !baseLower.includes(patwariLower)) {
+        base = `Patwari Halka No. ${patwari}, ${base}`;
+      }
+    }
+
+    if (khasra) {
+      const khasraLower = String(khasra).toLowerCase();
+      const baseLower = base.toLowerCase();
+      if (!baseLower.includes("khasra") && !baseLower.includes(khasraLower)) {
+        base = `Khasra No. ${khasra}, ${base}`;
+      }
+    }
+
+    return base;
+  };
+
+  const formattedAddress = enhanceAddressWithLandDetails(rawAddress, address);
+  if (address.full_address) {
+    address.full_address = enhanceAddressWithLandDetails(address.full_address, address);
+  } else {
+    address.full_address = formattedAddress;
+  }
   const plotArea = getValue(
     valuation.plot_area_physical,
     valuation.plot_area_in_deed,
@@ -319,6 +350,8 @@ const buildFlatPayload = (rawResult = {}) => {
     propertyDemarcated: propertyDetails.property_demarcated || "",
     propertyIdentification: propertyDetails.property_identification || "",
     identificationThrough: propertyDetails.identification_through || "",
+    nameOnSocietyBoard: propertyDetails.name_on_society_board || "",
+    nameOnDoor: propertyDetails.name_on_door || "",
 
     northDocument: getValue(bounds.north_as_per_deed, bounds.north),
     southDocument: getValue(bounds.south_as_per_deed, bounds.south),
@@ -563,6 +596,7 @@ HOME FIRST BANK SPECIFIC:
 - Extract 'villageName' from MPSSL (गाँव → village).
 - Extract 'tehsil' from MPSSL (तहसील → tehsil).
 - Extract 'district' from MPSSL (जिला → district).
+- Extract 'name_on_society_board' and 'name_on_door' from field visit form or documents.
 - Plot area must be in sq.ft.
 `,
     "Home First Tranche": `
@@ -607,6 +641,7 @@ DOCUMENT READING RULES (READ CAREFULLY):
 1. LEGAL DOCUMENTS (Sale Deed, Gift Deed, ATS, Registry, Lease Deed):
    - ANY Indian legal property document is valid: Sale Deed, Gift Deed, Lease Deed, Conveyance Deed, Mortgage Deed, Agreement to Sale, Allotment Letter, Patta, Fard, Khatiyan, Jamabandi, etc.
    - Extract: buyer name, seller name, registration number, registration date, property address, plot area, boundaries (N/S/E/W), khasra/survey/plot number, village, tehsil, district, state.
+   - Names (applicant_name, owner_name, buyer, seller): Extract the FULL name EXACTLY as written in the documents, including parentage or relationship details (e.g., "S/o", "D/o", "W/o", "late", etc.). Translate Hindi relationship markers like "आत्मज", "पिता", "पति", "पत्नी", "वल्द", "श्री", "श्रीमती" to standard English equivalents (e.g., "S/o", "D/o", "W/o", "Late"). For example, "राम कुमार आत्मज श्याम कुमार" or "राम कुमार वल्द श्याम कुमार" must be extracted as "Ram Kumar S/o Shyam Kumar". Never truncate names to first names only.
    - Document may be in Hindi (Devanagari) — translate and transliterate names, addresses, boundaries, and descriptions to clean, standard English and Roman script (e.g. "राम कुमार" to "Ram Kumar", "भोपाल" to "Bhopal").
    - Registration dates: convert to DD/MM/YYYY format.
 
@@ -773,7 +808,9 @@ Return JSON exactly in this shape:
       "name_of_occupant": "",
       "property_demarcated": "",
       "property_identification": "",
-      "identification_through": ""
+      "identification_through": "",
+      "name_on_society_board": "",
+      "name_on_door": ""
     },
     "infrastructure_details": {
       "water_supply": "",
@@ -1467,7 +1504,7 @@ const advancedAutofill = async (req, res) => {
 
     // ── 4. Call Claude ───────────────────────────────────────────────────────
     const responseText = await callClaudeAPI(
-      `You are an expert Indian bank property valuation AI that extracts data from multiple documents and fills bank forms. Translate and transliterate all Hindi text (including applicant/owner names, addresses, boundaries, landmarks, and structural descriptions) into clean, standard English and Roman script (e.g. "राम कुमार" becomes "Ram Kumar", "भोपाल" becomes "Bhopal"). Do NOT output any Devanagari/Hindi characters in the JSON. Return ONLY valid JSON.`,
+      `You are an expert Indian bank property valuation AI that extracts data from multiple documents and fills bank forms. For applicant/owner names, always extract the FULL name including parentage/relationship details if present in the document (such as 'S/o', 'D/o', 'W/o', 'late', etc.). Translate Hindi relationship terms like 'आत्मज' or 'पिता' or 'पति' or 'पत्नी' or 'वल्द' into their standard English forms (e.g., 'S/o', 'D/o', 'W/o', 'late'). For example, 'राम कुमार आत्मज श्याम कुमार' must be extracted as 'Ram Kumar S/o Shyam Kumar'. Translate and transliterate all Hindi text (including applicant/owner names, addresses, boundaries, landmarks, and structural descriptions) into clean, standard English and Roman script (e.g. "राम कुमार" becomes "Ram Kumar", "भोपाल" becomes "Bhopal"). Do NOT output any Devanagari/Hindi characters in the JSON. Return ONLY valid JSON.`,
       messagesPrompt,
       mediaBlocks
     );

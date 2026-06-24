@@ -55,12 +55,13 @@ const LNTAssignmentDetails = ({
     nameOnSocietyBoard: "",
     addressLegal: "",
     addressSite: "",
-    nameOnDoor: "",
+    nameOnDoor: "NA",
     nearbyLandmark: "",
     statusOfOccupancy: "VACANT",
     occupiedBy: "NA",
     usageOfProperty: "RESIDENTIAL",
     propertyEasilyIdentifiable: "YES",
+    projectPinCode: "",
   };
 
   const addressLegal = formValues.addressLegal;
@@ -138,21 +139,32 @@ const LNTAssignmentDetails = ({
 
       let finalPropLoc = "TOWN";
       let finalAreaLim = "MUNICIPAL-TP";
+      let finalRuralUrban = "URBAN";
 
+      const village = addr.village_name || extractedData.villageName || "";
+      const normalizedVillage = String(village).toLowerCase();
       const normalizedLocCat = String(locCat).toLowerCase();
-      if (normalizedLocCat.includes("municipal") || normalizedLocCat.includes("mc") || normalizedLocCat.includes("corporation")) {
+
+      if (normalizedVillage && normalizedVillage !== "na" && normalizedVillage !== "n/a") {
+        finalPropLoc = "VILLAGE";
+        finalAreaLim = "GP";
+        finalRuralUrban = "RURAL";
+      } else if (normalizedLocCat.includes("municipal") || normalizedLocCat.includes("mc") || normalizedLocCat.includes("corporation")) {
         finalPropLoc = "CITY";
         finalAreaLim = "MUNICIPAL";
+        finalRuralUrban = "URBAN";
       } else if (normalizedLocCat.includes("nagar") || normalizedLocCat.includes("palika") || normalizedLocCat.includes("planning") || normalizedLocCat.includes("tp")) {
         finalPropLoc = "TOWN";
         finalAreaLim = "MUNICIPAL-TP";
+        finalRuralUrban = "URBAN";
       } else if (normalizedLocCat.includes("gram") || normalizedLocCat.includes("panchayat") || normalizedLocCat.includes("gp")) {
         finalPropLoc = "VILLAGE";
         finalAreaLim = "GP";
+        finalRuralUrban = "RURAL";
       }
 
-      const addrLegal = addr.full_address || extractedData.addressLegal || "";
-      const addrSite = addr.full_address || extractedData.addressSite || addrLegal;
+      const addrLegal = extractedData.addressLegal || addr.full_address || "";
+      const addrSite = extractedData.addressSite || addr.full_address || addrLegal;
 
       const mapped = {
         customerName,
@@ -174,6 +186,10 @@ const LNTAssignmentDetails = ({
         longitude: p.longitude || extractedData.longitude,
         propertyLocation: finalPropLoc,
         propertyAreaLimits: finalAreaLim,
+        ruralUrban: finalRuralUrban,
+        projectPinCode: extractedData.projectPinCode || extractedData.pincode || addr.pincode || "",
+        nameOnDoor: extractedData.nameOnDoor || propDet.name_on_door || p.name_on_door || isEdit?.nameOnDoor || "NA",
+        nameOnSocietyBoard: extractedData.nameOnSocietyBoard || propDet.name_on_society_board || p.name_on_society_board || isEdit?.nameOnSocietyBoard || "",
       };
 
       Object.entries(mapped).forEach(([key, val]) => {
@@ -236,7 +252,7 @@ const LNTAssignmentDetails = ({
         nameOnSocietyBoard: safeVal("nameOnSocietyBoard", ""),
         addressLegal: safeVal("addressLegal"),
         addressSite: safeVal("addressSite") || safeVal("addressLegal"),
-        nameOnDoor: safeVal("nameOnDoor", ""),
+        nameOnDoor: safeVal("nameOnDoor", "NA"),
         nearbyLandmark: safeVal("nearbyLandmark"),
         statusOfOccupancy: safeVal("statusOfOccupancy", "VACANT"),
         occupiedBy: safeVal("occupiedBy", "NA"),
@@ -244,6 +260,7 @@ const LNTAssignmentDetails = ({
         propertyEasilyIdentifiable: safeVal("propertyEasilyIdentifiable", "YES"),
         latitude: safeVal("latitude"),
         longitude: safeVal("longitude"),
+        projectPinCode: safeVal("projectPinCode"),
       });
     }
   }, [isEdit, extractedData, form]);
@@ -534,8 +551,10 @@ const LNTAssignmentDetails = ({
                 >
                   <Select allowClear className="w-full" placeholder="Property Type">
                     <Option value="Apartment">Apartment</Option>
+                    <Option value="Flat">Flat</Option>
                     <Option value="Row House">Row House</Option>
                     <Option value="Individual House">Individual House</Option>
+                    <Option value="Open Plot">Open Plot</Option>
                     <Option value="Shop">Shop</Option>
                     <Option value="Office">Office</Option>
                   </Select>
@@ -747,10 +766,7 @@ const LNTAssignmentDetails = ({
                   rules={[{ required: true, message: "Owner Name Source is required" }]}
                   style={{ margin: 0 }}
                 >
-                  <Select allowClear className="w-full" placeholder="Owner Name Source">
-                    <Option value="SALE DEED">SALE DEED</Option>
-                    <Option value="ATS DRAFT">ATS DRAFT</Option>
-                  </Select>
+                  <Input style={{ height: "40px", borderRadius: "6px", border: "1px solid #d1d5db" }} placeholder="Owner Name Source" />
                 </Form.Item>
               </div>
 

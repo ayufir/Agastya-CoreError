@@ -135,6 +135,253 @@ const HomeFirstBank = () => {
     }
   };
 
+// Dropdown normalization helpers
+const normalizeYesNo = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.startsWith("Y") || s === "1" || s === "TRUE") return "YES";
+  if (s.startsWith("N") || s === "0" || s === "FALSE") return "NO";
+  return undefined;
+};
+
+const normalizePropertyCategory = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("PROJECT")) return "PROJECT";
+  if (s.includes("INDIVIDUAL")) return "INDIVIDUAL";
+  return "OTHER";
+};
+
+const normalizeUnitType = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toLowerCase();
+  if (s.includes("flat") || s.includes("apartment")) return "Flat";
+  if (s.includes("row")) return "Row House";
+  if (s.includes("individual") || s.includes("house") || s.includes("makan") || s.includes("makaan")) return "Individual House";
+  if (s.includes("open") || s.includes("plot") || s.includes("land") || s.includes("bhukhand")) return "Open Plot";
+  if (s.includes("shop")) return "Shop";
+  if (s.includes("office")) return "Office";
+  return undefined;
+};
+
+const normalizeTypeOfLoan = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("OWN")) return "OWN PLOT + SECO";
+  return "PLOT + SECO";
+};
+
+const normalizePropertyLocation = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("CITY")) return "CITY";
+  if (s.includes("TOWN")) return "TOWN";
+  if (s.includes("VILLAGE")) return "VILLAGE";
+  return undefined;
+};
+
+const normalizeRuralUrban = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("RURAL")) return "RURAL";
+  if (s.includes("URBAN")) return "URBAN";
+  return undefined;
+};
+
+const normalizeZone = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("RESIDENT")) return "RESIDENTIAL";
+  if (s.includes("COMMERC")) return "COMMERCIAL";
+  if (s.includes("INDUST")) return "INDUSTRIAL";
+  if (s.includes("AGRIC")) return "AGRICULTURAL";
+  if (s.includes("MIX")) return "MIXED";
+  return "OTHER";
+};
+
+const normalizePropertyAreaLimits = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("MUNICIPAL-TP") || s.includes("TP")) return "MUNICIPAL-TP";
+  if (s.includes("MUNICIPAL") || s.includes("MC") || s.includes("CORP")) return "MUNICIPAL";
+  if (s.includes("GP") || s.includes("GRAM") || s.includes("PANCH")) return "GP";
+  if (s.includes("ZP") || s.includes("ZILLA")) return "ZP";
+  return "OTHER";
+};
+
+const normalizeRelation = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("SELF")) return "SELF";
+  if (s.includes("SPOUSE") || s.includes("WIFE") || s.includes("HUSBAND")) return "SPOUSE";
+  if (s.includes("RELATIVE") || s.includes("FATHER") || s.includes("MOTHER") || s.includes("BROTHER") || s.includes("SISTER") || s.includes("SON") || s.includes("DAUGHTER")) return "RELATIVE";
+  if (s.includes("SELLER")) return "SELLER";
+  if (s.includes("BUYER")) return "BUYER";
+  if (s.includes("COLON")) return "COLONISER";
+  if (s.includes("BROK")) return "BROKER";
+  return "OTHER";
+};
+
+const normalizeOwnerNameSource = (val) => {
+  if (!val) return "";
+  return String(val).toUpperCase();
+};
+
+const normalizeStatusOfOccupancy = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("VACANT")) return "VACANT";
+  if (s.includes("PARTLY") || s.includes("PARTIAL")) return "PARTLY OCCUPIED";
+  if (s.includes("OCCUPIED") || s.includes("LIVE") || s.includes("TENANT") || s.includes("OWNER")) return "OCCUPIED";
+  return "OTHER";
+};
+
+const normalizeOccupiedBy = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("OWNER")) return "OWNER";
+  if (s.includes("TENANT") || s.includes("RENT")) return "TENANT";
+  if (s.includes("THIRD")) return "THIRD PARTY";
+  if (s.includes("ENCROACH")) return "ENCROACHER";
+  if (s.includes("NA") || s.includes("NOT APPLICABLE")) return "NA";
+  return "OTHER";
+};
+
+const normalizeUsageOfProperty = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("VACANT") || s.includes("PLOT")) return "VACANT PLOT";
+  if (s.includes("RESIDENT")) return "RESIDENTIAL";
+  if (s.includes("COMMERC")) return "COMMERCIAL";
+  if (s.includes("AGRIC")) return "AGRICULTURAL";
+  if (s.includes("MIX")) return "MIXED";
+  return "OTHER";
+};
+
+const normalizeLocationCategory = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("GP") || s.includes("GRAM") || s.includes("PANCH")) return "GP";
+  if (s.includes("MC") || s.includes("CORP") || s.includes("MUNICIPAL")) return "MC";
+  if (s.includes("MUNICIPAL-TP") || s.includes("TP")) return "MUNICIPAL-TP";
+  return "OTHER";
+};
+
+const normalizeApproachRoadType = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("RCC")) return "RCC ROAD";
+  if (s.includes("TAR") || s.includes("PUCCA") || s.includes("ASPHALT")) return "TAR ROAD";
+  if (s.includes("PAVER") || s.includes("BLOCK")) return "PAVER BLOCK ROAD";
+  if (s.includes("SOIL") || s.includes("MUD") || s.includes("KUTCHA") || s.includes("DIRT")) return "SOIL ROAD";
+  if (s.includes("GRAVEL") || s.includes("WBM")) return "GRAVEL ROAD";
+  return "OTHER";
+};
+
+const normalizeOccupancyPercentage = (val) => {
+  if (!val) return undefined;
+  const s = String(val);
+  if (s.includes("100")) return "100%";
+  if (s.includes("25")) return "25%";
+  if (s.includes("50")) return "50%";
+  return "50%";
+};
+
+const normalizeHabitation = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("LOW") || s.includes("POOR")) return "LOW";
+  if (s.includes("DENSE") || s.includes("HIGH")) return "DENSE";
+  return "MEDIUM";
+};
+
+const normalizeSeismicZone = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("I")) {
+    if (s.includes("II")) {
+      if (s.includes("III")) {
+        if (s.includes("IV")) {
+          if (s.includes("V")) return "V";
+          return "IV";
+        }
+        return "III";
+      }
+      return "II";
+    }
+    return "I";
+  }
+  return "II"; // default
+};
+
+const normalizeDemolitionRisk = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("HIGH")) return "HIGH";
+  if (s.includes("MED")) return "MEDIUM";
+  if (s.includes("LOW")) return "LOW";
+  if (s.includes("NO")) return "NO";
+  return "LOW";
+};
+
+const normalizeDemolitionRiskDetails = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toLowerCase();
+  if (s.includes("forest")) return "Forest Land";
+  if (s.includes("govt land") || s.includes("government land")) return "Govt Land";
+  if (s.includes("notification")) return "Govt Notification";
+  if (s.includes("widening")) return "Road Widening";
+  if (s.includes("demolition")) return "Demolition List";
+  return "NA";
+};
+
+const normalizeBoundariesMatching = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("PARTIAL")) return "PARTIAL";
+  if (s.includes("YES") || s.includes("MATCH")) return "YES";
+  if (s.includes("NO") || s.includes("DIFFER")) return "NO";
+  if (s.includes("VERIFY") || s.includes("CANNOT")) return "CANNOT VERIFY";
+  return "YES";
+};
+
+const normalizeMarketability = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("GOOD")) return "GOOD";
+  if (s.includes("AVERAGE")) return "AVERAGE";
+  if (s.includes("POOR")) return "POOR";
+  return "AVERAGE";
+};
+
+const normalizeTypeOfStructure = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("RCC")) return "RCC";
+  if (s.includes("LOAD") || s.includes("BEAR")) return "Load Bearing";
+  return "RCC";
+};
+
+const normalizeTypeOfRoof = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toLowerCase();
+  if (s.includes("rcc")) return "RCC";
+  if (s.includes("acc") || s.includes("asbestos")) return "ACC Sheet";
+  if (s.includes("stone") || s.includes("patti")) return "Stone Patti";
+  if (s.includes("tin") || s.includes("sheet") || s.includes("metal")) return "Tin Sheet";
+  if (s.includes("terra") || s.includes("tile")) return "Terracotta Tiles";
+  return "RCC";
+};
+
+const normalizeQualityOfConstruction = (val) => {
+  if (!val) return undefined;
+  const s = String(val).toUpperCase();
+  if (s.includes("GOOD")) return "Good";
+  if (s.includes("AVERAGE")) return "Average";
+  if (s.includes("POOR")) return "Poor";
+  return "Average";
+};
+
   const mapExtractedDataToHFSchema = (extracted, prev = {}) => {
     if (!extracted || Object.keys(extracted).length === 0) return {};
 
@@ -147,6 +394,49 @@ const HomeFirstBank = () => {
     const struct = p.structural_engineering || {};
     const legal = p.legal_and_compliance || {};
     const infra = p.infrastructure_details || {};
+
+    const village = extracted.villageName || addr.village_name || prev.villageName || "";
+    const locCat = extracted.locationCategory || loc.property_falling_within || prev.locationCategory || "";
+    const normalizedLocCat = String(locCat).toLowerCase();
+    const normalizedVillage = String(village).toLowerCase();
+
+    let finalPropLoc = prev.propertyLocation || "TOWN";
+    let finalAreaLim = prev.propertyAreaLimits || "MUNICIPAL-TP";
+    let finalRuralUrban = prev.ruralUrban || "URBAN";
+
+    if (normalizedVillage && normalizedVillage !== "na" && normalizedVillage !== "n/a") {
+      finalPropLoc = "VILLAGE";
+      finalAreaLim = "GP";
+      finalRuralUrban = "RURAL";
+    } else if (
+      normalizedLocCat.includes("municipal") ||
+      normalizedLocCat.includes("mc") ||
+      normalizedLocCat.includes("corporation") ||
+      normalizedLocCat.includes("city")
+    ) {
+      finalPropLoc = "CITY";
+      finalAreaLim = "MUNICIPAL";
+      finalRuralUrban = "URBAN";
+    } else if (
+      normalizedLocCat.includes("nagar") ||
+      normalizedLocCat.includes("palika") ||
+      normalizedLocCat.includes("planning") ||
+      normalizedLocCat.includes("tp") ||
+      normalizedLocCat.includes("town")
+    ) {
+      finalPropLoc = "TOWN";
+      finalAreaLim = "MUNICIPAL-TP";
+      finalRuralUrban = "URBAN";
+    } else if (
+      normalizedLocCat.includes("gram") ||
+      normalizedLocCat.includes("panchayat") ||
+      normalizedLocCat.includes("gp") ||
+      normalizedLocCat.includes("village")
+    ) {
+      finalPropLoc = "VILLAGE";
+      finalAreaLim = "GP";
+      finalRuralUrban = "RURAL";
+    }
 
     const mapped = {
       // Basic Details / Visit Details (Section 3)
@@ -163,38 +453,69 @@ const HomeFirstBank = () => {
       refNo: extracted.refNo || extracted.registration_number || extracted.fileNo || bankDet.file_no || bankDet.lan_no || prev.refNo || "N/A",
       dateOfReport: extracted.dateOfReport || extracted.reportDate || p.dateOfReport || prev.dateOfReport || null,
       dateOfVisit: extracted.dateOfVisit || extracted.visitDate || p.dateOfVisit || prev.dateOfVisit || null,
+      projectPinCode: extracted.projectPinCode || extracted.pincode || addr.pincode || prev.projectPinCode || "",
+      nameOnDoor: extracted.nameOnDoor || p.name_on_door || prev.nameOnDoor || "NA",
+      nameOnSocietyBoard: extracted.nameOnSocietyBoard || p.name_on_society_board || prev.nameOnSocietyBoard || "",
 
       // Property Overview (Section 2)
-      unitType: extracted.unitType || p.property_type || accom.type_of_structure || prev.unitType || "OPEN PLOT",
-      zone: extracted.zone || extracted.usageOfProperty || p.property_use || prev.zone || "Residential",
-      usageOfProperty: extracted.usageOfProperty || extracted.actualUsage || p.property_use || prev.usageOfProperty || "Residential",
+      propertyCategory: normalizePropertyCategory(extracted.propertyCategory || p.property_category || prev.propertyCategory || "INDIVIDUAL"),
+      unitType: normalizeUnitType(extracted.unitType || p.property_type || accom.type_of_structure || prev.unitType || "Row House"),
+      typeOfLoan: normalizeTypeOfLoan(extracted.typeOfLoan || p.type_of_loan || prev.typeOfLoan || "OWN PLOT + SECO"),
+      propertyLocation: normalizePropertyLocation(finalPropLoc),
+      populationCensus2011: finalRuralUrban === "URBAN" ? "100000" : "10000",
+      ruralUrban: normalizeRuralUrban(finalRuralUrban),
+      zone: normalizeZone(extracted.zone || extracted.usageOfProperty || p.property_use || prev.zone || "Residential"),
+      propertyAreaLimits: normalizePropertyAreaLimits(finalAreaLim),
+      eraApplicable: extracted.eraApplicable || p.legal_and_compliance?.approving_authority || prev.eraApplicable || "",
+      projectName: extracted.projectName || p.project_name || prev.projectName || "",
+
+      // Visit details normalizations
+      relationshipOfPersonMet: normalizeRelation(extracted.relationshipOfPersonMet || p.relationship_met_at_site || prev.relationshipOfPersonMet || "SELF"),
+      howFoundOwnerName: normalizeOwnerNameSource(extracted.howFoundOwnerName || p.how_found_owner_name || prev.howFoundOwnerName || "SALE DEED"),
+      documentsAvailable: normalizeYesNo(extracted.documentsAvailable || p.documents_provided || prev.documentsAvailable || "YES"),
+      statusOfOccupancy: normalizeStatusOfOccupancy(extracted.statusOfOccupancy || propDet.occupancy || loc.occupancy_level || prev.statusOfOccupancy || "VACANT"),
+      occupiedBy: normalizeOccupiedBy(extracted.occupiedBy || propDet.occupied_by || prev.occupiedBy || "NA"),
+      usageOfProperty: normalizeUsageOfProperty(extracted.usageOfProperty || extracted.actualUsage || p.property_use || prev.usageOfProperty || "RESIDENTIAL"),
+      propertyEasilyIdentifiable: normalizeYesNo(extracted.propertyEasilyIdentifiable || prev.propertyEasilyIdentifiable || "YES"),
 
       // Locality (Section 4)
-      nearestCityTown: extracted.nearestCityTown || extracted.city || loc.main_locality || loc.city || prev.nearestCityTown || "",
-      locationCategory: extracted.locationCategory || extracted.propertyJurisdiction || loc.property_falling_within || prev.locationCategory || "MC",
-      localityDevelopment: extracted.localityDevelopment || extracted.microLocation || loc.micro_location || prev.localityDevelopment || "Under Developed",
-      approachRoadType: extracted.approachRoadType || extracted.physicalApproach || loc.physical_approach || prev.approachRoadType || "Mud Road",
+      nearestCityTown: String(
+        extracted.nearestCityTown ||
+        extracted.city ||
+        extracted.tehsil ||
+        addr.tehsil ||
+        addr.district ||
+        loc.main_locality ||
+        loc.city ||
+        prev.nearestCityTown ||
+        savedCity ||
+        prev.city ||
+        ""
+      ).toUpperCase(),
+      locationCategory: normalizeLocationCategory(extracted.locationCategory || extracted.propertyJurisdiction || loc.property_falling_within || prev.locationCategory || "MC"),
+      localityDevelopment: normalizeHabitation(extracted.localityDevelopment || extracted.microLocation || loc.micro_location || prev.localityDevelopment || "Under Developed"),
+      approachRoadType: normalizeApproachRoadType(extracted.approachRoadType || extracted.physicalApproach || loc.physical_approach || prev.approachRoadType || "Mud Road"),
       approachRoadWidth: extracted.approachRoadWidth || extracted.widthApproachRoad || loc.width_approach_road || prev.approachRoadWidth || "15ft",
       distanceFromCityCentre: extracted.distanceFromCityCentre || extracted.distanceCityCentre || loc.distance_city_centre || prev.distanceFromCityCentre || "",
       distanceFromRailwayStation: extracted.distanceFromRailwayStation || extracted.distanceRailwayStation || loc.distance_railway_station || prev.distanceFromRailwayStation || "",
       distanceFromBusStand: extracted.distanceFromBusStand || extracted.distanceBusStop || extracted.busStop || loc.distance_bus_stop || prev.distanceFromBusStand || "",
       distanceFromHospital: extracted.distanceFromHospital || extracted.distanceHospital || extracted.hospital || loc.distance_hospital || prev.distanceFromHospital || "",
-      occupancyPercentage: extracted.occupancyPercentage || extracted.occupancyLevel || loc.occupancy_level || prev.occupancyPercentage || "",
-      habitationPercentage: extracted.habitationPercentage || prev.habitationPercentage || "",
+      occupancyPercentage: normalizeOccupancyPercentage(extracted.occupancyPercentage || extracted.occupancyLevel || loc.occupancy_level || prev.occupancyPercentage || "50%"),
+      habitationPercentage: normalizeHabitation(extracted.habitationPercentage || prev.habitationPercentage || "MEDIUM"),
       nallahRiverHighTension: extracted.nallahRiverHighTension || extracted.adverseFactors || loc.adverse_factors || prev.nallahRiverHighTension || "NA",
-      electricityAvailability: extracted.electricityAvailability || extracted.electricityAvailable || infra.electricity_available || prev.electricityAvailability || "YES",
-      waterAvailability: extracted.waterAvailability || extracted.waterSupply || infra.water_supply || prev.waterAvailability || "YES",
-      drainageAvailability: extracted.drainageAvailability || extracted.sewerLineConnected || infra.sewer_line_connected || prev.drainageAvailability || "YES",
+      electricityAvailability: normalizeYesNo(extracted.electricityAvailability || extracted.electricityAvailable || infra.electricity_available || prev.electricityAvailability || "YES"),
+      waterAvailability: normalizeYesNo(extracted.waterAvailability || extracted.waterSupply || infra.water_supply || prev.waterAvailability || "YES"),
+      drainageAvailability: normalizeYesNo(extracted.drainageAvailability || extracted.sewerLineConnected || infra.sewer_line_connected || prev.drainageAvailability || "YES"),
 
       // NDMA Guidelines (Section 6)
-      seismicZone: extracted.seismicZone || struct.seismic_zone || prev.seismicZone || "II",
-      cycloneZone: extracted.cycloneZone || prev.cycloneZone || "NO",
-      landslideProneZone: extracted.landslideProneZone || prev.landslideProneZone || "No",
-      floodZone: extracted.floodZone || struct.flood_prone_area || prev.floodZone || "NO",
-      crZone: extracted.crZone || prev.crZone || "NO",
-      demolitionRisk: extracted.demolitionRisk || extracted.riskOfDemolition || legal.risk_of_demolition || prev.demolitionRisk || "LOW",
-      demolitionRiskDetails: extracted.demolitionRiskDetails || prev.demolitionRiskDetails || "NA",
-      followsNDMAGuidelines: extracted.followsNDMAGuidelines || prev.followsNDMAGuidelines || "YES",
+      seismicZone: normalizeSeismicZone(extracted.seismicZone || struct.seismic_zone || prev.seismicZone || "II"),
+      cycloneZone: normalizeYesNo(extracted.cycloneZone || prev.cycloneZone || "NO"),
+      landslideProneZone: normalizeYesNo(extracted.landslideProneZone || prev.landslideProneZone || "NO"),
+      floodZone: normalizeYesNo(extracted.floodZone || struct.flood_prone_area || prev.floodZone || "NO"),
+      crZone: normalizeYesNo(extracted.crZone || prev.crZone || "NO"),
+      demolitionRisk: normalizeDemolitionRisk(extracted.demolitionRisk || extracted.riskOfDemolition || legal.risk_of_demolition || prev.demolitionRisk || "LOW"),
+      demolitionRiskDetails: normalizeDemolitionRiskDetails(extracted.demolitionRiskDetails || prev.demolitionRiskDetails || "NA"),
+      followsNDMAGuidelines: normalizeYesNo(extracted.followsNDMAGuidelines || prev.followsNDMAGuidelines || "YES"),
 
       // Boundaries & Dimensions (Section 7)
       directions: {
@@ -219,21 +540,21 @@ const HomeFirstBank = () => {
           plan: extracted.westPlan || extracted.westDocument || p.boundaries?.west_as_per_deed || prev?.directions?.West?.plan || "",
         },
       },
-      boundariesMatching: extracted.boundariesMatching || prev.boundariesMatching || "",
-      propertyDemarcated: extracted.propertyDemarcated || propDet.property_demarcated || prev.propertyDemarcated || "",
+      boundariesMatching: normalizeBoundariesMatching(extracted.boundariesMatching || prev.boundariesMatching || "YES"),
+      propertyDemarcated: normalizeYesNo(extracted.propertyDemarcated || propDet.property_demarcated || prev.propertyDemarcated || "YES"),
       boundaryRemarks: extracted.boundaryRemarks || prev.boundaryRemarks || "",
-      marketability: extracted.marketability || accom.marketability || prev.marketability || "",
+      marketability: normalizeMarketability(extracted.marketability || accom.marketability || prev.marketability || "AVERAGE"),
       landArea: extracted.landArea || extracted.plotArea || prev.landArea || "",
       linearDimension: extracted.linearDimension || extracted.plotDimensions || prev.linearDimension || "",
       plotArea: Number(extracted.plotArea) || Number(extracted.landArea) || prev.plotArea || 0,
 
       // Structural Details (Section 8)
-      typeOfStructure: extracted.typeOfStructure || p.property_sub_type || accom.type_of_structure || prev.typeOfStructure || "",
-      typeOfRoof: extracted.typeOfRoof || struct.roof_type || prev.typeOfRoof || "",
+      typeOfStructure: normalizeTypeOfStructure(extracted.typeOfStructure || p.property_sub_type || accom.type_of_structure || prev.typeOfStructure || "RCC"),
+      typeOfRoof: normalizeTypeOfRoof(extracted.typeOfRoof || struct.roof_type || prev.typeOfRoof || "RCC"),
       noOfFloorsPermissible: extracted.noOfFloorsPermissible || prev.noOfFloorsPermissible || "NA",
       noOfFloorsActual: Number(extracted.noOfFloorsActual) || Number(extracted.totalNoOfFloors) || prev.noOfFloorsActual || 0,
       noOfUnitFlatOnEachFloor: extracted.noOfUnitFlatOnEachFloor || prev.noOfUnitFlatOnEachFloor || "NA",
-      qualityOfConstruction: extracted.qualityOfConstruction || extracted.constructionQuality || accom.quality_of_construction || prev.qualityOfConstruction || "",
+      qualityOfConstruction: normalizeQualityOfConstruction(extracted.qualityOfConstruction || extracted.constructionQuality || accom.quality_of_construction || prev.qualityOfConstruction || "Average"),
       approxAgeOfProperty: Number(extracted.approxAgeOfProperty) || Number(extracted.ageOfProperty) || Number(extracted.propertyAge) || Number(accom.age_of_property) || prev.approxAgeOfProperty || 0,
       residualAge: Number(extracted.residualAge) || Number(accom.residual_age) || prev.residualAge || 0,
     };
