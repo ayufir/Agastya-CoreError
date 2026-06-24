@@ -145,7 +145,7 @@ const MenuItems = () => {
           </div>
           <div className='mt-1'>
             <h1 className='text-gray-800 font-bold relative text-xl leading-tight'>
-              {user?.name} {["Bhopal", "Gwalior", "Jabalpur"].includes(user?.assignedCity) ? " (Bhopal + Jabalpur + Gwalior)" : ""}
+              {user?.name} {["Bhopal", "Gwalior", "Jabalpur"].includes(user?.assignedCity) ? " (BJG)" : ""}
             </h1>
             <p className={`text-[10px] font-extrabold uppercase tracking-widest ${
               isFieldOfficer ? 'text-[#3b6657]' : 'text-red-600'
