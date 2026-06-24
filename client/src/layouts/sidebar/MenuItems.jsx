@@ -145,7 +145,7 @@ const MenuItems = () => {
           </div>
           <div className='mt-1'>
             <h1 className='text-gray-800 font-bold relative text-xl leading-tight'>
-              {user?.name}
+              {user?.name} {["Bhopal", "Gwalior", "Jabalpur"].includes(user?.assignedCity) ? " (Bhopal + Jabalpur + Gwalior)" : ""}
             </h1>
             <p className={`text-[10px] font-extrabold uppercase tracking-widest ${
               isFieldOfficer ? 'text-[#3b6657]' : 'text-red-600'
@@ -189,7 +189,7 @@ const MenuItems = () => {
               ? 'bg-[#eef7f4] border-[#d0e6df] text-[#1c2725]' 
               : 'bg-gray-100 border-gray-300 text-gray-700'
           }`}>
-            Zone: {user?.assignedCity || "All Zones"}
+            Zone: {["Bhopal", "Gwalior", "Jabalpur"].includes(user?.assignedCity) ? "Bhopal + Jabalpur + Gwalior (BJG)" : (user?.assignedCity || "All Zones")}
           </div>
         </div>
       )}
