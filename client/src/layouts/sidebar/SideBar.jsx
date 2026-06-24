@@ -75,7 +75,6 @@ const SideBar = ({ isCollapsed, setIsCollapsed }) => {
       <div className='hidden lg:flex h-screen '>
         {/* Collapsed Sidebar */}
         <div
-          onMouseEnter={() => setIsCollapsed(false)}
           onMouseLeave={() => setIsCollapsed(true)}
           className={`${
             isCollapsed ? "w-20" : "w-64"
@@ -85,6 +84,7 @@ const SideBar = ({ isCollapsed, setIsCollapsed }) => {
             <div className='p-2'>
               <button
                 className='h-12 w-12 mt-4 flex items-center justify-center text-gray-600 hover:bg-gray-100 rounded-full mx-auto'
+                onMouseEnter={() => setIsCollapsed(false)}
                 onClick={() => setIsCollapsed(false)}
               >
                 <Menu size={24} />
