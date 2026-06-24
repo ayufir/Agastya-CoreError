@@ -460,7 +460,7 @@ const Dashboard = () => {
         },
       ];
 
-      if (user?.role === "Admin" || user?.role === "SuperAdmin") {
+      if (user?.role === "SuperAdmin") {
         baseReports.push({
           title: "Approval Pending",
           total: cardCounts.approvalPending,
@@ -488,13 +488,16 @@ const Dashboard = () => {
           title: "Out Tat Cases",
           total: cardCounts.outOfTat,
           component: "Out_Tat_Cases",
-        },
-        {
+        }
+      );
+
+      if (user?.role === "SuperAdmin") {
+        baseReports.push({
           title: "All Cases",
           total: cardCounts.allCases,
           component: "Summary",
-        }
-      );
+        });
+      }
 
       return baseReports;
     },
