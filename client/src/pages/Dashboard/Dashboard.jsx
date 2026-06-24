@@ -3,7 +3,7 @@ import { Select } from "antd";
 import CountUp from "react-countup";
 import { DownOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import Pending from "./Pending";
 import QueryRaised from "./Admin/QueryRaised";
 import AssignedCase from "./Admin/AssignedCase";
@@ -214,6 +214,7 @@ const Pagination = ({ page, totalPages, onPrev, onNext }) => (
 const Dashboard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, FO: fieldOfficers = [] } = useSelector((state) => state.auth);
 
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -238,18 +239,20 @@ const Dashboard = () => {
   // Redirect non-admin roles away from the main dashboard
   useEffect(() => {
     if (!user) return;
-    if (user.role === "FieldOfficer") {
-      navigate("/field/dashboard", { replace: true });
-    } else if (user.role === "Coordinator") {
-      navigate("/coordinator/dashboard", { replace: true });
-    } else if (user.role === "TechnicalManager") {
-      navigate("/tm/dashboard", { replace: true });
-    } else if (user.role === "RegionalManager") {
-      navigate("/rtm/dashboard", { replace: true });
-    } else if (user.role === "Accountant") {
-      navigate("/accountant/dashboard", { replace: true });
+    if (location.pathname === "/") {
+      if (user.role === "FieldOfficer") {
+        navigate("/field/dashboard", { replace: true });
+      } else if (user.role === "Coordinator") {
+        navigate("/coordinator/dashboard", { replace: true });
+      } else if (user.role === "TechnicalManager") {
+        navigate("/tm/dashboard", { replace: true });
+      } else if (user.role === "RegionalManager") {
+        navigate("/rtm/dashboard", { replace: true });
+      } else if (user.role === "Accountant") {
+        navigate("/accountant/dashboard", { replace: true });
+      }
     }
-  }, [user, navigate]);
+  }, [user, navigate, location.pathname]);
 
   const selectedZone = useSelector((state) => state.assignedCases.selectedZone);
 

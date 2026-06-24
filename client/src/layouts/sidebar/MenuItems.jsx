@@ -47,6 +47,21 @@ const MenuItems = () => {
     );
   };
 
+  const user = useSelector((state) => state.auth.user);
+
+  let dashboardPath = "/";
+  if (user?.role === "FieldOfficer" || user?.role === "FIELDOFFICER") {
+    dashboardPath = "/field/dashboard";
+  } else if (user?.role === "Coordinator") {
+    dashboardPath = "/coordinator/dashboard";
+  } else if (user?.role === "TechnicalManager") {
+    dashboardPath = "/tm/dashboard";
+  } else if (user?.role === "RegionalManager") {
+    dashboardPath = "/rtm/dashboard";
+  } else if (user?.role === "Accountant") {
+    dashboardPath = "/accountant/dashboard";
+  }
+
   const adminMenu = [
     {
       name: "Dashboard",
@@ -83,9 +98,9 @@ const MenuItems = () => {
   const fieldOfficerMenu = [
     {
       name: "Dashboard",
-      path: "/field/dashboard",
+      path: dashboardPath,
       icon: <Home size={iconSize} />,
-      isActive: currentPath === "/field/dashboard",
+      isActive: currentPath === dashboardPath,
     },
     { name: "Logout", path: "/logout", icon: <LogOut size={iconSize} /> },
   ];
@@ -95,8 +110,6 @@ const MenuItems = () => {
     dispatch(logoutThunk());
     toast.success("Logged Out Successfully");
   };
-
-  const user = useSelector((state) => state.auth.user);
 
   const isCentralStaff = ["Coordinator"].includes(user?.role) && ["Bhopal", "Gwalior", "Jabalpur"].includes(user?.assignedCity);
   const showCitySelector = ["SuperAdmin", "Admin"].includes(user?.role) || isCentralStaff;
@@ -118,7 +131,7 @@ const MenuItems = () => {
 
   const menus = ["SuperAdmin", "Admin"].includes(user?.role) ? adminMenu : fieldOfficerMenu;
 
-  const isFieldOfficer = user?.role === "FIELDOFFICER";
+  const isFieldOfficer = ["FieldOfficer", "FIELDOFFICER"].includes(user?.role);
 
   return (
     <div className='h-full w-full font-outfit'>

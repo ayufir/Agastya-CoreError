@@ -316,4 +316,28 @@ export const routesConfig = [
       import("../pages/Dashboard/FieldOfficer/FieldOfficerDashboard")
     ),
   },
+
+  // ! Coordinator Dashboard
+  {
+    path: "/coordinator/dashboard",
+    element: lazy(() => import("../pages/Dashboard/Dashboard")),
+  },
+
+  // ! Technical Manager Dashboard
+  {
+    path: "/tm/dashboard",
+    element: lazy(() => import("../pages/Dashboard/Dashboard")),
+  },
+
+  // ! Regional Manager Dashboard
+  {
+    path: "/rtm/dashboard",
+    element: lazy(() => import("../pages/Dashboard/Dashboard")),
+  },
+
+  // ! Accountant Dashboard
+  {
+    path: "/accountant/dashboard",
+    element: lazy(() => import("../pages/Dashboard/Dashboard")),
+  },
 ];
