@@ -1,84 +1,47 @@
 {
-  "timestamp": "2026-06-20T12:34:22.437Z",
+  "timestamp": "2026-06-25T06:56:38.682Z",
   "body": {
+    "_id": "6a37d9fa7f35c49577e7fac2",
+    "status": "FinalSubmitted",
+    "AttachDocuments": [],
+    "atsDocuments": [],
     "gpsFiles": [],
     "emailFiles": [],
     "fieldFormFiles": [],
     "additionalFiles": [],
-    "_id": "6a2bfe92c7c1146c74ee4e81",
-    "status": "Work in Progress",
-    "AttachDocuments": [],
-    "atsDocuments": [
-      {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/Pooja_YQVhKkcj9.pdf",
-        "fileId": "6a2bfe8f5c7cd75eb85a4983",
-        "name": "Pooja_YQVhKkcj9.pdf"
-      }
-    ],
+    "siteVisitVideo": [],
     "createdBy": "683070c765ba61b559c1ecc1",
     "bankName": "HomeFirst",
     "city": "",
-    "approvalStatus": "Accepted",
-    "isReportSubmitted": true,
-    "refNo": "N/A",
-    "dateOfReport": null,
-    "dateOfVisit": null,
-    "vendorName": "",
-    "clContractNo": "",
-    "latitude": "",
-    "longitude": "",
+    "approvalStatus": "Declined",
+    "isReportSubmitted": false,
     "imageUrls": [],
     "valuationRemarks": [],
     "timeline": [
       {
-        "status": "submitted-by-fo",
-        "updatedAt": "2026-06-12T12:43:42.114Z",
-        "updatedBy": "6a2a4ed58ddfdbd661279b46",
-        "note": "Updated by field officer",
-        "_id": "6a2bfefec7c1146c74ee50a9"
+        "status": "Work in Progress",
+        "updatedAt": "2026-06-23T09:25:01.240Z",
+        "updatedBy": "683070c765ba61b559c1ecc1",
+        "note": "Assigned to user 69f304941bf36e8b8676ce93",
+        "_id": "6a3a50ede0e56227e558c1a6"
       },
       {
-        "status": "submitted-by-fo",
-        "updatedAt": "2026-06-12T12:49:17.611Z",
-        "updatedBy": "6a2a4ed58ddfdbd661279b46",
-        "note": "Updated by field officer",
-        "_id": "6a2c004d008ec14b4eef177f"
-      },
-      {
-        "status": "submitted-by-fo",
-        "updatedAt": "2026-06-12T12:51:15.715Z",
-        "updatedBy": "6a2a4ed58ddfdbd661279b46",
-        "note": "Updated by field officer",
-        "_id": "6a2c00c344630ccefca2c43d"
-      },
-      {
-        "status": "submitted-by-fo",
-        "updatedAt": "2026-06-12T12:51:33.535Z",
-        "updatedBy": "6a2a4ed58ddfdbd661279b46",
-        "note": "Updated by field officer",
-        "_id": "6a2c00d57cfcb601eaeb6963"
-      },
-      {
-        "status": "submitted-by-fo",
-        "updatedAt": "2026-06-12T12:55:03.996Z",
-        "updatedBy": "6a2a4ed58ddfdbd661279b46",
-        "note": "Updated by field officer",
-        "_id": "6a2c01a8e37d2e982fc90325"
-      },
-      {
-        "status": "submitted-by-fo",
-        "updatedAt": "2026-06-12T12:56:32.346Z",
-        "updatedBy": "6a2a4ed58ddfdbd661279b46",
-        "note": "Updated by field officer",
-        "_id": "6a2c0200a483d32a67f655f8"
+        "status": "Approved",
+        "updatedAt": "2026-06-25T06:56:13.796Z",
+        "updatedBy": "683070c765ba61b559c1ecc1",
+        "note": "Approved by SuperAdmin",
+        "_id": "6a3cd10df39f4b0e4653f36b"
       }
     ],
+    "dateOfReport": "2026-06-21",
+    "dateOfVisit": "2026-06-21",
     "documents": [],
-    "createdAt": "2026-06-12T12:41:54.441Z",
-    "updatedAt": "2026-06-15T08:15:09.937Z",
-    "__v": 1,
-    "assignedTo": "6a2a4ed58ddfdbd661279b46",
-    "route": "/bank/home-first/edit/6a2bfe92c7c1146c74ee4e81",
-    "siteVisitVideo": []
+    "createdAt": "2026-06-21T12:32:58.126Z",
+    "updatedAt": "2026-06-21T12:32:58.127Z",
+    "__v": 0,
+    "route": "/bank/home-first/edit/6a37d9fa7f35c49577e7fac2",
+    "declineReason": "awsedxfcgvbhjkml,;,kjhgfdszadxfghjk",
+    "assignedTo": "69f304941bf36e8b8676ce93",
+    "customerName": "ayan bhopal"
   }
 }

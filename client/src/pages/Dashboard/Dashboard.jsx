@@ -8,6 +8,7 @@ import Pending from "./Pending";
 import QueryRaised from "./Admin/QueryRaised";
 import AssignedCase from "./Admin/AssignedCase";
 import ApprovalPendingCases from "./Admin/ApprovalPendingCases";
+import ApprovedCases from "./Admin/ApprovedCases";
 import MyWorklist from "./MyWorklist";
 import FinalSubmittedCase from "./Admin/FinalSubmittedCase";
 import CancelledCases from "./Admin/CancelledCases";
@@ -35,8 +36,9 @@ const normalizeStatus = (status = "") =>
 const isApprovalPending = (item) => {
   const s = normalizeStatus(item.status);
   const isSubmitted = s.includes("submitted") || item.isReportSubmitted === true;
-  const isFinal = s.includes("final") || s.includes("done") || s.includes("complete");
-  return isSubmitted && !isFinal;
+  const isApproved = s.includes("approved");
+  const isCancelled = s.includes("cancel");
+  return isSubmitted && !isApproved && !isCancelled;
 };
 
 const getCurrentMonthValue = () => {
@@ -145,11 +147,17 @@ const formatDateTime = (date) => {
     });
 };
 
-const getBankStats = (data) => {
+const getBankStats = (data, user) => {
   const map = {};
+  const showCityInSummary =
+    user &&
+    (["Bhopal", "Gwalior", "Jabalpur"].includes(user.assignedCity) ||
+      ["SuperAdmin", "Admin"].includes(user.role));
 
   data.forEach((item) => {
-    const bank = item.bankName || "N/A";
+    const rawBank = item.bankName || "N/A";
+    const city = item.city && item.city !== "N/A" ? item.city : "";
+    const bank = (showCityInSummary && city) ? `${rawBank} (${city})` : rawBank;
 
     if (!map[bank]) {
       map[bank] = {
@@ -240,16 +248,8 @@ const Dashboard = () => {
   useEffect(() => {
     if (!user) return;
     if (location.pathname === "/") {
-      if (user.role === "FieldOfficer") {
+      if (user.role === "FieldOfficer" || user.role === "FIELDOFFICER") {
         navigate("/field/dashboard", { replace: true });
-      } else if (user.role === "Coordinator") {
-        navigate("/coordinator/dashboard", { replace: true });
-      } else if (user.role === "TechnicalManager") {
-        navigate("/tm/dashboard", { replace: true });
-      } else if (user.role === "RegionalManager") {
-        navigate("/rtm/dashboard", { replace: true });
-      } else if (user.role === "Accountant") {
-        navigate("/accountant/dashboard", { replace: true });
       }
     }
   }, [user, navigate, location.pathname]);
@@ -298,6 +298,20 @@ const Dashboard = () => {
     }
   }, [currentPage, pageSize, selectedZone, selectedMonth]);
 
+  const handleCaseApprovedLocal = useCallback((caseId) => {
+    setAllCasesData((prevCases) =>
+      prevCases.map((c) =>
+        c._id === caseId || c.key === caseId ? { ...c, status: "Approved" } : c
+      )
+    );
+  }, []);
+
+  const handleCaseDeletedLocal = useCallback((caseId) => {
+    setAllCasesData((prevCases) =>
+      prevCases.filter((c) => c._id !== caseId && c.key !== caseId)
+    );
+  }, []);
+
   useEffect(() => {
     fetchAllCases();
   }, [fetchAllCases]);
@@ -327,7 +341,13 @@ const Dashboard = () => {
     }
 
     if (selectedBankView) {
-      data = data.filter((item) => item.bankName === selectedBankView);
+      const match = selectedBankView.match(/^(.*?)\s*\((.*?)\)$/);
+      if (match) {
+        const [_, bankName, city] = match;
+        data = data.filter((item) => item.bankName === bankName && item.city === city);
+      } else {
+        data = data.filter((item) => item.bankName === selectedBankView);
+      }
     }
 
     if (selectedStatuses.length) {
@@ -401,8 +421,14 @@ const Dashboard = () => {
         const s = normalizeStatus(item.status);
         return (
           s.includes("final") ||
-          s.includes("done")
+          s.includes("done") ||
+          s.includes("approved")
         );
+      }).length,
+
+      approved: filteredCases.filter((item) => {
+        const s = normalizeStatus(item.status);
+        return s.includes("approved");
       }).length,
 
       query: filteredCases.filter((item) =>
@@ -446,21 +472,62 @@ const Dashboard = () => {
 
   const reports = useMemo(
     () => {
-      const baseReports = [
-        {
-          title: "To Be Assigned / File Generated",
-          total: cardCounts.pending,
-          component: "Pending",
-          declinedCount: cardCounts.declined,
-        },
-        {
-          title: "Total Assigned / Work in Progress",
-          total: cardCounts.working,
-          component: "Assigned",
-        },
-      ];
+      const baseReports = [];
 
-      if (user?.role === "SuperAdmin") {
+      // 1. Generated case file (Pending)
+      baseReports.push({
+        title: "Generated case file",
+        total: cardCounts.pending,
+        component: "Pending",
+        declinedCount: cardCounts.declined,
+      });
+
+      // 2. Work in Progress pending (Assigned)
+      baseReports.push({
+        title: "Work in Progress pending",
+        total: cardCounts.working,
+        component: "Assigned",
+      });
+
+      // 3. Query Raised
+      baseReports.push({
+        title: "Query Raised",
+        total: cardCounts.query,
+        component: "QueryRaised",
+      });
+
+      // 4. Total Submission
+      baseReports.push({
+        title: "Total Submission",
+        total: cardCounts.finalSubmitted,
+        component: "ReportSubmitted",
+      });
+
+      // 5. Cancel Cases
+      baseReports.push({
+        title: "Cancel Cases",
+        total: cardCounts.cancelled,
+        component: "CancelCases",
+      });
+
+      // 6. Out Tat Cases
+      baseReports.push({
+        title: "Out Tat Cases",
+        total: cardCounts.outOfTat,
+        component: "Out_Tat_Cases",
+      });
+
+      // 7. All Cases (SuperAdmin only)
+      if (user?.role !== "FieldOfficer" && user?.role !== "FIELDOFFICER") {
+        baseReports.push({
+          title: "All Cases",
+          total: cardCounts.allCases,
+          component: "Summary",
+        });
+      }
+
+      // 8. Approval Pending (SuperAdmin only)
+      if (user?.role !== "FieldOfficer" && user?.role !== "FIELDOFFICER") {
         baseReports.push({
           title: "Approval Pending",
           total: cardCounts.approvalPending,
@@ -468,34 +535,12 @@ const Dashboard = () => {
         });
       }
 
-      baseReports.push(
-        {
-          title: "Total Submission",
-          total: cardCounts.finalSubmitted,
-          component: "ReportSubmitted",
-        },
-        {
-          title: "Query Raised",
-          total: cardCounts.query,
-          component: "QueryRaised",
-        },
-        {
-          title: "Cancel Cases",
-          total: cardCounts.cancelled,
-          component: "CancelCases",
-        },
-        {
-          title: "Out Tat Cases",
-          total: cardCounts.outOfTat,
-          component: "Out_Tat_Cases",
-        }
-      );
-
-      if (user?.role === "SuperAdmin") {
+      // 9. Approved (SuperAdmin only)
+      if (user?.role !== "FieldOfficer" && user?.role !== "FIELDOFFICER") {
         baseReports.push({
-          title: "All Cases",
-          total: cardCounts.allCases,
-          component: "Summary",
+          title: "Approved",
+          total: cardCounts.approved,
+          component: "ApprovedCases",
         });
       }
 
@@ -504,7 +549,7 @@ const Dashboard = () => {
     [cardCounts, user]
   );
 
-  const bankSummary = useMemo(() => getBankStats(filteredCases), [filteredCases]);
+  const bankSummary = useMemo(() => getBankStats(filteredCases, user), [filteredCases, user]);
 
   const paginatedBankSummary = useMemo(
     () =>
@@ -578,6 +623,7 @@ const Dashboard = () => {
     Pending: { icon: "📂", color: "#f59e0b", bg: "#fffbeb", border: "#fde68a" },
     Assigned: { icon: "⚙️", color: "#6366f1", bg: "#eef2ff", border: "#c7d2fe" },
     ApprovalPending: { icon: "⏳", color: "#ec4899", bg: "#fdf2f8", border: "#fbcfe8" },
+    ApprovedCases: { icon: "⭐", color: "#16a34a", bg: "#f0fdf4", border: "#bbf7d0" },
     ReportSubmitted: { icon: "✅", color: "#10b981", bg: "#ecfdf5", border: "#a7f3d0" },
     QueryRaised: { icon: "❓", color: "#ef4444", bg: "#fff1f2", border: "#fecdd3" },
     CancelCases: { icon: "🚫", color: "#6b7280", bg: "#f9fafb", border: "#e5e7eb" },
@@ -767,14 +813,14 @@ const Dashboard = () => {
               </div>
             )}
 
-            {/* Bank Summary */}
+            {/* Daily Task Summary */}
             {!activeComponent && !selectedBankView && (
               <div style={{ background:"#fff", borderRadius:20, border:"1px solid #e2e8f0", overflow:"hidden", boxShadow:"0 4px 16px rgba(0,0,0,.06)", marginBottom:24 }}>
                 <div style={{ padding:"16px 20px", borderBottom:"1px solid #f1f5f9", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:8 }}>
                   <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                     <div style={{ width:36, height:36, borderRadius:10, background:"#eff6ff", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>🏦</div>
                     <div>
-                      <div style={{ fontWeight:700, fontSize:15, color:"#1e293b" }}>Bank Summary</div>
+                      <div style={{ fontWeight:700, fontSize:15, color:"#1e293b" }}>Daily Task Summary</div>
                       <div style={{ fontSize:12, color:"#94a3b8", fontWeight:500 }}>{bankSummary.length} banks · tap to drill down</div>
                     </div>
                   </div>
@@ -923,8 +969,9 @@ const Dashboard = () => {
                         <tr><td colSpan="7" style={{ textAlign:"center", padding:48, color:"#94a3b8" }}>No data found</td></tr>
                       ) : paginatedBankCases.map((rec, idx) => {
                         const row = getRowStyle(rec.status, rec.createdAt);
+                        const baseBankName = selectedBankView ? selectedBankView.replace(/\s*\(.*?\)$/, "") : "";
                         let bank;
-                        switch (selectedBankView) {
+                        switch (baseBankName) {
                           case "Home First": bank="home-first"; break;
                           case "Home First Trench": bank="home-first-trench"; break;
                           case "Aditya Bank": bank="aditya-birla"; break;
@@ -967,7 +1014,15 @@ const Dashboard = () => {
 
             {activeComponent==="Pending"         && <Pending selectedMonth={selectedMonth} />}
             {activeComponent==="Assigned"        && <AssignedCase selectedMonth={selectedMonth} />}
-            {activeComponent==="ApprovalPending" && <ApprovalPendingCases selectedMonth={selectedMonth} />}
+            {activeComponent==="ApprovalPending" && (
+              <ApprovalPendingCases
+                selectedMonth={selectedMonth}
+                onRefresh={fetchAllCases}
+                onCaseApproved={handleCaseApprovedLocal}
+                onCaseDeleted={handleCaseDeletedLocal}
+              />
+            )}
+            {activeComponent==="ApprovedCases"   && <ApprovedCases selectedMonth={selectedMonth} onRefresh={fetchAllCases} />}
             {activeComponent==="QueryRaised"     && <QueryRaised selectedMonth={selectedMonth} />}
             {activeComponent==="ReportSubmitted" && <FinalSubmittedCase selectedMonth={selectedMonth} />}
             {activeComponent==="CancelCases"     && <CancelledCases selectedMonth={selectedMonth} />}

@@ -1,9 +1,27 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { Select } from "antd";
+import { setSavedCity } from "../../redux/features/assignedCase/assignedCasesSlice";
 import { banks } from "./banks";
+
+const { Option } = Select;
 
 const BankHomePage = () => {
   const [search, setSearch] = useState("");
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
+  const savedCity = useSelector((state) => state.assignedCases.savedCity);
+
+  const isBJGUser =
+    ["Bhopal", "Gwalior", "Jabalpur"].includes(user?.assignedCity) &&
+    !["SuperAdmin", "Admin"].includes(user?.role);
+
+  useEffect(() => {
+    if (isBJGUser && !["Bhopal", "Gwalior", "Jabalpur"].includes(savedCity)) {
+      dispatch(setSavedCity(user?.assignedCity || "Bhopal"));
+    }
+  }, [isBJGUser, savedCity, user, dispatch]);
 
   banks.sort((a, b) => a.name.localeCompare(b.name));
 
@@ -15,6 +33,24 @@ const BankHomePage = () => {
 
   return (
     <div className='min-h-screen bg-gray-50 py-10 px-4'>
+      {isBJGUser && (
+        <div className='max-w-md mx-auto mb-6 bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col items-center gap-2'>
+          <label className='text-xs font-bold text-gray-500 uppercase tracking-wider'>
+            Select City for Bank Case Creation
+          </label>
+          <Select
+            value={savedCity || user?.assignedCity || "Bhopal"}
+            onChange={(val) => dispatch(setSavedCity(val))}
+            className='w-full'
+            size='large'
+          >
+            <Option value="Bhopal">Bhopal</Option>
+            <Option value="Jabalpur">Jabalpur</Option>
+            <Option value="Gwalior">Gwalior</Option>
+          </Select>
+        </div>
+      )}
+
       <div className='max-w-md mx-auto mb-8'>
         <input
           type='text'

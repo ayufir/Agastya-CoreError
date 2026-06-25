@@ -49,8 +49,9 @@ const normalizeStatus = (status = "") =>
 const isApprovalPending = (item) => {
   const s = normalizeStatus(item.status);
   const isSubmitted = s.includes("submitted") || item.isReportSubmitted === true;
-  const isFinal = s.includes("final") || s.includes("done") || s.includes("complete");
-  return isSubmitted && !isFinal;
+  const isApproved = s.includes("approved");
+  const isCancelled = s.includes("cancel");
+  return isSubmitted && !isApproved && !isCancelled;
 };
 
 const AssignedCase = ({ selectedMonth }) => {

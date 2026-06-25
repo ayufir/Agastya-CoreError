@@ -393,6 +393,7 @@ const UELogo = () => (
 const Login = () => {
   const [email, setEmail]             = useState("");
   const [password, setPassword]       = useState("");
+  const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [view, setView]               = useState("login"); // "login" | "reset"
   const [showPassword, setShowPassword] = useState(false);
@@ -424,13 +425,14 @@ const Login = () => {
   /* reset */
   const handleResetPassword = async (e) => {
     e.preventDefault();
-    if (!email || !newPassword) { toast.error("Fill all fields"); return; }
+    if (!email || !oldPassword || !newPassword) { toast.error("Fill all fields"); return; }
     setResetLoading(true);
     try {
-      const res = await axios.post("/auth/reset-password", { email, newPassword });
+      const res = await axios.post("/auth/reset-password", { email, oldPassword, newPassword });
       toast.success(res.data.message || "Password updated");
       setView("login");
       setPassword("");
+      setOldPassword("");
       setNewPassword("");
     } catch (err) {
       toast.error(err.response?.data?.message || "Reset failed");
@@ -442,6 +444,7 @@ const Login = () => {
   const switchView = (v) => {
     setShowPassword(false);
     setView(v);
+    setOldPassword("");
   };
 
   return (
@@ -618,6 +621,28 @@ const Login = () => {
                   required
                 />
                 <label className="ue-label" htmlFor="reset-email">Email address</label>
+              </div>
+
+              {/* Old Password */}
+              <div className="ue-field">
+                <input
+                  id="reset-old-password"
+                  type={showPassword ? "text" : "password"}
+                  className="ue-input"
+                  placeholder=" "
+                  value={oldPassword}
+                  onChange={e => setOldPassword(e.target.value)}
+                  required
+                />
+                <label className="ue-label" htmlFor="reset-old-password">Old password</label>
+                <button
+                  type="button"
+                  className="ue-eye-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
               </div>
 
               {/* New Password */}

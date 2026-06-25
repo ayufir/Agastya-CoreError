@@ -95,6 +95,17 @@ const MenuItems = () => {
     { name: "Logout", path: "/logout", icon: <LogOut size={iconSize} /> },
   ];
 
+  const onLogout = () => {
+    navigate("/login");
+    dispatch(logoutThunk());
+    toast.success("Logged Out Successfully");
+  };
+
+  const isFieldOfficer = ["FieldOfficer", "FIELDOFFICER"].includes(user?.role);
+  const isCentralStaff = ["Bhopal", "Gwalior", "Jabalpur"].includes(user?.assignedCity) && !["SuperAdmin", "Admin"].includes(user?.role);
+  const showCitySelector = !isFieldOfficer;
+  const allowedCities = isCentralStaff ? ["Bhopal", "Jabalpur", "Gwalior"] : cities;
+
   const fieldOfficerMenu = [
     {
       name: "Dashboard",
@@ -102,18 +113,22 @@ const MenuItems = () => {
       icon: <Home size={iconSize} />,
       isActive: currentPath === dashboardPath,
     },
-    { name: "Logout", path: "/logout", icon: <LogOut size={iconSize} /> },
   ];
 
-  const onLogout = () => {
-    navigate("/login");
-    dispatch(logoutThunk());
-    toast.success("Logged Out Successfully");
-  };
+  if (isCentralStaff) {
+    fieldOfficerMenu.push({
+      name: "Banks",
+      path: "/bank-logo",
+      icon: <Layers size={iconSize} />,
+      isActive: currentPath === "/bank-logo",
+    });
+  }
 
-  const isCentralStaff = ["Bhopal", "Gwalior", "Jabalpur"].includes(user?.assignedCity);
-  const showCitySelector = ["SuperAdmin", "Admin"].includes(user?.role) || isCentralStaff;
-  const allowedCities = isCentralStaff ? ["Bhopal", "Jabalpur", "Gwalior"] : cities;
+  fieldOfficerMenu.push({
+    name: "Logout",
+    path: "/logout",
+    icon: <LogOut size={iconSize} />,
+  });
 
   useEffect(() => {
     if (user) {
@@ -129,9 +144,7 @@ const MenuItems = () => {
     }
   }, [user, dispatch]);
 
-  const menus = ["SuperAdmin", "Admin"].includes(user?.role) ? adminMenu : fieldOfficerMenu;
-
-  const isFieldOfficer = ["FieldOfficer", "FIELDOFFICER"].includes(user?.role);
+  const menus = isFieldOfficer ? fieldOfficerMenu : adminMenu;
 
   return (
     <div className='h-full w-full font-outfit'>
@@ -145,7 +158,7 @@ const MenuItems = () => {
           </div>
           <div className='mt-1'>
             <h1 className='text-gray-800 font-bold relative text-xl leading-tight'>
-              {user?.name} {["Bhopal", "Gwalior", "Jabalpur"].includes(user?.assignedCity) ? " (BJG)" : ""}
+              {user?.name} {["Bhopal", "Gwalior", "Jabalpur"].includes(user?.assignedCity) && !["SuperAdmin", "Admin"].includes(user?.role) ? " (BJG)" : ""}
             </h1>
             <p className={`text-[10px] font-extrabold uppercase tracking-widest ${
               isFieldOfficer ? 'text-[#3b6657]' : 'text-red-600'

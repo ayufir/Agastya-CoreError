@@ -83,7 +83,21 @@ exports.login = async (req, res, next) => {
 exports.updateUser = async (req, res, next) => {
   console.log("Updating User:", req.params.id, req.body);
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+    const updateData = { ...req.body };
+
+    // If a password update is requested
+    if (updateData.password && typeof updateData.password === "string" && updateData.password.trim() !== "") {
+      // Security Check: Only non-FieldOfficers can change another employee's password. Users can change their own password.
+      if ((req.user.role === "FieldOfficer" || req.user.role === "FIELDOFFICER") && req.user._id.toString() !== req.params.id) {
+        return res.status(403).json({ message: "Only non-FieldOfficers can change employee passwords" });
+      }
+      updateData.password = await bcrypt.hash(updateData.password.trim(), 10);
+    } else {
+      // Remove empty or undefined password so it does not overwrite the existing password
+      delete updateData.password;
+    }
+
+    const user = await User.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
     });
     if (!user) {
@@ -98,6 +112,11 @@ exports.updateUser = async (req, res, next) => {
 
 exports.deleteUser = async (req, res, next) => {
   try {
+    // Only non-FieldOfficers are authorized to delete employee accounts
+    if (req.user.role === "FieldOfficer" || req.user.role === "FIELDOFFICER") {
+      return res.status(403).json({ message: "Only non-FieldOfficers can delete employee accounts" });
+    }
+
     const user = await User.findByIdAndDelete(req.params.id);
     if (!user) {
       return res.status(401).json({ message: "User Not Found" });
@@ -158,18 +177,12 @@ exports.logout = async (req, res, next) => {
 exports.getAllUsers = async (req, res, next) => {
   try {
     let query = {};
-    if (req.user.role === "Admin") {
-      // Admins see users in their city (excluding SuperAdmins for security)
-      query = {
-        assignedCity: req.user.assignedCity,
-        role: { $ne: "SuperAdmin" },
-      };
-    } else if (req.user.role === "SuperAdmin") {
-      // SuperAdmin sees everyone
-      query = {};
-    } else {
-      // Other roles see no one else
+    if (req.user.role === "FieldOfficer" || req.user.role === "FIELDOFFICER") {
+      // Field Officers see only themselves
       query = { _id: req.user._id };
+    } else {
+      // Non-Field Officers see everyone
+      query = {};
     }
 
     const users = await User.find(query).select("-password");
@@ -180,18 +193,25 @@ exports.getAllUsers = async (req, res, next) => {
 };
 
 exports.resetPassword = async (req, res, next) => {
-  let { email, newPassword } = req.body;
+  let { email, oldPassword, newPassword } = req.body;
   try {
     if (email && typeof email === "string") {
       email = email.trim().toLowerCase();
     }
-    if (!email || !newPassword) {
-      return res.status(400).json({ message: "Email and new password are required" });
+    if (!email || !oldPassword || !newPassword) {
+      return res.status(400).json({ message: "Email, old password, and new password are required" });
     }
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User not found with this email" });
     }
+
+    // Verify old password
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Incorrect old password" });
+    }
+
     const hashedPassword = await bcrypt.hash(newPassword.trim(), 10);
     user.password = hashedPassword;
     await user.save();

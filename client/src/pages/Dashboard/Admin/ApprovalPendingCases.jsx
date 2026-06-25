@@ -49,11 +49,12 @@ const normalizeStatus = (status = "") =>
 const isApprovalPending = (item) => {
   const s = normalizeStatus(item.status);
   const isSubmitted = s.includes("submitted") || item.isReportSubmitted === true;
-  const isFinal = s.includes("final") || s.includes("done") || s.includes("complete");
-  return isSubmitted && !isFinal;
+  const isApproved = s.includes("approved");
+  const isCancelled = s.includes("cancel");
+  return isSubmitted && !isApproved && !isCancelled;
 };
 
-const ApprovalPendingCases = ({ selectedMonth }) => {
+const ApprovalPendingCases = ({ selectedMonth, onRefresh, onCaseApproved, onCaseDeleted }) => {
   const dispatch = useDispatch();
 
   const { user } = useSelector((state) => state.auth);
@@ -238,7 +239,35 @@ const ApprovalPendingCases = ({ selectedMonth }) => {
     {
       title: "Action",
       render: (record) => (
-        <div className="flex gap-3">
+        <div className="flex gap-3 items-center">
+          {user?.role === "SuperAdmin" && (
+            <Popconfirm
+              title="Are you sure you want to approve this case?"
+              onConfirm={async () => {
+                try {
+                  await axiosInstance.put("/case/status", {
+                    caseId: record._id,
+                    status: "Approved",
+                    bankName: record.bankName,
+                    note: "Approved by SuperAdmin",
+                  });
+                  toast.success("Case approved successfully!");
+                  if (onCaseApproved) onCaseApproved(record._id);
+                  await fetchList();
+                  if (onRefresh) onRefresh();
+                } catch (err) {
+                  console.error("Approval error:", err);
+                  toast.error(err.response?.data?.message || "Failed to approve case");
+                }
+              }}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button type="primary" className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold" size="small">
+                Approve
+              </Button>
+            </Popconfirm>
+          )}
           <Link to={`/bank/${getBankRoute(record)}/edit/${record._id}`}>
             <Edit3 size={18} className="text-blue-600 hover:text-blue-800" />
           </Link>
@@ -247,7 +276,9 @@ const ApprovalPendingCases = ({ selectedMonth }) => {
             onConfirm={async () => {
               await dispatch(deletedCases(record._id));
               toast.success("Deleted");
+              if (onCaseDeleted) onCaseDeleted(record._id);
               await fetchList();
+              if (onRefresh) onRefresh();
             }}
             okText="Yes"
             cancelText="No"

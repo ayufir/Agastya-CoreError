@@ -143,14 +143,11 @@ const getCaseDisplayCity = (record) =>
 const buildRoleAwareQuery = (user, baseQuery = {}) => {
   const query = { ...baseQuery };
 
-  if (user.role === "FieldOfficer") {
+  if (user.role === "FieldOfficer" || user.role === "FIELDOFFICER") {
     // Field Officers only see cases assigned to them
     query.assignedTo = user._id;
-  } else if (user.role === "Coordinator") {
-    // Coordinators see cases they created OR cases assigned to them
-    query.$or = [{ createdBy: user._id }, { assignedTo: user._id }];
   }
-  // Admin & SuperAdmin: no ownership filter — they see ALL cases across all banks
+  // All other roles see all cases
 
   return query;
 };
@@ -181,8 +178,8 @@ const fetchCasesAcrossBanks = async ({
 };
 
 const applyCommonCaseFilters = (cases, rawQuery = {}, user) => {
-  // Enforce regional visibility for non-SuperAdmins and non-Admins
-  if (user && user.role !== "SuperAdmin" && user.role !== "Admin") {
+  // Enforce regional visibility for Field Officers only
+  if (user && (user.role === "FieldOfficer" || user.role === "FIELDOFFICER")) {
     const userCity = (user.assignedCity || "").toLowerCase().trim();
     const centralCities = ["bhopal", "gwalior", "jabalpur"];
     if (userCity) {
@@ -583,14 +580,8 @@ exports.getCasesByRole = async (req, res) => {
         const { key: modelKey, model: Model } = bankConfig;
         let query = {};
 
-        // Role-based ownership filtering
-        if (user.role === "Coordinator") {
-          // Show cases created BY them OR assigned TO them
-          query.$or = [
-            { createdBy: user._id },
-            { assignedTo: user._id }
-          ];
-        } else if (user.role === "FieldOfficer") {
+        // Role-based ownership filtering (Field Officers only see cases assigned to them)
+        if (user.role === "FieldOfficer" || user.role === "FIELDOFFICER") {
           query.assignedTo = user._id;
         }
 
@@ -601,8 +592,8 @@ exports.getCasesByRole = async (req, res) => {
 
     allCases = results.flat();
 
-    // City restriction for non-SuperAdmin and non-Admin users
-    if (user && user.role !== "SuperAdmin" && user.role !== "Admin" && user.assignedCity) {
+    // City restriction for Field Officers only
+    if (user && (user.role === "FieldOfficer" || user.role === "FIELDOFFICER") && user.assignedCity) {
       const centralCities = ["bhopal", "gwalior", "jabalpur"];
       const normalizedUserCity = user.assignedCity.toLowerCase().trim();
       
@@ -849,7 +840,7 @@ exports.getAllAssignedCases = async (req, res) => {
       user,
       baseQuery: {
         assignedTo: { $ne: null },
-        status: { $in: [...WORK_IN_PROGRESS_STATUSES, "Submitted"] },
+        status: { $in: [...WORK_IN_PROGRESS_STATUSES, "Submitted", "FinalSubmitted"] },
       },
       populate: "assignedTo createdBy",
     });
@@ -1011,7 +1002,7 @@ exports.getFinalSubmittedCases = async (req, res) => {
   try {
     const finalCases = await fetchCasesAcrossBanks({
       user,
-      baseQuery: { status: "FinalSubmitted" },
+      baseQuery: { status: { $in: ["FinalSubmitted", "Approved"] } },
       populate: "assignedTo createdBy",
     });
 

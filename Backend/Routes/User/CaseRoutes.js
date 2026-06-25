@@ -33,7 +33,7 @@ router.get("/summary-data", protect, getSummaryData);
 router.get("/out-of-tat", protect, getOutOfTATCases);
 
 // Assign case to Field Officer
-router.put("/assign", protect, restrictTo("Coordinator", "Admin", "SuperAdmin"), assignCase);
+router.put("/assign", protect, restrictTo("Coordinator", "Admin", "SuperAdmin", "TechnicalManager", "RegionalManager", "Accountant"), assignCase);
 
 // Update case status (Visited, Reviewed, Approved etc.)
 router.put("/status", protect, updateCaseStatus);

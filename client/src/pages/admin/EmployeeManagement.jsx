@@ -31,7 +31,7 @@ function EmployeeManagement() {
     "Accountant",
   ];
 
-  const availableRoles = currentUser?.role === "SuperAdmin" 
+  const availableRoles = currentUser?.role !== "FieldOfficer" && currentUser?.role !== "FIELDOFFICER" 
     ? roles 
     : roles.filter(role => !["SuperAdmin", "Admin"].includes(role));
 
@@ -61,15 +61,21 @@ function EmployeeManagement() {
 
   const handleFinish = async (values) => {
     try {
+      const payload = { ...values };
+      // If editing and password is empty, remove it from the payload to avoid overwriting
+      if (editingEmployee && (!payload.password || payload.password.trim() === "")) {
+        delete payload.password;
+      }
+
       if (editingEmployee) {
         // Update
         await dispatch(
-          updateEmployee({ id: editingEmployee._id, data: values })
+          updateEmployee({ id: editingEmployee._id, data: payload })
         ).unwrap();
         message.success("Employee updated successfully");
       } else {
         // Add
-        await dispatch(addEmployee(values)).unwrap();
+        await dispatch(addEmployee(payload)).unwrap();
         message.success("Employee added successfully");
       }
       handleCancel();
@@ -126,9 +132,11 @@ function EmployeeManagement() {
           <Button type='link' onClick={() => showModal(record)}>
             Edit
           </Button>
-          <Button type='link' danger onClick={() => handleDelete(record._id)}>
-            Delete
-          </Button>
+          {currentUser?.role !== "FieldOfficer" && currentUser?.role !== "FIELDOFFICER" && (
+            <Button type='link' danger onClick={() => handleDelete(record._id)}>
+              Delete
+            </Button>
+          )}
         </>
       ),
     },
@@ -164,15 +172,13 @@ function EmployeeManagement() {
           >
             <Input />
           </Form.Item>
-          {editingEmployee ? (
-            ""
-          ) : (
+          {(!editingEmployee || (currentUser?.role !== "FieldOfficer" && currentUser?.role !== "FIELDOFFICER")) && (
             <Form.Item
               name='password'
-              label='Password'
-              rules={[{ required: true, type: "password" }]}
+              label={editingEmployee ? 'New Password (leave blank to keep current)' : 'Password'}
+              rules={editingEmployee ? [] : [{ required: true, message: 'Password is required' }]}
             >
-              <Input />
+              <Input.Password placeholder={editingEmployee ? "Enter new password" : "Enter password"} />
             </Form.Item>
           )}
           <Form.Item name='role' label='Role' rules={[{ required: true }]}>
