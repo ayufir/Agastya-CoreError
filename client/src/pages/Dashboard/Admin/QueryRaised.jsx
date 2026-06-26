@@ -258,6 +258,8 @@ const QueryRaised = ({ selectedMonth }) => {
         columns={columns}
         data={filteredNotes}
         pagination
+        paginationPerPage={10}
+        paginationRowsPerPageOptions={[10, 20, 50, 100]}
         highlightOnHover
         striped
         dense

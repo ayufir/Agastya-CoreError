@@ -211,6 +211,39 @@ bankRegistry.forEach(({ model: Model }) => {
     if (!Model.schema.paths.additionalFiles) {
       Model.schema.add({ additionalFiles: { type: [Object], default: [] } });
     }
+    if (!Model.schema.paths.customCaseId) {
+      Model.schema.add({ customCaseId: { type: String, default: "" } });
+    }
+    if (!Model.schema.paths.appIdNotes) {
+      Model.schema.add({ appIdNotes: { type: String, default: "" } });
+    }
+
+    // Add global post hooks for SuperAdmin notifications
+    Model.schema.post("save", async function (doc, next) {
+      if (doc) {
+        try {
+          const notifySuperAdmins = require("../utils/notifySuperAdmins");
+          const bankName = doc.bankName || doc.bank || Model.modelName || "System";
+          await notifySuperAdmins(doc._id, bankName, `Case ${doc.fileNumber || doc._id} was created/updated.`);
+        } catch (e) {
+          console.error("Hook save error:", e);
+        }
+      }
+      next();
+    });
+
+    Model.schema.post("findOneAndUpdate", async function (doc, next) {
+      if (doc) {
+        try {
+          const notifySuperAdmins = require("../utils/notifySuperAdmins");
+          const bankName = doc.bankName || doc.bank || Model.modelName || "System";
+          await notifySuperAdmins(doc._id, bankName, `Case ${doc.fileNumber || doc._id} was updated.`);
+        } catch (e) {
+          console.error("Hook findOneAndUpdate error:", e);
+        }
+      }
+      next();
+    });
   }
 });
 

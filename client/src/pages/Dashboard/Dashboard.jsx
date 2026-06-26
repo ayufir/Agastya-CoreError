@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Select } from "antd";
+import { Select, Input, Tooltip } from "antd";
+import { toast } from "react-hot-toast";
 import CountUp from "react-countup";
 import { DownOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
@@ -16,9 +17,10 @@ import OutOfTATCase from "./Admin/OutOfTatCase";
 import SummaryCard from "./Admin/SummaryCard";
 import { fetchFieldOfficers } from "../../redux/features/auth/authThunks";
 import { fetchNotifications } from "../../redux/features/notification/notificationThunk";
+import { setZone } from "../../redux/features/assignedCase/assignedCasesSlice";
 import axiosInstance from "../../config/axios";
 import socket from "../../config/socket";
-import { getDisplayCustomerName } from "../../utils/dashboardRecord";
+import { getDisplayCustomerName, getDisplayAddress } from "../../utils/dashboardRecord";
 
 const { Option } = Select;
 
@@ -73,6 +75,7 @@ const normalizeAllCaseRecord = (record, index) => {
     bankName:
       readValue(record, ["bankName", "bank", "bankDetails.bankName"]) || "N/A",
     customerName: getDisplayCustomerName(record),
+    address: getDisplayAddress(record) || "N/A",
     city:
       readValue(record, [
         "city",
@@ -244,6 +247,23 @@ const Dashboard = () => {
 
   const rowsPerPage = 10;
 
+  const handleUpdateCustomFields = async (record, field, value) => {
+    const trimmed = value.trim();
+    if ((record[field] || "") === trimmed) return;
+
+    try {
+      await axiosInstance.put(`/case/custom-fields/${record._id}`, {
+        bankName: record.bankName || record.bank || record.bankSlug,
+        [field]: trimmed
+      });
+      toast.success("Updated successfully!");
+      await fetchAllCases();
+    } catch (error) {
+      toast.error("Failed to update");
+      console.error(error);
+    }
+  };
+
   // Redirect non-admin roles away from the main dashboard
   useEffect(() => {
     if (!user) return;
@@ -255,6 +275,10 @@ const Dashboard = () => {
   }, [user, navigate, location.pathname]);
 
   const selectedZone = useSelector((state) => state.assignedCases.selectedZone);
+
+  const citiesList = ["Combined BJG", "Bhopal", "Indore", "Jabalpur", "Gwalior", "Dehradun"];
+  const isCentralStaff = ["Bhopal", "Gwalior", "Jabalpur"].includes(user?.assignedCity) && !["SuperAdmin", "Admin"].includes(user?.role);
+  const allowedCities = isCentralStaff ? ["Combined BJG", "Bhopal", "Jabalpur", "Gwalior"] : citiesList;
 
   useEffect(() => {
     dispatch(fetchFieldOfficers());
@@ -725,15 +749,30 @@ const Dashboard = () => {
       `}</style>
 
       {/* TAB STRIP (inside content, no sticky/fixed, works with existing Header) */}
-      <div className="dash-tab-strip">
-        <button className={`dash-tab ${activeTab==="dashboard"?"active":""}`} onClick={() => { setActiveTab("dashboard"); setActiveComponent(""); clearBankView(); }}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-          Dashboard
-        </button>
-        <button className={`dash-tab ${activeTab==="myworklist"?"active":""}`} onClick={() => { setActiveTab("myworklist"); setActiveComponent(""); clearBankView(); }}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
-          My Worklist
-        </button>
+      <div className="dash-tab-strip" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingRight: 16 }}>
+        <div style={{ display: "flex", gap: "4px" }}>
+          <button className={`dash-tab ${activeTab==="dashboard"?"active":""}`} onClick={() => { setActiveTab("dashboard"); setActiveComponent(""); clearBankView(); }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+            Dashboard
+          </button>
+          <button className={`dash-tab ${activeTab==="myworklist"?"active":""}`} onClick={() => { setActiveTab("myworklist"); setActiveComponent(""); clearBankView(); }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+            My Worklist
+          </button>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, paddingBottom: 6 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: "#475569" }}>City:</span>
+          <Select
+            value={selectedZone || "Combined BJG"}
+            onChange={(val) => dispatch(setZone(val))}
+            style={{ width: 180 }}
+            size="middle"
+          >
+            {allowedCities.map((c) => (
+              <Option key={c} value={c}>{c}</Option>
+            ))}
+          </Select>
+        </div>
       </div>
 
       {/* CONTENT */}
@@ -833,23 +872,22 @@ const Dashboard = () => {
                     <thead>
                       <tr>
                         <th style={{ textAlign:"left" }}>Bank</th>
-                        <th style={{ textAlign:"center" }}>Total</th>
-                        <th style={{ textAlign:"center", color:"#10b981" }}>Done</th>
-                        <th style={{ textAlign:"center", color:"#f59e0b" }}>Pending</th>
                         <th style={{ textAlign:"center", color:"#ef4444" }}>Query</th>
-                        <th style={{ textAlign:"center", color:"#6366f1" }}>Working</th>
+                        <th style={{ textAlign:"center", color:"#f59e0b" }}>Pending</th>
+                        <th style={{ textAlign:"center", color:"#10b981" }}>Submitted Case</th>
+                        <th style={{ textAlign:"center" }}>Total</th>
                         <th>Completion</th>
                       </tr>
                     </thead>
                     <tbody>
                       {loading ? (
-                        <tr><td colSpan="7" style={{ textAlign:"center", padding:"40px", color:"#94a3b8" }}>
+                        <tr><td colSpan="6" style={{ textAlign:"center", padding:"40px", color:"#94a3b8" }}>
                           <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:10 }}>
                             <div style={{ width:20, height:20, border:"2.5px solid #e2e8f0", borderTopColor:"#6366f1", borderRadius:"50%", animation:"spin .7s linear infinite" }} />Loading...
                           </div>
                         </td></tr>
                       ) : bankSummary.length === 0 ? (
-                        <tr><td colSpan="7" style={{ textAlign:"center", padding:"48px", color:"#94a3b8" }}>
+                        <tr><td colSpan="6" style={{ textAlign:"center", padding:"48px", color:"#94a3b8" }}>
                           <div style={{ fontSize:32, marginBottom:8 }}>🏦</div><div style={{ fontWeight:600 }}>No data for this period</div>
                         </td></tr>
                       ) : paginatedBankSummary.map(bank => {
@@ -862,11 +900,10 @@ const Dashboard = () => {
                                 <span style={{ fontWeight:600, color:"#1e293b", fontSize:14 }}>{bank.bank}</span>
                               </div>
                             </td>
-                            <td style={{ textAlign:"center" }}><span style={{ fontWeight:700, color:"#1e293b" }}>{bank.total}</span></td>
-                            <td style={{ textAlign:"center" }}><span className="status-badge" style={{ background:"#ecfdf5", color:"#059669" }}>{bank.done}</span></td>
-                            <td style={{ textAlign:"center" }}><span className="status-badge" style={{ background:"#fffbeb", color:"#d97706" }}>{bank.pending}</span></td>
                             <td style={{ textAlign:"center" }}><span className="status-badge" style={{ background:"#fff1f2", color:"#e11d48" }}>{bank.query}</span></td>
-                            <td style={{ textAlign:"center" }}><span className="status-badge" style={{ background:"#eef2ff", color:"#6366f1" }}>{bank.working}</span></td>
+                            <td style={{ textAlign:"center" }}><span className="status-badge" style={{ background:"#fffbeb", color:"#d97706" }}>{bank.pending}</span></td>
+                            <td style={{ textAlign:"center" }}><span className="status-badge" style={{ background:"#ecfdf5", color:"#059669" }}>{bank.done}</span></td>
+                            <td style={{ textAlign:"center" }}><span style={{ fontWeight:700, color:"#1e293b" }}>{bank.total}</span></td>
                             <td>
                               <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                                 <span style={{ fontWeight:700, fontSize:13, color:rate>70?"#059669":rate>40?"#d97706":"#dc2626", minWidth:34 }}>{rate}%</span>
@@ -901,7 +938,7 @@ const Dashboard = () => {
                           <div style={{ height:"100%", width:`${rate}%`, borderRadius:999, background:rate>70?"linear-gradient(90deg,#10b981,#34d399)":rate>40?"linear-gradient(90deg,#f59e0b,#fbbf24)":"linear-gradient(90deg,#ef4444,#f87171)" }} />
                         </div>
                         <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:6, textAlign:"center" }}>
-                          {[{label:"Total",val:bank.total,bg:"#f8fafc",color:"#1e293b"},{label:"Done",val:bank.done,bg:"#ecfdf5",color:"#059669"},{label:"Pending",val:bank.pending,bg:"#fffbeb",color:"#d97706"},{label:"Query",val:bank.query,bg:"#fff1f2",color:"#e11d48"}].map(s=>(
+                          {[{label:"Query",val:bank.query,bg:"#fff1f2",color:"#e11d48"},{label:"Pending",val:bank.pending,bg:"#fffbeb",color:"#d97706"},{label:"Submitted Case",val:bank.done,bg:"#ecfdf5",color:"#059669"},{label:"Total",val:bank.total,bg:"#f8fafc",color:"#1e293b"}].map(s=>(
                             <div key={s.label} style={{ background:s.bg, borderRadius:8, padding:"6px 4px" }}>
                               <div style={{ fontSize:16, fontWeight:800, color:s.color }}>{s.val}</div>
                               <div style={{ fontSize:9, fontWeight:600, color:"#94a3b8", textTransform:"uppercase", letterSpacing:".5px" }}>{s.label}</div>
@@ -954,19 +991,21 @@ const Dashboard = () => {
                     <thead>
                       <tr>
                         <th style={{ textAlign:"center", width:36 }}>#</th>
-                        <th>Date</th>
                         <th>Customer</th>
+                        <th>Date & Time</th>
+                        <th>Address</th>
                         <th>City</th>
                         <th>Engineer</th>
                         <th>Status</th>
-                        <th>Remark</th>
+                        <th>Case ID</th>
+                        <th>App ID / Notes</th>
                       </tr>
                     </thead>
                     <tbody>
                       {loading ? (
-                        <tr><td colSpan="7" style={{ textAlign:"center", padding:40, color:"#94a3b8" }}>Loading...</td></tr>
+                        <tr><td colSpan="9" style={{ textAlign:"center", padding:40, color:"#94a3b8" }}>Loading...</td></tr>
                       ) : paginatedBankCases.length === 0 ? (
-                        <tr><td colSpan="7" style={{ textAlign:"center", padding:48, color:"#94a3b8" }}>No data found</td></tr>
+                        <tr><td colSpan="9" style={{ textAlign:"center", padding:48, color:"#94a3b8" }}>No data found</td></tr>
                       ) : paginatedBankCases.map((rec, idx) => {
                         const row = getRowStyle(rec.status, rec.createdAt);
                         const baseBankName = selectedBankView ? selectedBankView.replace(/\s*\(.*?\)$/, "") : "";
@@ -987,7 +1026,6 @@ const Dashboard = () => {
                         return (
                           <tr key={rec.key} className={row.className} style={{ backgroundColor:row.backgroundColor }}>
                             <td style={{ textAlign:"center", color:"#94a3b8", fontSize:12 }}>{(bankCasesPage-1)*rowsPerPage+idx+1}</td>
-                            <td style={{ whiteSpace:"nowrap", color:"#64748b", fontSize:12 }}>{formatDateTime(rec.createdAt)}</td>
                             <td style={{ fontSize:13 }}>
                                <Link
                                  to={`/bank/${bank}/edit/${rec?.key}`}
@@ -997,10 +1035,37 @@ const Dashboard = () => {
                                  {rec.customerName}
                                </Link>
                              </td>
+                            <td style={{ whiteSpace:"nowrap", color:"#64748b", fontSize:12 }}>{formatDateTime(rec.createdAt)}</td>
+                            <td style={{ color:"#64748b", fontSize:13, maxWidth:200, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                              <Tooltip title={rec.address}>
+                                {rec.address}
+                              </Tooltip>
+                            </td>
                             <td style={{ color:"#64748b", fontSize:13 }}>{rec.city}</td>
                             <td><Link to={`/bank/${bank}/${rec?.key}`} style={{ color:"#6366f1", fontWeight:600, textDecoration:"none", fontSize:13 }}>{rec.engineer}</Link></td>
                             <td><span className="status-badge" style={badge}>{rec.status}</span></td>
-                            <td style={{ color:"#64748b", fontSize:12, maxWidth:150, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{rec.remark||"—"}</td>
+                            <td>
+                              <Input
+                                placeholder="Enter Case ID"
+                                defaultValue={rec.customCaseId || ""}
+                                onBlur={(e) => handleUpdateCustomFields(rec, "customCaseId", e.target.value)}
+                                onPressEnter={(e) => {
+                                  e.target.blur();
+                                }}
+                                style={{ width: "120px" }}
+                              />
+                            </td>
+                            <td>
+                              <Input
+                                placeholder="Enter App ID / Notes"
+                                defaultValue={rec.appIdNotes || ""}
+                                onBlur={(e) => handleUpdateCustomFields(rec, "appIdNotes", e.target.value)}
+                                onPressEnter={(e) => {
+                                  e.target.blur();
+                                }}
+                                style={{ width: "150px" }}
+                              />
+                            </td>
                           </tr>
                         );
                       })}

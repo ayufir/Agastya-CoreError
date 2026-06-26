@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button, Modal, Form, Input, message, Select } from "antd";
+import { Table, Button, Modal, Form, Input, message, Select, Popconfirm, Divider, Space } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
@@ -19,6 +19,8 @@ function EmployeeManagement() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
+  const [customCities, setCustomCities] = useState([]);
+  const [newCityName, setNewCityName] = useState("");
 
   const { user: currentUser } = useSelector((state) => state.auth);
   const navigate = useNavigate();
@@ -80,6 +82,31 @@ function EmployeeManagement() {
     setEditingEmployee(null);
   };
 
+  const onCityNameChange = (e) => {
+    setNewCityName(e.target.value);
+  };
+
+  const addCustomCity = (e) => {
+    e.preventDefault();
+    const trimmed = newCityName.trim();
+    if (!trimmed) return;
+
+    const defaultCities = ["Bhopal", "Jabalpur", "Gwalior", "Indore", "Dehradun"];
+    const allExisting = [
+      ...defaultCities,
+      ...customCities,
+      ...(employees ? employees.map(emp => emp.assignedCity).filter(Boolean) : [])
+    ];
+
+    if (allExisting.some(c => c.toLowerCase() === trimmed.toLowerCase())) {
+      message.warning("City already exists!");
+      return;
+    }
+
+    setCustomCities([...customCities, trimmed]);
+    setNewCityName("");
+  };
+
   const handleFinish = async (values) => {
     try {
       const payload = { ...values };
@@ -107,22 +134,15 @@ function EmployeeManagement() {
     }
   };
 
-  const handleDelete = (id) => {
-    console.log(id, "LIOn");
-
-    Modal.confirm({
-      title: "Are you sure you want to delete this employee?",
-      onOk: async () => {
-        try {
-          await dispatch(deleteEmployee(id)).unwrap();
-          message.success("Employee deleted");
-          dispatch(fetchFieldOfficers());
-        } catch (err) {
-          message.error("Failed to delete");
-          console.error(err);
-        }
-      },
-    });
+  const handleDelete = async (id) => {
+    try {
+      await dispatch(deleteEmployee(id)).unwrap();
+      message.success("Employee deleted successfully");
+      dispatch(fetchFieldOfficers());
+    } catch (err) {
+      message.error(err || "Failed to delete");
+      console.error(err);
+    }
   };
 
   const columns = [
@@ -154,13 +174,29 @@ function EmployeeManagement() {
             Edit
           </Button>
           {currentUser?.role === "SuperAdmin" && (
-            <Button type='link' danger onClick={() => handleDelete(record._id)}>
-              Delete
-            </Button>
+            <Popconfirm
+              title="Are you sure you want to delete this employee?"
+              onConfirm={() => handleDelete(record._id)}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button type='link' danger>
+                Delete
+              </Button>
+            </Popconfirm>
           )}
         </>
       ),
     },
+  ];
+
+  const defaultCities = ["Bhopal", "Jabalpur", "Gwalior", "Indore", "Dehradun"];
+  const otherCities = [
+    ...customCities,
+    ...(employees 
+      ? employees.map(emp => emp.assignedCity).filter(c => c && !defaultCities.includes(c) && !customCities.includes(c))
+      : []
+    )
   ];
 
   return (
@@ -212,7 +248,27 @@ function EmployeeManagement() {
             </Select>
           </Form.Item>
           <Form.Item name='assignedCity' label='Assigned City/Zone'>
-            <Select placeholder='Select City (Leave empty for All)'>
+            <Select
+              placeholder='Select City (Leave empty for All)'
+              dropdownRender={(menu) => (
+                <>
+                  {menu}
+                  <Divider style={{ margin: '8px 0' }} />
+                  <div style={{ display: 'flex', flexWrap: 'nowrap', padding: '0 8px 4px', gap: '8px' }}>
+                    <Input
+                      placeholder="Add custom city"
+                      value={newCityName}
+                      onChange={onCityNameChange}
+                      onKeyDown={(e) => e.stopPropagation()}
+                      style={{ flex: 'auto' }}
+                    />
+                    <Button type="primary" onClick={addCustomCity}>
+                      + Add
+                    </Button>
+                  </div>
+                </>
+              )}
+            >
               <Option value=''>All Cities</Option>
               <OptGroup label="Central Portal (Bhopal, Jabalpur, Gwalior)">
                 <Option value='Bhopal'>Bhopal</Option>
@@ -225,6 +281,15 @@ function EmployeeManagement() {
               <OptGroup label="Dehradun Portal">
                 <Option value='Dehradun'>Dehradun</Option>
               </OptGroup>
+              {otherCities.length > 0 && (
+                <OptGroup label="Custom/Other Cities">
+                  {otherCities.map((city) => (
+                    <Option key={city} value={city}>
+                      {city}
+                    </Option>
+                  ))}
+                </OptGroup>
+              )}
             </Select>
           </Form.Item>
         </Form>

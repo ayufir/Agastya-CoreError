@@ -1457,4 +1457,57 @@ exports.changeAssign = async (req, res) => {
       error: error.message,
     });
   }
-}
+};
+
+exports.updateCaseCustomFields = async (req, res) => {
+  const { id } = req.params;
+  const { customCaseId, appIdNotes, bankName } = req.body;
+
+  let Model = null;
+  if (bankName) {
+    Model = resolveModel(bankName);
+  }
+
+  if (!Model) {
+    const registry = modelMap.bankRegistry || Object.values(modelMap);
+    for (const bankConfig of registry) {
+      const M = bankConfig.model || bankConfig;
+      if (M && M.findById) {
+        try {
+          const doc = await M.findById(id);
+          if (doc) {
+            Model = M;
+            break;
+          }
+        } catch (err) {
+          // ignore
+        }
+      }
+    }
+  }
+
+  if (!Model) {
+    return res.status(400).json({ error: "Case not found in any bank model." });
+  }
+
+  try {
+    const updatePayload = {};
+    if (customCaseId !== undefined) {
+      updatePayload.customCaseId = customCaseId;
+    }
+    if (appIdNotes !== undefined) {
+      updatePayload.appIdNotes = appIdNotes;
+    }
+
+    const updated = await Model.findByIdAndUpdate(
+      id,
+      { $set: updatePayload },
+      { new: true }
+    );
+
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update custom case fields." });
+  }
+};

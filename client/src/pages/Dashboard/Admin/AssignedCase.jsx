@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import { Table, Button, Tag, Input, Popconfirm, Modal, Select, Tooltip } from "antd";
 import { Edit3, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import dayjs from "dayjs";
 
 import { fetchFieldOfficers } from "../../../redux/features/auth/authThunks";
 import { fetchAssignedCases } from "../../../redux/features/assignedCase/assignedCasesThunk";
@@ -73,7 +74,7 @@ const AssignedCase = ({ selectedMonth }) => {
   const [selectedBanks, setSelectedBanks] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(1000);
+  const [pageSize, setPageSize] = useState(10);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCaseId, setSelectedCaseId] = useState(null);
@@ -181,6 +182,23 @@ const AssignedCase = ({ selectedMonth }) => {
     }
   };
 
+  const handleUpdateCustomFields = async (record, field, value) => {
+    const trimmed = value.trim();
+    if ((record[field] || "") === trimmed) return;
+
+    try {
+      await axiosInstance.put(`/case/custom-fields/${record._id}`, {
+        bankName: record.bankName || record.bank || record.bankSlug,
+        [field]: trimmed
+      });
+      toast.success("Updated successfully!");
+      await fetchAssignedList();
+    } catch (error) {
+      toast.error("Failed to update");
+      console.error(error);
+    }
+  };
+
   const columns = [
     {
       title: "Bank Name",
@@ -258,6 +276,51 @@ const AssignedCase = ({ selectedMonth }) => {
           </Tooltip>
         );
       },
+    },
+    {
+      title: "Date & Time",
+      key: "createdAt",
+      render: (_, record) => {
+        const date = getCaseDate(record);
+        return date ? (
+          <div style={{ fontSize: "12px", color: "#475569" }}>
+            <div style={{ fontWeight: 500 }}>{dayjs(date).format("DD/MM/YYYY")}</div>
+            <div style={{ fontSize: "10px", color: "#94a3b8", marginTop: "2px" }}>{dayjs(date).format("hh:mm A")}</div>
+          </div>
+        ) : (
+          <span className="text-gray-400 text-xs">—</span>
+        );
+      },
+    },
+    {
+      title: "Case ID",
+      key: "customCaseId",
+      render: (record) => (
+        <Input
+          placeholder="Enter Case ID"
+          defaultValue={record.customCaseId || ""}
+          onBlur={(e) => handleUpdateCustomFields(record, "customCaseId", e.target.value)}
+          onPressEnter={(e) => {
+            e.target.blur();
+          }}
+          style={{ width: "120px" }}
+        />
+      ),
+    },
+    {
+      title: "App ID / Notes",
+      key: "appIdNotes",
+      render: (record) => (
+        <Input
+          placeholder="Enter App ID / Notes"
+          defaultValue={record.appIdNotes || ""}
+          onBlur={(e) => handleUpdateCustomFields(record, "appIdNotes", e.target.value)}
+          onPressEnter={(e) => {
+            e.target.blur();
+          }}
+          style={{ width: "150px" }}
+        />
+      ),
     },
     {
       title: "Status",

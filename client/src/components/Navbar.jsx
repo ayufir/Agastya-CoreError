@@ -1,6 +1,7 @@
-import React, { useState } from "react";
-import { useSelector } from "react-redux";
+import React, { useState, useRef, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { logoutThunk } from "../redux/features/auth/authThunks";
 import {
   Menu,
   X,
@@ -11,14 +12,33 @@ import {
   Home,
   HelpCircle,
   Layers,
+  LogOut
 } from "lucide-react";
 import BellWithNotifications from "./BellWithNotifications";
 
 const Header = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
   const [activeTab, setActiveTab] = useState("Home");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const profileRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setIsProfileOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    dispatch(logoutThunk());
+    navigate("/login");
+  };
 
   const handleLogoClick = () => {
     const role = user?.role;
@@ -104,7 +124,32 @@ const Header = () => {
             <Globe className='h-6 w-6 text-gray-500 cursor-pointer hover:text-gray-700' />
             {/* <Bell className='h-6 w-6 text-gray-500 cursor-pointer hover:text-gray-700' /> */}
             <BellWithNotifications />
-            <User className='h-6 w-6 text-gray-500 cursor-pointer hover:text-gray-700' />
+            <div className='relative' ref={profileRef}>
+              <User 
+                className='h-6 w-6 text-gray-500 cursor-pointer hover:text-gray-700' 
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+              />
+              {isProfileOpen && (
+                <div className='absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50'>
+                  <div className='py-1' role='menu' aria-orientation='vertical'>
+                    <div className='px-4 py-3 border-b border-gray-100'>
+                      <p className='text-sm text-gray-500'>Signed in as</p>
+                      <p className='text-sm font-medium text-gray-900 truncate'>{user?.name || "User"}</p>
+                      <p className='text-xs text-gray-500 truncate'>{user?.email || "No email"}</p>
+                      <p className='text-xs font-semibold text-indigo-600 mt-1 uppercase'>{user?.role || "Role"}</p>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className='w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2'
+                      role='menuitem'
+                    >
+                      <LogOut size={16} />
+                      Log out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Mobile Menu Button */}
@@ -156,7 +201,13 @@ const Header = () => {
             <Search className='h-6 w-6 text-gray-500' />
             <Globe className='h-6 w-6 text-gray-500' />
             <Bell className='h-6 w-6 text-gray-500' />
-            <User className='h-6 w-6 text-gray-500' />
+            <div className='flex items-center gap-2 cursor-pointer' onClick={() => setIsProfileOpen(!isProfileOpen)}>
+              <User className='h-6 w-6 text-gray-500' />
+              <span className='text-sm font-medium text-gray-700'>{user?.name || "Profile"}</span>
+            </div>
+            <button onClick={handleLogout} className='text-red-500 p-2'>
+              <LogOut size={20} />
+            </button>
           </div>
         </div>
       )}

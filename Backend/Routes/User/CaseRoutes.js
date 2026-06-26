@@ -19,7 +19,8 @@ const {
   getOutOfTATCases,
   getSummaryData,
   deleteImageFromCase,
-  changeAssign
+  changeAssign,
+  updateCaseCustomFields
 } = require("../../controllers/User/CaseAsignCtrl");
 
 const { protect, restrictTo } = require("../../middleware/authMiddleware");
@@ -56,6 +57,8 @@ router.put("/remove-image/:id", deleteImageFromCase); //! delete image
 router.put("/unassign-case/:caseId", protect, unassignCase);
 
 router.put("/final-update/:id", protect, finalUpdate);
+
+router.put("/custom-fields/:id", protect, updateCaseCustomFields);
 
 router.put("/accept/:id", protect, acceptCase);
 

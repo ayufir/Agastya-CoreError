@@ -167,6 +167,23 @@ const Pending = ({ selectedMonth }) => {
     }
   };
 
+  const handleUpdateCustomFields = async (record, field, value) => {
+    const trimmed = value.trim();
+    if ((record[field] || "") === trimmed) return;
+
+    try {
+      await axiosInstance.put(`/case/custom-fields/${record._id}`, {
+        bankName: record.bankName || record.bank || record.bankSlug,
+        [field]: trimmed
+      });
+      toast.success("Updated successfully!");
+      await fetchPendingList();
+    } catch (error) {
+      toast.error("Failed to update");
+      console.error(error);
+    }
+  };
+
   const columns = [
     {
       title: "Bank",
@@ -225,6 +242,38 @@ const Pending = ({ selectedMonth }) => {
           <span className="text-gray-400 text-xs">—</span>
         );
       },
+    },
+    {
+      title: "Case ID",
+      key: "customCaseId",
+      width: 130,
+      render: (record) => (
+        <Input
+          placeholder="Enter Case ID"
+          defaultValue={record.customCaseId || ""}
+          onBlur={(e) => handleUpdateCustomFields(record, "customCaseId", e.target.value)}
+          onPressEnter={(e) => {
+            e.target.blur();
+          }}
+          style={{ width: "110px" }}
+        />
+      ),
+    },
+    {
+      title: "App ID / Notes",
+      key: "appIdNotes",
+      width: 160,
+      render: (record) => (
+        <Input
+          placeholder="Enter App ID / Notes"
+          defaultValue={record.appIdNotes || ""}
+          onBlur={(e) => handleUpdateCustomFields(record, "appIdNotes", e.target.value)}
+          onPressEnter={(e) => {
+            e.target.blur();
+          }}
+          style={{ width: "140px" }}
+        />
+      ),
     },
     {
       title: "FO Declined",
