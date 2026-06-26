@@ -105,33 +105,40 @@ const normalizeAllCaseRecord = (record, index) => {
 const getRowStyle = (status, createdAt) => {
   const s = normalizeStatus(status);
 
-  if (s.includes("final") || s.includes("done")) {
-    return { backgroundColor: "#dcfce7", className: "" };
+  // 1. Cancelled cases: Red background
+  if (s.includes("cancel")) {
+    return { backgroundColor: "#fee2e2", className: "" };
   }
 
+  // 2. Submitted / Done cases: Green background
+  if (s.includes("final") || s.includes("done") || s.includes("submitted") || s.includes("approved")) {
+    return { backgroundColor: "#bbf7d0", className: "" };
+  }
+
+  // 3. Query cases: Yellow background
+  if (s.includes("query")) {
+    return { backgroundColor: "#fef9c3", className: "" };
+  }
+
+  // 4. Over 47 hours: Red blinking background
+  if (createdAt) {
+    const hours = (new Date() - new Date(createdAt)) / (1000 * 60 * 60);
+    if (hours > 47) {
+      return { backgroundColor: "#fecaca", className: "blink-row" };
+    }
+  }
+
+  // 5. In progress / working cases: Light orange/yellow background
   if (
     s.includes("working") ||
     s.includes("assigned") ||
     s.includes("progress") ||
-    (s.includes("submitted") && !s.includes("final"))
+    s.includes("visited") ||
+    s.includes("reported") ||
+    s.includes("reviewed")
   ) {
-    return { backgroundColor: "#fef9c3", className: "" };
+    return { backgroundColor: "#fff7ed", className: "" };
   }
-
-  if (s.includes("pending")) {
-    let isOld = false;
-    if (createdAt) {
-      const hours = (new Date() - new Date(createdAt)) / (1000 * 60 * 60);
-      if (hours > 48) isOld = true;
-    }
-
-    return {
-      backgroundColor: isOld ? "#fee2e2" : "#fff7ed",
-      className: isOld ? "blink-row" : "",
-    };
-  }
-
-  if (s.includes("query")) return { backgroundColor: "#ffe4e6", className: "" };
 
   return { backgroundColor: "white", className: "" };
 };
@@ -1019,10 +1026,15 @@ const Dashboard = () => {
                           default: bank="bajaj";
                         }
                         const s = normalizeStatus(rec.status);
-                        const badge = s.includes("final") || s.includes("done") ? { background:"#ecfdf5", color:"#059669" }
-                          : s.includes("query") ? { background:"#fff1f2", color:"#e11d48" }
-                          : s.includes("working")||s.includes("assigned")||s.includes("progress")||(s.includes("submitted") && !s.includes("final")) ? { background:"#eef2ff", color:"#6366f1" }
-                          : { background:"#fffbeb", color:"#d97706" };
+                        const badge = (s.includes("final") || s.includes("done") || s.includes("submitted") || s.includes("approved"))
+                          ? { background: "#ecfdf5", color: "#059669" }
+                          : s.includes("query")
+                          ? { background: "#fffbeb", color: "#d97706" }
+                          : s.includes("cancel")
+                          ? { background: "#fff1f2", color: "#e11d48" }
+                          : s.includes("working") || s.includes("assigned") || s.includes("progress")
+                          ? { background: "#eef2ff", color: "#6366f1" }
+                          : { background: "#f8fafc", color: "#64748b" };
                         return (
                           <tr key={rec.key} className={row.className} style={{ backgroundColor:row.backgroundColor }}>
                             <td style={{ textAlign:"center", color:"#94a3b8", fontSize:12 }}>{(bankCasesPage-1)*rowsPerPage+idx+1}</td>

@@ -19,7 +19,15 @@ function EmployeeManagement() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
-  const [customCities, setCustomCities] = useState([]);
+  const [customCities, setCustomCities] = useState(() => {
+    try {
+      const saved = localStorage.getItem("custom_cities");
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error("Error reading custom_cities from localStorage:", e);
+      return [];
+    }
+  });
   const [newCityName, setNewCityName] = useState("");
 
   const { user: currentUser } = useSelector((state) => state.auth);
@@ -103,7 +111,13 @@ function EmployeeManagement() {
       return;
     }
 
-    setCustomCities([...customCities, trimmed]);
+    const updated = [...customCities, trimmed];
+    setCustomCities(updated);
+    try {
+      localStorage.setItem("custom_cities", JSON.stringify(updated));
+    } catch (err) {
+      console.error("Error saving custom_cities to localStorage:", err);
+    }
     setNewCityName("");
   };
 
