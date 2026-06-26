@@ -120,7 +120,7 @@ const ApprovedCases = ({ selectedMonth }) => {
       title: "Customer Name",
       render: (_, record) => (
         <Link
-          to={`/bank/${getBankRoute(record)}/${record._id}`}
+          to={`/bank/${getBankRoute(record)}/edit/${record._id}`}
           className="text-blue-600 hover:underline"
         >
           {getDisplayCustomerName(record)}

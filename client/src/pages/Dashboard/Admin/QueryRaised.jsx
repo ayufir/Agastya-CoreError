@@ -239,7 +239,12 @@ const QueryRaised = ({ selectedMonth }) => {
       const city = getDisplayCity(caseData);
       const normalizedCity = String(city || "").toLowerCase();
 
-      return selectedZones.some((zone) => normalizedCity.includes(zone));
+      return selectedZones.some((zone) => {
+        if (zone === "combined bjg") {
+          return ["bhopal", "gwalior", "jabalpur"].some(c => normalizedCity === c || normalizedCity.includes(c));
+        }
+        return normalizedCity.includes(zone);
+      });
     });
   }, [notes, caseMap, selectedZone, selectedMonth]);
 

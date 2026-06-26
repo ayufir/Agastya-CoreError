@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Table, Button, Modal, Form, Input, message, Select } from "antd";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
   fetchFieldOfficers,
   addEmployee,
@@ -20,6 +21,26 @@ function EmployeeManagement() {
   const [editingEmployee, setEditingEmployee] = useState(null);
 
   const { user: currentUser } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
+
+  // 🔒 Only SuperAdmin can access this page
+  if (currentUser && currentUser.role !== "SuperAdmin") {
+    return (
+      <div style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "60vh",
+        gap: 16
+      }}>
+        <div style={{ fontSize: 48 }}>🔒</div>
+        <h2 style={{ color: "#dc2626", fontWeight: 700, fontSize: 22 }}>Access Denied</h2>
+        <p style={{ color: "#64748b", fontSize: 15 }}>Yeh page sirf SuperAdmin ke liye hai.</p>
+        <Button type="primary" onClick={() => navigate("/")}>Dashboard par Jao</Button>
+      </div>
+    );
+  }
 
   const roles = [
     "SuperAdmin",
@@ -132,7 +153,7 @@ function EmployeeManagement() {
           <Button type='link' onClick={() => showModal(record)}>
             Edit
           </Button>
-          {currentUser?.role !== "FieldOfficer" && currentUser?.role !== "FIELDOFFICER" && (
+          {currentUser?.role === "SuperAdmin" && (
             <Button type='link' danger onClick={() => handleDelete(record._id)}>
               Delete
             </Button>

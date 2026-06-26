@@ -76,12 +76,13 @@ const buildAllowanceRow = (record) => ({
   "Latitude": record.latitude || "N/A",
   "Longitude": record.longitude || "N/A",
   "Distance (km)": record.distanceFromCityCentre || record.distance || "N/A",
+  "OthersIfAny": record.othersIfAny || record.others || record.remarks || "",
 });
 
-/** Export array of case records to a .csv file */
-const exportAllowanceCSV = (cases, filename = "allowance_sheet.csv") => {
+/** Export array of case records (or pre-built row objects) to a .csv file */
+const exportAllowanceCSV = (cases, filename = "allowance_sheet.csv", isPrebuilt = false) => {
   if (!cases || cases.length === 0) { return; }
-  const rows = cases.map(buildAllowanceRow);
+  const rows = isPrebuilt ? cases : cases.map(buildAllowanceRow);
   const headers = Object.keys(rows[0]);
   const escape = (val) => `"${String(val ?? "").replace(/"/g, '""')}"`;
   const csvContent = [
@@ -99,8 +100,8 @@ const exportAllowanceCSV = (cases, filename = "allowance_sheet.csv") => {
   URL.revokeObjectURL(url);
 };
 
-/** Export array of case records to a .xlsx file using SheetJS (CDN) */
-const exportAllowanceExcel = async (cases, filename = "allowance_sheet.xlsx") => {
+/** Export array of case records (or pre-built row objects) to a .xlsx file using SheetJS (CDN) */
+const exportAllowanceExcel = async (cases, filename = "allowance_sheet.xlsx", isPrebuilt = false) => {
   if (!cases || cases.length === 0) { return; }
   // Dynamically load xlsx from CDN if not already available
   if (!window.XLSX) {
@@ -113,13 +114,13 @@ const exportAllowanceExcel = async (cases, filename = "allowance_sheet.xlsx") =>
     });
   }
   const XLSX = window.XLSX;
-  const rows = cases.map(buildAllowanceRow);
+  const rows = isPrebuilt ? cases : cases.map(buildAllowanceRow);
   const ws = XLSX.utils.json_to_sheet(rows);
   // Column widths
   ws["!cols"] = [
     { wch: 20 }, { wch: 26 }, { wch: 14 }, { wch: 14 },
     { wch: 16 }, { wch: 40 }, { wch: 14 }, { wch: 14 },
-    { wch: 14 }, { wch: 14 },
+    { wch: 14 }, { wch: 14 }, { wch: 20 },
   ];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Allowance Sheet");
@@ -147,6 +148,24 @@ const FieldOfficerDashboard = () => {
   const [denyTargetCase, setDenyTargetCase] = useState(null); // { id, bankName }
   const [denyReason, setDenyReason] = useState("");
   const [isDenyLoading, setIsDenyLoading] = useState(false);
+
+  // Allowance Sheet — inline editable fields per row (keyed by record._id)
+  const [allowanceEdits, setAllowanceEdits] = useState({});
+  const updateAllowanceEdit = (id, field, value) =>
+    setAllowanceEdits((prev) => ({
+      ...prev,
+      [id]: { ...prev[id], [field]: value },
+    }));
+  // Build a row merging DB data with any user edits
+  const buildAllowanceRowWithEdits = (record) => {
+    const base = buildAllowanceRow(record);
+    const edits = allowanceEdits[record._id] || {};
+    return {
+      ...base,
+      "Distance (km)": edits.distance !== undefined ? edits.distance : base["Distance (km)"],
+      "OthersIfAny": edits.othersIfAny !== undefined ? edits.othersIfAny : base["OthersIfAny"],
+    };
+  };
 
   const navigate = useNavigate();
 
@@ -1184,7 +1203,7 @@ const FieldOfficerDashboard = () => {
               }}
               scroll={{ x: "max-content" }}
               pagination={{
-                pageSize: 10,
+                pageSize: 20,
                 showSizeChanger: true,
                 pageSizeOptions: ["10", "20", "50"],
                 showTotal: (total, range) =>
@@ -1476,8 +1495,9 @@ const FieldOfficerDashboard = () => {
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={() => exportAllowanceCSV(
-                  sortedCases,
-                  `allowance_${(user?.name || "officer").replace(/\s+/g, "_")}_${dayjs().format("DDMMYYYY")}.csv`
+                  sortedCases.map(buildAllowanceRowWithEdits),
+                  `allowance_${(user?.name || "officer").replace(/\s+/g, "_")}_${dayjs().format("DDMMYYYY")}.csv`,
+                  true
                 )}
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-400/20 hover:bg-emerald-400/30 text-[#eef68f] border border-emerald-400/30 hover:border-emerald-400/60 font-bold text-xs rounded-xl transition-all cursor-pointer active:scale-95 shadow-sm"
               >
@@ -1486,8 +1506,9 @@ const FieldOfficerDashboard = () => {
               </button>
               <button
                 onClick={() => exportAllowanceExcel(
-                  sortedCases,
-                  `allowance_${(user?.name || "officer").replace(/\s+/g, "_")}_${dayjs().format("DDMMYYYY")}.xlsx`
+                  sortedCases.map(buildAllowanceRowWithEdits),
+                  `allowance_${(user?.name || "officer").replace(/\s+/g, "_")}_${dayjs().format("DDMMYYYY")}.xlsx`,
+                  true
                 )}
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-400/20 hover:bg-blue-400/30 text-blue-200 border border-blue-400/30 hover:border-blue-400/60 font-bold text-xs rounded-xl transition-all cursor-pointer active:scale-95 shadow-sm"
               >
@@ -1513,6 +1534,7 @@ const FieldOfficerDashboard = () => {
                     "Latitude",
                     "Longitude",
                     "Distance (km)",
+                    "OthersIfAny",
                   ].map((col) => (
                     <th
                       key={col}
@@ -1525,7 +1547,7 @@ const FieldOfficerDashboard = () => {
               </thead>
               <tbody>
                 {sortedCases.map((record, idx) => {
-                  const row = buildAllowanceRow(record);
+                  const row = buildAllowanceRowWithEdits(record);
                   const isEven = idx % 2 === 0;
                   return (
                     <tr
@@ -1593,15 +1615,53 @@ const FieldOfficerDashboard = () => {
                           {row["Longitude"]}
                         </span>
                       </td>
-                      {/* Distance */}
-                      <td className="px-4 py-3 whitespace-nowrap">
-                        {row["Distance (km)"] !== "N/A" ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-50 border border-amber-100 text-amber-700">
-                            {row["Distance (km)"]} km
-                          </span>
-                        ) : (
-                          <span className="text-slate-300 text-[10px] italic">N/A</span>
-                        )}
+                      {/* Distance — editable input */}
+                      <td className="px-3 py-2 whitespace-nowrap">
+                        <input
+                          type="text"
+                          value={allowanceEdits[record._id]?.distance !== undefined
+                            ? allowanceEdits[record._id].distance
+                            : (record.distanceFromCityCentre || record.distance || "")}
+                          onChange={(e) => updateAllowanceEdit(record._id, "distance", e.target.value)}
+                          placeholder="km"
+                          style={{
+                            width: 80,
+                            padding: "3px 8px",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: "#92400e",
+                            background: "#fffbeb",
+                            border: "1.5px solid #fcd34d",
+                            borderRadius: 8,
+                            outline: "none",
+                          }}
+                          onFocus={(e) => e.target.style.borderColor = "#f59e0b"}
+                          onBlur={(e) => e.target.style.borderColor = "#fcd34d"}
+                        />
+                      </td>
+                      {/* OthersIfAny — editable input */}
+                      <td className="px-3 py-2">
+                        <input
+                          type="text"
+                          value={allowanceEdits[record._id]?.othersIfAny !== undefined
+                            ? allowanceEdits[record._id].othersIfAny
+                            : (record.othersIfAny || record.others || record.remarks || "")}
+                          onChange={(e) => updateAllowanceEdit(record._id, "othersIfAny", e.target.value)}
+                          placeholder=""
+                          style={{
+                            width: 140,
+                            padding: "3px 8px",
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: "#5b21b6",
+                            background: "#f5f3ff",
+                            border: "1.5px solid #c4b5fd",
+                            borderRadius: 8,
+                            outline: "none",
+                          }}
+                          onFocus={(e) => e.target.style.borderColor = "#7c3aed"}
+                          onBlur={(e) => e.target.style.borderColor = "#c4b5fd"}
+                        />
                       </td>
                     </tr>
                   );

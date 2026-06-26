@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Table, Input, Tag, Select, Modal, Button, Popconfirm } from "antd";
+import { Table, Input, Tag, Select, Modal, Button, Popconfirm, Tooltip } from "antd";
 import { Link } from "react-router-dom";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
@@ -47,6 +47,7 @@ const isSameMonth = (date, monthValue) => {
 const Pending = ({ selectedMonth }) => {
   const dispatch = useDispatch();
   const fieldOfficers = useSelector(selectFieldOfficers);
+  const user = useSelector((state) => state.auth.user);
 
   const {
     pendingCases,
@@ -120,7 +121,8 @@ const Pending = ({ selectedMonth }) => {
         status.includes("submit") ||
         status.includes("progress") ||
         status.includes("working") ||
-        status.includes("assigned")
+        status.includes("assigned") ||
+        status.includes("cancel")
       ) {
         return false;
       }
@@ -181,7 +183,7 @@ const Pending = ({ selectedMonth }) => {
       width: 180,
       render: (_, record) => (
         <Link
-          to={`/bank/${getBankRoute(record)}/${record._id}`}
+          to={`/bank/${getBankRoute(record)}/edit/${record._id}`}
           className="text-blue-600 hover:text-blue-800 font-semibold hover:underline"
         >
           {getDisplayCustomerName(record)}
@@ -293,10 +295,19 @@ const Pending = ({ selectedMonth }) => {
         );
 
         return record.status === "Work in Progress" ? (
-          <div className="flex items-center gap-1.5 text-emerald-700 font-medium bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1 text-xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>FO: {assignedFO?.name || "Unknown"}</span>
-          </div>
+          <Tooltip title={
+            <div style={{ padding: "4px" }}>
+              <p style={{ margin: 0, fontWeight: "bold" }}>{assignedFO?.name || "Unknown"}</p>
+              <p style={{ margin: 0, fontSize: "11px", opacity: 0.9 }}>Role: {assignedFO?.role || "FieldOfficer"}</p>
+              <p style={{ margin: 0, fontSize: "11px", opacity: 0.9 }}>Email: {assignedFO?.email || "N/A"}</p>
+              {assignedFO?.assignedCity && <p style={{ margin: 0, fontSize: "11px", opacity: 0.9 }}>City: {assignedFO.assignedCity}</p>}
+            </div>
+          }>
+            <div className="flex items-center gap-1.5 text-emerald-700 font-medium bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1 text-xs cursor-pointer">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>FO: {assignedFO?.name || "Unknown"}</span>
+            </div>
+          </Tooltip>
         ) : (
           <Button
             type="primary"
@@ -314,36 +325,68 @@ const Pending = ({ selectedMonth }) => {
     {
       title: "Action",
       key: "action",
-      width: 100,
-      render: (record) => (
-        <div className="flex gap-2 items-center justify-center">
+      width: 140,
+      fixed: "right",
+      render: (_, record) => (
+        <div style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center" }}>
           <Link
             to={`/bank/${getBankRoute(record)}/edit/${record._id}`}
-            className="flex items-center justify-center w-8 h-8 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 transition-colors shadow-sm"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 34,
+              height: 34,
+              borderRadius: 8,
+              border: "1px solid #a7f3d0",
+              background: "#ecfdf5",
+              color: "#059669",
+              flexShrink: 0,
+            }}
             title="Edit Case"
           >
             <Edit3 size={15} />
           </Link>
 
           <Popconfirm
-            title="Are you sure you want to delete this case?"
+            title="Case delete ho jayega!"
+            description="Kya aap sure hain?"
             onConfirm={() => handleDelete(record._id)}
-            okText="Yes"
-            cancelText="No"
+            okText="Haan, Delete Karo"
+            cancelText="Nahi"
+            okButtonProps={{ danger: true }}
           >
-            <Button
-              type="text"
-              danger
-              className="flex items-center justify-center w-8 h-8 rounded-lg border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 transition-colors shadow-sm p-0"
+            <button
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 34,
+                height: 34,
+                borderRadius: 8,
+                border: "1px solid #fecaca",
+                background: "#fff1f2",
+                color: "#dc2626",
+                cursor: "pointer",
+                flexShrink: 0,
+              }}
               title="Delete Case"
             >
               <Trash2 size={15} />
-            </Button>
+            </button>
           </Popconfirm>
         </div>
       ),
     },
   ];
+
+  const filteredColumns = useMemo(() => {
+    const isFO = user?.role === "FieldOfficer" || user?.role === "FIELDOFFICER";
+    if (isFO) {
+      return columns.filter((col) => col.key !== "action");
+    }
+    return columns;
+  }, [columns, user]);
 
   return (
     <div className="bg-gray-50 p-6 rounded-2xl shadow-sm min-h-screen">
@@ -363,7 +406,7 @@ const Pending = ({ selectedMonth }) => {
           white-space: nowrap;
         }
         .premium-table .ant-table-tbody > tr > td {
-          padding: 12px 14px !important;
+          padding: 10px 10px !important;
           border-bottom: 1px solid #f1f5f9 !important;
           vertical-align: middle !important;
         }
@@ -454,7 +497,7 @@ const Pending = ({ selectedMonth }) => {
       </div>
 
       <Table
-        columns={columns}
+        columns={filteredColumns}
         dataSource={monthFilteredPendingCases}
         rowKey="_id"
         loading={loading}
@@ -506,7 +549,7 @@ const Pending = ({ selectedMonth }) => {
         >
           {fieldOfficers.map((fieldOfficer) => (
             <Option key={fieldOfficer._id} value={fieldOfficer._id}>
-              {fieldOfficer.name}
+              {fieldOfficer.name} ({fieldOfficer.role || "FO"})
             </Option>
           ))}
         </Select>

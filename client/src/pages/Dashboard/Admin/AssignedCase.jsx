@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import { Table, Button, Tag, Input, Popconfirm, Modal, Select } from "antd";
+import { Table, Button, Tag, Input, Popconfirm, Modal, Select, Tooltip } from "antd";
 import { Edit3, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -222,7 +222,7 @@ const AssignedCase = ({ selectedMonth }) => {
       title: "Customer",
       render: (record) => (
         <Link
-          to={`/bank/${getBankRoute(record)}/${record._id}`}
+          to={`/bank/${getBankRoute(record)}/edit/${record._id}`}
           className="text-blue-600"
         >
           {getDisplayCustomerName(record)}
@@ -231,21 +231,33 @@ const AssignedCase = ({ selectedMonth }) => {
     },
     {
       title: "Assigned To",
-      dataIndex: ["assignedTo", "name"],
-      render: (text, record) => (
-        <div className="flex items-center gap-2">
-          <span>{text || "Not Assigned"}</span>
-
-          {record.assignedTo && user.role === "Admin" && (
-            <Popconfirm
-              title="Remove assignment?"
-              onConfirm={() => handleRemoveAssignment(record._id)}
-            >
-              <button className="bg-red-300 px-2 rounded">R</button>
-            </Popconfirm>
-          )}
-        </div>
-      ),
+      render: (_, record) => {
+        const fo = record.assignedTo;
+        if (!fo) return <span>Not Assigned</span>;
+        return (
+          <Tooltip title={
+            <div style={{ padding: "4px" }}>
+              <p style={{ margin: 0, fontWeight: "bold" }}>{fo.name}</p>
+              <p style={{ margin: 0, fontSize: "11px", opacity: 0.9 }}>Role: {fo.role || "FieldOfficer"}</p>
+              <p style={{ margin: 0, fontSize: "11px", opacity: 0.9 }}>Email: {fo.email || "N/A"}</p>
+              {fo.assignedCity && <p style={{ margin: 0, fontSize: "11px", opacity: 0.9 }}>City: {fo.assignedCity}</p>}
+            </div>
+          }>
+            <div className="flex items-center gap-2 cursor-pointer">
+              <span>{fo.name}</span>
+              <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md font-bold uppercase">{fo.role}</span>
+              {record.assignedTo && user.role === "Admin" && (
+                <Popconfirm
+                  title="Remove assignment?"
+                  onConfirm={() => handleRemoveAssignment(record._id)}
+                >
+                  <button className="bg-red-300 px-2 rounded">R</button>
+                </Popconfirm>
+              )}
+            </div>
+          </Tooltip>
+        );
+      },
     },
     {
       title: "Status",
@@ -397,7 +409,7 @@ const AssignedCase = ({ selectedMonth }) => {
         >
           {fieldOfficers?.map((fieldOfficer) => (
             <Option key={fieldOfficer._id} value={fieldOfficer._id}>
-              {fieldOfficer.name}
+              {fieldOfficer.name} ({fieldOfficer.role || "FO"})
             </Option>
           ))}
         </Select>

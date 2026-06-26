@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import { Table, Button, Tag, Input, Popconfirm, Modal, Select } from "antd";
+import { Table, Button, Tag, Input, Popconfirm, Modal, Select, Tooltip } from "antd";
 import { Edit3, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -189,7 +189,7 @@ const ApprovalPendingCases = ({ selectedMonth, onRefresh, onCaseApproved, onCase
       title: "Customer",
       render: (record) => (
         <Link
-          to={`/bank/${getBankRoute(record)}/${record._id}`}
+          to={`/bank/${getBankRoute(record)}/edit/${record._id}`}
           className="text-blue-600 font-semibold hover:underline"
         >
           {getDisplayCustomerName(record)}
@@ -198,20 +198,33 @@ const ApprovalPendingCases = ({ selectedMonth, onRefresh, onCaseApproved, onCase
     },
     {
       title: "Assigned To",
-      dataIndex: ["assignedTo", "name"],
-      render: (text, record) => (
-        <div className="flex items-center gap-2">
-          <span>{text || "Not Assigned"}</span>
-          {record.assignedTo && (user?.role === "Admin" || user?.role === "SuperAdmin") && (
-            <Popconfirm
-              title="Remove assignment?"
-              onConfirm={() => handleRemoveAssignment(record._id)}
-            >
-              <button className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs hover:bg-red-200">Unassign</button>
-            </Popconfirm>
-          )}
-        </div>
-      ),
+      render: (_, record) => {
+        const fo = record.assignedTo;
+        if (!fo) return <span>Not Assigned</span>;
+        return (
+          <Tooltip title={
+            <div style={{ padding: "4px" }}>
+              <p style={{ margin: 0, fontWeight: "bold" }}>{fo.name}</p>
+              <p style={{ margin: 0, fontSize: "11px", opacity: 0.9 }}>Role: {fo.role || "FieldOfficer"}</p>
+              <p style={{ margin: 0, fontSize: "11px", opacity: 0.9 }}>Email: {fo.email || "N/A"}</p>
+              {fo.assignedCity && <p style={{ margin: 0, fontSize: "11px", opacity: 0.9 }}>City: {fo.assignedCity}</p>}
+            </div>
+          }>
+            <div className="flex items-center gap-2 cursor-pointer">
+              <span>{fo.name}</span>
+              <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md font-bold uppercase">{fo.role}</span>
+              {record.assignedTo && (user?.role === "Admin" || user?.role === "SuperAdmin") && (
+                <Popconfirm
+                  title="Remove assignment?"
+                  onConfirm={() => handleRemoveAssignment(record._id)}
+                >
+                  <button className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs hover:bg-red-200">Unassign</button>
+                </Popconfirm>
+              )}
+            </div>
+          </Tooltip>
+        );
+      },
     },
     {
       title: "Status",
@@ -222,19 +235,53 @@ const ApprovalPendingCases = ({ selectedMonth, onRefresh, onCaseApproved, onCase
       ),
     },
     {
-      title: "Change Assign",
-      render: (record) => (
-        <Button
-          onClick={() => {
-            setSelectedCaseId(record._id);
-            setSelectedBankName(record?.bankName);
-            setSelectedRoute(record?.route || record?.bankSlug);
-            setIsModalOpen(true);
-          }}
-        >
-          Change Assign
-        </Button>
-      ),
+      title: "Assign Date",
+      key: "assignDate",
+      render: (_, record) => {
+        // createdAt is when the case was first created/assigned
+        const raw = record.createdAt || record.uploadDate || record.createdDate || "";
+        if (!raw) return <span className="text-gray-400 text-xs">—</span>;
+        const d = new Date(raw);
+        if (isNaN(d.getTime())) return <span className="text-gray-400 text-xs">—</span>;
+        return (
+          <div className="text-xs">
+            <div className="font-semibold text-slate-700">
+              {d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+            </div>
+            <div className="text-slate-400">{d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</div>
+          </div>
+        );
+      },
+    },
+    {
+      title: "Submitted Date",
+      key: "submittedDate",
+      render: (_, record) => {
+        // Find the latest "FinalSubmitted" or "submitted" entry in timeline
+        let submittedAt = null;
+        if (Array.isArray(record.timeline) && record.timeline.length > 0) {
+          const submittedEntry = [...record.timeline]
+            .reverse()
+            .find(t => {
+              const s = (t.status || "").toLowerCase();
+              return s.includes("submit") || s.includes("finalsubmit");
+            });
+          if (submittedEntry) submittedAt = submittedEntry.updatedAt || submittedEntry.createdAt;
+        }
+        // fallback: dateOfReport or submissionDate
+        if (!submittedAt) submittedAt = record.submissionDate || record.dateOfReport || "";
+        if (!submittedAt) return <span className="text-gray-400 text-xs">—</span>;
+        const d = new Date(submittedAt);
+        if (isNaN(d.getTime())) return <span className="text-gray-400 text-xs">—</span>;
+        return (
+          <div className="text-xs">
+            <div className="font-semibold text-emerald-700">
+              {d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+            </div>
+            <div className="text-slate-400">{d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</div>
+          </div>
+        );
+      },
     },
     {
       title: "Action",
@@ -371,7 +418,7 @@ const ApprovalPendingCases = ({ selectedMonth, onRefresh, onCaseApproved, onCase
         >
           {fieldOfficers?.map((fieldOfficer) => (
             <Option key={fieldOfficer._id} value={fieldOfficer._id}>
-              {fieldOfficer.name}
+              {fieldOfficer.name} ({fieldOfficer.role || "FO"})
             </Option>
           ))}
         </Select>

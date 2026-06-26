@@ -178,8 +178,8 @@ const fetchCasesAcrossBanks = async ({
 };
 
 const applyCommonCaseFilters = (cases, rawQuery = {}, user) => {
-  // Enforce regional visibility for Field Officers only
-  if (user && (user.role === "FieldOfficer" || user.role === "FIELDOFFICER")) {
+  // Enforce regional visibility for all non-SuperAdmin users if they have an assignedCity
+  if (user && user.role !== "SuperAdmin" && user.assignedCity) {
     const userCity = (user.assignedCity || "").toLowerCase().trim();
     const centralCities = ["bhopal", "gwalior", "jabalpur"];
     if (userCity) {
@@ -233,11 +233,12 @@ const applyCommonCaseFilters = (cases, rawQuery = {}, user) => {
 
     if (selectedCities.length > 0) {
       const caseCity = normalizeText(getCaseDisplayCity(caseItem));
-      const cityMatched = selectedCities.some(
-        (selectedCity) =>
-          caseCity &&
-          (caseCity === selectedCity || caseCity.includes(selectedCity))
-      );
+      const cityMatched = selectedCities.some((selectedCity) => {
+        if (selectedCity === "combined bjg") {
+          return ["bhopal", "gwalior", "jabalpur"].some(c => caseCity === c || caseCity.includes(c));
+        }
+        return caseCity && (caseCity === selectedCity || caseCity.includes(selectedCity));
+      });
 
       if (!cityMatched) {
         return false;
@@ -460,6 +461,27 @@ exports.assignCase = async (req, res) => {
       { new: true }
     );
 
+    try {
+      const mongoose = require("mongoose");
+      const Notification = require("../../model/Notification");
+      const User = mongoose.model("User");
+      let officerName = "Officer";
+      try {
+        const officer = await User.findById(fieldOfficerId);
+        if (officer) officerName = officer.name;
+      } catch (_) {}
+      const notif = await Notification.create({
+        userId: fieldOfficerId,
+        caseId: caseId,
+        message: `New case for ${updated.customerName || updated.applicantName || "customer"} has been assigned to ${officerName}`,
+        bankName: updated.bankName || bankName,
+      });
+      if (req.io) req.io.emit("newNotification", notif);
+      else if (global.io) global.io.emit("newNotification", notif);
+    } catch (notifErr) {
+      console.error("Failed to create notification on assignCase:", notifErr.message);
+    }
+
     res.json(updated);
   } catch (err) {
     console.error(err);
@@ -592,8 +614,8 @@ exports.getCasesByRole = async (req, res) => {
 
     allCases = results.flat();
 
-    // City restriction for Field Officers only
-    if (user && (user.role === "FieldOfficer" || user.role === "FIELDOFFICER") && user.assignedCity) {
+    // City restriction for all non-SuperAdmin users if they have an assignedCity
+    if (user && user.role !== "SuperAdmin" && user.assignedCity) {
       const centralCities = ["bhopal", "gwalior", "jabalpur"];
       const normalizedUserCity = user.assignedCity.toLowerCase().trim();
       
@@ -638,6 +660,20 @@ exports.acceptCase = async (req, res) => {
 
     if (!updatedCase) {
       return res.status(404).json({ message: "Case not found." });
+    }
+
+    try {
+      const Notification = require("../../model/Notification");
+      const notif = await Notification.create({
+        userId: req.user?._id,
+        caseId: id,
+        message: `Case for ${updatedCase.customerName || updatedCase.applicantName || "customer"} has been accepted by ${req.user?.name || "Field Officer"}`,
+        bankName: updatedCase.bankName || bankName,
+      });
+      if (req.io) req.io.emit("newNotification", notif);
+      else if (global.io) global.io.emit("newNotification", notif);
+    } catch (notifErr) {
+      console.error("Failed to create notification on acceptCase:", notifErr.message);
     }
 
     res.status(200).json(updatedCase);
@@ -689,6 +725,20 @@ exports.declineCase = async (req, res) => {
 
     if (!updatedCase) {
       return res.status(404).json({ message: "Case not found." });
+    }
+
+    try {
+      const Notification = require("../../model/Notification");
+      const notif = await Notification.create({
+        userId: req.user?._id,
+        caseId: id,
+        message: `Case for ${updatedCase.customerName || updatedCase.applicantName || "customer"} has been declined by ${req.user?.name || "Field Officer"}${declineReason ? `. Reason: ${declineReason}` : ""}`,
+        bankName: updatedCase.bankName || bankName,
+      });
+      if (req.io) req.io.emit("newNotification", notif);
+      else if (global.io) global.io.emit("newNotification", notif);
+    } catch (notifErr) {
+      console.error("Failed to create notification on declineCase:", notifErr.message);
     }
 
     res.status(200).json(updatedCase);
@@ -870,6 +920,11 @@ exports.getPendingCases = async (req, res) => {
 
 exports.deleteCase = async (req, res) => {
   const { id } = req.params;
+  const user = req.user;
+
+  if (user && (user.role === "FieldOfficer" || user.role === "FIELDOFFICER")) {
+    return res.status(403).json({ error: "Access denied. Field Officers are not allowed to delete cases." });
+  }
 
   try {
     let updatedCase = null;
@@ -890,6 +945,19 @@ exports.deleteCase = async (req, res) => {
               { new: true } // returns the updated document
             );
             matchedModel = key;
+            try {
+              const Notification = require("../../model/Notification");
+              const notif = await Notification.create({
+                userId: req.user?._id,
+                caseId: id,
+                message: `Case for ${updatedCase.customerName || updatedCase.applicantName || "customer"} was deleted/cancelled by ${req.user?.name || "Admin"}`,
+                bankName: updatedCase.bankName || matchedModel,
+              });
+              if (req.io) req.io.emit("newNotification", notif);
+              else if (global.io) global.io.emit("newNotification", notif);
+            } catch (notifErr) {
+              console.error("Failed to create notification on deleteCase:", notifErr.message);
+            }
             break;
           }
         } catch (err) {
@@ -987,6 +1055,20 @@ exports.finalUpdate = async (req, res) => {
 
     if (!updatedCase) {
       return res.status(404).json({ error: "Case not found." });
+    }
+
+    try {
+      const Notification = require("../../model/Notification");
+      const notif = await Notification.create({
+        userId: req.user?._id,
+        caseId: id,
+        message: `Case report for ${updatedCase.customerName || updatedCase.applicantName || "customer"} was finalized/submitted by ${req.user?.name || "Admin"}`,
+        bankName: updatedCase.bankName || bankName,
+      });
+      if (req.io) req.io.emit("newNotification", notif);
+      else if (global.io) global.io.emit("newNotification", notif);
+    } catch (notifErr) {
+      console.error("Failed to create notification on finalUpdate:", notifErr.message);
     }
 
     res.json(updatedCase);

@@ -14,7 +14,7 @@ const MenuItems = () => {
   const selectedZone = useSelector((state) => state.assignedCases.selectedZone);
   const dispatch = useDispatch();
 
-  const cities = ["Bhopal", "Indore", "Jabalpur", "Gwalior", "Dehradun"];
+  const cities = ["Combined BJG", "Bhopal", "Indore", "Jabalpur", "Gwalior", "Dehradun"];
 
   const iconSize = 20;
   const location = useLocation();
@@ -86,12 +86,16 @@ const MenuItems = () => {
       action: openInvoice,
       icon: <List size={iconSize} />,
     },
-    {
-      name: "Manage Employees",
-      path: "/admin/employees",
-      icon: <MdAdminPanelSettings size={iconSize} />,
-      isActive: currentPath.includes("/admin/employees"),
-    },
+    ...(user?.role === "SuperAdmin"
+      ? [
+          {
+            name: "Manage Employees",
+            path: "/admin/employees",
+            icon: <MdAdminPanelSettings size={iconSize} />,
+            isActive: currentPath.includes("/admin/employees"),
+          },
+        ]
+      : []),
     { name: "Logout", path: "/logout", icon: <LogOut size={iconSize} /> },
   ];
 
@@ -104,7 +108,7 @@ const MenuItems = () => {
   const isFieldOfficer = ["FieldOfficer", "FIELDOFFICER"].includes(user?.role);
   const isCentralStaff = ["Bhopal", "Gwalior", "Jabalpur"].includes(user?.assignedCity) && !["SuperAdmin", "Admin"].includes(user?.role);
   const showCitySelector = !isFieldOfficer;
-  const allowedCities = isCentralStaff ? ["Bhopal", "Jabalpur", "Gwalior"] : cities;
+  const allowedCities = isCentralStaff ? ["Combined BJG", "Bhopal", "Jabalpur", "Gwalior"] : cities;
 
   const fieldOfficerMenu = [
     {
@@ -137,7 +141,7 @@ const MenuItems = () => {
         // SuperAdmin & Admin see all zones by default
       } else if (centralCities.includes(user.assignedCity)) {
         // Central staff see Bhopal + Gwalior + Jabalpur combined by default
-        dispatch(setZone(""));
+        dispatch(setZone("Combined BJG"));
       } else {
         dispatch(setZone(user.assignedCity || ""));
       }

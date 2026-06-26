@@ -1,11 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Table, Tag, Input, Select } from "antd";
+import { Link } from "react-router-dom";
 
 import { getCancelledCases } from "../../../redux/features/assignedCase/assignedCasesThunk";
 import getBankTagColor from "../getBankTagColor";
 import Spinner from "../../../components/Spinner";
 import {
+  getBankRoute,
   getDisplayAddress,
   getDisplayCustomerName,
 } from "../../../utils/dashboardRecord";
@@ -103,9 +105,12 @@ const CancelledCases = ({ selectedMonth }) => {
     {
       title: "Customer Name",
       render: (_, record) => (
-        <span className="text-blue-600 hover:underline">
+        <Link
+          to={`/bank/${getBankRoute(record)}/${record._id}`}
+          className="text-blue-600 hover:underline"
+        >
           {getDisplayCustomerName(record)}
-        </span>
+        </Link>
       ),
     },
     {

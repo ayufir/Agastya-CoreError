@@ -97,7 +97,7 @@ export const deletedCases = createAsyncThunk(
   "case/deletedCases",
   async (id, { rejectWithValue }) => {
     try {
-      const data = await axios.delete(`${API_URL}/${id}`);
+      const { data } = await axios.delete(`${API_URL}/${id}`);
       return data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);

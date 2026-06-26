@@ -518,7 +518,7 @@ const Dashboard = () => {
       });
 
       // 7. All Cases (SuperAdmin only)
-      if (user?.role !== "FieldOfficer" && user?.role !== "FIELDOFFICER") {
+      if (user?.role === "SuperAdmin") {
         baseReports.push({
           title: "All Cases",
           total: cardCounts.allCases,
@@ -527,7 +527,7 @@ const Dashboard = () => {
       }
 
       // 8. Approval Pending (SuperAdmin only)
-      if (user?.role !== "FieldOfficer" && user?.role !== "FIELDOFFICER") {
+      if (user?.role === "SuperAdmin") {
         baseReports.push({
           title: "Approval Pending",
           total: cardCounts.approvalPending,
@@ -536,7 +536,7 @@ const Dashboard = () => {
       }
 
       // 9. Approved (SuperAdmin only)
-      if (user?.role !== "FieldOfficer" && user?.role !== "FIELDOFFICER") {
+      if (user?.role === "SuperAdmin") {
         baseReports.push({
           title: "Approved",
           total: cardCounts.approved,
@@ -988,7 +988,15 @@ const Dashboard = () => {
                           <tr key={rec.key} className={row.className} style={{ backgroundColor:row.backgroundColor }}>
                             <td style={{ textAlign:"center", color:"#94a3b8", fontSize:12 }}>{(bankCasesPage-1)*rowsPerPage+idx+1}</td>
                             <td style={{ whiteSpace:"nowrap", color:"#64748b", fontSize:12 }}>{formatDateTime(rec.createdAt)}</td>
-                            <td style={{ fontWeight:600, color:"#1e293b", fontSize:13 }}>{rec.customerName}</td>
+                            <td style={{ fontSize:13 }}>
+                               <Link
+                                 to={`/bank/${bank}/edit/${rec?.key}`}
+                                 style={{ fontWeight:600, color:"#2563eb", textDecoration:"none" }}
+                                 className="hover:underline"
+                               >
+                                 {rec.customerName}
+                               </Link>
+                             </td>
                             <td style={{ color:"#64748b", fontSize:13 }}>{rec.city}</td>
                             <td><Link to={`/bank/${bank}/${rec?.key}`} style={{ color:"#6366f1", fontWeight:600, textDecoration:"none", fontSize:13 }}>{rec.engineer}</Link></td>
                             <td><span className="status-badge" style={badge}>{rec.status}</span></td>
