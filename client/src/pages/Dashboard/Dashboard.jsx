@@ -879,10 +879,10 @@ const Dashboard = () => {
                     <thead>
                       <tr>
                         <th style={{ textAlign:"left" }}>Bank</th>
-                        <th style={{ textAlign:"center", color:"#ef4444" }}>Query</th>
-                        <th style={{ textAlign:"center", color:"#f59e0b" }}>Pending</th>
-                        <th style={{ textAlign:"center", color:"#10b981" }}>Submitted Case</th>
-                        <th style={{ textAlign:"center" }}>Total</th>
+                        <th style={{ textAlign:"center", color:"#e11d48", backgroundColor:"#fff1f2" }}>Query</th>
+                        <th style={{ textAlign:"center", color:"#d97706", backgroundColor:"#fffbeb" }}>Pending</th>
+                        <th style={{ textAlign:"center", color:"#059669", backgroundColor:"#ecfdf5" }}>Submitted Case</th>
+                        <th style={{ textAlign:"center", color:"#1e293b", backgroundColor:"#f1f5f9" }}>Total</th>
                         <th>Completion</th>
                       </tr>
                     </thead>
@@ -907,10 +907,10 @@ const Dashboard = () => {
                                 <span style={{ fontWeight:600, color:"#1e293b", fontSize:14 }}>{bank.bank}</span>
                               </div>
                             </td>
-                            <td style={{ textAlign:"center" }}><span className="status-badge" style={{ background:"#fff1f2", color:"#e11d48" }}>{bank.query}</span></td>
-                            <td style={{ textAlign:"center" }}><span className="status-badge" style={{ background:"#fffbeb", color:"#d97706" }}>{bank.pending}</span></td>
-                            <td style={{ textAlign:"center" }}><span className="status-badge" style={{ background:"#ecfdf5", color:"#059669" }}>{bank.done}</span></td>
-                            <td style={{ textAlign:"center" }}><span style={{ fontWeight:700, color:"#1e293b" }}>{bank.total}</span></td>
+                            <td style={{ textAlign:"center" }}><span className="status-badge" style={{ background:"#fff1f2", color:"#e11d48", padding:"4px 10px", fontSize:"11.5px", fontWeight:700 }}>{bank.query}</span></td>
+                            <td style={{ textAlign:"center" }}><span className="status-badge" style={{ background:"#fffbeb", color:"#d97706", padding:"4px 10px", fontSize:"11.5px", fontWeight:700 }}>{bank.pending}</span></td>
+                            <td style={{ textAlign:"center" }}><span className="status-badge" style={{ background:"#ecfdf5", color:"#059669", padding:"4px 10px", fontSize:"11.5px", fontWeight:700 }}>{bank.done}</span></td>
+                            <td style={{ textAlign:"center" }}><span className="status-badge" style={{ background:"#f8fafc", color:"#1e293b", border:"1px solid #e2e8f0", padding:"4px 10px", fontSize:"11.5px", fontWeight:700 }}>{bank.total}</span></td>
                             <td>
                               <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                                 <span style={{ fontWeight:700, fontSize:13, color:rate>70?"#059669":rate>40?"#d97706":"#dc2626", minWidth:34 }}>{rate}%</span>
