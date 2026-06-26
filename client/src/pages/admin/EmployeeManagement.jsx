@@ -260,9 +260,14 @@ function EmployeeManagement() {
                       value={newCityName}
                       onChange={onCityNameChange}
                       onKeyDown={(e) => e.stopPropagation()}
+                      onMouseDown={(e) => e.stopPropagation()}
                       style={{ flex: 'auto' }}
                     />
-                    <Button type="primary" onClick={addCustomCity}>
+                    <Button 
+                      type="primary" 
+                      onClick={addCustomCity}
+                      onMouseDown={(e) => e.preventDefault()}
+                    >
                       + Add
                     </Button>
                   </div>
