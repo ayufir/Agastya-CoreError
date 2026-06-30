@@ -45,6 +45,17 @@ const isSameMonth = (date, monthValue) => {
   );
 };
 
+const normalizeStatus = (status = "") =>
+  status.toString().toLowerCase().trim().replace(/\s+/g, " ");
+
+const isApprovalPending = (item) => {
+  const s = normalizeStatus(item.status);
+  const isSubmitted = s.includes("submitted") || item.isReportSubmitted === true;
+  const isApproved = s.includes("approved");
+  const isCancelled = s.includes("cancel");
+  return isSubmitted && !isApproved && !isCancelled;
+};
+
 const Pending = ({ selectedMonth }) => {
   const dispatch = useDispatch();
   const fieldOfficers = useSelector(selectFieldOfficers);
@@ -62,7 +73,7 @@ const Pending = ({ selectedMonth }) => {
   const [selectedBanks, setSelectedBanks] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [currentCase, setCurrentCase] = useState(null);
   const [selectedFO, setSelectedFO] = useState(null);
@@ -148,17 +159,12 @@ const Pending = ({ selectedMonth }) => {
       : [];
 
     return (pendingCases || []).filter((item) => {
-      // Always include pending cases regardless of month filter to match dashboard card count
-      const status = (item.status || "").toLowerCase().trim();
-      if (
-        status.includes("complete") ||
-        status.includes("final") ||
-        status.includes("submit") ||
-        status.includes("progress") ||
-        status.includes("working") ||
-        status.includes("assigned") ||
-        status.includes("cancel")
-      ) {
+      // Apply month filter
+      if (selectedMonth && !isSameMonth(getCaseDate(item), selectedMonth)) {
+        return false;
+      }
+      const s = normalizeStatus(item.status);
+      if (!s.includes("pending") || isApprovalPending(item)) {
         return false;
       }
       // Apply local search filter: every token must match somewhere in the record

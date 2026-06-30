@@ -314,7 +314,7 @@ const MyWorklist = () => {
               columns={teamColumns}
               data={teamData}
               pagination
-              paginationPerPage={10}
+              paginationPerPage={20}
               paginationRowsPerPageOptions={[10, 20, 50, 100]}
               highlightOnHover
               striped

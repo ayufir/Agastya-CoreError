@@ -126,7 +126,7 @@ const SummaryCard = ({ selectedMonth }) => {
   const [selectedBanks, setSelectedBanks] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
   const [filterOptions, setFilterOptions] = useState({
     banks: [],
     statuses: [],

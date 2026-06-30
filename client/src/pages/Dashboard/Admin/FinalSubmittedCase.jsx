@@ -54,7 +54,7 @@ const FinalSubmittedCases = ({ selectedMonth }) => {
   const [selectedBanks, setSelectedBanks] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
 
   const bankFilter = useMemo(() => selectedBanks.join(","), [selectedBanks]);
   const statusFilter = useMemo(

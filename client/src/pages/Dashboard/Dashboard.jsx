@@ -98,6 +98,8 @@ const normalizeAllCaseRecord = (record, index) => {
         "createdDate",
         "submissionDate",
         "dateOfVisit",
+        "basicDetails.createdAt",
+        "header.createdAt",
       ]) || "",
   };
 };
@@ -252,7 +254,7 @@ const Dashboard = () => {
   const [bankSummaryPage, setBankSummaryPage] = useState(1);
   const [bankCasesPage, setBankCasesPage] = useState(1);
 
-  const rowsPerPage = 10;
+  const rowsPerPage = 20;
 
   const handleUpdateCustomFields = async (record, field, value) => {
     const trimmed = value.trim();
@@ -371,10 +373,6 @@ const Dashboard = () => {
   const monthFiltered = useMemo(() => {
     return allCasesData.filter((item) => {
       if (!selectedMonth) return true;
-      // Always include Pending cases (unassigned) regardless of month
-      // so the pending count is never 0 due to month filtering
-      const s = normalizeStatus(item.status);
-      if (s.includes("pending") && !item.isReportSubmitted) return true;
       return isSameMonth(item.createdAt, selectedMonth);
     });
   }, [allCasesData, selectedMonth]);
@@ -477,6 +475,7 @@ const Dashboard = () => {
         const s = normalizeStatus(item.status);
         return (
           s.includes("final") ||
+          s.includes("submit") ||
           s.includes("done") ||
           s.includes("approved")
         );

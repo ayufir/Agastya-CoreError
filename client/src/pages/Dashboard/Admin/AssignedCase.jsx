@@ -74,7 +74,7 @@ const AssignedCase = ({ selectedMonth }) => {
   const [selectedBanks, setSelectedBanks] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCaseId, setSelectedCaseId] = useState(null);
@@ -136,7 +136,13 @@ const AssignedCase = ({ selectedMonth }) => {
       if (!isSameMonth(getCaseDate(item), selectedMonth)) return false;
       if (isApprovalPending(item)) return false;
       const status = (item.status || "").toLowerCase().trim();
-      if (status.includes("final") || status.includes("done") || status.includes("complete")) {
+      if (
+        status.includes("final") ||
+        status.includes("done") ||
+        status.includes("complete") ||
+        status.includes("approved") ||
+        status.includes("cancel")
+      ) {
         return false;
       }
       return true;

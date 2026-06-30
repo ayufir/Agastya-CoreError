@@ -143,8 +143,12 @@ const getCaseDisplayCity = (record) =>
 const buildRoleAwareQuery = (user, baseQuery = {}) => {
   const query = { ...baseQuery };
 
-  if (user.role === "FieldOfficer" || user.role === "FIELDOFFICER") {
-    // Field Officers only see cases assigned to them
+  if (
+    user.role === "FieldOfficer" ||
+    user.role === "FIELDOFFICER" ||
+    user.role === "TechnicalManager"
+  ) {
+    // Field Officers and Technical Managers only see cases assigned to them
     query.assignedTo = user._id;
   }
   // All other roles see all cases
@@ -202,6 +206,20 @@ const applyCommonCaseFilters = (cases, rawQuery = {}, user) => {
   ).map(normalizeStatusValue);
   const selectedCities = parseMultiValueParam(rawQuery.city).map(normalizeText);
   const search = normalizeText(rawQuery.search);
+
+  // Month filter
+  if (rawQuery.month) {
+    const [year, month] = rawQuery.month.split('-').map(Number);
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 1);
+    cases = cases.filter((caseItem) => {
+      const createdDate = caseItem.createdAt ? new Date(caseItem.createdAt) : null;
+      const uploadedDate = caseItem.uploadDate ? new Date(caseItem.uploadDate) : null;
+      const matchCreated = createdDate && !isNaN(createdDate.getTime()) && createdDate >= startDate && createdDate < endDate;
+      const matchUploaded = uploadedDate && !isNaN(uploadedDate.getTime()) && uploadedDate >= startDate && uploadedDate < endDate;
+      return matchCreated || matchUploaded;
+    });
+  }
 
   return cases.filter((caseItem) => {
     if (selectedBanks.length > 0) {
@@ -897,7 +915,19 @@ exports.getAllAssignedCases = async (req, res) => {
       user,
       baseQuery: {
         assignedTo: { $ne: null },
-        status: { $in: [...WORK_IN_PROGRESS_STATUSES, "Submitted", "FinalSubmitted"] },
+        status: {
+          $in: [
+            "Assigned",
+            "Visited",
+            "Reviewed",
+            "Reported",
+            "assigned",
+            "visited",
+            "reviewed",
+            "reported",
+            ...WORK_IN_PROGRESS_STATUSES
+          ]
+        },
       },
       populate: "assignedTo createdBy",
     });
@@ -1091,7 +1121,7 @@ exports.getFinalSubmittedCases = async (req, res) => {
   try {
     const finalCases = await fetchCasesAcrossBanks({
       user,
-      baseQuery: { status: { $in: ["FinalSubmitted", "Approved"] } },
+      baseQuery: { status: { $in: ["FinalSubmitted", "Submitted", "Approved", "approved"] } },
       populate: "assignedTo createdBy",
     });
 
@@ -1109,7 +1139,7 @@ exports.getCancelledCases = async (req, res) => {
   try {
     const cancelledCases = await fetchCasesAcrossBanks({
       user,
-      baseQuery: { status: "cancelled" },
+      baseQuery: { status: { $in: ["cancelled", "Cancelled", "cancel", "Cancel"] } },
       populate: "assignedTo createdBy",
     });
 
@@ -1135,22 +1165,30 @@ exports.getOutOfTATCases = async (req, res) => {
     const outOfTatCases = await fetchCasesAcrossBanks({
       user,
       baseQuery: {
-        createdAt: { $lte: fortyEightHoursAgo },
-        $expr: { $eq: ["$createdAt", "$updatedAt"] },
-        status: {
-          $nin: [
-            "cancelled",
-            "completed",
-            ...WORK_IN_PROGRESS_STATUSES,
-            "FinalSubmitted",
-            "Submitted",
-          ],
-        },
+        $or: [
+          { createdAt: { $lte: fortyEightHoursAgo } },
+          { uploadDate: { $lte: fortyEightHoursAgo } }
+        ]
       },
       populate: "assignedTo createdBy",
     });
 
-    const payload = buildCaseListPayload(outOfTatCases, req.query, 10, user);
+    const normalizeS = (s) => String(s || "").toLowerCase().trim().replace(/\s+/g, " ");
+
+    const filteredOutOfTat = outOfTatCases.filter((item) => {
+      const s = normalizeS(item.status);
+      if (
+        s.includes("working") || s.includes("assigned") || s.includes("progress") ||
+        s.includes("visited") || s.includes("reported") || s.includes("reviewed") ||
+        s.includes("final") || s.includes("submitted") || s.includes("done") || s.includes("cancel")
+      ) return false;
+      const d = new Date(item.createdAt || item.uploadDate);
+      if (isNaN(d.getTime())) return false;
+      const hours = (now - d) / (1000 * 60 * 60);
+      return hours > 48;
+    });
+
+    const payload = buildCaseListPayload(filteredOutOfTat, req.query, 10, user);
 
     return res.status(200).json({
       success: true,
@@ -1178,8 +1216,6 @@ exports.getSummaryData = async (req, res) => {
     const fortyEightHoursAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
 
     // Month filtering
-    // NOTE: Pending cases (status === "Pending") are ALWAYS included regardless of month
-    // so they always show up in the dashboard count correctly.
     let monthFilter = {};
     if (req.query.month) {
       const [year, month] = req.query.month.split('-').map(Number);
@@ -1188,8 +1224,7 @@ exports.getSummaryData = async (req, res) => {
       monthFilter = {
         $or: [
           { createdAt: { $gte: startDate, $lt: endDate } },
-          { uploadDate: { $gte: startDate, $lt: endDate } },
-          { status: "Pending" }  // Always include unassigned/pending cases in any month view
+          { uploadDate: { $gte: startDate, $lt: endDate } }
         ]
       };
     }
@@ -1294,7 +1329,7 @@ exports.getSummaryData = async (req, res) => {
 
     const finalSubmittedCount = filteredTotalSubmissions.filter((item) => {
       const s = normalizeS(item.status);
-      return s.includes("final") || s.includes("done") || s.includes("approved");
+      return s.includes("final") || s.includes("submit") || s.includes("done") || s.includes("approved");
     }).length;
 
     const queryRaisedCount = filteredTotalSubmissions.filter((item) =>

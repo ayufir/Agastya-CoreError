@@ -51,7 +51,7 @@ const OutOfTATCase = ({ selectedMonth }) => {
   const [selectedBanks, setSelectedBanks] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
 
   const bankFilter = useMemo(() => selectedBanks.join(","), [selectedBanks]);
   const statusFilter = useMemo(
@@ -64,11 +64,12 @@ const OutOfTATCase = ({ selectedMonth }) => {
       page: 1,
       limit: 1000,
       city: selectedZone || undefined,
+      month: selectedMonth || undefined,
       search: debouncedSearch || undefined,
       bankName: bankFilter || undefined,
       status: statusFilter || undefined,
     }),
-    [bankFilter, debouncedSearch, selectedZone, statusFilter]
+    [bankFilter, debouncedSearch, selectedMonth, selectedZone, statusFilter]
   );
 
   const fetchOutOfTatList = useCallback(async () => {

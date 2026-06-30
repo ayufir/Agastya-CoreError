@@ -46,12 +46,12 @@ const ViolationObserved = ({
       };
 
       form.setFieldsValue({
-        deviationToPlan: safeVal("deviationToPlan", "No"),
-        deviationDetails: safeVal("deviationDetails", "NA"),
-        demolitionRisk: safeVal("violationDemolitionRisk") || safeVal("demolitionRiskViolation") || safeVal("demolitionRisk", "No") || undefined,
-        demolitionDetails: safeVal("demolitionDetails", "NA") || "",
-        encroachment: safeVal("encroachment", "No") || undefined,
-        encroachmentDetails: safeVal("encroachmentDetails", "NA") || "",
+        deviationToPlan: safeVal("deviationToPlan") || undefined,
+        deviationDetails: safeVal("deviationDetails", ""),
+        demolitionRisk: safeVal("violationDemolitionRisk") || safeVal("demolitionRiskViolation") || safeVal("demolitionRisk") || undefined,
+        demolitionDetails: safeVal("demolitionDetails", "") || "",
+        encroachment: safeVal("encroachment") || undefined,
+        encroachmentDetails: safeVal("encroachmentDetails", "") || "",
       });
     }
   }, [isEdit, extractedData, form]);

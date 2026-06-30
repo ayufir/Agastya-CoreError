@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Select } from "antd";
 import { setSavedCity } from "../../redux/features/assignedCase/assignedCasesSlice";
 import { banks } from "./banks";
+import toast from "react-hot-toast";
 
 const { Option } = Select;
 
@@ -19,7 +20,7 @@ const BankHomePage = () => {
 
   useEffect(() => {
     if (isBJGUser && !["Bhopal", "Gwalior", "Jabalpur"].includes(savedCity)) {
-      dispatch(setSavedCity(user?.assignedCity || "Bhopal"));
+      dispatch(setSavedCity(""));
     }
   }, [isBJGUser, savedCity, user, dispatch]);
 
@@ -31,6 +32,13 @@ const BankHomePage = () => {
     );
   }, [search]);
 
+  const handleBankClick = (e) => {
+    if (isBJGUser && !savedCity) {
+      e.preventDefault();
+      toast.error("Please select a city first before creating a case!");
+    }
+  };
+
   return (
     <div className='min-h-screen bg-gray-50 py-10 px-4'>
       {isBJGUser && (
@@ -39,10 +47,12 @@ const BankHomePage = () => {
             Select City for Bank Case Creation
           </label>
           <Select
-            value={savedCity || user?.assignedCity || "Bhopal"}
+            value={savedCity || undefined}
             onChange={(val) => dispatch(setSavedCity(val))}
+            placeholder="Select City"
             className='w-full'
             size='large'
+            allowClear
           >
             <Option value="Bhopal">Bhopal</Option>
             <Option value="Jabalpur">Jabalpur</Option>
@@ -66,6 +76,7 @@ const BankHomePage = () => {
           filteredBanks.map((bank, index) => (
             <Link
               to={`/bank/${bank.name.toLowerCase().replace(/\s+/g, "-")}`}
+              onClick={handleBankClick}
               key={index}
               className='bg-white flex flex-col items-center w-32 sm:w-36 md:w-40 p-4 border border-gray-200 rounded-xl shadow-sm hover:shadow-lg hover:scale-105 transition-all duration-300 ease-in-out'
             >

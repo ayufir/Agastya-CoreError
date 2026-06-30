@@ -56,7 +56,7 @@ const ApprovedCases = ({ selectedMonth }) => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedBanks, setSelectedBanks] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
 
   const bankFilter = useMemo(() => selectedBanks.join(","), [selectedBanks]);
 
