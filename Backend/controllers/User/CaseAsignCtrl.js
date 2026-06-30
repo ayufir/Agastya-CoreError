@@ -246,6 +246,10 @@ const applyCommonCaseFilters = (cases, rawQuery = {}, user) => {
     }
 
     if (search) {
+      // Word-split partial match: "Ram" matches "Ramji", "Ram Kumar", etc.
+      // Split on spaces so "Ram Ku" finds "Ram Kumar" — every token must match
+      const searchTokens = search.split(/\s+/).filter(Boolean);
+
       const searchableValues = [
         caseItem.bankName,
         caseItem.bankSlug,
@@ -254,11 +258,14 @@ const applyCommonCaseFilters = (cases, rawQuery = {}, user) => {
         getCaseDisplayContact(caseItem),
         caseItem?.assignedTo?.name,
         caseItem.status,
-      ].map(normalizeText);
+        caseItem.customCaseId,
+        caseItem.appIdNotes,
+      ]
+        .map(normalizeText)
+        .filter(Boolean)
+        .join(" ");
 
-      const hasMatch = searchableValues.some(
-        (value) => value && value.includes(search)
-      );
+      const hasMatch = searchTokens.every((token) => searchableValues.includes(token));
 
       if (!hasMatch) {
         return false;
@@ -1171,6 +1178,8 @@ exports.getSummaryData = async (req, res) => {
     const fortyEightHoursAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
 
     // Month filtering
+    // NOTE: Pending cases (status === "Pending") are ALWAYS included regardless of month
+    // so they always show up in the dashboard count correctly.
     let monthFilter = {};
     if (req.query.month) {
       const [year, month] = req.query.month.split('-').map(Number);
@@ -1179,7 +1188,8 @@ exports.getSummaryData = async (req, res) => {
       monthFilter = {
         $or: [
           { createdAt: { $gte: startDate, $lt: endDate } },
-          { uploadDate: { $gte: startDate, $lt: endDate } }
+          { uploadDate: { $gte: startDate, $lt: endDate } },
+          { status: "Pending" }  // Always include unassigned/pending cases in any month view
         ]
       };
     }
@@ -1217,7 +1227,7 @@ exports.getSummaryData = async (req, res) => {
         const { key: modelKey, displayName, model: Model } = bankConfig;
         const baseQuery = buildRoleAwareQuery(user);
         const allCases = await Model.find({ ...baseQuery, ...monthFilter })
-          .select("_id status approvalStatus declineReason createdAt uploadDate customerName visitedPersonName applicantName applicantsName clientName basicDetails.nameOfClient propertyInfo.applicantName summary.applicantName header.contactedPerson addressLegal legalAddress addressSite propertyAddress address locationDetails.propertyAddressAsVisit locationDetails.propertyAddressAsDocs locationDetails.propertyAddressAsTRF propertyInfo.addressAtSite propertyInfo.addressAsPerDocument summary.propertyAddress customerNo contactNumber mobileNo personContactNo personContact contactPerson contactPersonNumber propertyCity city propertyLocation nearestCityTown locationDetails.mainLocality basicDetails.city propertyInfo.city summary.city assignedTo createdBy AttachDocuments atsDocuments route")
+          .select("_id status approvalStatus declineReason createdAt uploadDate customerName visitedPersonName applicantName applicantsName clientName basicDetails.nameOfClient propertyInfo.applicantName summary.applicantName header.contactedPerson addressLegal legalAddress addressSite propertyAddress address locationDetails.propertyAddressAsVisit locationDetails.propertyAddressAsDocs locationDetails.propertyAddressAsTRF propertyInfo.addressAtSite propertyInfo.addressAsPerDocument summary.propertyAddress customerNo contactNumber mobileNo personContactNo personContact contactPerson contactPersonNumber propertyCity city propertyLocation nearestCityTown locationDetails.mainLocality basicDetails.city propertyInfo.city summary.city assignedTo createdBy AttachDocuments atsDocuments route customCaseId appIdNotes displayAddress displayCustomerName personName applicantDetails.applicantName applicantNames contactPersonName contactedPerson")
           .populate("assignedTo");
         return {
           modelKey,
@@ -1257,15 +1267,66 @@ exports.getSummaryData = async (req, res) => {
 
     const summaryTable = buildCaseListPayload(totalSubmissions, req.query, 10, user);
 
+    // Calculate actual counts from the filtered data
+    const normalizeS = (s) => String(s || "").toLowerCase().trim().replace(/\s+/g, " ");
+    const isSubmittedCase = (item) => {
+      const s = normalizeS(item.status);
+      return (s.includes("submitted") || item.isReportSubmitted === true) && !s.includes("approved") && !s.includes("cancel");
+    };
+
+    const pendingCount = filteredTotalSubmissions.filter((item) => {
+      const s = normalizeS(item.status);
+      return s.includes("pending") && !isSubmittedCase(item);
+    }).length;
+
+    const workingCount = filteredTotalSubmissions.filter((item) => {
+      const s = normalizeS(item.status);
+      if (isSubmittedCase(item)) return false;
+      return (
+        s.includes("working") ||
+        s.includes("assigned") ||
+        s.includes("progress") ||
+        s.includes("visited") ||
+        s.includes("reported") ||
+        s.includes("reviewed")
+      );
+    }).length;
+
+    const finalSubmittedCount = filteredTotalSubmissions.filter((item) => {
+      const s = normalizeS(item.status);
+      return s.includes("final") || s.includes("done") || s.includes("approved");
+    }).length;
+
+    const queryRaisedCount = filteredTotalSubmissions.filter((item) =>
+      normalizeS(item.status).includes("query")
+    ).length;
+
+    const cancelledCount = filteredTotalSubmissions.filter((item) =>
+      normalizeS(item.status).includes("cancel")
+    ).length;
+
+    const outOfTatCount = filteredTotalSubmissions.filter((item) => {
+      const s = normalizeS(item.status);
+      if (
+        s.includes("working") || s.includes("assigned") || s.includes("progress") ||
+        s.includes("visited") || s.includes("reported") || s.includes("reviewed") ||
+        s.includes("final") || s.includes("submitted") || s.includes("done") || s.includes("cancel")
+      ) return false;
+      const d = new Date(item.createdAt || item.uploadDate);
+      if (isNaN(d.getTime())) return false;
+      const hours = (now - d) / (1000 * 60 * 60);
+      return hours > 48;
+    }).length;
+
     res.json({
       counts: {
         allCases: filteredTotalSubmissions.length,
-        pending: 0,
-        working: 0,
-        finalSubmitted: 0,
-        queryRaised: 0,
-        cancelled: 0,
-        outOfTat: 0,
+        pending: pendingCount,
+        working: workingCount,
+        finalSubmitted: finalSubmittedCount,
+        queryRaised: queryRaisedCount,
+        cancelled: cancelledCount,
+        outOfTat: outOfTatCount,
       },
       pending: [],
       working: [],

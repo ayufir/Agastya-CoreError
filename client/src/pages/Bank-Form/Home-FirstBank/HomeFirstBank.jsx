@@ -83,7 +83,7 @@ const HomeFirstBank = () => {
   const [showJsonModal, setShowJsonModal] = useState(false);
   const [jsonOutputData, setJsonOutputData] = useState(null);
   const [onModalCloseAction, setOnModalCloseAction] = useState(null);
-  const [isAutofillOpen, setIsAutofillOpen] = useState(true);
+  const [isAutofillOpen, setIsAutofillOpen] = useState(false);
   const [isPropertyDetailsOpen, setIsPropertyDetailsOpen] = useState(false);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
 

@@ -173,15 +173,29 @@ exports.logout = async (req, res, next) => {
   }
 };
 
-// ✅ Get all users with hierarchical filtering
 exports.getAllUsers = async (req, res, next) => {
   try {
     let query = {};
     if (req.user.role === "FieldOfficer" || req.user.role === "FIELDOFFICER") {
       // Field Officers see only themselves
       query = { _id: req.user._id };
+    } else if (req.user.role !== "SuperAdmin" && req.user.role !== "Admin" && req.user.assignedCity) {
+      // Non-Admin users with an assignedCity see only users of that city (or within their central cities group)
+      const userCity = req.user.assignedCity.toLowerCase().trim();
+      const centralCities = ["bhopal", "gwalior", "jabalpur"];
+      
+      if (centralCities.includes(userCity)) {
+        // Bhopal, Gwalior, Jabalpur are grouped
+        query = {
+          assignedCity: { $regex: /^\s*(bhopal|gwalior|jabalpur)\s*$/i }
+        };
+      } else {
+        query = {
+          assignedCity: { $regex: new RegExp(`^\\s*${userCity}\\s*$`, "i") }
+        };
+      }
     } else {
-      // Non-Field Officers see everyone
+      // SuperAdmin and Admin see everyone
       query = {};
     }
 

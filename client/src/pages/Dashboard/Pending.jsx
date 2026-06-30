@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { Edit3, Trash2, Plus, AlertCircle } from "lucide-react";
+import axiosInstance from "../../config/axios";
 
 import { fetchPendingCases } from "../../redux/features/assignedCase/assignedCasesThunk";
 import { assignCase, deletedCases } from "../../redux/features/case/caseThunks";
@@ -93,8 +94,9 @@ const Pending = ({ selectedMonth }) => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(searchText.trim());
-    }, 350);
+      // Lowercase so backend case-insensitive comparison works correctly
+      setDebouncedSearch(searchText.trim().toLowerCase());
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [searchText]);
@@ -112,8 +114,41 @@ const Pending = ({ selectedMonth }) => {
   }, [selectedZone, selectedMonth, selectedBanks, selectedStatuses, debouncedSearch]);
 
   const monthFilteredPendingCases = useMemo(() => {
+    // Helper: get all searchable text fields from a case item
+    const getSearchableText = (item) => [
+      item.customerName,
+      item.visitedPersonName,
+      item.applicantName,
+      item.applicantsName,
+      item.clientName,
+      item.displayCustomerName,
+      item.personName,
+      item.contactPersonName,
+      item.contactedPerson,
+      item.bankName,
+      item.bankSlug,
+      item.status,
+      item.propertyAddress,
+      item.addressLegal,
+      item.address,
+      item.displayAddress,
+      item.propertyCity,
+      item.city,
+      item.customerNo,
+      item.contactNumber,
+      item.mobileNo,
+      item.assignedTo?.name,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    const searchTokens = debouncedSearch
+      ? debouncedSearch.trim().toLowerCase().split(/\s+/).filter(Boolean)
+      : [];
+
     return (pendingCases || []).filter((item) => {
-      if (!isSameMonth(getCaseDate(item), selectedMonth)) return false;
+      // Always include pending cases regardless of month filter to match dashboard card count
       const status = (item.status || "").toLowerCase().trim();
       if (
         status.includes("complete") ||
@@ -126,9 +161,14 @@ const Pending = ({ selectedMonth }) => {
       ) {
         return false;
       }
+      // Apply local search filter: every token must match somewhere in the record
+      if (searchTokens.length > 0) {
+        const text = getSearchableText(item);
+        return searchTokens.every((token) => text.includes(token));
+      }
       return true;
     });
-  }, [pendingCases, selectedMonth]);
+  }, [pendingCases, selectedMonth, debouncedSearch]);
 
   const handleDelete = async (recordId) => {
     try {
@@ -247,7 +287,7 @@ const Pending = ({ selectedMonth }) => {
       title: "Case ID",
       key: "customCaseId",
       width: 130,
-      render: (record) => (
+      render: (_, record) => (
         <Input
           placeholder="Enter Case ID"
           defaultValue={record.customCaseId || ""}
@@ -263,7 +303,7 @@ const Pending = ({ selectedMonth }) => {
       title: "App ID / Notes",
       key: "appIdNotes",
       width: 160,
-      render: (record) => (
+      render: (_, record) => (
         <Input
           placeholder="Enter App ID / Notes"
           defaultValue={record.appIdNotes || ""}

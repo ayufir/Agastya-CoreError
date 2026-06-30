@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutThunk } from "../../redux/features/auth/authThunks";
 import { setZone, setSavedCity } from "../../redux/features/assignedCase/assignedCasesSlice.js";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 const { Option } = Select;
 
@@ -14,7 +14,7 @@ const MenuItems = () => {
   const selectedZone = useSelector((state) => state.assignedCases.selectedZone);
   const dispatch = useDispatch();
 
-  const cities = ["Combined BJG", "Bhopal", "Indore", "Jabalpur", "Gwalior", "Dehradun"];
+  const cities = useMemo(() => ["Combined BJG", "Bhopal", "Indore", "Jabalpur", "Gwalior", "Dehradun"], []);
 
   const iconSize = 20;
   const location = useLocation();
@@ -108,7 +108,19 @@ const MenuItems = () => {
   const isFieldOfficer = ["FieldOfficer", "FIELDOFFICER"].includes(user?.role);
   const isCentralStaff = ["Bhopal", "Gwalior", "Jabalpur"].includes(user?.assignedCity) && !["SuperAdmin", "Admin"].includes(user?.role);
   const showCitySelector = !isFieldOfficer;
-  const allowedCities = isCentralStaff ? ["Combined BJG", "Bhopal", "Jabalpur", "Gwalior"] : cities;
+  const allowedCities = useMemo(() => {
+    if (!user) return [];
+    if (["SuperAdmin", "Admin"].includes(user.role)) {
+      return cities;
+    }
+    if (user.assignedCity) {
+      if (["Bhopal", "Gwalior", "Jabalpur"].includes(user.assignedCity)) {
+        return ["Combined BJG", "Bhopal", "Jabalpur", "Gwalior"];
+      }
+      return [user.assignedCity];
+    }
+    return cities;
+  }, [user, cities]);
 
   const fieldOfficerMenu = [
     {
@@ -142,8 +154,11 @@ const MenuItems = () => {
       } else if (centralCities.includes(user.assignedCity)) {
         // Central staff see Bhopal + Gwalior + Jabalpur combined by default
         dispatch(setZone("Combined BJG"));
+        dispatch(setSavedCity("Combined BJG"));
       } else {
-        dispatch(setZone(user.assignedCity || ""));
+        const userCity = user.assignedCity || "";
+        dispatch(setZone(userCity));
+        dispatch(setSavedCity(userCity));
       }
     }
   }, [user, dispatch]);

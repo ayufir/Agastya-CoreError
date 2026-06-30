@@ -17,7 +17,7 @@ import OutOfTATCase from "./Admin/OutOfTatCase";
 import SummaryCard from "./Admin/SummaryCard";
 import { fetchFieldOfficers } from "../../redux/features/auth/authThunks";
 import { fetchNotifications } from "../../redux/features/notification/notificationThunk";
-import { setZone } from "../../redux/features/assignedCase/assignedCasesSlice";
+import { setZone, setSavedCity } from "../../redux/features/assignedCase/assignedCasesSlice";
 import axiosInstance from "../../config/axios";
 import socket from "../../config/socket";
 import { getDisplayCustomerName, getDisplayAddress } from "../../utils/dashboardRecord";
@@ -283,9 +283,20 @@ const Dashboard = () => {
 
   const selectedZone = useSelector((state) => state.assignedCases.selectedZone);
 
-  const citiesList = ["Combined BJG", "Bhopal", "Indore", "Jabalpur", "Gwalior", "Dehradun"];
-  const isCentralStaff = ["Bhopal", "Gwalior", "Jabalpur"].includes(user?.assignedCity) && !["SuperAdmin", "Admin"].includes(user?.role);
-  const allowedCities = isCentralStaff ? ["Combined BJG", "Bhopal", "Jabalpur", "Gwalior"] : citiesList;
+  const citiesList = useMemo(() => ["Combined BJG", "Bhopal", "Indore", "Jabalpur", "Gwalior", "Dehradun"], []);
+  const allowedCities = useMemo(() => {
+    if (!user) return [];
+    if (["SuperAdmin", "Admin"].includes(user.role)) {
+      return citiesList;
+    }
+    if (user.assignedCity) {
+      if (["Bhopal", "Gwalior", "Jabalpur"].includes(user.assignedCity)) {
+        return ["Combined BJG", "Bhopal", "Jabalpur", "Gwalior"];
+      }
+      return [user.assignedCity];
+    }
+    return citiesList;
+  }, [user, citiesList]);
 
   useEffect(() => {
     dispatch(fetchFieldOfficers());
@@ -360,6 +371,10 @@ const Dashboard = () => {
   const monthFiltered = useMemo(() => {
     return allCasesData.filter((item) => {
       if (!selectedMonth) return true;
+      // Always include Pending cases (unassigned) regardless of month
+      // so the pending count is never 0 due to month filtering
+      const s = normalizeStatus(item.status);
+      if (s.includes("pending") && !item.isReportSubmitted) return true;
       return isSameMonth(item.createdAt, selectedMonth);
     });
   }, [allCasesData, selectedMonth]);
@@ -394,19 +409,26 @@ const Dashboard = () => {
     }
 
     if (debouncedSearch) {
-      data = data.filter((item) =>
-        [
+      // Word-split search: "Ram Ku" matches "Ram Kumar", each word must appear somewhere
+      const searchTokens = debouncedSearch.trim().split(/\s+/).filter(Boolean);
+      data = data.filter((item) => {
+        const haystack = [
           item.bankName,
           item.customerName,
+          item.address,
           item.city,
           item.engineer,
           item.status,
           item.remark,
+          item.contactNumber,
+          item.mobileNo,
+          item.customerNo,
         ]
+          .filter(Boolean)
           .join(" ")
-          .toLowerCase()
-          .includes(debouncedSearch)
-      );
+          .toLowerCase();
+        return searchTokens.every((token) => haystack.includes(token));
+      });
     }
 
     return data;
@@ -434,16 +456,19 @@ const Dashboard = () => {
       }).length,
 
       working: filteredCases.filter((item) => {
+        if (!item.assignedTo) return false;
         if (isApprovalPending(item)) return false;
         const s = normalizeStatus(item.status);
-        return (
-          s.includes("working") ||
-          s.includes("assigned") ||
-          s.includes("progress") ||
-          s.includes("visited") ||
-          s.includes("reported") ||
-          s.includes("reviewed")
-        );
+        if (
+          s.includes("final") ||
+          s.includes("done") ||
+          s.includes("approved") ||
+          s.includes("cancel") ||
+          s.includes("complete")
+        ) {
+          return false;
+        }
+        return true;
       }).length,
 
       approvalPending: filteredCases.filter(isApprovalPending).length,
@@ -770,8 +795,11 @@ const Dashboard = () => {
         <div style={{ display: "flex", alignItems: "center", gap: 8, paddingBottom: 6 }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: "#475569" }}>City:</span>
           <Select
-            value={selectedZone || "Combined BJG"}
-            onChange={(val) => dispatch(setZone(val))}
+            value={selectedZone || (allowedCities.includes("Combined BJG") ? "Combined BJG" : allowedCities[0] || "")}
+            onChange={(val) => {
+              dispatch(setZone(val));
+              dispatch(setSavedCity(val));
+            }}
             style={{ width: 180 }}
             size="middle"
           >
@@ -1096,7 +1124,32 @@ const Dashboard = () => {
                 </div>
               </div>
             )}
-
+            {activeComponent && (
+              <div style={{ marginBottom: 16 }}>
+                <button
+                  onClick={() => setActiveComponent("")}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "8px 16px",
+                    borderRadius: 10,
+                    border: "1.5px solid #e2e8f0",
+                    background: "#fff",
+                    color: "#475569",
+                    fontWeight: 600,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
+                    transition: "all 0.15s ease",
+                  }}
+                  onMouseOver={(e) => { e.currentTarget.style.background = "#f8fafc"; e.currentTarget.style.color = "#1e293b"; }}
+                  onMouseOut={(e) => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.color = "#475569"; }}
+                >
+                  ← Back to Dashboard
+                </button>
+              </div>
+            )}
             {activeComponent==="Pending"         && <Pending selectedMonth={selectedMonth} />}
             {activeComponent==="Assigned"        && <AssignedCase selectedMonth={selectedMonth} />}
             {activeComponent==="ApprovalPending" && (

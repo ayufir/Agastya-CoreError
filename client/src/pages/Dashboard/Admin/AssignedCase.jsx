@@ -295,7 +295,7 @@ const AssignedCase = ({ selectedMonth }) => {
     {
       title: "Case ID",
       key: "customCaseId",
-      render: (record) => (
+      render: (_, record) => (
         <Input
           placeholder="Enter Case ID"
           defaultValue={record.customCaseId || ""}
@@ -310,7 +310,7 @@ const AssignedCase = ({ selectedMonth }) => {
     {
       title: "App ID / Notes",
       key: "appIdNotes",
-      render: (record) => (
+      render: (_, record) => (
         <Input
           placeholder="Enter App ID / Notes"
           defaultValue={record.appIdNotes || ""}
