@@ -197,6 +197,7 @@ const getBankStats = (data, user) => {
       (s.includes("submitted") && !s.includes("final"))
     ) {
       map[bank].working++;
+      map[bank].pending++;
     } else {
       map[bank].pending++;
     }
@@ -908,7 +909,6 @@ const Dashboard = () => {
                         <th style={{ textAlign:"left" }}>Bank</th>
                         <th style={{ textAlign:"center", color:"#e11d48", backgroundColor:"#fff1f2" }}>Query</th>
                         <th style={{ textAlign:"center", color:"#d97706", backgroundColor:"#fffbeb" }}>Pending</th>
-                        <th style={{ textAlign:"center", color:"#2563eb", backgroundColor:"#eff6ff" }}>WIP</th>
                         <th style={{ textAlign:"center", color:"#059669", backgroundColor:"#ecfdf5" }}>Submitted Case</th>
                         <th style={{ textAlign:"center", color:"#1e293b", backgroundColor:"#f1f5f9" }}>Total</th>
                         <th>Completion</th>
@@ -916,13 +916,13 @@ const Dashboard = () => {
                     </thead>
                     <tbody>
                       {loading ? (
-                        <tr><td colSpan="7" style={{ textAlign:"center", padding:"40px", color:"#94a3b8" }}>
+                        <tr><td colSpan="6" style={{ textAlign:"center", padding:"40px", color:"#94a3b8" }}>
                           <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:10 }}>
                             <div style={{ width:20, height:20, border:"2.5px solid #e2e8f0", borderTopColor:"#6366f1", borderRadius:"50%", animation:"spin .7s linear infinite" }} />Loading...
                           </div>
                         </td></tr>
                       ) : bankSummary.length === 0 ? (
-                        <tr><td colSpan="7" style={{ textAlign:"center", padding:"48px", color:"#94a3b8" }}>
+                        <tr><td colSpan="6" style={{ textAlign:"center", padding:"48px", color:"#94a3b8" }}>
                           <div style={{ fontSize:32, marginBottom:8 }}>🏦</div><div style={{ fontWeight:600 }}>No data for this period</div>
                         </td></tr>
                       ) : paginatedBankSummary.map(bank => {
@@ -937,7 +937,6 @@ const Dashboard = () => {
                             </td>
                             <td style={{ textAlign:"center" }}><span className="status-badge" style={{ background:"#fff1f2", color:"#e11d48", padding:"4px 10px", fontSize:"11.5px", fontWeight:700 }}>{bank.query}</span></td>
                             <td style={{ textAlign:"center" }}><span className="status-badge" style={{ background:"#fffbeb", color:"#d97706", padding:"4px 10px", fontSize:"11.5px", fontWeight:700 }}>{bank.pending}</span></td>
-                            <td style={{ textAlign:"center" }}><span className="status-badge" style={{ background:"#eff6ff", color:"#2563eb", padding:"4px 10px", fontSize:"11.5px", fontWeight:700 }}>{bank.working}</span></td>
                             <td style={{ textAlign:"center" }}><span className="status-badge" style={{ background:"#ecfdf5", color:"#059669", padding:"4px 10px", fontSize:"11.5px", fontWeight:700 }}>{bank.done}</span></td>
                             <td style={{ textAlign:"center" }}><span className="status-badge" style={{ background:"#f8fafc", color:"#1e293b", border:"1px solid #e2e8f0", padding:"4px 10px", fontSize:"11.5px", fontWeight:700 }}>{bank.total}</span></td>
                             <td>
@@ -973,8 +972,8 @@ const Dashboard = () => {
                         <div style={{ height:5, background:"#f1f5f9", borderRadius:999, overflow:"hidden", marginBottom:12 }}>
                           <div style={{ height:"100%", width:`${rate}%`, borderRadius:999, background:rate>70?"linear-gradient(90deg,#10b981,#34d399)":rate>40?"linear-gradient(90deg,#f59e0b,#fbbf24)":"linear-gradient(90deg,#ef4444,#f87171)" }} />
                         </div>
-                        <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:6, textAlign:"center" }}>
-                          {[{label:"Query",val:bank.query,bg:"#fff1f2",color:"#e11d48"},{label:"Pending",val:bank.pending,bg:"#fffbeb",color:"#d97706"},{label:"WIP",val:bank.working,bg:"#eff6ff",color:"#2563eb"},{label:"Submitted Case",val:bank.done,bg:"#ecfdf5",color:"#059669"},{label:"Total",val:bank.total,bg:"#f8fafc",color:"#1e293b"}].map(s=>(
+                        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:6, textAlign:"center" }}>
+                          {[{label:"Query",val:bank.query,bg:"#fff1f2",color:"#e11d48"},{label:"Pending",val:bank.pending,bg:"#fffbeb",color:"#d97706"},{label:"Submitted Case",val:bank.done,bg:"#ecfdf5",color:"#059669"},{label:"Total",val:bank.total,bg:"#f8fafc",color:"#1e293b"}].map(s=>(
                             <div key={s.label} style={{ background:s.bg, borderRadius:8, padding:"6px 4px" }}>
                               <div style={{ fontSize:16, fontWeight:800, color:s.color }}>{s.val}</div>
                               <div style={{ fontSize:9, fontWeight:600, color:"#94a3b8", textTransform:"uppercase", letterSpacing:".5px" }}>{s.label}</div>
