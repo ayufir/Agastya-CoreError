@@ -1152,7 +1152,11 @@ exports.getFinalSubmittedCases = async (req, res) => {
       populate: "assignedTo createdBy",
     });
 
-    res.status(200).json(buildCaseListPayload(finalCases, req.query, 10, user));
+    const filtered = sortCasesNewestFirst(
+      applyCommonCaseFilters(finalCases, req.query, user)
+    );
+    const { items, pagination } = paginateItems(filtered, req.query, 1000);
+    res.status(200).json({ items, pagination, filterOptions: buildFilterOptions(filtered) });
   } catch (err) {
     console.error("Error fetching final submitted cases:", err);
     res.status(500).json({ message: "Failed to fetch final submitted cases." });

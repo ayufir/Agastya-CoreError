@@ -105,11 +105,8 @@ const FinalSubmittedCases = ({ selectedMonth }) => {
     downloadAnchorNode.remove();
   };
 
-  const monthFilteredFinal = useMemo(() => {
-    return (final || []).filter((item) =>
-      isSameMonth(getCaseDate(item), selectedMonth)
-    );
-  }, [final, selectedMonth]);
+  // API already filters by month — no need to re-filter on frontend
+  const monthFilteredFinal = final || [];
 
   const columns = [
     {
@@ -175,7 +172,7 @@ const FinalSubmittedCases = ({ selectedMonth }) => {
   return (
     <div className="p-4">
       <h2 className="text-xl font-bold mb-4">
-        Final Submitted Cases ({monthFilteredFinal.length})
+        Final Submitted Cases ({(final || []).length})
       </h2>
 
       <div className="flex flex-wrap gap-4 mb-4">
