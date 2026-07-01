@@ -24,15 +24,15 @@
 // export default ProtectedLayout;
 
 // ! abhishek code
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 // import { ProtectedRoute, Header, SideBar, Outlet } from './your-components';
 import { Outlet } from "react-router-dom";
 import ProtectedRoute from "../components/ProtectedRoute";
 import Header from "../components/Navbar";
 import SideBar from "../layouts/sidebar/SideBar";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
 import { setZone } from "../redux/features/assignedCase/assignedCasesSlice.js";
+import { Spin } from "antd";
 
 const ProtectedLayout = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
@@ -66,7 +66,15 @@ const ProtectedLayout = () => {
             className={`flex-1 overflow-y-auto h-full transition-all duration-300 ${isCollapsed ? "lg:ml-[20px] ml-0" : "lg:ml-6 ml-0"
               }`}
           >
-            <Outlet />
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center h-full min-h-[300px]">
+                  <Spin size="large" tip="Loading Page..." />
+                </div>
+              }
+            >
+              <Outlet />
+            </Suspense>
           </div>
         </div>
       </div>
