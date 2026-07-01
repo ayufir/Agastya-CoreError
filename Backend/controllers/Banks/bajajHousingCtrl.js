@@ -54,7 +54,7 @@ exports.createReport = async (req, res) => {
             if (req.user.assignedCity) {
                 if (!body.locationDetails) body.locationDetails = {};
                 if (!body.locationDetails.propertyCity) {
-                    body.locationDetails.propertyCity = req.user.assignedCity;
+                    body.locationDetails.propertyCity = req.user.assignedCity === "Combined BJG" ? "Bhopal" : req.user.assignedCity;
                 }
             }
         }

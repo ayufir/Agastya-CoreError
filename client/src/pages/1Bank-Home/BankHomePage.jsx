@@ -15,7 +15,7 @@ const BankHomePage = () => {
   const savedCity = useSelector((state) => state.assignedCases.savedCity);
 
   const isBJGUser =
-    ["Bhopal", "Gwalior", "Jabalpur"].includes(user?.assignedCity) &&
+    ["Bhopal", "Gwalior", "Jabalpur", "Combined BJG"].includes(user?.assignedCity) &&
     !["SuperAdmin", "Admin"].includes(user?.role);
 
   useEffect(() => {

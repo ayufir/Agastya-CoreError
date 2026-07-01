@@ -19,7 +19,7 @@ exports.createReport = async (req, res) => {
       body.createdBy = req.user._id;
       // Auto-populate city if not provided
       if (req.user.assignedCity && !body.propertyCity) {
-        body.propertyCity = req.user.assignedCity;
+        body.propertyCity = req.user.assignedCity === "Combined BJG" ? "Bhopal" : req.user.assignedCity;
       }
     }
 

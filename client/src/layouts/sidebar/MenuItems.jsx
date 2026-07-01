@@ -26,8 +26,16 @@ const MenuItems = () => {
 
   const handleChange = (value) => {
     setSelectedZoneLocal(value || "--Select Zone--");
-    dispatch(setSavedCity(value || ""));
     dispatch(setZone(value || ""));
+    if (value === "Combined BJG") {
+      const currentSaved = localStorage.getItem("savedCity");
+      if (!["Bhopal", "Gwalior", "Jabalpur"].includes(currentSaved)) {
+        const defaultCity = ["Bhopal", "Gwalior", "Jabalpur"].includes(user?.assignedCity) ? user.assignedCity : "Bhopal";
+        dispatch(setSavedCity(defaultCity));
+      }
+    } else {
+      dispatch(setSavedCity(value || ""));
+    }
   };
 
   // Sync Redux zone back to local state on mount
@@ -106,7 +114,7 @@ const MenuItems = () => {
   };
 
   const isFieldOfficer = ["FieldOfficer", "FIELDOFFICER"].includes(user?.role);
-  const isCentralStaff = ["Bhopal", "Gwalior", "Jabalpur"].includes(user?.assignedCity) && !["SuperAdmin", "Admin"].includes(user?.role);
+  const isCentralStaff = ["Bhopal", "Gwalior", "Jabalpur", "Combined BJG"].includes(user?.assignedCity) && !["SuperAdmin", "Admin"].includes(user?.role);
   const showCitySelector = !isFieldOfficer;
   const allowedCities = useMemo(() => {
     if (!user) return [];
@@ -114,7 +122,7 @@ const MenuItems = () => {
       return cities;
     }
     if (user.assignedCity) {
-      if (["Bhopal", "Gwalior", "Jabalpur"].includes(user.assignedCity)) {
+      if (["Bhopal", "Gwalior", "Jabalpur", "Combined BJG"].includes(user.assignedCity)) {
         return ["Combined BJG", "Bhopal", "Jabalpur", "Gwalior"];
       }
       return [user.assignedCity];
@@ -148,13 +156,18 @@ const MenuItems = () => {
 
   useEffect(() => {
     if (user) {
-      const centralCities = ["Bhopal", "Gwalior", "Jabalpur"];
+      const centralCities = ["Bhopal", "Gwalior", "Jabalpur", "Combined BJG"];
       if (["SuperAdmin", "Admin"].includes(user.role)) {
         // SuperAdmin & Admin see all zones by default
       } else if (centralCities.includes(user.assignedCity)) {
         // Central staff see Bhopal + Gwalior + Jabalpur combined by default
         dispatch(setZone("Combined BJG"));
-        dispatch(setSavedCity("Combined BJG"));
+        // Set savedCity to a specific city if not already set to a valid city
+        const currentSaved = localStorage.getItem("savedCity");
+        if (!["Bhopal", "Gwalior", "Jabalpur"].includes(currentSaved)) {
+          const defaultCity = user.assignedCity === "Combined BJG" ? "Bhopal" : user.assignedCity;
+          dispatch(setSavedCity(defaultCity));
+        }
       } else {
         const userCity = user.assignedCity || "";
         dispatch(setZone(userCity));
@@ -177,7 +190,7 @@ const MenuItems = () => {
           </div>
           <div className='mt-1'>
             <h1 className='text-gray-800 font-bold relative text-xl leading-tight'>
-              {user?.name} {["Bhopal", "Gwalior", "Jabalpur"].includes(user?.assignedCity) && !["SuperAdmin", "Admin"].includes(user?.role) ? " (BJG)" : ""}
+              {user?.name} {["Bhopal", "Gwalior", "Jabalpur", "Combined BJG"].includes(user?.assignedCity) && !["SuperAdmin", "Admin"].includes(user?.role) ? " (BJG)" : ""}
             </h1>
             <p className={`text-[10px] font-extrabold uppercase tracking-widest ${
               isFieldOfficer ? 'text-[#3b6657]' : 'text-red-600'

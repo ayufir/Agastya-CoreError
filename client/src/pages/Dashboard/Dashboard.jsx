@@ -292,7 +292,7 @@ const Dashboard = () => {
       return citiesList;
     }
     if (user.assignedCity) {
-      if (["Bhopal", "Gwalior", "Jabalpur"].includes(user.assignedCity)) {
+      if (["Bhopal", "Gwalior", "Jabalpur", "Combined BJG"].includes(user.assignedCity)) {
         return ["Combined BJG", "Bhopal", "Jabalpur", "Gwalior"];
       }
       return [user.assignedCity];

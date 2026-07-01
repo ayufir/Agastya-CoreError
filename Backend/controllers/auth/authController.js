@@ -184,10 +184,10 @@ exports.getAllUsers = async (req, res, next) => {
       const userCity = req.user.assignedCity.toLowerCase().trim();
       const centralCities = ["bhopal", "gwalior", "jabalpur"];
       
-      if (centralCities.includes(userCity)) {
+      if (centralCities.includes(userCity) || userCity === "combined bjg") {
         // Bhopal, Gwalior, Jabalpur are grouped
         query = {
-          assignedCity: { $regex: /^\s*(bhopal|gwalior|jabalpur)\s*$/i }
+          assignedCity: { $regex: /^\s*(bhopal|gwalior|jabalpur|combined bjg)\s*$/i }
         };
       } else {
         query = {

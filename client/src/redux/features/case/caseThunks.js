@@ -43,12 +43,12 @@ export const assignCase = createAsyncThunk(
 );
 // Accept a case to Field Officer
 export const acceptCaseById = createAsyncThunk(
-  "case/assignCase",
+  "case/acceptCase",
   async ({ id, bankName }, { rejectWithValue }) => {
     console.log(id, bankName, "RES");
     try {
-      const data = await axios.put(`${API_URL}/accept/${id}`, { bankName });
-      // return data;
+      const { data } = await axios.put(`${API_URL}/accept/${id}`, { bankName });
+      return data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
     }

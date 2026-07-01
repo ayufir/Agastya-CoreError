@@ -143,13 +143,15 @@ const getCaseDisplayCity = (record) =>
 const buildRoleAwareQuery = (user, baseQuery = {}) => {
   const query = { ...baseQuery };
 
-  if (
-    user.role === "FieldOfficer" ||
-    user.role === "FIELDOFFICER" ||
-    user.role === "TechnicalManager"
-  ) {
-    // Field Officers and Technical Managers only see cases assigned to them
+  if (user.role === "FieldOfficer" || user.role === "FIELDOFFICER") {
+    // Field Officers only see cases assigned to them
     query.assignedTo = user._id;
+  } else if (user.role === "TechnicalManager") {
+    // Technical Managers see cases assigned to them OR created by them
+    query.$or = [
+      { assignedTo: user._id },
+      { createdBy: user._id }
+    ];
   }
   // All other roles see all cases
 
@@ -189,8 +191,8 @@ const applyCommonCaseFilters = (cases, rawQuery = {}, user) => {
     if (userCity) {
       cases = cases.filter((caseItem) => {
         const caseCity = (getCaseDisplayCity(caseItem) || "").toLowerCase().trim();
-        if (centralCities.includes(userCity)) {
-          return centralCities.some(c => caseCity === c || caseCity.includes(c));
+        if (centralCities.includes(userCity) || userCity === "combined bjg") {
+          return ["bhopal", "gwalior", "jabalpur", "combined bjg"].some(c => caseCity === c || caseCity.includes(c));
         } else {
           return caseCity === userCity || caseCity.includes(userCity);
         }
@@ -470,18 +472,19 @@ exports.assignCase = async (req, res) => {
     let updated = await Model.findByIdAndUpdate(
       caseId,
       {
-        assignedTo: fieldOfficerId,
-        status: WORK_IN_PROGRESS_STATUS,
-        route: route,
-        // $push: {
-        timeline: {
-          // status: "Assigned",
+        $set: {
+          assignedTo: fieldOfficerId,
           status: WORK_IN_PROGRESS_STATUS,
-          updatedAt: new Date(),
-          updatedBy: req.user._id,
-          note: `Assigned to user ${fieldOfficerId}`,
+          route: route
         },
-        // },
+        $push: {
+          timeline: {
+            status: WORK_IN_PROGRESS_STATUS,
+            updatedAt: new Date(),
+            updatedBy: req.user._id,
+            note: `Assigned to user ${fieldOfficerId}`,
+          }
+        }
       },
       { new: true }
     );
@@ -547,15 +550,15 @@ exports.unassignCase = async (req, res) => {
       caseId,
       {
         $unset: { assignedTo: "" },
-        status: "Pending",
-        // $push: {
-        timeline: {
-          status: "Pending",
-          updatedAt: new Date(),
-          updatedBy: req.user._id,
-          note: `Unassigned by admin`,
-        },
-        // },
+        $set: { status: "Pending" },
+        $push: {
+          timeline: {
+            status: "Pending",
+            updatedAt: new Date(),
+            updatedBy: req.user._id,
+            note: `Unassigned by admin`,
+          }
+        }
       },
       { new: true }
     );
@@ -646,8 +649,8 @@ exports.getCasesByRole = async (req, res) => {
       
       allCases = allCases.filter((caseItem) => {
         const caseCity = (getCaseDisplayCity(caseItem) || "").toLowerCase().trim();
-        if (centralCities.includes(normalizedUserCity)) {
-          return centralCities.some(c => caseCity === c || caseCity.includes(c));
+        if (centralCities.includes(normalizedUserCity) || normalizedUserCity === "combined bjg") {
+          return ["bhopal", "gwalior", "jabalpur", "combined bjg"].some(c => caseCity === c || caseCity.includes(c));
         } else {
           return caseCity === normalizedUserCity || caseCity.includes(normalizedUserCity);
         }
@@ -679,7 +682,17 @@ exports.acceptCase = async (req, res) => {
   try {
     const updatedCase = await Model.findByIdAndUpdate(
       id,
-      { approvalStatus: "Accepted" },
+      {
+        $set: { approvalStatus: "Accepted" },
+        $push: {
+          timeline: {
+            status: "Accepted",
+            updatedAt: new Date(),
+            updatedBy: req.user?._id,
+            note: `Accepted by Field Officer`,
+          }
+        }
+      },
       { new: true }
     );
 
