@@ -1139,7 +1139,16 @@ exports.getFinalSubmittedCases = async (req, res) => {
   try {
     const finalCases = await fetchCasesAcrossBanks({
       user,
-      baseQuery: { status: { $in: ["FinalSubmitted", "Submitted", "Approved", "approved"] } },
+      baseQuery: {
+        status: {
+          $in: [
+            "FinalSubmitted", "Submitted", "Approved", "approved",
+            "Done", "done", "Submit", "submit",
+            "Final Submitted", "Report Submitted", "Completed", "completed",
+            "finalsubmitted", "reportsubmitted"
+          ]
+        }
+      },
       populate: "assignedTo createdBy",
     });
 
