@@ -176,27 +176,31 @@ exports.logout = async (req, res, next) => {
 exports.getAllUsers = async (req, res, next) => {
   try {
     let query = {};
+    
     if (req.user.role === "FieldOfficer" || req.user.role === "FIELDOFFICER") {
       // Field Officers see only themselves
       query = { _id: req.user._id };
-    } else if (req.user.role !== "SuperAdmin" && req.user.role !== "Admin" && req.user.assignedCity) {
-      // Non-Admin users with an assignedCity see only users of that city (or within their central cities group)
-      const userCity = req.user.assignedCity.toLowerCase().trim();
-      const centralCities = ["bhopal", "gwalior", "jabalpur"];
-      
-      if (centralCities.includes(userCity) || userCity === "combined bjg") {
-        // Bhopal, Gwalior, Jabalpur are grouped
-        query = {
-          assignedCity: { $regex: /^\s*(bhopal|gwalior|jabalpur|combined bjg)\s*$/i }
-        };
-      } else {
-        query = {
-          assignedCity: { $regex: new RegExp(`^\\s*${userCity}\\s*$`, "i") }
-        };
-      }
-    } else {
+    } else if (req.user.role === "SuperAdmin" || req.user.role === "Admin") {
       // SuperAdmin and Admin see everyone
       query = {};
+    } else {
+      // Coordinator, TechnicalManager, Accountant, etc. see only Field Officers
+      query = {
+        role: { $in: ["FieldOfficer", "FIELDOFFICER"] }
+      };
+
+      // Apply city filtering if they have an assignedCity
+      if (req.user.assignedCity) {
+        const userCity = req.user.assignedCity.toLowerCase().trim();
+        const centralCities = ["bhopal", "gwalior", "jabalpur"];
+        
+        if (centralCities.includes(userCity) || userCity === "combined bjg") {
+          // Bhopal, Gwalior, Jabalpur are grouped
+          query.assignedCity = { $regex: /^\s*(bhopal|gwalior|jabalpur|combined bjg)\s*$/i };
+        } else {
+          query.assignedCity = { $regex: new RegExp(`^\\s*${userCity}\\s*$`, "i") };
+        }
+      }
     }
 
     const users = await User.find(query).select("-password");
