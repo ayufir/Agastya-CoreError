@@ -1318,7 +1318,8 @@ exports.getSummaryData = async (req, res) => {
       applyCommonCaseFilters(totalSubmissions, req.query, user)
     );
 
-    const summaryTable = buildCaseListPayload(filteredTotalSubmissions, req.query, 10, user);
+    const { items: tableItems, pagination } = paginateItems(filteredTotalSubmissions, req.query, 10);
+    const filterOptions = buildFilterOptions(filteredTotalSubmissions);
 
     // Calculate actual counts from the filtered data
     const normalizeS = (s) => String(s || "").toLowerCase().trim().replace(/\s+/g, " ");
@@ -1388,9 +1389,9 @@ exports.getSummaryData = async (req, res) => {
       queryRaised: [],
       cancelled: [],
       outOfTat: [],
-      tableItems: summaryTable.items,
-      pagination: summaryTable.pagination,
-      filterOptions: summaryTable.filterOptions,
+      tableItems: tableItems,
+      pagination: pagination,
+      filterOptions: filterOptions,
     });
   } catch (err) {
     console.error("Error fetching summary data:", err);
