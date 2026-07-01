@@ -194,6 +194,7 @@ const ACCENT_STYLES = {
 // ─── Upload card ──────────────────────────────────────────────────────────────
 const UploadCard = ({ title, helper, files, onAddFiles, onRemoveFile, accent = "blue", accept = "image/*,.pdf", icon, loading = false, allowDelete = true, isFieldOfficer = false, isSubmitted = false }) => {
   const styles = ACCENT_STYLES[accent] || ACCENT_STYLES.blue;
+  const [isDragging, setIsDragging] = useState(false);
 
   // accent → CTA button color
   const btnColorMap = {
@@ -206,6 +207,24 @@ const UploadCard = ({ title, helper, files, onAddFiles, onRemoveFile, accent = "
     slate:   { bg: "#475569", hover: "#334155" },
   };
   const btnColor = btnColorMap[accent] || btnColorMap.blue;
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (loading || isSubmitted) return;
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      onAddFiles(e.dataTransfer.files);
+    }
+  };
 
   // ── Field Officer view stays unchanged ──
   if (isFieldOfficer) {
@@ -226,7 +245,16 @@ const UploadCard = ({ title, helper, files, onAddFiles, onRemoveFile, accent = "
             </div>
           ) : (
             <>
-              <label className="flex flex-col items-center justify-center cursor-pointer rounded-[20px] border border-dashed border-[#d0e6df] bg-[#f4faf8]/35 hover:bg-[#eef7f4]/60 hover:border-[#3b6657] px-3 sm:px-4 py-6 sm:py-8 text-center transition-all duration-200 group">
+              <label 
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`flex flex-col items-center justify-center cursor-pointer rounded-[20px] border border-dashed px-3 sm:px-4 py-6 sm:py-8 text-center transition-all duration-200 group ${
+                  isDragging 
+                    ? "border-[#3b6657] bg-[#eef7f4]/80 shadow-md scale-[1.01]" 
+                    : "border-[#d0e6df] bg-[#f4faf8]/35 hover:bg-[#eef7f4]/60 hover:border-[#3b6657]"
+                }`}
+              >
                 {loading ? (
                   <Loader2 className="w-10 h-10 text-[#3b6657] mb-2.5 animate-spin" />
                 ) : (
@@ -288,20 +316,24 @@ const UploadCard = ({ title, helper, files, onAddFiles, onRemoveFile, accent = "
       </div>
 
       {/* Drop Zone */}
-      <label style={{
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        border: "1.5px dashed #d1d5db",
-        borderRadius: 14,
-        padding: "28px 16px",
-        cursor: loading ? "not-allowed" : "pointer",
-        background: "#fafafa",
-        transition: "border-color 0.2s ease, background 0.2s ease",
-        textAlign: "center",
-        position: "relative",
-        minHeight: 130,
-      }}
-      onMouseEnter={e => { if (!loading) { e.currentTarget.style.borderColor = btnColor.bg; e.currentTarget.style.background = "#f5f5ff"; }}}
-      onMouseLeave={e => { e.currentTarget.style.borderColor = "#d1d5db"; e.currentTarget.style.background = "#fafafa"; }}
+      <label 
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        style={{
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          border: isDragging ? `2px dashed ${btnColor.bg}` : "1.5px dashed #d1d5db",
+          borderRadius: 14,
+          padding: "28px 16px",
+          cursor: loading ? "not-allowed" : "pointer",
+          background: isDragging ? "#f5f5ff" : "#fafafa",
+          transition: "border-color 0.2s ease, background 0.2s ease",
+          textAlign: "center",
+          position: "relative",
+          minHeight: 130,
+        }}
+        onMouseEnter={e => { if (!loading && !isDragging) { e.currentTarget.style.borderColor = btnColor.bg; e.currentTarget.style.background = "#f5f5ff"; }}}
+        onMouseLeave={e => { if (!loading && !isDragging) { e.currentTarget.style.borderColor = "#d1d5db"; e.currentTarget.style.background = "#fafafa"; }}}
       >
         {/* Upload Icon — Document with arrow */}
         {loading ? (
