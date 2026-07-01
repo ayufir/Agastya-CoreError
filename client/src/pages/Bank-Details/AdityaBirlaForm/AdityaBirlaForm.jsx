@@ -681,6 +681,9 @@ export default function AdityaBirlaForm() {
 
             {/* Report Content */}
             <div className="p-4 print:p-0">
+                <h1 className="print:hidden text-xl font-bold text-[#0f172a] mb-4">
+                    Technical Individual Assignment
+                </h1>
                 <div className="print:hidden mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
                     <div 
                         className="flex items-center justify-between cursor-pointer select-none"
