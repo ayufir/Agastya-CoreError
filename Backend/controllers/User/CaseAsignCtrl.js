@@ -1318,7 +1318,7 @@ exports.getSummaryData = async (req, res) => {
       applyCommonCaseFilters(totalSubmissions, req.query, user)
     );
 
-    const summaryTable = buildCaseListPayload(totalSubmissions, req.query, 10, user);
+    const summaryTable = buildCaseListPayload(filteredTotalSubmissions, req.query, 10, user);
 
     // Calculate actual counts from the filtered data
     const normalizeS = (s) => String(s || "").toLowerCase().trim().replace(/\s+/g, " ");
