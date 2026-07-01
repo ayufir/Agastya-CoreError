@@ -1012,7 +1012,7 @@ const Dashboard = () => {
                     <input type="text" placeholder="Search..." value={searchText} onChange={e => setSearchText(e.target.value)}
                       className="filter-input" style={{ width:150, flex:"0 0 auto" }} />
                     <Select mode="multiple" placeholder="Status" style={{ minWidth:120 }} value={selectedStatuses} onChange={setSelectedStatuses} allowClear size="middle">
-                      {statusOptions.map(s => <Option key={s} value={s}>{s}</Option>)}
+                      {statusOptions.map(s => <Option key={s} value={s}>{normalizeStatus(s) === "pending" ? "Not Assigned" : s}</Option>)}
                     </Select>
                     <Select mode="multiple" placeholder="Engineers" style={{ minWidth:140 }} value={selectedEngineers} onChange={setSelectedEngineers} allowClear size="middle">
                       {engineerOptions.map(e => <Option key={e} value={e}>{e}</Option>)}
@@ -1083,7 +1083,7 @@ const Dashboard = () => {
                             </td>
                             <td style={{ color:"#64748b", fontSize:13 }}>{rec.city}</td>
                             <td><Link to={`/bank/${bank}/${rec?.key}`} style={{ color:"#6366f1", fontWeight:600, textDecoration:"none", fontSize:13 }}>{rec.engineer}</Link></td>
-                            <td><span className="status-badge" style={badge}>{rec.status}</span></td>
+                            <td><span className="status-badge" style={badge}>{normalizeStatus(rec.status) === "pending" ? "Not Assigned" : rec.status}</span></td>
                             <td>
                               <Input
                                 placeholder="Enter Case ID"
