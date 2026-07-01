@@ -125,56 +125,30 @@ const Pending = ({ selectedMonth }) => {
   }, [selectedZone, selectedMonth, selectedBanks, selectedStatuses, debouncedSearch]);
 
   const monthFilteredPendingCases = useMemo(() => {
-    // Helper: get all searchable text fields from a case item
     const getSearchableText = (item) => [
-      item.customerName,
-      item.visitedPersonName,
-      item.applicantName,
-      item.applicantsName,
-      item.clientName,
-      item.displayCustomerName,
-      item.personName,
-      item.contactPersonName,
-      item.contactedPerson,
-      item.bankName,
-      item.bankSlug,
-      item.status,
-      item.propertyAddress,
-      item.addressLegal,
-      item.address,
-      item.displayAddress,
-      item.propertyCity,
-      item.city,
-      item.customerNo,
-      item.contactNumber,
-      item.mobileNo,
-      item.assignedTo?.name,
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
+      item.customerName, item.visitedPersonName, item.applicantName,
+      item.applicantsName, item.clientName, item.displayCustomerName,
+      item.personName, item.contactPersonName, item.contactedPerson,
+      item.bankName, item.bankSlug, item.status,
+      item.propertyAddress, item.addressLegal, item.address, item.displayAddress,
+      item.propertyCity, item.city, item.customerNo, item.contactNumber,
+      item.mobileNo, item.assignedTo?.name,
+    ].filter(Boolean).join(" ").toLowerCase();
 
     const searchTokens = debouncedSearch
       ? debouncedSearch.trim().toLowerCase().split(/\s+/).filter(Boolean)
       : [];
 
+    // API already filters by month & status — just apply local search
     return (pendingCases || []).filter((item) => {
-      // Apply month filter
-      if (selectedMonth && !isSameMonth(getCaseDate(item), selectedMonth)) {
-        return false;
-      }
-      const s = normalizeStatus(item.status);
-      if (!s.includes("pending") || isApprovalPending(item)) {
-        return false;
-      }
-      // Apply local search filter: every token must match somewhere in the record
       if (searchTokens.length > 0) {
         const text = getSearchableText(item);
         return searchTokens.every((token) => text.includes(token));
       }
       return true;
     });
-  }, [pendingCases, selectedMonth, debouncedSearch]);
+  }, [pendingCases, debouncedSearch]);
+
 
   const handleDelete = async (recordId) => {
     try {

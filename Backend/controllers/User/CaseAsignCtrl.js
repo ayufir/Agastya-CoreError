@@ -957,11 +957,25 @@ exports.getPendingCases = async (req, res) => {
   try {
     const allPendingCases = await fetchCasesAcrossBanks({
       user,
-      baseQuery: { status: "Pending" },
+      baseQuery: {
+        status: {
+          $in: [
+            "Pending", "pending",
+            "Generated", "generated",
+            "New", "new",
+            "Created", "created",
+            "Open", "open"
+          ]
+        }
+      },
       populate: "assignedTo createdBy",
     });
 
-    res.json(buildCaseListPayload(allPendingCases, req.query, 10, user));
+    const filtered = sortCasesNewestFirst(
+      applyCommonCaseFilters(allPendingCases, req.query, user)
+    );
+    const { items, pagination } = paginateItems(filtered, req.query, 1000);
+    res.json({ items, pagination, filterOptions: buildFilterOptions(filtered) });
   } catch (err) {
     console.error("Error in getPendingCases:", err);
     res.status(500).json({ error: "Failed to fetch pending cases." });
