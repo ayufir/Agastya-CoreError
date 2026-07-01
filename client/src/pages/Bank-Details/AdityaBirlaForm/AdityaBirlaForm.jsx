@@ -343,6 +343,7 @@ export default function AdityaBirlaForm() {
     const [saving, setSaving] = useState(false);
     const [autoFilledFields, setAutoFilledFields] = useState([]);
     const [showAutoFill, setShowAutoFill] = useState(false);
+    const [isPropertyDetailsOpen, setIsPropertyDetailsOpen] = useState(false);
 
     const handleDownloadAll = async () => {
         const toastId = toast.loading("Fetching latest files and generating ZIP…");
@@ -865,6 +866,141 @@ export default function AdityaBirlaForm() {
                                 </div>
                             )}
                         </div>
+                    )}
+                </div>
+
+                {/* Collapsible Property Details Panel */}
+                <div className="print:hidden mb-4 rounded-lg border border-[#e5e7eb] bg-white overflow-hidden shadow-sm">
+                    {/* Accordion Header Row */}
+                    <div 
+                      onClick={() => setIsPropertyDetailsOpen(!isPropertyDetailsOpen)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        padding: "16px 24px",
+                        background: "#ffffff",
+                        borderBottom: isPropertyDetailsOpen ? "1px solid #e5e7eb" : "none",
+                        cursor: "pointer",
+                        userSelect: "none"
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+                        <span style={{ fontSize: "14px", fontWeight: 600, color: "#1e293b" }}>Property Details</span>
+                        {(form.basicDetails?.nameOfClient || form.basicDetails?.caseReferenceNumber) && (
+                          <div style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "12px", color: "#64748b", fontWeight: 500 }}>
+                            {form.basicDetails?.nameOfClient && (
+                              <>
+                                <span style={{ color: "#cbd5e1" }}>|</span>
+                                <span>Applicant <strong style={{ color: "#0f172a", fontWeight: 600 }}>{form.basicDetails.nameOfClient}</strong></span>
+                              </>
+                            )}
+                            {form.basicDetails?.caseReferenceNumber && (
+                              <>
+                                <span style={{ color: "#cbd5e1" }}>|</span>
+                                <span>Loan Code <strong style={{ color: "#0f172a", fontWeight: 600 }}>{form.basicDetails.caseReferenceNumber}</strong></span>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        style={{
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          padding: 0,
+                          transform: isPropertyDetailsOpen ? "rotate(180deg)" : "rotate(0deg)",
+                          transition: "transform 0.2s ease"
+                        }}
+                      >
+                        <svg 
+                          width="14" height="14" fill="none" stroke="#64748b" strokeWidth="2.5" viewBox="0 0 24 24"
+                          style={{ transform: isPropertyDetailsOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}
+                        >
+                          <polyline points="6 9 12 15 18 9" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* Accordion Content Panel */}
+                    {isPropertyDetailsOpen && (
+                      <div style={{ padding: "20px 24px" }}>
+                        {/* Row 1 */}
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px", marginBottom: "16px" }}>
+                          <div>
+                            <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Applicant Name</div>
+                            <input
+                              value={form.basicDetails?.nameOfClient || ""}
+                              onChange={(e) => set("basicDetails", "nameOfClient", e.target.value)}
+                              style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                            />
+                          </div>
+                          <div>
+                            <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Loan Code</div>
+                            <input
+                              value={form.basicDetails?.caseReferenceNumber || ""}
+                              onChange={(e) => set("basicDetails", "caseReferenceNumber", e.target.value)}
+                              style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                            />
+                          </div>
+                          <div>
+                            <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Property Code</div>
+                            <input
+                              value={form.basicDetails?.caseReferenceNumber || ""}
+                              onChange={(e) => set("basicDetails", "caseReferenceNumber", e.target.value)}
+                              style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                            />
+                          </div>
+                          <div>
+                            <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Contact No.</div>
+                            <input
+                              value={form.basicDetails?.contactNo || ""}
+                              onChange={(e) => set("basicDetails", "contactNo", e.target.value)}
+                              style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Row 2 */}
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px", marginBottom: "16px" }}>
+                          <div>
+                            <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Property Name / Owner</div>
+                            <input
+                              value={form.basicDetails?.nameOfPropertyOwner || ""}
+                              onChange={(e) => set("basicDetails", "nameOfPropertyOwner", e.target.value)}
+                              style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                            />
+                          </div>
+                          <div>
+                            <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Valuer Name</div>
+                            <input
+                              value={form.basicDetails?.nameOfValuer || ""}
+                              onChange={(e) => set("basicDetails", "nameOfValuer", e.target.value)}
+                              style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                            />
+                          </div>
+                          <div>
+                            <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Property Sub Type</div>
+                            <input
+                              value={form.locationDetails?.propertySubType || ""}
+                              onChange={(e) => set("locationDetails", "propertySubType", e.target.value)}
+                              style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                            />
+                          </div>
+                          <div style={{ visibility: "hidden" }}></div>
+                        </div>
+
+                        {/* Row 3: Address */}
+                        <div>
+                          <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Address</div>
+                          <input
+                            value={form.locationDetails?.propertyAddressAsVisit || ""}
+                            onChange={(e) => set("locationDetails", "propertyAddressAsVisit", e.target.value)}
+                            style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                          />
+                        </div>
+                      </div>
                     )}
                 </div>
 
