@@ -1065,10 +1065,11 @@ exports.finalUpdate = async (req, res) => {
   try {
     const existingCase = await Model.findById(id);
 
+    const modelKey = toPascalCaseSmart(bankName);
     const updateFields = {
       ...sanitizedUpdateData,
       bankName: sanitizedUpdateData.bankName || bankName,
-      route: sanitizedUpdateData.route || getBankMeta(modelMapKey || modelKey).route,
+      route: sanitizedUpdateData.route || getBankMeta(modelKey).route,
       isReportSubmitted: true,
       approvalStatus: "FinalSubmitted",
       status: "FinalSubmitted", // lock status
