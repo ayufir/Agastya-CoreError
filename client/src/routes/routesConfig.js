@@ -83,26 +83,24 @@ export const routesConfig = [
     path: "/bank/aditya",
     element: lazy(() => import("../pages/Bank-Details/AdityaBirlaForm/AdityaBirlaForm.jsx"))
   },
-
+  {
+    path: "/bank/aditya-birla",
+    element: lazy(() => import("../pages/Bank-Details/AdityaBirlaForm/AdityaBirlaForm.jsx"))
+  },
   {
     path: "/bank/aditya-birla/:id",
     element: lazy(() => import("../pages/Bank-Details/AdityaBirlaForm/AdityaBirlaForm.jsx"))
   },
-  // {
-  //   path: "/bank/aditya/:id",
-  //   element: lazy(() => import("../pages/Bank-Details/AdityaDetails")),
-  // },
   {
     path: "/bank/aditya/:id",
     element: lazy(() => import("../pages/Bank-Details/AdityaBirlaForm/AdityaBirlaForm.jsx")),
   },
-  // {
-  //   path: "/bank/aditya/edit/:id",
-  //   element: lazy(() => import("../pages/Bank-Form/Adtiya-Bank/AditiyaFrom")),
-  // },
-
   {
     path: "/bank/aditya/edit/:id",
+    element: lazy(() => import("../pages/Bank-Details/AdityaBirlaForm/AdityaBirlaForm.jsx")),
+  },
+  {
+    path: "/bank/aditya-birla/edit/:id",
     element: lazy(() => import("../pages/Bank-Details/AdityaBirlaForm/AdityaBirlaForm.jsx")),
   },
 
