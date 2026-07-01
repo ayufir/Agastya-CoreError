@@ -681,18 +681,6 @@ export default function AdityaBirlaForm() {
                 <div className="flex-1 text-yellow-500 font-bold text-sm">
                     Aditya Birla Capital Ltd.
                 </div>
-                <button
-                    onClick={downloadAllImages}
-                    className="bg-purple-700 hover:bg-purple-800 text-white px-4 py-1.5 rounded text-sm font-medium"
-                >
-                    📷 Download All Images
-                </button>
-                <button
-                    onClick={downloadAllDocuments}
-                    className="bg-purple-700 hover:bg-purple-800 text-white px-4 py-1.5 rounded text-sm font-medium"
-                >
-                    📄 Download All Documents
-                </button>
 
                 <button
                     onClick={handleSubmit}
