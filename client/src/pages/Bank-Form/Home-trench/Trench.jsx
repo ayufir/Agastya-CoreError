@@ -634,36 +634,6 @@ const Trench = () => {
           >
             {activeTab === 1 && (
               <>
-                <div className="trench-autofill">
-                  <div className="trench-autofill-heading">
-                    <div>
-                      <strong>Upload Home First Report</strong>
-                      <p>
-                        Only visitor name, contact number, property address,
-                        latitude, and longitude will be filled.
-                      </p>
-                    </div>
-                    {autoFilledFields.length > 0 && (
-                      <Tag color="success">{autoFilledFields.length} fields filled</Tag>
-                    )}
-                  </div>
-                  <AutoFillForm setFormData={handleAutoFill} />
-                  <div className="mt-4">
-                    <AdvancedAutoFillForm
-                      bankName="Home First Tranche"
-                      setFormData={handleAutoFill}
-                      atsDocuments={atsDocuments && atsDocuments.length > 0 ? atsDocuments : (docUrls || [])}
-                      imageUrls={uploadedUrls || []}
-                      siteVisitVideo={reportData?.siteVisitVideo || []}
-                      gpsFiles={reportData?.gpsFiles || []}
-                      emailFiles={reportData?.emailFiles || []}
-                      fieldFormFiles={reportData?.fieldFormFiles || []}
-                      additionalFiles={reportData?.additionalFiles || []}
-                      fetchData={fetchReport}
-                    />
-                  </div>
-                </div>
-
                 <div className="trench-grid">
                   <Form.Item label="Date of Visit" name="dateOfVisit">
                     <DatePicker className="w-full" format="DD/MM/YYYY" />
