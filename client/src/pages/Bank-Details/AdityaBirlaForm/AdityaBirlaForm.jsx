@@ -341,6 +341,7 @@ export default function AdityaBirlaForm() {
     const [liveLocation, setLiveLocation] = useState({ lat: "--", lng: "--" });
     const [saving, setSaving] = useState(false);
     const [autoFilledFields, setAutoFilledFields] = useState([]);
+    const [showAutoFill, setShowAutoFill] = useState(false);
 
     const handleAutoFill = createAutoFillAdapter(
         ADITYA_MAPPING,
@@ -681,26 +682,42 @@ export default function AdityaBirlaForm() {
             {/* Report Content */}
             <div className="p-4 print:p-0">
                 <div className="print:hidden mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
-                    <div className="mb-2 text-sm font-semibold text-slate-800">
-                        AI Auto-fill
+                    <div 
+                        className="flex items-center justify-between cursor-pointer select-none"
+                        onClick={() => setShowAutoFill(!showAutoFill)}
+                    >
+                        <div className="text-sm font-semibold text-slate-800 flex items-center gap-2">
+                            <span>✨ AI Advanced Auto-fill</span>
+                            <span className="text-xs font-normal text-slate-500">
+                                ({showAutoFill ? "Click to collapse" : "Click to expand"})
+                            </span>
+                        </div>
+                        <div className="text-slate-500 font-bold text-lg">
+                            {showAutoFill ? "−" : "+"}
+                        </div>
                     </div>
-                    <div className="mb-4">
-                        <AutoFillForm setFormData={handleAutoFill} />
-                    </div>
-                    <AdvancedAutoFillForm
-                        bankName="Aditya Birla"
-                        setFormData={handleAutoFill}
-                        atsDocuments={form?.atsDocuments && form.atsDocuments.length > 0 ? form.atsDocuments : (form?.AttachDocuments || [])}
-                        imageUrls={form?.imageUrls || []}
-                        siteVisitVideo={form?.siteVisitVideo || []}
-                        gpsFiles={form?.gpsFiles || []}
-                        emailFiles={form?.emailFiles || []}
-                        fieldFormFiles={form?.fieldFormFiles || []}
-                        additionalFiles={form?.additionalFiles || []}
-                    />
-                    {autoFilledFields.length > 0 && (
-                        <div className="mt-3 text-xs text-slate-600">
-                            {autoFilledFields.length} fields auto-filled from uploaded documents.
+                    
+                    {showAutoFill && (
+                        <div className="mt-4 border-t border-blue-100 pt-4">
+                            <div className="mb-4">
+                                <AutoFillForm setFormData={handleAutoFill} />
+                            </div>
+                            <AdvancedAutoFillForm
+                                bankName="Aditya Birla"
+                                setFormData={handleAutoFill}
+                                atsDocuments={form?.atsDocuments && form.atsDocuments.length > 0 ? form.atsDocuments : (form?.AttachDocuments || [])}
+                                imageUrls={form?.imageUrls || []}
+                                siteVisitVideo={form?.siteVisitVideo || []}
+                                gpsFiles={form?.gpsFiles || []}
+                                emailFiles={form?.emailFiles || []}
+                                fieldFormFiles={form?.fieldFormFiles || []}
+                                additionalFiles={form?.additionalFiles || []}
+                            />
+                            {autoFilledFields.length > 0 && (
+                                <div className="mt-3 text-xs text-slate-600">
+                                    {autoFilledFields.length} fields auto-filled from uploaded documents.
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
