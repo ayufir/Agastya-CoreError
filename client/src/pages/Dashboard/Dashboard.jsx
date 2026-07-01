@@ -445,7 +445,24 @@ const Dashboard = () => {
     return {
       pending: filteredCases.filter((item) => {
         const s = normalizeStatus(item.status);
-        return s.includes("pending") && !isApprovalPending(item);
+        // Exclude work-in-progress, final, done, approved, cancel, query
+        if (
+          s.includes("work in progress") ||
+          s.includes("working") ||
+          s.includes("assigned") ||
+          s.includes("progress") ||
+          s.includes("visited") ||
+          s.includes("reported") ||
+          s.includes("reviewed") ||
+          s.includes("final") ||
+          s.includes("done") ||
+          s.includes("approved") ||
+          s.includes("cancel") ||
+          s.includes("complete") ||
+          s.includes("query") ||
+          s.includes("submit")
+        ) return false;
+        return !isApprovalPending(item);
       }).length,
 
       // Cases returned by FO with a decline reason
@@ -462,11 +479,23 @@ const Dashboard = () => {
           s.includes("done") ||
           s.includes("approved") ||
           s.includes("cancel") ||
-          s.includes("complete")
+          s.includes("complete") ||
+          s.includes("submit") ||
+          s.includes("query")
         ) {
           return false;
         }
-        return true;
+        // Must be an active WIP status - not just "pending" without assignment
+        return (
+          s.includes("work in progress") ||
+          s.includes("working") ||
+          s.includes("assigned") ||
+          s.includes("progress") ||
+          s.includes("visited") ||
+          s.includes("reported") ||
+          s.includes("reviewed") ||
+          s.includes("pending")  // pending + assignedTo = handed to FO
+        );
       }).length,
 
       approvalPending: filteredCases.filter(isApprovalPending).length,

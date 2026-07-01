@@ -191,6 +191,11 @@ const applyCommonCaseFilters = (cases, rawQuery = {}, user) => {
     if (userCity) {
       cases = cases.filter((caseItem) => {
         const caseCity = (getCaseDisplayCity(caseItem) || "").toLowerCase().trim();
+
+        // Cases with no city set → always show to the user who owns them
+        // (buildRoleAwareQuery already filtered to their cases)
+        if (!caseCity) return true;
+
         if (centralCities.includes(userCity) || userCity === "combined bjg") {
           return ["bhopal", "gwalior", "jabalpur", "combined bjg"].some(c => caseCity === c || caseCity.includes(c));
         } else {
