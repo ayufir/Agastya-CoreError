@@ -1063,6 +1063,8 @@ exports.finalUpdate = async (req, res) => {
   console.log('====================================');
 
   try {
+    const existingCase = await Model.findById(id);
+
     const updateFields = {
       ...sanitizedUpdateData,
       bankName: sanitizedUpdateData.bankName || bankName,
@@ -1076,7 +1078,9 @@ exports.finalUpdate = async (req, res) => {
     if (updateFields.createdBy && typeof updateFields.createdBy === "object") {
       updateFields.createdBy = updateFields.createdBy._id;
     }
-    if (!updateFields.createdBy && req.user?._id) {
+    if (existingCase && existingCase.createdBy) {
+      updateFields.createdBy = existingCase.createdBy;
+    } else if (!updateFields.createdBy && req.user?._id) {
       updateFields.createdBy = req.user._id;
     }
 
@@ -1275,7 +1279,7 @@ exports.getSummaryData = async (req, res) => {
         const { key: modelKey, displayName, model: Model } = bankConfig;
         const baseQuery = buildRoleAwareQuery(user);
         const allCases = await Model.find({ ...baseQuery, ...monthFilter })
-          .select("_id status approvalStatus declineReason createdAt uploadDate customerName visitedPersonName applicantName applicantsName clientName basicDetails.nameOfClient propertyInfo.applicantName summary.applicantName header.contactedPerson addressLegal legalAddress addressSite propertyAddress address locationDetails.propertyAddressAsVisit locationDetails.propertyAddressAsDocs locationDetails.propertyAddressAsTRF propertyInfo.addressAtSite propertyInfo.addressAsPerDocument summary.propertyAddress customerNo contactNumber mobileNo personContactNo personContact contactPerson contactPersonNumber propertyCity city propertyLocation nearestCityTown locationDetails.mainLocality basicDetails.city propertyInfo.city summary.city assignedTo createdBy AttachDocuments atsDocuments route customCaseId appIdNotes displayAddress displayCustomerName personName applicantDetails.applicantName applicantNames contactPersonName contactedPerson")
+          .select("_id status approvalStatus declineReason createdAt uploadDate customerName visitedPersonName applicantName applicantsName clientName basicDetails.nameOfClient propertyInfo.applicantName summary.applicantName header.contactedPerson addressLegal legalAddress addressSite propertyAddress address locationDetails.propertyAddressAsVisit locationDetails.propertyAddressAsDocs locationDetails.propertyAddressAsTRF propertyInfo.addressAtSite propertyInfo.addressAsPerDocument summary.propertyAddress customerNo contactNumber mobileNo personContactNo personContact contactPerson contactPersonNumber propertyCity city propertyLocation nearestCityTown locationDetails.mainLocality basicDetails.city propertyInfo.city summary.city assignedTo createdBy AttachDocuments atsDocuments route customCaseId appIdNotes displayAddress displayCustomerName personName applicantDetails.applicantName applicantNames contactPersonName contactedPerson isReportSubmitted")
           .populate("assignedTo");
         return {
           modelKey,

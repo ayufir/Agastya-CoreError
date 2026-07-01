@@ -26,6 +26,7 @@ import { createAutoFillAdapter } from "../../../utils/Autofilladapter";
 import { ICICI_MAPPING } from "../../../config/Bankfieldmappings";
 
 import toast from "react-hot-toast";
+import { Download } from "lucide-react";
 
 const Icon = ({ children }) => (
   <svg
@@ -240,6 +241,82 @@ const IciciBank = () => {
   const [saving, setSaving] = useState(false);
   const [showMobileSteps, setShowMobileSteps] = useState(false);
 
+  const [showAutoFill, setShowAutoFill] = useState(false);
+  const [isPropertyDetailsOpen, setIsPropertyDetailsOpen] = useState(false);
+  const [autoFilledFields, setAutoFilledFields] = useState([]);
+
+  const handleDownloadAll = async () => {
+    const toastId = toast.loading("Fetching latest files and generating ZIP…");
+    try {
+      const { saveAs } = await import("file-saver");
+      let freshData = formData;
+      if (id) {
+        try {
+          const response = await dispatch(getIciciBankById(id)).unwrap();
+          freshData = response;
+          setFormData(response);
+          setEditData(response);
+        } catch (fetchErr) {
+          console.warn("Could not refresh from server, using cached form:", fetchErr);
+        }
+      }
+
+      const dataSource = freshData || formData || {};
+      const urls = [];
+
+      const addUrl = (fileObj) => {
+        if (!fileObj) return;
+        if (typeof fileObj === "string" && fileObj.startsWith("http")) {
+          urls.push(fileObj);
+        } else if (fileObj.url && typeof fileObj.url === "string" && fileObj.url.startsWith("http")) {
+          urls.push(fileObj.url);
+        } else if (Array.isArray(fileObj)) {
+          fileObj.forEach(addUrl);
+        }
+      };
+
+      [
+        dataSource.atsDocuments,
+        dataSource.AttachDocuments,
+        dataSource.imageUrls,
+        dataSource.sitePhotographs,
+        dataSource.siteVisitVideo,
+        dataSource.gpsFiles,
+        dataSource.emailFiles,
+        dataSource.fieldFormFiles,
+        dataSource.additionalFiles,
+      ]
+        .filter(Array.isArray)
+        .forEach(arr => arr.forEach(addUrl));
+
+      if (urls.length === 0 && (!dataSource || Object.keys(dataSource).length === 0)) {
+        toast.error("No files or data found to download.", { id: toastId });
+        return;
+      }
+
+      const res = await axiosInstance.post("/proxy", {
+        urls,
+        jsonData: dataSource,
+        jsonFilename: "complete_application_data.json",
+      }, { responseType: "blob" });
+
+      const clientName = (dataSource.propertyDetails?.applicantName || dataSource.propertyDetails?.propertyOwner || "Applicant").trim().replace(/[^a-zA-Z0-9]/g, "_");
+      const refNo = (dataSource.propertyDetails?.loanAccountNo || id || "Case").trim().replace(/[^a-zA-Z0-9]/g, "_");
+      const zipFilename = `${clientName}_${refNo}.zip`;
+
+      saveAs(res.data, zipFilename);
+      toast.success(
+        urls.length > 0
+          ? `Downloaded ${urls.length} file(s) + form data ✓`
+          : "Form data downloaded as JSON ✓",
+        { id: toastId }
+      );
+    } catch (error) {
+      console.error("Failed to download ZIP:", error);
+      toast.error("Download failed: " + (error?.response?.data?.error || error.message || error), { id: toastId });
+    }
+  };
+
   const currentFormStateRef = useRef(null);
 
   const dispatch = useDispatch();
@@ -292,6 +369,7 @@ const IciciBank = () => {
     ICICI_MAPPING,
     async (mappedData, rawExtractedData) => {
       setExtractedData(mappedData);
+      setAutoFilledFields(Object.keys(mappedData));
       
       let updatedData;
       setFormData((prev) => {
@@ -691,24 +769,294 @@ const IciciBank = () => {
       </div>
 
       <div className="max-w-[1550px] mx-auto px-4 mt-6">
+        {/* Technical Individual Assignment Tools & Inputs (bottom of the page, hidden on print) */}
+        <div className="mb-6 print:hidden">
+            <h1 className="text-xl font-bold text-[#0f172a] mb-4">
+                Technical Individual Assignment
+            </h1>
+            
+            {/* AI Advanced Auto Fill Accordion */}
+            <div className="mb-4 rounded-lg border border-[#e5e7eb] bg-white overflow-hidden shadow-sm">
+                {/* Collapsible Header */}
+                <div
+                  onClick={() => setShowAutoFill(!showAutoFill)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "14px 20px",
+                    background: "linear-gradient(135deg, #f0f7ff, #e8f0fe)",
+                    borderBottom: showAutoFill ? "1px solid #e5e7eb" : "none",
+                    cursor: "pointer",
+                    userSelect: "none",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{
+                      width: 30, height: 30, borderRadius: 8,
+                      background: "linear-gradient(135deg, #3b82f6, #6366f1)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0,
+                    }}>
+                      <svg width="16" height="16" fill="none" stroke="white" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                    </div>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: "#1e40af" }}>AI Advanced Auto Fill</span>
+                    <span style={{
+                      fontSize: 11, fontWeight: 500, color: "#6366f1",
+                      background: "#ede9fe", borderRadius: 6, padding: "2px 8px"
+                    }}>AI Powered</span>
+
+                    {/* Download All ZIP Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownloadAll();
+                      }}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                        marginLeft: 12,
+                        padding: "6px 12px",
+                        background: "linear-gradient(135deg, #10b981, #059669)",
+                        color: "#ffffff",
+                        border: "none",
+                        borderRadius: 8,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        boxShadow: "0 2px 6px rgba(16, 185, 129, 0.25)",
+                        transition: "all 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "translateY(-1px)";
+                        e.currentTarget.style.boxShadow = "0 4px 10px rgba(16, 185, 129, 0.35)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "translateY(0)";
+                        e.currentTarget.style.boxShadow = "0 2px 6px rgba(16, 185, 129, 0.25)";
+                      }}
+                    >
+                      <Download size={12} /> Download All (ZIP)
+                    </button>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{
+                      fontSize: 11, fontWeight: 600,
+                      color: showAutoFill ? "#dc2626" : "#16a34a",
+                      background: showAutoFill ? "#fef2f2" : "#f0fdf4",
+                      border: `1px solid ${showAutoFill ? "#fecaca" : "#bbf7d0"}`,
+                      borderRadius: 6, padding: "3px 10px",
+                    }}>
+                      {showAutoFill ? "Hide" : "Show"}
+                    </span>
+                    <svg
+                      width="14" height="14" fill="none" stroke="#64748b" strokeWidth="2.5" viewBox="0 0 24 24"
+                      style={{ transform: showAutoFill ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.25s ease" }}
+                    >
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </div>
+                </div>
+
+                {showAutoFill && (
+                    <div style={{ padding: "16px", borderTop: "1px solid #e5e7eb" }}>
+                        <div className="mb-4">
+                            <AutoFillForm setFormData={handleAutoFill} />
+                        </div>
+                        <AdvancedAutoFillForm
+                            bankName="ICICI"
+                            setFormData={handleAutoFill}
+                            setFormDataDirect={setFormData}
+                            setEditDataDirect={setEditData}
+                            imageUrls={editData?.sitePhotographs || editData?.imageUrls || []}
+                            atsDocuments={editData?.atsDocuments && editData.atsDocuments.length > 0 ? editData.atsDocuments : (editData?.AttachDocuments || [])}
+                            siteVisitVideo={editData?.siteVisitVideo || []}
+                            gpsFiles={editData?.gpsFiles || []}
+                            emailFiles={editData?.emailFiles || []}
+                            fieldFormFiles={editData?.fieldFormFiles || []}
+                            additionalFiles={editData?.additionalFiles || []}
+                            fetchData={fetchEditData}
+                        />
+                        {autoFilledFields.length > 0 && (
+                            <div className="mt-3 text-xs text-slate-600">
+                                {autoFilledFields.length} fields auto-filled from uploaded documents.
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            {/* Collapsible Property Details Panel */}
+            <div className="mb-4 rounded-lg border border-[#e5e7eb] bg-white overflow-hidden shadow-sm">
+                {/* Accordion Header Row */}
+                <div 
+                  onClick={() => setIsPropertyDetailsOpen(!isPropertyDetailsOpen)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "16px 24px",
+                    background: "#ffffff",
+                    borderBottom: isPropertyDetailsOpen ? "1px solid #e5e7eb" : "none",
+                    cursor: "pointer",
+                    userSelect: "none"
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+                    <span style={{ fontSize: "14px", fontWeight: 600, color: "#1e293b" }}>Property Details</span>
+                    {(formData.applicantName || formData.customerName) && (
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "12px", color: "#64748b", fontWeight: 500 }}>
+                        {(formData.applicantName || formData.customerName) && (
+                          <>
+                            <span style={{ color: "#cbd5e1" }}>|</span>
+                            <span>Applicant <strong style={{ color: "#0f172a", fontWeight: 600 }}>{formData.applicantName || formData.customerName}</strong></span>
+                          </>
+                        )}
+                        {id && (
+                          <>
+                            <span style={{ color: "#cbd5e1" }}>|</span>
+                            <span>Loan Code <strong style={{ color: "#0f172a", fontWeight: 600 }}>{id}</strong></span>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: 0,
+                      transform: isPropertyDetailsOpen ? "rotate(180deg)" : "rotate(0deg)",
+                      transition: "transform 0.2s ease"
+                    }}
+                  >
+                    <svg 
+                      width="14" height="14" fill="none" stroke="#64748b" strokeWidth="2.5" viewBox="0 0 24 24"
+                      style={{ transform: isPropertyDetailsOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}
+                    >
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Accordion Content Panel */}
+                {isPropertyDetailsOpen && (
+                  <div style={{ padding: "20px 24px" }}>
+                    {/* Row 1 */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px", marginBottom: "16px" }}>
+                      <div>
+                        <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Applicant Name</div>
+                        <input
+                          value={formData.applicantName || ""}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFormData(prev => ({ ...prev, applicantName: val }));
+                            setEditData(prev => ({ ...prev, applicantName: val }));
+                          }}
+                          style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                        />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Loan Code</div>
+                        <input
+                          value={id || ""}
+                          disabled
+                          style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#94a3b8", outline: "none", boxSizing: "border-box", backgroundColor: "#f3f4f6" }}
+                        />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Property Code</div>
+                        <input
+                          value={formData.uniquePropertyId || ""}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFormData(prev => ({ ...prev, uniquePropertyId: val }));
+                            setEditData(prev => ({ ...prev, uniquePropertyId: val }));
+                          }}
+                          style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                        />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Contact No.</div>
+                        <input
+                          value={formData.personContact || ""}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFormData(prev => ({ ...prev, personContact: val }));
+                            setEditData(prev => ({ ...prev, personContact: val }));
+                          }}
+                          style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Row 2 */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px", marginBottom: "16px" }}>
+                      <div>
+                        <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Property Name / Owner</div>
+                        <input
+                          value={formData.customerName || ""}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFormData(prev => ({ ...prev, customerName: val }));
+                            setEditData(prev => ({ ...prev, customerName: val }));
+                          }}
+                          style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                        />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Valuer Name</div>
+                        <input
+                          value={formData.valuerName || "UNIQUE ENGINEERING ASSOCIATE"}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFormData(prev => ({ ...prev, valuerName: val }));
+                            setEditData(prev => ({ ...prev, valuerName: val }));
+                          }}
+                          style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                        />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Property Sub Type</div>
+                        <input
+                          value={formData.propertySubType || ""}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setFormData(prev => ({ ...prev, propertySubType: val }));
+                            setEditData(prev => ({ ...prev, propertySubType: val }));
+                          }}
+                          style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                        />
+                      </div>
+                      <div style={{ visibility: "hidden" }}></div>
+                    </div>
+
+                    {/* Row 3: Address */}
+                    <div>
+                      <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Address</div>
+                      <input
+                        value={formData.plotNo || formData.projectSocietyName || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData(prev => ({ ...prev, plotNo: val }));
+                          setEditData(prev => ({ ...prev, plotNo: val }));
+                        }}
+                        style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                      />
+                    </div>
+                  </div>
+                )}
+            </div>
+        </div>
+
         {isFieldOfficer ? (
           <div className="mt-4">
-            <div className="mb-6">
-              <AdvancedAutoFillForm
-                bankName="ICICI"
-                setFormData={handleAutoFill}
-                setFormDataDirect={setFormData}
-                setEditDataDirect={setEditData}
-                imageUrls={editData?.sitePhotographs || editData?.imageUrls || []}
-                atsDocuments={editData?.atsDocuments && editData.atsDocuments.length > 0 ? editData.atsDocuments : (editData?.AttachDocuments || [])}
-                siteVisitVideo={editData?.siteVisitVideo || []}
-                gpsFiles={editData?.gpsFiles || []}
-                emailFiles={editData?.emailFiles || []}
-                fieldFormFiles={editData?.fieldFormFiles || []}
-                additionalFiles={editData?.additionalFiles || []}
-                fetchData={fetchEditData}
-              />
-            </div>
 
             <div className="flex flex-col sm:flex-row justify-end gap-4 bg-white border border-gray-200 rounded-xl shadow-sm p-4 mb-10">
               <Button
@@ -948,25 +1296,7 @@ const IciciBank = () => {
                   </div>
                 </div>
 
-                <div className={`mb-6 border border-blue-200 rounded-lg p-4 bg-blue-50/50 ${activeCard !== "propertyDetails" ? "hidden" : ""}`}>
-                  <div className="mb-4">
-                    <AutoFillForm setFormData={handleAutoFill} />
-                  </div>
-                  <AdvancedAutoFillForm
-                    bankName="ICICI"
-                    setFormData={handleAutoFill}
-                    setFormDataDirect={setFormData}
-                    setEditDataDirect={setEditData}
-                    imageUrls={editData?.sitePhotographs || editData?.imageUrls || []}
-                    atsDocuments={editData?.atsDocuments && editData.atsDocuments.length > 0 ? editData.atsDocuments : (editData?.AttachDocuments || [])}
-                    siteVisitVideo={editData?.siteVisitVideo || []}
-                    gpsFiles={editData?.gpsFiles || []}
-                    emailFiles={editData?.emailFiles || []}
-                    fieldFormFiles={editData?.fieldFormFiles || []}
-                    additionalFiles={editData?.additionalFiles || []}
-                    fetchData={fetchEditData}
-                  />
-                </div>
+
 
                 {renderForm()}
               </div>

@@ -134,7 +134,6 @@ const AssignedCase = ({ selectedMonth }) => {
   const monthFilteredAssignedCases = useMemo(() => {
     return (cases || []).filter((item) => {
       if (!isSameMonth(getCaseDate(item), selectedMonth)) return false;
-      if (isApprovalPending(item)) return false;
       const status = (item.status || "").toLowerCase().trim();
       if (
         status.includes("final") ||
@@ -331,11 +330,14 @@ const AssignedCase = ({ selectedMonth }) => {
     {
       title: "Status",
       dataIndex: "status",
-      render: (status) => (
-        <span className="bg-green-600 text-white px-2 py-1 rounded">
-          {status}
-        </span>
-      ),
+      render: (status, record) => {
+        const isFOSubmitted = record.isReportSubmitted === true;
+        return (
+          <span className={`${isFOSubmitted ? "bg-blue-600 animate-pulse" : "bg-green-600"} text-white px-2.5 py-1 rounded text-xs font-semibold`}>
+            {isFOSubmitted ? "FO Submitted" : status}
+          </span>
+        );
+      },
     },
     {
       title: "Change Assign",

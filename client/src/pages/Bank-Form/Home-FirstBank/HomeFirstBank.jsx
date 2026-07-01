@@ -1277,6 +1277,7 @@ const normalizeQualityOfConstruction = (val) => {
             {isAutofillOpen && (
               <div style={{ padding: "16px" }}>
                 <AdvancedAutoFillForm
+                  caseId={id}
                   bankName="HomeFirst Bank"
                   setFormData={setExtractedData}
                   atsDocuments={
@@ -1545,6 +1546,7 @@ const normalizeQualityOfConstruction = (val) => {
             {isFieldOfficer ? (
               <div className="mt-4">
                 <AdvancedAutoFillForm
+                  caseId={id}
                   bankName="HomeFirst Bank"
                   setFormData={setExtractedData}
                   atsDocuments={

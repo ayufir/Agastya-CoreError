@@ -19,10 +19,8 @@ const BankHomePage = () => {
     !["SuperAdmin", "Admin"].includes(user?.role);
 
   useEffect(() => {
-    if (isBJGUser && !["Bhopal", "Gwalior", "Jabalpur"].includes(savedCity)) {
-      dispatch(setSavedCity(""));
-    }
-  }, [isBJGUser, savedCity, user, dispatch]);
+    dispatch(setSavedCity(""));
+  }, [dispatch]);
 
   banks.sort((a, b) => a.name.localeCompare(b.name));
 

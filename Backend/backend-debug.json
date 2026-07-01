@@ -1,47 +1,222 @@
 {
-  "timestamp": "2026-06-25T06:56:38.682Z",
+  "timestamp": "2026-07-01T10:28:57.504Z",
   "body": {
-    "_id": "6a37d9fa7f35c49577e7fac2",
-    "status": "FinalSubmitted",
-    "AttachDocuments": [],
-    "atsDocuments": [],
-    "gpsFiles": [],
-    "emailFiles": [],
-    "fieldFormFiles": [],
+    "directions": {
+      "North": {
+        "document": "Colony Road",
+        "actual": "",
+        "plan": "Colony Road"
+      },
+      "South": {
+        "document": "Land of Others",
+        "actual": "",
+        "plan": "Land of Others"
+      },
+      "East": {
+        "document": "Colony Road",
+        "actual": "",
+        "plan": "Colony Road"
+      },
+      "West": {
+        "document": "Western Part of Plot 7, 8, 9",
+        "actual": "",
+        "plan": "Western Part of Plot 7, 8, 9"
+      }
+    },
+    "_id": "6a44ce294957b5bed2bb4d2f",
+    "status": "Work in Progress",
+    "AttachDocuments": [
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/CHANDRABHAN_ATS_BALAJI_OAe7dhrFk.pdf",
+        "fileId": "6a44cdc55c7cd75eb8c34c7d",
+        "name": "CHANDRABHAN_ATS_BALAJI_OAe7dhrFk.pdf"
+      }
+    ],
+    "atsDocuments": [
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/CHANDRABHAN_ATS_BALAJI_OAe7dhrFk.pdf",
+        "fileId": "6a44cdc55c7cd75eb8c34c7d",
+        "name": "CHANDRABHAN_ATS_BALAJI_OAe7dhrFk.pdf"
+      }
+    ],
+    "gpsFiles": [
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-06-19_at_3.42.58_PM__1__DXUmocM6Z.jpeg",
+        "fileId": "6a44cfd15c7cd75eb8ce9b61",
+        "name": "WhatsApp_Image_2026-06-19_at_3.42.58_PM__1__DXUmocM6Z.jpeg"
+      }
+    ],
+    "emailFiles": [
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/mail_H243M1EpH.jpg",
+        "fileId": "6a44cdb95c7cd75eb8c30617",
+        "name": "mail_H243M1EpH.jpg"
+      }
+    ],
+    "fieldFormFiles": [
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/1df01ddb-abda-4cc1-846b-b2ae21078ff4_sMfjturCf.jpg",
+        "fileId": "6a44cfd45c7cd75eb8ceb405",
+        "name": "1df01ddb-abda-4cc1-846b-b2ae21078ff4_sMfjturCf.jpg"
+      }
+    ],
     "additionalFiles": [],
     "siteVisitVideo": [],
-    "createdBy": "683070c765ba61b559c1ecc1",
+    "createdBy": "6a3bbb07003d7113b353da1e",
     "bankName": "HomeFirst",
-    "city": "",
-    "approvalStatus": "Declined",
-    "isReportSubmitted": false,
-    "imageUrls": [],
+    "city": "Bhopal",
+    "approvalStatus": "Accepted",
+    "isReportSubmitted": true,
+    "refNo": "PROP-268323",
+    "dateOfReport": null,
+    "dateOfVisit": null,
+    "projectPinCode": "",
+    "latitude": "",
+    "longitude": "",
+    "propertyCategory": "INDIVIDUAL",
+    "unitType": "Open Plot",
+    "typeOfLoan": "OWN PLOT + SECO",
+    "propertyLocation": "VILLAGE",
+    "populationCensus2011": "10000",
+    "ruralUrban": "RURAL",
+    "zone": "RESIDENTIAL",
+    "propertyAreaLimits": "GP",
+    "eraApplicable": "",
+    "projectName": "",
+    "customerName": "Smt. Maida Bai Saur W/o Shri Chandrabhan",
+    "customerNo": "6263737568",
+    "personMetDuringVisit": "N/A",
+    "personContactNo": "N/A",
+    "relationshipOfPersonMet": "SELF",
+    "propertyOwnerName": "Dheeraj Singh Chauhan S/o Shri Jaypal Singh Chauhan",
+    "howFoundOwnerName": "SALE DEED",
+    "nameOnSocietyBoard": "Balaji Homes",
+    "addressLegal": "Khasra No. 347/1(S), Patwari Halka No. 16/29 (Old/New), Plot No. 7B (Eastern Part of Plots 7, 8 and 9), Balaji Homes, Village Imliya, P.H.N. Old/New 16/29, R.N.M. Old/New 02/03, Vikas Khand Fanda, Tehsil Huzur, District Bhopal, M.P.",
+    "addressSite": "Khasra No. 347/1(S), Patwari Halka No. 16/29 (Old/New), Plot No. 7B (Eastern Part of Plots 7, 8 and 9), Balaji Homes, Village Imliya, P.H.N. Old/New 16/29, R.N.M. Old/New 02/03, Vikas Khand Fanda, Tehsil Huzur, District Bhopal, M.P.",
+    "nameOnDoor": "NA",
+    "nearbyLandmark": "",
+    "statusOfOccupancy": "VACANT",
+    "occupiedBy": "NA",
+    "usageOfProperty": "RESIDENTIAL",
+    "propertyEasilyIdentifiable": "YES",
+    "imageUrls": [
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-06-19_at_3.42.47_PM_v32SBM5i-.jpeg",
+        "fileId": "6a44cfdd5c7cd75eb8cee1a4",
+        "name": "WhatsApp_Image_2026-06-19_at_3.42.47_PM_v32SBM5i-.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-06-19_at_3.42.52_PM__1__wXWfKkDkf.jpeg",
+        "fileId": "6a44cfe05c7cd75eb8cef8dd",
+        "name": "WhatsApp_Image_2026-06-19_at_3.42.52_PM__1__wXWfKkDkf.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-06-19_at_3.42.52_PM_erWv0Cop-.jpeg",
+        "fileId": "6a44cfe25c7cd75eb8cf0602",
+        "name": "WhatsApp_Image_2026-06-19_at_3.42.52_PM_erWv0Cop-.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-06-19_at_3.42.53_PM__1__NZE-C88jA.jpeg",
+        "fileId": "6a44cfe35c7cd75eb8cf1275",
+        "name": "WhatsApp_Image_2026-06-19_at_3.42.53_PM__1__NZE-C88jA.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-06-19_at_3.42.53_PM_XcCnOCelJ.jpeg",
+        "fileId": "6a44cfe55c7cd75eb8cf18ee",
+        "name": "WhatsApp_Image_2026-06-19_at_3.42.53_PM_XcCnOCelJ.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-06-19_at_3.42.54_PM__1__Rcve3bKVz.jpeg",
+        "fileId": "6a44cfe75c7cd75eb8cf2d5b",
+        "name": "WhatsApp_Image_2026-06-19_at_3.42.54_PM__1__Rcve3bKVz.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-06-19_at_3.42.54_PM__2__izBr80drr.jpeg",
+        "fileId": "6a44cfe85c7cd75eb8cf3078",
+        "name": "WhatsApp_Image_2026-06-19_at_3.42.54_PM__2__izBr80drr.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-06-19_at_3.42.54_PM_MZ284CaPm.jpeg",
+        "fileId": "6a44cfe95c7cd75eb8cf3397",
+        "name": "WhatsApp_Image_2026-06-19_at_3.42.54_PM_MZ284CaPm.jpeg"
+      }
+    ],
+    "nearestCityTown": "BHOPAL",
+    "locationCategory": "OTHER",
+    "localityDevelopment": "MEDIUM",
+    "approachRoadType": "SOIL ROAD",
+    "approachRoadWidth": "15ft",
+    "distanceFromCityCentre": "",
+    "distanceFromRailwayStation": "",
+    "distanceFromBusStand": "",
+    "distanceFromHospital": "",
+    "occupancyPercentage": "50%",
+    "habitationPercentage": "MEDIUM",
+    "nallahRiverHighTension": "NA",
+    "electricityAvailability": "YES",
+    "waterAvailability": "YES",
+    "drainageAvailability": "YES",
+    "seismicZone": "II",
+    "cycloneZone": "NO",
+    "landslideProneZone": "NO",
+    "floodZone": "NO",
+    "crZone": "NO",
+    "demolitionRisk": "LOW",
+    "demolitionRiskDetails": "NA",
+    "followsNDMAGuidelines": "YES",
+    "boundariesMatching": "YES",
+    "propertyDemarcated": "YES",
+    "boundaryRemarks": "",
+    "marketability": "AVERAGE",
+    "landArea": "1220 sq.ft.",
+    "linearDimension": "21 ft x 60 ft",
+    "plotArea": "0",
+    "typeOfStructure": "RCC",
+    "typeOfRoof": "RCC",
+    "noOfFloorsPermissible": "NA",
+    "noOfFloorsActual": "0",
+    "noOfUnitFlatOnEachFloor": "NA",
+    "qualityOfConstruction": "Average",
+    "approxAgeOfProperty": "0",
+    "residualAge": "0",
+    "landDocumentArea": "1220 sq.ft.",
+    "landPlanArea": "1220 sq.ft.",
+    "landSiteArea": "1220 sq.ft.",
+    "liftAvailable": "",
+    "realizableValue": "12,80,000",
+    "constructionStage": "Vacant Plot",
+    "constructionStatus": "Vacant Plot",
     "valuationRemarks": [],
+    "customCaseId": "",
+    "appIdNotes": "",
     "timeline": [
       {
         "status": "Work in Progress",
-        "updatedAt": "2026-06-23T09:25:01.240Z",
-        "updatedBy": "683070c765ba61b559c1ecc1",
-        "note": "Assigned to user 69f304941bf36e8b8676ce93",
-        "_id": "6a3a50ede0e56227e558c1a6"
+        "updatedAt": "2026-07-01T08:22:33.032Z",
+        "updatedBy": "6a3bbb07003d7113b353da1e",
+        "note": "Assigned to user 6a43a92e5aa8fc52bfb43a9b",
+        "_id": "6a44ce494957b5bed2bb4d68"
       },
       {
-        "status": "Approved",
-        "updatedAt": "2026-06-25T06:56:13.796Z",
-        "updatedBy": "683070c765ba61b559c1ecc1",
-        "note": "Approved by SuperAdmin",
-        "_id": "6a3cd10df39f4b0e4653f36b"
+        "status": "Accepted",
+        "updatedAt": "2026-07-01T08:27:11.017Z",
+        "updatedBy": "6a448a96704fd7d2d407a479",
+        "note": "Accepted by Field Officer",
+        "_id": "6a44cf5f4957b5bed2bb4f1c"
+      },
+      {
+        "status": "submitted-by-fo",
+        "updatedAt": "2026-07-01T08:29:44.903Z",
+        "updatedBy": "6a448a96704fd7d2d407a479",
+        "note": "Submitted by field officer",
+        "_id": "6a44cff84957b5bed2bb4fc8"
       }
     ],
-    "dateOfReport": "2026-06-21",
-    "dateOfVisit": "2026-06-21",
     "documents": [],
-    "createdAt": "2026-06-21T12:32:58.126Z",
-    "updatedAt": "2026-06-21T12:32:58.127Z",
+    "createdAt": "2026-07-01T08:22:01.555Z",
+    "updatedAt": "2026-07-01T08:22:01.555Z",
     "__v": 0,
-    "route": "/bank/home-first/edit/6a37d9fa7f35c49577e7fac2",
-    "declineReason": "awsedxfcgvbhjkml,;,kjhgfdszadxfghjk",
-    "assignedTo": "69f304941bf36e8b8676ce93",
-    "customerName": "ayan bhopal"
+    "assignedTo": "6a448a96704fd7d2d407a479",
+    "route": "/bank/home-first/edit/6a44ce294957b5bed2bb4d2f"
   }
 }

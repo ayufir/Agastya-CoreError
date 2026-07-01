@@ -456,7 +456,6 @@ const Dashboard = () => {
 
       working: filteredCases.filter((item) => {
         if (!item.assignedTo) return false;
-        if (isApprovalPending(item)) return false;
         const s = normalizeStatus(item.status);
         if (
           s.includes("final") ||

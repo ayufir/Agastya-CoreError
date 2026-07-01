@@ -12,6 +12,7 @@ import {
 } from "antd";
 import dayjs from "dayjs";
 import toast from "react-hot-toast";
+import { Download } from "lucide-react";
 import {
   createHomeTrenchReport,
   getHomeTrenchReportById,
@@ -66,12 +67,90 @@ const Trench = () => {
   const watchedLatitude = Form.useWatch("latitude", form);
   const watchedLongitude = Form.useWatch("longitude", form);
 
+  const [showAutoFill, setShowAutoFill] = useState(false);
+  const [isPropertyDetailsOpen, setIsPropertyDetailsOpen] = useState(false);
+  const isFieldOfficer = user?.role === "FieldOfficer";
+
+  const watchedVisitedPersonName = Form.useWatch("visitedPersonName", form);
+  const watchedContactNumber = Form.useWatch("contactNumber", form);
+  const watchedPropertyAddress = Form.useWatch("propertyAddress", form);
+  const watchedLaiNo = Form.useWatch("laiNo", form);
+  const watchedPropertyCode = Form.useWatch("propertyCode", form);
+
+  const handleDownloadAll = async () => {
+    const toastId = toast.loading("Fetching latest files and generating ZIP…");
+    try {
+      const { saveAs } = await import("file-saver");
+      let freshData = reportData;
+      if (id) {
+        try {
+          const response = await dispatch(getHomeTrenchReportById(id)).unwrap();
+          freshData = response;
+          setReportData(response);
+        } catch (fetchErr) {
+          console.warn("Could not refresh from server, using cached form:", fetchErr);
+        }
+      }
+
+      const dataSource = freshData || reportData || {};
+      const urls = [];
+
+      const addUrl = (fileObj) => {
+        if (!fileObj) return;
+        if (typeof fileObj === "string" && fileObj.startsWith("http")) {
+          urls.push(fileObj);
+        } else if (fileObj.url && typeof fileObj.url === "string" && fileObj.url.startsWith("http")) {
+          urls.push(fileObj.url);
+        } else if (Array.isArray(fileObj)) {
+          fileObj.forEach(addUrl);
+        }
+      };
+
+      [
+        dataSource.atsDocuments,
+        dataSource.AttachDocuments,
+        dataSource.imageUrls,
+      ]
+        .filter(Array.isArray)
+        .forEach(arr => arr.forEach(addUrl));
+
+      if (urls.length === 0 && (!dataSource || Object.keys(dataSource).length === 0)) {
+        toast.error("No files or data found to download.", { id: toastId });
+        return;
+      }
+
+      const axiosInstance = (await import("../../../config/axios")).default;
+      const res = await axiosInstance.post("/proxy", {
+        urls,
+        jsonData: dataSource,
+        jsonFilename: "complete_application_data.json",
+      }, { responseType: "blob" });
+
+      const clientName = (dataSource.visitedPersonName || "Applicant").trim().replace(/[^a-zA-Z0-9]/g, "_");
+      const refNo = (dataSource.laiNo || id || "Case").trim().replace(/[^a-zA-Z0-9]/g, "_");
+      const zipFilename = `${clientName}_${refNo}.zip`;
+
+      saveAs(res.data, zipFilename);
+      toast.success(
+        urls.length > 0
+          ? `Downloaded ${urls.length} file(s) + form data ✓`
+          : "Form data downloaded as JSON ✓",
+        { id: toastId }
+      );
+    } catch (error) {
+      console.error("Failed to download ZIP:", error);
+      toast.error("Download failed: " + (error?.response?.data?.error || error.message || error), { id: toastId });
+    }
+  };
+
   const initialValues = useMemo(() => ({
     dateOfVisit: TODAY(),
     dateOfReport: TODAY(),
     propertyAddress: "",
     visitedPersonName: "",
     contactNumber: "",
+    laiNo: "",
+    propertyCode: "",
     constructionStage: "",
     constructionPercentage: null,
     constructionRemarks: "",
@@ -114,6 +193,8 @@ const Trench = () => {
       const response = await dispatch(getHomeTrenchReportById(id)).unwrap();
       const hydrated = {
         ...response,
+        laiNo: response.laiNo || "",
+        propertyCode: response.propertyCode || "",
         dateOfVisit: response.dateOfVisit ? dayjs(response.dateOfVisit) : TODAY(),
         dateOfReport: response.dateOfReport ? dayjs(response.dateOfReport) : TODAY(),
         charges: response.charges === "" || response.charges == null
@@ -169,6 +250,8 @@ const Trench = () => {
     const values = await form.validateFields();
     return {
       ...values,
+      laiNo: values.laiNo || "",
+      propertyCode: values.propertyCode || "",
       dateOfVisit: values.dateOfVisit?.format("YYYY-MM-DD") || "",
       dateOfReport: values.dateOfReport?.format("YYYY-MM-DD") || "",
       imageUrls: uploadedUrls,
@@ -288,6 +371,221 @@ const Trench = () => {
           {user?.name || "Assigned User"} · {user?.role || "User"}
         </div>
       </header>
+
+      {/* ── Technical Individual Assignment Header & Panels ── */}
+      <div style={{ maxWidth: 1280, margin: "20px auto 0", padding: "0 16px" }}>
+        <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#0f172a", marginBottom: "16px" }}>
+          Technical Individual Assignment
+        </h1>
+
+        {/* AI Advanced Auto Fill Accordion */}
+        <div style={{
+          background: "#ffffff",
+          borderRadius: 12,
+          border: "1px solid #e5e7eb",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+          overflow: "hidden",
+          marginBottom: "16px"
+        }}>
+          <div 
+            onClick={() => setShowAutoFill(!showAutoFill)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "16px 24px",
+              background: "#ffffff",
+              borderBottom: showAutoFill ? "1px solid #e5e7eb" : "none",
+              cursor: "pointer",
+              userSelect: "none"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <span style={{ fontSize: "14px", fontWeight: 600, color: "#1e293b" }}>🤖 AI Advanced Auto Fill</span>
+              {autoFilledFields.length > 0 && (
+                <span style={{ fontSize: "11px", background: "#f0fdf4", color: "#166534", padding: "2px 8px", borderRadius: "9999px", fontWeight: 500 }}>
+                  {autoFilledFields.length} fields filled
+                </span>
+              )}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }} onClick={(e) => e.stopPropagation()}>
+              <button
+                onClick={handleDownloadAll}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  padding: "6px 12px",
+                  borderRadius: "8px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "#475569",
+                  cursor: "pointer",
+                  transition: "all 0.2s"
+                }}
+              >
+                <Download size={14} /> Download All (ZIP)
+              </button>
+              <button
+                onClick={() => setShowAutoFill(!showAutoFill)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                  transform: showAutoFill ? "rotate(180deg)" : "rotate(0deg)",
+                  transition: "transform 0.2s ease"
+                }}
+              >
+                <svg width="14" height="14" fill="none" stroke="#64748b" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {showAutoFill && (
+            <div style={{ padding: "20px 24px" }}>
+              <AdvancedAutoFillForm
+                bankName="Home First Tranche"
+                setFormData={handleAutoFill}
+                atsDocuments={atsDocuments && atsDocuments.length > 0 ? atsDocuments : (docUrls || [])}
+                imageUrls={uploadedUrls || []}
+                siteVisitVideo={reportData?.siteVisitVideo || []}
+                gpsFiles={reportData?.gpsFiles || []}
+                emailFiles={reportData?.emailFiles || []}
+                fieldFormFiles={reportData?.fieldFormFiles || []}
+                additionalFiles={reportData?.additionalFiles || []}
+                fetchData={fetchReport}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Collapsible Property Details Panel */}
+        <div style={{
+          background: "#ffffff",
+          borderRadius: 12,
+          border: "1px solid #e5e7eb",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+          overflow: "hidden"
+        }}>
+          {/* Accordion Header Row */}
+          <div 
+            onClick={() => setIsPropertyDetailsOpen(!isPropertyDetailsOpen)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "16px 24px",
+              background: "#ffffff",
+              borderBottom: isPropertyDetailsOpen ? "1px solid #e5e7eb" : "none",
+              cursor: "pointer",
+              userSelect: "none"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "14px", fontWeight: 600, color: "#1e293b" }}>🏠 Property Details</span>
+              {(watchedVisitedPersonName || watchedLaiNo || watchedPropertyCode) && (
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "12px", color: "#64748b", fontWeight: 500 }}>
+                  {watchedVisitedPersonName && (
+                    <>
+                      <span style={{ color: "#cbd5e1" }}>|</span>
+                      <span>Applicant <strong style={{ color: "#0f172a", fontWeight: 600 }}>{watchedVisitedPersonName}</strong></span>
+                    </>
+                  )}
+                  {watchedLaiNo && (
+                    <>
+                      <span style={{ color: "#cbd5e1" }}>|</span>
+                      <span>Loan Code <strong style={{ color: "#0f172a", fontWeight: 600 }}>{watchedLaiNo}</strong></span>
+                    </>
+                  )}
+                  {watchedPropertyCode && (
+                    <>
+                      <span style={{ color: "#cbd5e1" }}>|</span>
+                      <span>Property <strong style={{ color: "#0f172a", fontWeight: 600 }}>{watchedPropertyCode}</strong></span>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+            <button
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+                transform: isPropertyDetailsOpen ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "transform 0.2s ease"
+              }}
+            >
+              <svg width="14" height="14" fill="none" stroke="#64748b" strokeWidth="2.5" viewBox="0 0 24 24" style={{ transform: isPropertyDetailsOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Accordion Content Panel */}
+          {isPropertyDetailsOpen && (
+            <div style={{ padding: "20px 24px" }}>
+              {/* Row 1 */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px", marginBottom: "16px" }}>
+                <div>
+                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Visited Person Name</div>
+                  <input
+                    value={watchedVisitedPersonName || ""}
+                    onChange={(e) => form.setFieldsValue({ visitedPersonName: e.target.value })}
+                    disabled={isFieldOfficer && reportData?.isReportSubmitted}
+                    style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                  />
+                </div>
+                <div>
+                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Loan Code</div>
+                  <input
+                    value={watchedLaiNo || ""}
+                    onChange={(e) => form.setFieldsValue({ laiNo: e.target.value })}
+                    disabled={isFieldOfficer && reportData?.isReportSubmitted}
+                    style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                  />
+                </div>
+                <div>
+                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Property Code</div>
+                  <input
+                    value={watchedPropertyCode || ""}
+                    onChange={(e) => form.setFieldsValue({ propertyCode: e.target.value })}
+                    disabled={isFieldOfficer && reportData?.isReportSubmitted}
+                    style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                  />
+                </div>
+                <div>
+                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Contact No.</div>
+                  <input
+                    value={watchedContactNumber || ""}
+                    onChange={(e) => form.setFieldsValue({ contactNumber: e.target.value })}
+                    disabled={isFieldOfficer && reportData?.isReportSubmitted}
+                    style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                  />
+                </div>
+              </div>
+
+              {/* Row 2 */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "20px" }}>
+                <div>
+                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Property Address</div>
+                  <textarea
+                    value={watchedPropertyAddress || ""}
+                    onChange={(e) => form.setFieldsValue({ propertyAddress: e.target.value })}
+                    disabled={isFieldOfficer && reportData?.isReportSubmitted}
+                    style={{ width: "100%", minHeight: "64px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "8px 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box", resize: "vertical" }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
       <section className="trench-heading">
         <h1>Revisit One Off</h1>

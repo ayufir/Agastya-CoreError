@@ -66,6 +66,8 @@ exports.getIciciBankById = async (req, res) => {
 exports.updateIciciBank = async (req, res) => {
   console.log(req.body, "ICICI UPDATE controller");
   try {
+    const existing = await IciciBank.findById(req.params.id);
+
     const updateBody = {
       ...req.body,
       bankName: req.body.bankName || "Icici",
@@ -77,7 +79,9 @@ exports.updateIciciBank = async (req, res) => {
       updateBody.createdBy = updateBody.createdBy._id;
     }
 
-    if (!updateBody.createdBy && req.user?._id) {
+    if (existing && existing.createdBy) {
+      updateBody.createdBy = existing.createdBy;
+    } else if (!updateBody.createdBy && req.user?._id) {
       updateBody.createdBy = req.user._id;
     }
 
@@ -110,6 +114,7 @@ exports.updateIciciBank = async (req, res) => {
 exports.submitIciciBank = async (req, res) => {
   try {
     const { id } = req.params;
+    const existing = await IciciBank.findById(id);
 
     const updateData = {
       ...req.body,
@@ -125,7 +130,9 @@ exports.submitIciciBank = async (req, res) => {
       updateData.createdBy = updateData.createdBy._id;
     }
 
-    if (!updateData.createdBy && req.user?._id) {
+    if (existing && existing.createdBy) {
+      updateData.createdBy = existing.createdBy;
+    } else if (!updateData.createdBy && req.user?._id) {
       updateData.createdBy = req.user._id;
     }
 
