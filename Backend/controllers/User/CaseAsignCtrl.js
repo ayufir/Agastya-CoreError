@@ -960,18 +960,23 @@ exports.getAllAssignedCases = async (req, res) => {
 exports.getPendingCases = async (req, res) => {
   const user = req.user;
   try {
-    const allPendingCases = await fetchCasesAcrossBanks({
+    // Fetch ALL cases for this user (no status filter in DB), then filter in memory
+    // This matches the frontend card count logic exactly
+    const allCases = await fetchCasesAcrossBanks({
       user,
-      baseQuery: {
-        status: {
-          $regex: /^\s*(pending|generated|new|created|open)\s*$/i
-        }
-      },
+      baseQuery: {},
       populate: "assignedTo createdBy",
     });
 
+    const PENDING_STATUSES = ["pending", "generated", "new", "created", "open"];
+
+    const pendingCases = allCases.filter((c) => {
+      const s = String(c.status || "").toLowerCase().trim();
+      return PENDING_STATUSES.includes(s);
+    });
+
     const filtered = sortCasesNewestFirst(
-      applyCommonCaseFilters(allPendingCases, req.query, user)
+      applyCommonCaseFilters(pendingCases, req.query, user)
     );
     const { items, pagination } = paginateItems(filtered, req.query, 1000);
     res.json({ items, pagination, filterOptions: buildFilterOptions(filtered) });
