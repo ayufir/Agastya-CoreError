@@ -268,7 +268,6 @@ const AssignedCase = ({ selectedMonth }) => {
           }>
             <div className="flex items-center gap-2 cursor-pointer">
               <span>{fo.name}</span>
-              <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded-md font-bold uppercase">{fo.role}</span>
               {record.assignedTo && user.role === "Admin" && (
                 <Popconfirm
                   title="Remove assignment?"
