@@ -167,9 +167,10 @@ const Trench = () => {
   }), []);
 
   const handleAutoFill = createAutoFillAdapter(TRENCH_MAPPING, (mappedData) => {
+    const excludeKeys = ["totalBua", "latitude", "longitude", "areaRemarks", "overallStatus", "negativeReason"];
     const allowedData = Object.fromEntries(
-      Object.entries(mappedData).filter(([, value]) => (
-        value !== null && value !== undefined && value !== ""
+      Object.entries(mappedData).filter(([key, value]) => (
+        value !== null && value !== undefined && value !== "" && !excludeKeys.includes(key)
       ))
     );
 
@@ -699,10 +700,18 @@ const Trench = () => {
                   <Form.Item label="Total BUA Considered on Site (Sqft)" name="totalBua">
                     <InputNumber className="w-full" min={0} />
                   </Form.Item>
-                  <Form.Item label="Latitude" name="latitude">
+                  <Form.Item 
+                    label="Latitude" 
+                    name="latitude"
+                    extra={<span style={{ fontSize: "11px", color: "#6b7280" }}>Example: 19.0760</span>}
+                  >
                     <Input />
                   </Form.Item>
-                  <Form.Item label="Longitude" name="longitude">
+                  <Form.Item 
+                    label="Longitude" 
+                    name="longitude"
+                    extra={<span style={{ fontSize: "11px", color: "#6b7280" }}>Example: 72.8777</span>}
+                  >
                     <Input />
                   </Form.Item>
                   <Form.Item className="trench-full" label="Remarks" name="areaRemarks">
@@ -717,11 +726,20 @@ const Trench = () => {
                       ]}
                     />
                   </Form.Item>
-                  <Form.Item label="If Negative, Specify Reason" name="negativeReason">
-                    <Input />
+                  <Form.Item
+                    noStyle
+                    shouldUpdate={(prevValues, currentValues) => prevValues?.overallStatus !== currentValues?.overallStatus}
+                  >
+                    {({ getFieldValue }) =>
+                      getFieldValue("overallStatus") === "NEGATIVE" ? (
+                        <Form.Item label="If Negative, Specify Reason" name="negativeReason">
+                          <Input />
+                        </Form.Item>
+                      ) : null
+                    }
                   </Form.Item>
                 </div>
-                <div className="trench-location-picker">
+                <div className="trench-location-picker" style={{ display: 'none' }}>
                   <LocationPicker
                     ref={geoRef}
                     onLocationChange={handleLocationChange}

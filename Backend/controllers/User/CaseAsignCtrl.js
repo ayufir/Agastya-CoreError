@@ -1156,17 +1156,12 @@ exports.finalUpdate = async (req, res) => {
 exports.getFinalSubmittedCases = async (req, res) => {
   const user = req.user;
   try {
+    // Use regex to match exactly the same statuses as frontend cardCounts.finalSubmitted:
+    // s.includes("final") || s.includes("submit") || s.includes("done") || s.includes("approved")
     const finalCases = await fetchCasesAcrossBanks({
       user,
       baseQuery: {
-        status: {
-          $in: [
-            "FinalSubmitted", "Submitted", "Approved", "approved",
-            "Done", "done", "Submit", "submit",
-            "Final Submitted", "Report Submitted", "Completed", "completed",
-            "finalsubmitted", "reportsubmitted"
-          ]
-        }
+        status: { $regex: /final|submit|done|approved/i }
       },
       populate: "assignedTo createdBy",
     });
