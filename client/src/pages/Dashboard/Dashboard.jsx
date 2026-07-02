@@ -685,277 +685,170 @@ const Dashboard = () => {
     ...new Set(allCasesData.map((x) => x.city).filter((x) => x && x !== "N/A")),
   ].sort();
 
-
-
-  /* ── Sparkline data for stat cards (last 6 weeks from filteredCases) ── */
-  const sparklineData = useMemo(() => {
-    const weeks = Array.from({ length: 6 }, (_, i) => {
-      const d = new Date();
-      d.setDate(d.getDate() - (5 - i) * 7);
-      return d.toISOString().slice(0, 10);
-    });
-    return weeks.map(w => ({ name: w, value: Math.floor(Math.random() * 5) + 1 }));
-  }, [filteredCases.length]);
-
-  /* ── Monthly trend data ── */
-  const monthlyTrendData = useMemo(() => {
-    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    return months.map((m, i) => ({
-      month: m,
-      cases: allCasesData.filter(c => {
-        const d = new Date(c.createdAt || "");
-        return !isNaN(d) && d.getMonth() === i && d.getFullYear() === new Date().getFullYear();
-      }).length,
-    }));
-  }, [allCasesData]);
-
-  /* ── Donut chart data ── */
-  const donutData = useMemo(() => {
-    const d = [
-      { name: "Generated Case File", value: cardCounts.pending, color: "#f59e0b" },
-      { name: "Work in Progress",    value: cardCounts.working,       color: "#6366f1" },
-      { name: "Approval Pending",    value: cardCounts.approvalPending, color: "#ec4899" },
-      { name: "Total Submission",    value: cardCounts.finalSubmitted, color: "#10b981" },
-      { name: "Other",               value: cardCounts.cancelled + cardCounts.query, color: "#94a3b8" },
-    ].filter(x => x.value > 0);
-    return d.length ? d : [{ name: "No Data", value: 1, color: "#e2e8f0" }];
-  }, [cardCounts]);
-
-  /* ── Top banks data ── */
-  const topBanksData = useMemo(() =>
-    bankSummary.slice(0, 5).map(b => ({
-      name: b.bank.length > 12 ? b.bank.slice(0, 12) + "…" : b.bank,
-      fullName: b.bank,
-      total: b.total,
-      pct: bankSummary[0]?.total ? Math.round((b.total / bankSummary[0].total) * 100) : 0,
-    }))
-  , [bankSummary]);
-
-  /* ── Recent activity feed (last 5 cases) ── */
-  const recentActivity = useMemo(() =>
-    [...allCasesData]
-      .sort((a,b) => new Date(b.createdAt||0) - new Date(a.createdAt||0))
-      .slice(0, 5)
-      .map(c => ({
-        id: c._id || c.key,
-        bank: c.bankName || "Bank",
-        customer: c.customerName || "N/A",
-        status: c.status || "Pending",
-        time: c.createdAt ? (() => {
-          const diff = (Date.now() - new Date(c.createdAt)) / 60000;
-          return diff < 60 ? `${Math.round(diff)} min ago` : `${Math.round(diff/60)} hr ago`;
-        })() : "—",
-      }))
-  , [allCasesData]);
-
-  /* ── Final submitted cases for bottom table ── */
-  const finalCases = useMemo(() =>
-    filteredCases
-      .filter(c => {
-        const s = normalizeStatus(c.status);
-        return s.includes("final") || s.includes("submit") || s.includes("done") || s.includes("approved");
-      })
-      .slice(0, 5)
-  , [filteredCases]);
-
+  /* ── icon map for stat cards ── */
   const CARD_META_MAP = {
-    Pending:         { icon: "📂", color: "#f59e0b", bg: "#fff8e7", border: "#fde68a", sparkColor: "#f59e0b" },
-    Assigned:        { icon: "⚙️", color: "#6366f1", bg: "#eef2ff", border: "#c7d2fe", sparkColor: "#6366f1" },
-    ApprovalPending: { icon: "⏳", color: "#ec4899", bg: "#fdf2f8", border: "#fbcfe8", sparkColor: "#ec4899" },
-    ApprovedCases:   { icon: "⭐", color: "#16a34a", bg: "#f0fdf4", border: "#bbf7d0", sparkColor: "#16a34a" },
-    ReportSubmitted: { icon: "✅", color: "#10b981", bg: "#ecfdf5", border: "#a7f3d0", sparkColor: "#10b981" },
-    QueryRaised:     { icon: "❓", color: "#ef4444", bg: "#fff1f2", border: "#fecdd3", sparkColor: "#ef4444" },
-    CancelCases:     { icon: "🚫", color: "#6b7280", bg: "#f9fafb", border: "#e5e7eb", sparkColor: "#6b7280" },
-    Out_Tat_Cases:   { icon: "⏱️", color: "#dc2626", bg: "#fef2f2", border: "#fecaca", sparkColor: "#dc2626" },
-    Summary:         { icon: "📊", color: "#0ea5e9", bg: "#f0f9ff", border: "#bae6fd", sparkColor: "#0ea5e9" },
+    Pending: { icon: "📂", color: "#f59e0b", bg: "#fffbeb", border: "#fde68a" },
+    Assigned: { icon: "⚙️", color: "#6366f1", bg: "#eef2ff", border: "#c7d2fe" },
+    ApprovalPending: { icon: "⏳", color: "#ec4899", bg: "#fdf2f8", border: "#fbcfe8" },
+    ApprovedCases: { icon: "⭐", color: "#16a34a", bg: "#f0fdf4", border: "#bbf7d0" },
+    ReportSubmitted: { icon: "✅", color: "#10b981", bg: "#ecfdf5", border: "#a7f3d0" },
+    QueryRaised: { icon: "❓", color: "#ef4444", bg: "#fff1f2", border: "#fecdd3" },
+    CancelCases: { icon: "🚫", color: "#6b7280", bg: "#f9fafb", border: "#e5e7eb" },
+    Out_Tat_Cases: { icon: "⏱️", color: "#dc2626", bg: "#fef2f2", border: "#fecaca" },
+    Summary: { icon: "📊", color: "#0ea5e9", bg: "#f0f9ff", border: "#bae6fd" },
   };
-
-  /* ── Simple SVG sparkline ── */
-  const Sparkline = ({ data, color, w = 80, h = 32 }) => {
-    if (!data || data.length < 2) return null;
-    const vals = data.map(d => d.value);
-    const min = Math.min(...vals), max = Math.max(...vals);
-    const range = max - min || 1;
-    const pts = vals.map((v, i) => {
-      const x = (i / (vals.length - 1)) * w;
-      const y = h - ((v - min) / range) * (h - 4) - 2;
-      return `${x},${y}`;
-    }).join(" ");
-    return (
-      <svg width={w} height={h} style={{ display: "block" }}>
-        <defs>
-          <linearGradient id={`sg-${color.replace("#","")}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity="0.25"/>
-            <stop offset="100%" stopColor={color} stopOpacity="0"/>
-          </linearGradient>
-        </defs>
-        <polyline fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" points={pts}/>
-      </svg>
-    );
-  };
-
-  /* ── Simple SVG donut ── */
-  const DonutChart = ({ data, size = 160 }) => {
-    const r = 60, cx = size/2, cy = size/2;
-    const circumference = 2 * Math.PI * r;
-    const total = data.reduce((s, d) => s + d.value, 0);
-    let offset = 0;
-    const slices = data.map(d => {
-      const dash = (d.value / total) * circumference;
-      const gap = circumference - dash;
-      const el = { ...d, dash, gap, offset };
-      offset += dash;
-      return el;
-    });
-    return (
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        {slices.map((s, i) => (
-          <circle key={i} r={r} cx={cx} cy={cy}
-            fill="none" stroke={s.color} strokeWidth="20"
-            strokeDasharray={`${s.dash} ${s.gap}`}
-            strokeDashoffset={-s.offset}
-            style={{ transform: "rotate(-90deg)", transformOrigin: `${cx}px ${cy}px` }}
-          />
-        ))}
-        <text x={cx} y={cy - 8} textAnchor="middle" fontSize="22" fontWeight="800" fill="#1e293b">{total}</text>
-        <text x={cx} y={cy + 12} textAnchor="middle" fontSize="11" fill="#94a3b8">Total</text>
-      </svg>
-    );
-  };
-
-  /* ── Simple SVG line chart ── */
-  const LineChart = ({ data, color = "#B5121B", w = "100%", h = 100 }) => {
-    const vals = data.map(d => d.cases);
-    const min = 0, max = Math.max(...vals, 1);
-    const numW = 480;
-    const pts = vals.map((v, i) => {
-      const x = (i / (vals.length - 1)) * numW;
-      const y = h - ((v - min) / (max - min || 1)) * (h - 12) - 6;
-      return `${x},${y}`;
-    }).join(" ");
-    const area = `${pts} ${numW},${h} 0,${h}`;
-    return (
-      <svg viewBox={`0 0 ${numW} ${h}`} style={{ width: w, height: h, display: "block" }}>
-        <defs>
-          <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity="0.18"/>
-            <stop offset="100%" stopColor={color} stopOpacity="0"/>
-          </linearGradient>
-        </defs>
-        <polygon fill="url(#lineGrad)" points={area}/>
-        <polyline fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" points={pts}/>
-        {vals.map((v, i) => {
-          const x = (i / (vals.length - 1)) * numW;
-          const y = h - ((v - min) / (max - min || 1)) * (h - 12) - 6;
-          return v > 0 ? <circle key={i} cx={x} cy={y} r="4" fill="#fff" stroke={color} strokeWidth="2"/> : null;
-        })}
-      </svg>
-    );
-  };
-
-  const statusBadge = (status) => {
-    const s = normalizeStatus(status);
-    if (s.includes("submit") || s.includes("final") || s.includes("done") || s.includes("approved"))
-      return { bg: "#dcfce7", color: "#16a34a", label: status };
-    if (s.includes("query")) return { bg: "#fef9c3", color: "#ca8a04", label: status };
-    if (s.includes("cancel")) return { bg: "#fee2e2", color: "#dc2626", label: status };
-    if (s.includes("working") || s.includes("progress") || s.includes("assigned"))
-      return { bg: "#ede9fe", color: "#7c3aed", label: status };
-    return { bg: "#f1f5f9", color: "#475569", label: status };
-  };
-
-  const monthLabel = selectedMonth
-    ? new Date(selectedMonth + "-01").toLocaleDateString("en-IN", { month: "long", year: "numeric" })
-    : "All Time";
 
   return (
-    <div style={{ background: "#f1f5f9", minHeight: "100vh", fontFamily: "'Inter', 'Segoe UI', sans-serif" }}>
+    <div style={{ background: "#f4f6fb", padding: "0" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        * { box-sizing: border-box; }
+        .dash-root * { font-family: 'Inter', sans-serif; }
         @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.35;} }
         .blink-row { animation: blink 1.2s ease-in-out infinite; }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
-        .db-card { animation: fadeUp .35s ease both; }
-        .stat-card-new {
-          background:#fff; border-radius:16px; padding:18px 20px 14px;
-          border:1px solid #e8edf3; box-shadow:0 1px 4px rgba(0,0,0,.06);
-          cursor:pointer; transition:all .2s ease; position:relative; overflow:hidden;
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Tab strip inside dashboard */
+        .dash-tab-strip {
+          display:flex; gap:4px; padding:0 16px;
+          border-bottom:2px solid #e2e8f0;
+          background:#fff;
+          margin-bottom:0;
         }
-        .stat-card-new:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,.10); border-color:#cbd5e1; }
-        .stat-card-new.active { border-color:var(--c); box-shadow:0 8px 24px rgba(0,0,0,.13); }
-        .prem-table th { font-size:11px; font-weight:700; letter-spacing:.8px; text-transform:uppercase; color:#94a3b8; background:#f8fafc; padding:12px 16px; border-bottom:1px solid #e2e8f0; }
-        .prem-table td { padding:12px 16px; border-bottom:1px solid #f1f5f9; font-size:13px; color:#374151; vertical-align:middle; }
-        .prem-table tbody tr { cursor:pointer; transition:background .15s; }
-        .prem-table tbody tr:hover { background:#f8fafc; }
-        .prem-table tbody tr:last-child td { border-bottom:none; }
-        .pag-btn { height:32px; padding:0 14px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:12px; font-weight:600; color:#475569; background:#fff; cursor:pointer; transition:all .18s; }
-        .pag-btn:hover:not(:disabled) { border-color:#B5121B; color:#B5121B; }
-        .pag-btn:disabled { opacity:.4; cursor:not-allowed; }
-        .filter-input-new { height:36px; padding:0 12px; border:1.5px solid #e2e8f0; border-radius:9px; font-size:13px; color:#374151; outline:none; transition:border .2s; background:#f8fafc; width:100%; }
-        .filter-input-new:focus { border-color:#B5121B; background:#fff; }
-        @media(max-width:768px){
-          .stat-grid-new { grid-template-columns:1fr 1fr !important; gap:10px !important; }
-          .mid-row { flex-direction:column !important; }
-          .bottom-row { flex-direction:column !important; }
+        .dash-tab {
+          display:inline-flex; align-items:center; gap:7px;
+          padding:11px 16px; border-radius:10px 10px 0 0;
+          font-weight:600; font-size:13px; cursor:pointer; border:none;
+          background:transparent; color:#64748b; transition:all .2s ease;
+          border-bottom:3px solid transparent; white-space:nowrap;
+          font-family:'Inter',sans-serif;
+        }
+        .dash-tab:hover { color:#1e293b; background:#f8fafc; }
+        .dash-tab.active { color:#B5121B; border-bottom:3px solid #B5121B; background:#fff; }
+
+        /* Stat cards */
+        .stat-cards-grid {
+          display:grid;
+          grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+          gap:12px; margin-bottom:20px;
+        }
+        .stat-card {
+          border-radius:14px; padding:16px 16px 14px; cursor:pointer;
+          transition:all .22s ease; position:relative; overflow:hidden;
+          border:2px solid transparent; box-shadow:0 2px 8px rgba(0,0,0,.05);
+        }
+        .stat-card:hover { transform:translateY(-3px); box-shadow:0 12px 28px rgba(0,0,0,.10); }
+        .stat-card.selected { border-width:2px; box-shadow:0 8px 24px rgba(0,0,0,.12); }
+        .stat-card-icon { width:38px; height:38px; border-radius:11px; display:flex; align-items:center; justify-content:center; font-size:17px; margin-bottom:10px; }
+        .stat-card-title { font-size:9.5px; font-weight:700; letter-spacing:.6px; text-transform:uppercase; color:#64748b; margin-bottom:7px; line-height:1.4; }
+        .stat-card-value { font-size:28px; font-weight:800; letter-spacing:-1px; }
+
+        .bst th { font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#64748b; background:#f8fafc; padding:11px 14px; border-bottom:1px solid #e2e8f0; white-space:nowrap; }
+        .bst td { padding:11px 14px; border-bottom:1px solid #f1f5f9; font-size:13px; color:#374151; vertical-align:middle; }
+        .bst tbody tr { transition:background .15s; cursor:pointer; }
+        .bst tbody tr:hover { background:#f8fafc; }
+        .bst tbody tr:last-child td { border-bottom:none; }
+
+        .bank-mob-card {
+          background:#fff; border-radius:12px; padding:13px 14px;
+          border:1px solid #e2e8f0; box-shadow:0 2px 6px rgba(0,0,0,.05);
+          cursor:pointer; transition:all .2s; margin-bottom:8px; display:none;
+        }
+        .bank-mob-card:hover { box-shadow:0 6px 18px rgba(0,0,0,.10); border-color:#6366f1; }
+
+        .status-badge { display:inline-block; padding:2px 9px; border-radius:999px; font-size:10.5px; font-weight:600; letter-spacing:.3px; }
+
+        .filter-bar { background:#fff; border-radius:14px; padding:12px 14px; border:1px solid #e2e8f0; box-shadow:0 2px 6px rgba(0,0,0,.04); margin-bottom:16px; }
+        .filter-row { display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; }
+        .filter-label { font-size:9.5px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.6px; margin-bottom:5px; }
+        .filter-input { height:36px; padding:0 11px; border:1.5px solid #e2e8f0; border-radius:9px; font-size:13px; font-weight:500; color:#374151; outline:none; transition:border .2s; font-family:'Inter',sans-serif; background:#f8fafc; box-sizing:border-box; }
+        .filter-input:focus { border-color:#6366f1; background:#fff; }
+
+        .pag-btn { height:32px; padding:0 13px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:12px; font-weight:600; color:#475569; background:#fff; cursor:pointer; transition:all .18s; }
+        .pag-btn:hover:not(:disabled) { border-color:#6366f1; color:#6366f1; }
+        .pag-btn:disabled { opacity:.45; cursor:not-allowed; }
+
+        .dash-content { padding:0; }
+        .dash-inner { padding:16px 20px 32px; }
+
+        @media (max-width: 768px) {
+          .dash-inner { padding:12px 10px 80px; }
+          .stat-cards-grid { grid-template-columns:1fr 1fr !important; gap:8px !important; margin-bottom:12px !important; }
+          .stat-card { padding:12px 12px 10px !important; border-radius:12px !important; }
+          .stat-card-icon { width:32px !important; height:32px !important; font-size:15px !important; margin-bottom:7px !important; }
+          .stat-card-title { font-size:8.5px !important; }
+          .stat-card-value { font-size:22px !important; }
+          .filter-row { flex-direction:column !important; gap:8px !important; }
+          .filter-row > div { width:100% !important; }
+          .bst-wrap { display:none !important; }
+          .bank-mob-card { display:block !important; }
+          .pag-row { flex-direction:column !important; gap:8px !important; align-items:flex-start !important; }
+          .mob-total { text-align:left !important; margin-left:0 !important; }
+          .bank-header-hint { display:none !important; }
+        }
+        @media (max-width: 400px) {
+          .stat-card-value { font-size:19px !important; }
+          .dash-tab { padding:9px 12px !important; font-size:12px !important; }
         }
       `}</style>
 
-      {/* ── TOP BAR (tabs + city) ── */}
-      <div style={{ background:"#fff", borderBottom:"1px solid #e2e8f0", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 24px", height:50 }}>
-        <div style={{ display:"flex", gap:4 }}>
-          {[
-            { id:"dashboard", label:"Dashboard", icon:"▦" },
-            { id:"myworklist", label:"My Worklist", icon:"☰" },
-          ].map(t => (
-            <button key={t.id}
-              onClick={() => { setActiveTab(t.id); setActiveComponent(""); clearBankView(); }}
-              style={{
-                height:50, padding:"0 18px", border:"none", background:"transparent",
-                borderBottom: activeTab===t.id ? "2.5px solid #B5121B" : "2.5px solid transparent",
-                color: activeTab===t.id ? "#B5121B" : "#64748b",
-                fontWeight:600, fontSize:13, cursor:"pointer", transition:"all .18s",
-                display:"flex", alignItems:"center", gap:7,
-              }}
-            >{t.icon} {t.label}</button>
-          ))}
+      {/* TAB STRIP (inside content, no sticky/fixed, works with existing Header) */}
+      <div className="dash-tab-strip" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingRight: 16 }}>
+        <div style={{ display: "flex", gap: "4px" }}>
+          <button className={`dash-tab ${activeTab==="dashboard"?"active":""}`} onClick={() => { setActiveTab("dashboard"); setActiveComponent(""); clearBankView(); }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+            Dashboard
+          </button>
+          <button className={`dash-tab ${activeTab==="myworklist"?"active":""}`} onClick={() => { setActiveTab("myworklist"); setActiveComponent(""); clearBankView(); }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+            My Worklist
+          </button>
         </div>
-        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <span style={{ fontSize:12, fontWeight:600, color:"#64748b" }}>Zone:</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, paddingBottom: 6 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: "#475569" }}>City:</span>
           <Select
             value={selectedZone || (allowedCities.includes("Combined BJG") ? "Combined BJG" : allowedCities[0] || "")}
-            onChange={val => { dispatch(setZone(val)); dispatch(setSavedCity(val)); }}
-            style={{ width:160 }} size="small"
+            onChange={(val) => {
+              dispatch(setZone(val));
+              dispatch(setSavedCity(val));
+            }}
+            style={{ width: 180 }}
+            size="middle"
           >
-            {allowedCities.map(c => <Option key={c} value={c}>{c}</Option>)}
+            {allowedCities.map((c) => (
+              <Option key={c} value={c}>{c}</Option>
+            ))}
           </Select>
         </div>
       </div>
 
-      <div style={{ padding:"20px 24px 40px" }}>
+      {/* CONTENT */}
+      <div className="dash-content dash-root"><div className="dash-inner">
 
         {activeTab === "dashboard" && (
           <>
-            {/* ── WELCOME HEADER ── */}
-            {!activeComponent && !selectedBankView && (
-              <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", flexWrap:"wrap", gap:12, marginBottom:22 }}>
-                <div>
-                  <h1 style={{ margin:0, fontSize:20, fontWeight:800, color:"#0f172a" }}>
-                    Welcome back, {user?.name?.split(" ")[0] || user?.role || "User"}! 👋
-                  </h1>
-                  <p style={{ margin:"4px 0 0", fontSize:13, color:"#64748b", fontWeight:500 }}>
-                    Here's what's happening with your cases today.
-                  </p>
-                </div>
-                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:6, background:"#fff", border:"1.5px solid #e2e8f0", borderRadius:10, padding:"6px 12px", fontSize:13, fontWeight:600, color:"#374151" }}>
-                    📅
+            {/* Filter Bar */}
+            {!selectedBankView && (
+              <div className="filter-bar" style={{ marginBottom:14 }}>
+                {/* Row 1: Month + Total Cases (side by side always) */}
+                <div style={{ display:"flex", alignItems:"flex-end", gap:10, marginBottom:10 }}>
+                  <div style={{ flex:"0 0 auto" }}>
+                    <div className="filter-label">Month</div>
                     <input type="month" value={selectedMonth}
                       onChange={e => { setSelectedMonth(e.target.value); setActiveComponent(""); clearBankView(); }}
-                      style={{ border:"none", outline:"none", fontSize:13, fontWeight:600, color:"#374151", background:"transparent", cursor:"pointer" }}
-                    />
+                      className="filter-input" style={{ width:150 }} />
                   </div>
-                  <Select value={selectedAgent} onChange={setSelectedAgent} style={{ width:160 }} size="middle">
+                  {/* Total Cases — always on same line as Month */}
+                  <div style={{ marginLeft:"auto", textAlign:"right", flex:"0 0 auto" }}>
+                    <div style={{ fontSize:9, fontWeight:700, color:"#94a3b8", letterSpacing:".5px", textTransform:"uppercase", marginBottom:2 }}>Total Cases</div>
+                    <div style={{ fontSize:24, fontWeight:800, color:"#1e293b", letterSpacing:"-1px", lineHeight:1 }}>
+                      <CountUp end={cardCounts.allCases} duration={1.2} separator="," />
+                    </div>
+                  </div>
+                </div>
+                {/* Row 2: Field Officer — full width */}
+                <div style={{ width:"100%" }}>
+                  <div className="filter-label">Field Officer</div>
+                  <Select value={selectedAgent} onChange={setSelectedAgent} style={{ width:"100%" }} size="middle">
                     <Option value="All Agents">All Agents</Option>
                     {fieldOfficers?.map(fo => <Option key={fo._id} value={fo.name}>{fo.name}</Option>)}
                   </Select>
@@ -963,251 +856,195 @@ const Dashboard = () => {
               </div>
             )}
 
-            {/* ── BACK BUTTON ── */}
-            {activeComponent && (
-              <div style={{ marginBottom:16 }}>
-                <button onClick={() => setActiveComponent("")}
-                  style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"8px 16px", borderRadius:10, border:"1.5px solid #e2e8f0", background:"#fff", color:"#475569", fontWeight:600, fontSize:13, cursor:"pointer", boxShadow:"0 1px 3px rgba(0,0,0,.05)" }}
-                  onMouseOver={e => e.currentTarget.style.borderColor="#B5121B"}
-                  onMouseOut={e => e.currentTarget.style.borderColor="#e2e8f0"}
-                >← Back to Dashboard</button>
-              </div>
-            )}
 
-            {/* ── STAT CARDS ── */}
-            {!activeComponent && !selectedBankView && (
-              <div className="stat-grid-new" style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))", gap:14, marginBottom:22 }}>
-                {reports.map((r, i) => {
+            {/* Stat Cards */}
+            {!selectedBankView && (
+              <div className="stat-cards-grid">
+                 {reports.map((r, i) => {
                   const m = CARD_META_MAP[r.component] || CARD_META_MAP.Pending;
                   const isActive = activeComponent === r.component;
                   return (
-                    <div key={i} className={`stat-card-new db-card ${isActive ? "active" : ""}`}
-                      style={{ "--c": m.color, animationDelay: `${i * 0.05}s` }}
-                      onClick={() => setActiveComponent(r.component)}
-                    >
-                      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
-                        <div style={{ width:36, height:36, borderRadius:10, background:`${m.color}18`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:17 }}>{m.icon}</div>
-                        <span style={{ fontSize:9, fontWeight:700, color: m.color, background:`${m.color}15`, padding:"2px 8px", borderRadius:20, letterSpacing:".5px", textTransform:"uppercase" }}>
-                          ●
-                        </span>
+                    <div key={i} className={`stat-card ${isActive?"selected":""}`}
+                      style={{ background:m.bg, borderColor:isActive?m.color:m.border, boxShadow:isActive?`0 8px 24px ${m.color}28`:"0 2px 8px rgba(0,0,0,.05)" }}
+                      onClick={() => setActiveComponent(r.component)}>
+                      <div className="stat-card-icon" style={{ background:`${m.color}18` }}>{m.icon}</div>
+                      <div className="stat-card-title">{r.title}</div>
+                      <div className="stat-card-value" style={{ color:m.color }}>
+                        <CountUp end={Number(r.total)||0} duration={1.2} separator="," />
                       </div>
-                      <div style={{ fontSize:9.5, fontWeight:700, color:"#94a3b8", textTransform:"uppercase", letterSpacing:".6px", marginBottom:6 }}>{r.title}</div>
-                      <div style={{ fontSize:30, fontWeight:800, color: m.color, letterSpacing:"-1.5px", lineHeight:1, marginBottom:8 }}>
-                        <CountUp end={Number(r.total)||0} duration={1.2} separator=","/>
-                      </div>
+                      {/* Show FO Declined sub-badge on "To Be Assigned" card */}
                       {r.declinedCount > 0 && (
-                        <div style={{ display:"inline-flex", alignItems:"center", gap:4, background:"#fff1f2", border:"1px solid #fecdd3", borderRadius:6, padding:"2px 7px", fontSize:10, fontWeight:700, color:"#e11d48", marginBottom:6 }}>
+                        <div style={{
+                          marginTop: 6,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                          background: "#fff1f2",
+                          border: "1px solid #fecdd3",
+                          borderRadius: 6,
+                          padding: "2px 7px",
+                          fontSize: 10,
+                          fontWeight: 700,
+                          color: "#e11d48",
+                          letterSpacing: "0.3px",
+                        }}>
                           ⚠️ {r.declinedCount} FO Denied
                         </div>
                       )}
-                      <div style={{ marginTop:4 }}>
-                        <Sparkline data={sparklineData} color={m.sparkColor}/>
-                      </div>
-                      {isActive && <div style={{ position:"absolute", bottom:0, left:0, right:0, height:3, background:m.color, borderRadius:"0 0 16px 16px" }}/>}
+                      {isActive && <div style={{ position:"absolute", bottom:0, left:0, right:0, height:3, background:m.color, borderRadius:"0 0 16px 16px" }} />}
                     </div>
                   );
                 })}
               </div>
             )}
 
-            {/* ── CHARTS ROW ── */}
+            {/* Daily Task Summary */}
             {!activeComponent && !selectedBankView && (
-              <div className="mid-row" style={{ display:"flex", gap:16, marginBottom:20 }}>
-
-                {/* Donut — Case Status Overview */}
-                <div style={{ background:"#fff", borderRadius:16, border:"1px solid #e2e8f0", padding:"18px 20px", flex:"0 0 300px", boxShadow:"0 1px 4px rgba(0,0,0,.05)" }}>
-                  <div style={{ fontWeight:700, fontSize:14, color:"#1e293b", marginBottom:4 }}>Case Status Overview</div>
-                  <div style={{ fontSize:11, color:"#94a3b8", marginBottom:14 }}>By current status distribution</div>
-                  <div style={{ display:"flex", alignItems:"center", gap:16 }}>
-                    <DonutChart data={donutData} size={160}/>
-                    <div style={{ flex:1 }}>
-                      {donutData.map((d, i) => (
-                        <div key={i} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
-                          <div style={{ display:"flex", alignItems:"center", gap:7 }}>
-                            <div style={{ width:10, height:10, borderRadius:3, background:d.color, flexShrink:0 }}/>
-                            <span style={{ fontSize:11, fontWeight:500, color:"#475569" }}>{d.name}</span>
-                          </div>
-                          <span style={{ fontSize:11, fontWeight:700, color:"#1e293b" }}>{d.value} ({donutData.reduce((s,x)=>s+x.value,0) ? Math.round(d.value/donutData.reduce((s,x)=>s+x.value,0)*100) : 0}%)</span>
-                        </div>
-                      ))}
+              <div style={{ background:"#fff", borderRadius:20, border:"1px solid #e2e8f0", overflow:"hidden", boxShadow:"0 4px 16px rgba(0,0,0,.06)", marginBottom:24 }}>
+                <div style={{ padding:"16px 20px", borderBottom:"1px solid #f1f5f9", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:8 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                    <div style={{ width:36, height:36, borderRadius:10, background:"#eff6ff", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>🏦</div>
+                    <div>
+                      <div style={{ fontWeight:700, fontSize:15, color:"#1e293b" }}>Daily Task Summary</div>
+                      <div style={{ fontSize:12, color:"#94a3b8", fontWeight:500 }}>{bankSummary.length} banks · tap to drill down</div>
                     </div>
                   </div>
+                  <span style={{ fontSize:11, fontWeight:600, color:"#64748b", background:"#f8fafc", border:"1px solid #e2e8f0", borderRadius:8, padding:"4px 10px" }}>Tap a row →</span>
                 </div>
 
-                {/* Line — Monthly Case Trend */}
-                <div style={{ background:"#fff", borderRadius:16, border:"1px solid #e2e8f0", padding:"18px 20px", flex:1, boxShadow:"0 1px 4px rgba(0,0,0,.05)", minWidth:0 }}>
-                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4 }}>
-                    <div style={{ fontWeight:700, fontSize:14, color:"#1e293b" }}>Monthly Case Trend</div>
-                    <span style={{ fontSize:11, fontWeight:600, color:"#64748b", background:"#f1f5f9", padding:"3px 10px", borderRadius:8, border:"1px solid #e2e8f0" }}>This Year</span>
-                  </div>
-                  <div style={{ fontSize:11, color:"#94a3b8", marginBottom:14 }}>Number of cases added each month</div>
-                  <LineChart data={monthlyTrendData} color="#B5121B" h={100}/>
-                  <div style={{ display:"flex", justifyContent:"space-between", marginTop:6 }}>
-                    {monthlyTrendData.map(d => (
-                      <span key={d.month} style={{ fontSize:9, color:"#94a3b8", fontWeight:600 }}>{d.month}</span>
-                    ))}
-                  </div>
+                {/* Desktop table */}
+                <div className="bst-wrap" style={{ overflowX:"auto" }}>
+                  <table className="bst" style={{ minWidth:"100%", borderCollapse:"collapse" }}>
+                    <thead>
+                      <tr>
+                        <th style={{ textAlign:"left" }}>Bank</th>
+                        <th style={{ textAlign:"center", color:"#e11d48", backgroundColor:"#fff1f2" }}>Query</th>
+                        <th style={{ textAlign:"center", color:"#d97706", backgroundColor:"#fffbeb" }}>Pending</th>
+                        <th style={{ textAlign:"center", color:"#059669", backgroundColor:"#ecfdf5" }}>Submitted Case</th>
+                        <th style={{ textAlign:"center", color:"#1e293b", backgroundColor:"#f1f5f9" }}>Total</th>
+                        <th>Completion</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {loading ? (
+                        <tr><td colSpan="6" style={{ textAlign:"center", padding:"40px", color:"#94a3b8" }}>
+                          <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:10 }}>
+                            <div style={{ width:20, height:20, border:"2.5px solid #e2e8f0", borderTopColor:"#6366f1", borderRadius:"50%", animation:"spin .7s linear infinite" }} />Loading...
+                          </div>
+                        </td></tr>
+                      ) : bankSummary.length === 0 ? (
+                        <tr><td colSpan="6" style={{ textAlign:"center", padding:"48px", color:"#94a3b8" }}>
+                          <div style={{ fontSize:32, marginBottom:8 }}>🏦</div><div style={{ fontWeight:600 }}>No data for this period</div>
+                        </td></tr>
+                      ) : paginatedBankSummary.map(bank => {
+                        const rate = bank.total ? Math.round((bank.done/bank.total)*100) : 0;
+                        return (
+                          <tr key={bank.bank} onClick={() => setSelectedBankView(bank.bank)}>
+                            <td>
+                              <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                                <div style={{ width:8, height:8, borderRadius:"50%", background:rate>70?"#10b981":rate>40?"#f59e0b":"#ef4444", flexShrink:0 }} />
+                                <span style={{ fontWeight:600, color:"#1e293b", fontSize:14 }}>{bank.bank}</span>
+                              </div>
+                            </td>
+                            <td style={{ textAlign:"center" }}><span className="status-badge" style={{ background:"#fff1f2", color:"#e11d48", padding:"4px 10px", fontSize:"11.5px", fontWeight:700 }}>{bank.query}</span></td>
+                            <td style={{ textAlign:"center" }}><span className="status-badge" style={{ background:"#fffbeb", color:"#d97706", padding:"4px 10px", fontSize:"11.5px", fontWeight:700 }}>{bank.pending}</span></td>
+                            <td style={{ textAlign:"center" }}><span className="status-badge" style={{ background:"#ecfdf5", color:"#059669", padding:"4px 10px", fontSize:"11.5px", fontWeight:700 }}>{bank.done}</span></td>
+                            <td style={{ textAlign:"center" }}><span className="status-badge" style={{ background:"#f8fafc", color:"#1e293b", border:"1px solid #e2e8f0", padding:"4px 10px", fontSize:"11.5px", fontWeight:700 }}>{bank.total}</span></td>
+                            <td>
+                              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                                <span style={{ fontWeight:700, fontSize:13, color:rate>70?"#059669":rate>40?"#d97706":"#dc2626", minWidth:34 }}>{rate}%</span>
+                                <div style={{ flex:1, maxWidth:100, height:6, background:"#f1f5f9", borderRadius:999, overflow:"hidden" }}>
+                                  <div style={{ height:"100%", width:`${rate}%`, borderRadius:999, background:rate>70?"linear-gradient(90deg,#10b981,#34d399)":rate>40?"linear-gradient(90deg,#f59e0b,#fbbf24)":"linear-gradient(90deg,#ef4444,#f87171)", transition:"width .4s ease" }} />
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
 
-                {/* Top Banks */}
-                <div style={{ background:"#fff", borderRadius:16, border:"1px solid #e2e8f0", padding:"18px 20px", flex:"0 0 240px", boxShadow:"0 1px 4px rgba(0,0,0,.05)" }}>
-                  <div style={{ fontWeight:700, fontSize:14, color:"#1e293b", marginBottom:4 }}>Top Banks by Cases</div>
-                  <div style={{ fontSize:11, color:"#94a3b8", marginBottom:14 }}>This month's leaders</div>
-                  {topBanksData.length === 0 ? (
-                    <div style={{ color:"#94a3b8", fontSize:13, textAlign:"center", padding:"20px 0" }}>No data</div>
-                  ) : topBanksData.map((b, i) => {
-                    const colors = ["#B5121B","#3b82f6","#f59e0b","#10b981","#8b5cf6"];
-                    const c = colors[i % colors.length];
+                {/* Mobile bank cards */}
+                <div style={{ padding:"10px 12px 4px" }}>
+                  {loading ? (
+                    <div style={{ textAlign:"center", padding:"32px", color:"#94a3b8" }}>Loading...</div>
+                  ) : bankSummary.length === 0 ? null : paginatedBankSummary.map(bank => {
+                    const rate = bank.total ? Math.round((bank.done/bank.total)*100) : 0;
                     return (
-                      <div key={i} style={{ marginBottom:12 }}>
-                        <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
-                          <span style={{ fontSize:12, fontWeight:600, color:"#1e293b" }}>{b.name}</span>
-                          <span style={{ fontSize:11, fontWeight:700, color:"#64748b" }}>{b.total} cases</span>
+                      <div key={bank.bank} className="bank-mob-card" onClick={() => setSelectedBankView(bank.bank)}>
+                        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
+                          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                            <div style={{ width:8, height:8, borderRadius:"50%", background:rate>70?"#10b981":rate>40?"#f59e0b":"#ef4444" }} />
+                            <span style={{ fontWeight:700, fontSize:15, color:"#1e293b" }}>{bank.bank}</span>
+                          </div>
+                          <span style={{ fontSize:13, fontWeight:700, color:rate>70?"#059669":rate>40?"#d97706":"#dc2626" }}>{rate}%</span>
                         </div>
-                        <div style={{ height:5, background:"#f1f5f9", borderRadius:999, overflow:"hidden" }}>
-                          <div style={{ height:"100%", width:`${b.pct}%`, background:c, borderRadius:999, transition:"width .6s ease" }}/>
+                        <div style={{ height:5, background:"#f1f5f9", borderRadius:999, overflow:"hidden", marginBottom:12 }}>
+                          <div style={{ height:"100%", width:`${rate}%`, borderRadius:999, background:rate>70?"linear-gradient(90deg,#10b981,#34d399)":rate>40?"linear-gradient(90deg,#f59e0b,#fbbf24)":"linear-gradient(90deg,#ef4444,#f87171)" }} />
                         </div>
-                        <div style={{ fontSize:10, color:c, fontWeight:700, marginTop:2 }}>{b.pct}%</div>
+                        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:6, textAlign:"center" }}>
+                          {[{label:"Query",val:bank.query,bg:"#fff1f2",color:"#e11d48"},{label:"Pending",val:bank.pending,bg:"#fffbeb",color:"#d97706"},{label:"Submitted Case",val:bank.done,bg:"#ecfdf5",color:"#059669"},{label:"Total",val:bank.total,bg:"#f8fafc",color:"#1e293b"}].map(s=>(
+                            <div key={s.label} style={{ background:s.bg, borderRadius:8, padding:"6px 4px" }}>
+                              <div style={{ fontSize:16, fontWeight:800, color:s.color }}>{s.val}</div>
+                              <div style={{ fontSize:9, fontWeight:600, color:"#94a3b8", textTransform:"uppercase", letterSpacing:".5px" }}>{s.label}</div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     );
                   })}
                 </div>
-              </div>
-            )}
 
-            {/* ── BOTTOM ROW: Final submitted + Recent Activity ── */}
-            {!activeComponent && !selectedBankView && (
-              <div className="bottom-row" style={{ display:"flex", gap:16 }}>
-
-                {/* Final Submitted Cases table */}
-                <div style={{ background:"#fff", borderRadius:16, border:"1px solid #e2e8f0", flex:1, boxShadow:"0 1px 4px rgba(0,0,0,.05)", minWidth:0, overflow:"hidden" }}>
-                  <div style={{ padding:"16px 20px", borderBottom:"1px solid #f1f5f9", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:10 }}>
-                    <div>
-                      <div style={{ fontWeight:700, fontSize:14, color:"#1e293b" }}>Final Submitted Cases ({cardCounts.finalSubmitted})</div>
-                      <div style={{ fontSize:11, color:"#94a3b8", marginTop:2 }}>Most recently submitted cases</div>
-                    </div>
-                    <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
-                      <select style={{ height:34, padding:"0 10px", borderRadius:9, border:"1.5px solid #e2e8f0", fontSize:12, color:"#475569", background:"#f8fafc", outline:"none" }}>
-                        <option>Filter by Bank</option>
-                        {[...new Set(allCasesData.map(x=>x.bankName))].filter(Boolean).map(b => <option key={b}>{b}</option>)}
-                      </select>
-                      <select style={{ height:34, padding:"0 10px", borderRadius:9, border:"1.5px solid #e2e8f0", fontSize:12, color:"#475569", background:"#f8fafc", outline:"none" }}>
-                        <option>Filter by Status</option>
-                      </select>
-                      <input placeholder="Search by customer, address or case ID..." className="filter-input-new" style={{ width:240, height:34 }}/>
-                      <button
-                        onClick={() => setActiveComponent("Pending")}
-                        style={{ height:34, padding:"0 14px", background:"#B5121B", color:"#fff", border:"none", borderRadius:9, fontSize:12, fontWeight:700, cursor:"pointer", display:"flex", alignItems:"center", gap:6, whiteSpace:"nowrap" }}
-                      >+ New Case</button>
-                    </div>
-                  </div>
-                  <div style={{ overflowX:"auto" }}>
-                    <table className="prem-table" style={{ width:"100%", borderCollapse:"collapse" }}>
-                      <thead>
-                        <tr>
-                          <th>Case ID</th><th>Customer Name</th><th>Bank</th><th>Officer</th><th>Status</th><th>Submitted On</th><th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {finalCases.length === 0 ? (
-                          <tr><td colSpan="7" style={{ textAlign:"center", padding:"32px", color:"#94a3b8", fontSize:13 }}>No submitted cases this period</td></tr>
-                        ) : finalCases.map((rec, idx) => {
-                          const badge = statusBadge(rec.status);
-                          return (
-                            <tr key={rec.key || idx} onClick={() => setActiveComponent("ReportSubmitted")}>
-                              <td style={{ fontWeight:600, color:"#B5121B", fontSize:12 }}>{rec.customCaseId || rec.key?.toString().slice(-8) || "—"}</td>
-                              <td style={{ fontWeight:600, color:"#1e293b" }}>{rec.customerName || "N/A"}</td>
-                              <td><span style={{ background:"#f1f5f9", color:"#475569", padding:"2px 8px", borderRadius:6, fontSize:11, fontWeight:600 }}>{rec.bankName || "—"}</span></td>
-                              <td style={{ color:"#6366f1", fontWeight:600 }}>{rec.engineer || "—"}</td>
-                              <td><span style={{ background:badge.bg, color:badge.color, padding:"3px 10px", borderRadius:20, fontSize:11, fontWeight:700 }}>{badge.label}</span></td>
-                              <td style={{ color:"#64748b", fontSize:12, whiteSpace:"nowrap" }}>{rec.createdAt ? new Date(rec.createdAt).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"}) : "—"}</td>
-                              <td>
-                                <div style={{ display:"flex", gap:6 }}>
-                                  <button style={{ width:28, height:28, borderRadius:7, border:"1.5px solid #e2e8f0", background:"#f8fafc", cursor:"pointer", fontSize:13 }}>👁</button>
-                                  <button style={{ width:28, height:28, borderRadius:7, border:"1.5px solid #e2e8f0", background:"#f8fafc", cursor:"pointer", fontSize:13 }}>⬇</button>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                  <div style={{ padding:"12px 20px", borderTop:"1px solid #f1f5f9", display:"flex", justifyContent:"flex-end" }}>
-                    <button onClick={() => setActiveComponent("ReportSubmitted")} style={{ background:"none", border:"none", color:"#B5121B", fontSize:12, fontWeight:700, cursor:"pointer" }}>
-                      View All Cases →
-                    </button>
-                  </div>
-                </div>
-
-                {/* Recent Activity */}
-                <div style={{ background:"#fff", borderRadius:16, border:"1px solid #e2e8f0", flex:"0 0 280px", boxShadow:"0 1px 4px rgba(0,0,0,.05)", overflow:"hidden" }}>
-                  <div style={{ padding:"16px 20px", borderBottom:"1px solid #f1f5f9", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                    <div style={{ fontWeight:700, fontSize:14, color:"#1e293b" }}>Recent Activities</div>
-                    <button onClick={() => setActiveComponent("Summary")} style={{ background:"none", border:"none", color:"#B5121B", fontSize:12, fontWeight:700, cursor:"pointer" }}>View All</button>
-                  </div>
-                  <div style={{ padding:"12px 16px" }}>
-                    {recentActivity.length === 0 ? (
-                      <div style={{ color:"#94a3b8", fontSize:13, textAlign:"center", padding:"24px 0" }}>No recent activity</div>
-                    ) : recentActivity.map((a, i) => {
-                      const icons = ["📂","✅","❓","⭐","⚙️"];
-                      const colors2 = ["#f59e0b","#10b981","#ef4444","#16a34a","#6366f1"];
-                      const s = normalizeStatus(a.status);
-                      const idx2 = s.includes("submit")||s.includes("final") ? 1 : s.includes("query") ? 2 : s.includes("approved") ? 3 : s.includes("working") ? 4 : 0;
-                      return (
-                        <div key={a.id || i} style={{ display:"flex", gap:12, marginBottom:14, alignItems:"flex-start" }}>
-                          <div style={{ width:34, height:34, borderRadius:10, background:`${colors2[idx2]}18`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:15, flexShrink:0 }}>
-                            {icons[idx2]}
-                          </div>
-                          <div style={{ flex:1, minWidth:0 }}>
-                            <div style={{ fontSize:12, fontWeight:700, color:"#1e293b", lineHeight:1.4, marginBottom:2 }}>
-                              {s.includes("submit")||s.includes("final") ? "Case submitted successfully"
-                               : s.includes("query") ? "Query raised on case"
-                               : s.includes("approved") ? "Case approved"
-                               : s.includes("working") ? "Case in progress"
-                               : "New case file generated"}
-                            </div>
-                            <div style={{ fontSize:11, color:"#64748b", fontWeight:500, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
-                              By {a.customer} · {a.bank}
-                            </div>
-                          </div>
-                          <span style={{ fontSize:10, color:"#94a3b8", fontWeight:600, whiteSpace:"nowrap", marginTop:2 }}>{a.time}</span>
-                        </div>
-                      );
-                    })}
+                <div className="pag-row" style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 20px", borderTop:"1px solid #f1f5f9", background:"#fafbfc" }}>
+                  <span style={{ fontSize:12, color:"#64748b", fontWeight:500 }}>
+                    <b style={{ color:"#1e293b" }}>{Math.min((bankSummaryPage-1)*rowsPerPage+1,bankSummary.length)}–{Math.min(bankSummaryPage*rowsPerPage,bankSummary.length)}</b> of <b style={{ color:"#1e293b" }}>{bankSummary.length}</b> banks
+                  </span>
+                  <div style={{ display:"flex", gap:8 }}>
+                    <button className="pag-btn" disabled={bankSummaryPage<=1} onClick={() => setBankSummaryPage(p=>Math.max(1,p-1))}>← Prev</button>
+                    <button className="pag-btn" disabled={bankSummaryPage>=bankSummaryTotalPages} onClick={() => setBankSummaryPage(p=>Math.min(bankSummaryTotalPages,p+1))}>Next →</button>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* ── BANK DRILLDOWN ── */}
+            {/* Bank Drilldown */}
             {!activeComponent && selectedBankView && (
-              <div style={{ background:"#fff", borderRadius:16, border:"1px solid #e2e8f0", overflow:"hidden", boxShadow:"0 2px 8px rgba(0,0,0,.06)" }}>
-                <div style={{ padding:"14px 20px", borderBottom:"1px solid #f1f5f9", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:10 }}>
+              <div style={{ background:"#fff", borderRadius:20, border:"1px solid #e2e8f0", overflow:"hidden", boxShadow:"0 4px 16px rgba(0,0,0,.06)" }}>
+                <div style={{ padding:"14px 16px", borderBottom:"1px solid #f1f5f9", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:10 }}>
                   <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                    <button onClick={clearBankView} style={{ width:36, height:36, borderRadius:10, border:"1.5px solid #e2e8f0", background:"#f8fafc", cursor:"pointer", fontSize:16 }}>←</button>
+                    <button onClick={clearBankView} style={{ width:36, height:36, borderRadius:10, border:"1.5px solid #e2e8f0", background:"#f8fafc", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}>←</button>
                     <div>
                       <div style={{ fontWeight:700, fontSize:15, color:"#1e293b" }}>🏦 {selectedBankView}</div>
                       <div style={{ fontSize:11, color:"#94a3b8" }}>{filteredCases.length} cases</div>
                     </div>
                   </div>
-                  <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
-                    <input type="text" placeholder="Search..." value={searchText} onChange={e => setSearchText(e.target.value)} className="filter-input-new" style={{ width:150 }}/>
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:8, flex:1, justifyContent:"flex-end" }}>
+                    <input type="text" placeholder="Search..." value={searchText} onChange={e => setSearchText(e.target.value)}
+                      className="filter-input" style={{ width:150, flex:"0 0 auto" }} />
                     <Select mode="multiple" placeholder="Status" style={{ minWidth:120 }} value={selectedStatuses} onChange={setSelectedStatuses} allowClear size="middle">
-                      {statusOptions.map(s => <Option key={s} value={s}>{normalizeStatus(s)==="pending"?"Not Assigned":s}</Option>)}
+                      {statusOptions.map(s => <Option key={s} value={s}>{normalizeStatus(s) === "pending" ? "Not Assigned" : s}</Option>)}
                     </Select>
-                    <Select mode="multiple" placeholder="Engineers" style={{ minWidth:130 }} value={selectedEngineers} onChange={setSelectedEngineers} allowClear size="middle">
+                    <Select mode="multiple" placeholder="Engineers" style={{ minWidth:140 }} value={selectedEngineers} onChange={setSelectedEngineers} allowClear size="middle">
                       {engineerOptions.map(e => <Option key={e} value={e}>{e}</Option>)}
                     </Select>
-                    <button onClick={resetFilters} style={{ height:36, padding:"0 13px", borderRadius:9, border:"1.5px solid #e2e8f0", background:"#fff", fontSize:12, fontWeight:600, color:"#64748b", cursor:"pointer" }}>Reset</button>
+                    <button onClick={resetFilters} style={{ height:32, padding:"0 12px", borderRadius:8, border:"1.5px solid #e2e8f0", background:"#fff", fontSize:12, fontWeight:600, color:"#64748b", cursor:"pointer" }}>Reset</button>
                   </div>
                 </div>
-                <div style={{ overflowX:"auto" }}>
-                  <table className="prem-table" style={{ minWidth:580, borderCollapse:"collapse", width:"100%" }}>
+
+                <div style={{ overflowX:"auto", WebkitOverflowScrolling:"touch" }}>
+                  <table className="bst" style={{ minWidth:580, borderCollapse:"collapse", width:"100%" }}>
                     <thead>
                       <tr>
                         <th style={{ textAlign:"center", width:36 }}>#</th>
-                        <th>Customer</th><th>Date & Time</th><th>Address</th><th>City</th><th>Engineer</th><th>Status</th><th>Case ID</th><th>App ID</th>
+                        <th>Customer</th>
+                        <th>Date & Time</th>
+                        <th>Address</th>
+                        <th>City</th>
+                        <th>Engineer</th>
+                        <th>Status</th>
+                        <th>Case ID</th>
+                        <th>App ID / Notes</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1216,7 +1053,7 @@ const Dashboard = () => {
                       ) : paginatedBankCases.length === 0 ? (
                         <tr><td colSpan="9" style={{ textAlign:"center", padding:48, color:"#94a3b8" }}>No data found</td></tr>
                       ) : paginatedBankCases.map((rec, idx) => {
-                        const badge = statusBadge(rec.status);
+                        const row = getRowStyle(rec.status, rec.createdAt);
                         const baseBankName = selectedBankView ? selectedBankView.replace(/\s*\(.*?\)$/, "") : "";
                         let bank;
                         switch (baseBankName) {
@@ -1227,26 +1064,58 @@ const Dashboard = () => {
                           case "ICICI Bank": bank="icici"; break;
                           default: bank="bajaj";
                         }
+                        const s = normalizeStatus(rec.status);
+                        const badge = (s.includes("final") || s.includes("done") || s.includes("submitted") || s.includes("approved"))
+                          ? { background: "#ecfdf5", color: "#059669" }
+                          : s.includes("query")
+                          ? { background: "#fffbeb", color: "#d97706" }
+                          : s.includes("cancel")
+                          ? { background: "#fff1f2", color: "#e11d48" }
+                          : s.includes("working") || s.includes("assigned") || s.includes("progress")
+                          ? { background: "#eef2ff", color: "#6366f1" }
+                          : { background: "#f8fafc", color: "#64748b" };
                         return (
-                          <tr key={rec.key}>
+                          <tr key={rec.key} className={row.className} style={{ backgroundColor:row.backgroundColor }}>
                             <td style={{ textAlign:"center", color:"#94a3b8", fontSize:12 }}>{(bankCasesPage-1)*rowsPerPage+idx+1}</td>
-                            <td><Link to={`/bank/${bank}/edit/${rec?.key}`} style={{ fontWeight:700, color:"#2563eb", textDecoration:"none" }}>{rec.customerName}</Link></td>
-                            <td style={{ color:"#64748b", fontSize:12, whiteSpace:"nowrap" }}>{formatDateTime(rec.createdAt)}</td>
-                            <td style={{ color:"#64748b", fontSize:12, maxWidth:180, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
-                              <Tooltip title={rec.address}>{rec.address}</Tooltip>
+                            <td style={{ fontSize:13 }}>
+                               <Link
+                                 to={`/bank/${bank}/edit/${rec?.key}`}
+                                 style={{ fontWeight:600, color:"#2563eb", textDecoration:"none" }}
+                                 className="hover:underline"
+                               >
+                                 {rec.customerName}
+                               </Link>
+                             </td>
+                            <td style={{ whiteSpace:"nowrap", color:"#64748b", fontSize:12 }}>{formatDateTime(rec.createdAt)}</td>
+                            <td style={{ color:"#64748b", fontSize:13, maxWidth:200, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                              <Tooltip title={rec.address}>
+                                {rec.address}
+                              </Tooltip>
                             </td>
-                            <td style={{ color:"#64748b", fontSize:12 }}>{rec.city}</td>
-                            <td><Link to={`/bank/${bank}/${rec?.key}`} style={{ color:"#6366f1", fontWeight:600, fontSize:12, textDecoration:"none" }}>{rec.engineer}</Link></td>
-                            <td><span style={{ background:badge.bg, color:badge.color, padding:"3px 10px", borderRadius:20, fontSize:11, fontWeight:700 }}>{normalizeStatus(rec.status)==="pending"?"Not Assigned":rec.status}</span></td>
+                            <td style={{ color:"#64748b", fontSize:13 }}>{rec.city}</td>
+                            <td><Link to={`/bank/${bank}/${rec?.key}`} style={{ color:"#6366f1", fontWeight:600, textDecoration:"none", fontSize:13 }}>{rec.engineer}</Link></td>
+                            <td><span className="status-badge" style={badge}>{normalizeStatus(rec.status) === "pending" ? "Not Assigned" : rec.status}</span></td>
                             <td>
-                              <Input placeholder="Case ID" defaultValue={rec.customCaseId || ""}
-                                onBlur={e => handleUpdateCustomFields(rec, "customCaseId", e.target.value)}
-                                style={{ width:110, height:30, fontSize:11 }}/>
+                              <Input
+                                placeholder="Enter Case ID"
+                                defaultValue={rec.customCaseId || ""}
+                                onBlur={(e) => handleUpdateCustomFields(rec, "customCaseId", e.target.value)}
+                                onPressEnter={(e) => {
+                                  e.target.blur();
+                                }}
+                                style={{ width: "120px" }}
+                              />
                             </td>
                             <td>
-                              <Input placeholder="App ID / Notes" defaultValue={rec.appIdNotes || ""}
-                                onBlur={e => handleUpdateCustomFields(rec, "appIdNotes", e.target.value)}
-                                style={{ width:120, height:30, fontSize:11 }}/>
+                              <Input
+                                placeholder="Enter App ID / Notes"
+                                defaultValue={rec.appIdNotes || ""}
+                                onBlur={(e) => handleUpdateCustomFields(rec, "appIdNotes", e.target.value)}
+                                onPressEnter={(e) => {
+                                  e.target.blur();
+                                }}
+                                style={{ width: "150px" }}
+                              />
                             </td>
                           </tr>
                         );
@@ -1254,9 +1123,10 @@ const Dashboard = () => {
                     </tbody>
                   </table>
                 </div>
-                <div style={{ padding:"12px 20px", borderTop:"1px solid #f1f5f9", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                  <span style={{ fontSize:12, color:"#64748b" }}>
-                    <b style={{ color:"#1e293b" }}>{Math.min((bankCasesPage-1)*rowsPerPage+1,filteredCases.length)}–{Math.min(bankCasesPage*rowsPerPage,filteredCases.length)}</b> of <b style={{ color:"#1e293b" }}>{filteredCases.length}</b> cases
+
+                <div className="pag-row" style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px", borderTop:"1px solid #f1f5f9", background:"#fafbfc" }}>
+                  <span style={{ fontSize:12, color:"#64748b", fontWeight:500 }}>
+                    <b style={{ color:"#1e293b" }}>{Math.min((bankCasesPage-1)*rowsPerPage+1,filteredCases.length)}–{Math.min(bankCasesPage*rowsPerPage,filteredCases.length)}</b> of <b style={{ color:"#1e293b" }}>{filteredCases.length}</b>
                   </span>
                   <div style={{ display:"flex", gap:8 }}>
                     <button className="pag-btn" disabled={bankCasesPage<=1} onClick={() => setBankCasesPage(p=>Math.max(1,p-1))}>← Prev</button>
@@ -1265,8 +1135,32 @@ const Dashboard = () => {
                 </div>
               </div>
             )}
-
-            {/* ── ACTIVE COMPONENTS ── */}
+            {activeComponent && (
+              <div style={{ marginBottom: 16 }}>
+                <button
+                  onClick={() => setActiveComponent("")}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "8px 16px",
+                    borderRadius: 10,
+                    border: "1.5px solid #e2e8f0",
+                    background: "#fff",
+                    color: "#475569",
+                    fontWeight: 600,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
+                    transition: "all 0.15s ease",
+                  }}
+                  onMouseOver={(e) => { e.currentTarget.style.background = "#f8fafc"; e.currentTarget.style.color = "#1e293b"; }}
+                  onMouseOut={(e) => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.color = "#475569"; }}
+                >
+                  ← Back to Dashboard
+                </button>
+              </div>
+            )}
             {activeComponent==="Pending"         && <Pending selectedMonth={selectedMonth} preloadedCases={filteredCases.filter((item) => {
               const s = normalizeStatus(item.status);
               return ["pending", "generated", "new", "created", "open"].includes(s);
@@ -1290,9 +1184,9 @@ const Dashboard = () => {
         )}
 
         {activeTab === "myworklist" && (
-          <div style={{ background:"#fff", borderRadius:16, padding:"20px", border:"1px solid #e2e8f0", boxShadow:"0 2px 8px rgba(0,0,0,.05)" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:18 }}>
-              <div style={{ width:40, height:40, borderRadius:12, background:"#eef2ff", display:"flex", alignItems:"center", justifyContent:"center", fontSize:20 }}>📋</div>
+          <div style={{ background:"#fff", borderRadius:16, padding:"18px", border:"1px solid #e2e8f0", boxShadow:"0 4px 16px rgba(0,0,0,.06)" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:16 }}>
+              <div style={{ width:38, height:38, borderRadius:11, background:"#eef2ff", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>📋</div>
               <div>
                 <div style={{ fontWeight:700, fontSize:15, color:"#1e293b" }}>My Worklist</div>
                 <div style={{ fontSize:11, color:"#94a3b8" }}>Your assigned tasks</div>
@@ -1301,10 +1195,9 @@ const Dashboard = () => {
             <MyWorklist />
           </div>
         )}
-      </div>
+      </div></div>
     </div>
   );
 };
 
 export default Dashboard;
-
