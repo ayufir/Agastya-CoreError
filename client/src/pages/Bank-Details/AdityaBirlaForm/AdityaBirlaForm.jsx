@@ -474,6 +474,16 @@ export default function AdityaBirlaForm() {
                 const nextForm = {
                     ...INIT,
                     ...data,
+                    basicDetails: data.basicDetails || INIT.basicDetails,
+                    locationDetails: data.locationDetails || INIT.locationDetails,
+                    propertyDetails: data.propertyDetails || INIT.propertyDetails,
+                    accommodationDetails: data.accommodationDetails || INIT.accommodationDetails,
+                    documentDetails: data.documentDetails || INIT.documentDetails,
+                    builtUpArea: data.builtUpArea || INIT.builtUpArea,
+                    valuationDetails: data.valuationDetails || INIT.valuationDetails,
+                    setbacks: data.setbacks || INIT.setbacks,
+                    boundaryDetails: data.boundaryDetails || INIT.boundaryDetails,
+                    engineerDetails: data.engineerDetails || INIT.engineerDetails,
                     AttachDocuments: data.AttachDocuments || [],
                     imageUrls: data.imageUrls || [],
                 };
@@ -745,7 +755,7 @@ export default function AdityaBirlaForm() {
     <input
       className="outline-none bg-transparent text-xs text-[#B5121B] font-medium text-right"
       type="datetime-local"
-      value={B.createdAt}
+      value={B?.createdAt || ""}
       onChange={e => set("basicDetails", "createdAt", e.target.value)}
     />
   </div>
