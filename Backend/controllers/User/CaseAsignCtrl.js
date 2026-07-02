@@ -964,13 +964,7 @@ exports.getPendingCases = async (req, res) => {
       user,
       baseQuery: {
         status: {
-          $in: [
-            "Pending", "pending",
-            "Generated", "generated",
-            "New", "new",
-            "Created", "created",
-            "Open", "open"
-          ]
+          $regex: /^\s*(pending|generated|new|created|open)\s*$/i
         }
       },
       populate: "assignedTo createdBy",
