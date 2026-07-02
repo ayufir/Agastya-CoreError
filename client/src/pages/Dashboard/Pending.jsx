@@ -56,7 +56,7 @@ const isApprovalPending = (item) => {
   return isSubmitted && !isApproved && !isCancelled;
 };
 
-const Pending = ({ selectedMonth }) => {
+const Pending = ({ selectedMonth, preloadedCases }) => {
   const dispatch = useDispatch();
   const fieldOfficers = useSelector(selectFieldOfficers);
   const user = useSelector((state) => state.auth.user);
@@ -117,8 +117,11 @@ const Pending = ({ selectedMonth }) => {
   }, [dispatch]);
 
   useEffect(() => {
-    fetchPendingList();
-  }, [fetchPendingList]);
+    // Only fetch from API if no preloaded cases are supplied by Dashboard
+    if (!preloadedCases) {
+      fetchPendingList();
+    }
+  }, [fetchPendingList, preloadedCases]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -139,15 +142,29 @@ const Pending = ({ selectedMonth }) => {
       ? debouncedSearch.trim().toLowerCase().split(/\s+/).filter(Boolean)
       : [];
 
-    // API already filters by month & status — just apply local search
-    return (pendingCases || []).filter((item) => {
+    // Use preloadedCases from Dashboard (matches card count exactly) or fall back to API data
+    const source = preloadedCases
+      ? [...preloadedCases].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      : (pendingCases || []);
+
+    return source.filter((item) => {
+      // Local bank filter
+      if (selectedBanks.length > 0) {
+        const bank = (item.bankName || item.bankSlug || "").toLowerCase();
+        if (!selectedBanks.some(b => bank.includes(b.toLowerCase()))) return false;
+      }
+      // Local status filter
+      if (selectedStatuses.length > 0) {
+        if (!selectedStatuses.includes(item.status)) return false;
+      }
+      // Local search filter
       if (searchTokens.length > 0) {
         const text = getSearchableText(item);
         return searchTokens.every((token) => text.includes(token));
       }
       return true;
     });
-  }, [pendingCases, debouncedSearch]);
+  }, [preloadedCases, pendingCases, debouncedSearch, selectedBanks, selectedStatuses]);
 
 
   const handleDelete = async (recordId) => {

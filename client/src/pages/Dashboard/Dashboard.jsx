@@ -445,24 +445,7 @@ const Dashboard = () => {
     return {
       pending: filteredCases.filter((item) => {
         const s = normalizeStatus(item.status);
-        // Exclude work-in-progress, final, done, approved, cancel, query
-        if (
-          s.includes("work in progress") ||
-          s.includes("working") ||
-          s.includes("assigned") ||
-          s.includes("progress") ||
-          s.includes("visited") ||
-          s.includes("reported") ||
-          s.includes("reviewed") ||
-          s.includes("final") ||
-          s.includes("done") ||
-          s.includes("approved") ||
-          s.includes("cancel") ||
-          s.includes("complete") ||
-          s.includes("query") ||
-          s.includes("submit")
-        ) return false;
-        return !isApprovalPending(item);
+        return ["pending", "generated", "new", "created", "open"].includes(s);
       }).length,
 
       // Cases returned by FO with a decline reason
@@ -1178,7 +1161,10 @@ const Dashboard = () => {
                 </button>
               </div>
             )}
-            {activeComponent==="Pending"         && <Pending selectedMonth={selectedMonth} />}
+            {activeComponent==="Pending"         && <Pending selectedMonth={selectedMonth} preloadedCases={filteredCases.filter((item) => {
+              const s = normalizeStatus(item.status);
+              return ["pending", "generated", "new", "created", "open"].includes(s);
+            })} />}
             {activeComponent==="Assigned"        && <AssignedCase selectedMonth={selectedMonth} />}
             {activeComponent==="ApprovalPending" && (
               <ApprovalPendingCases
