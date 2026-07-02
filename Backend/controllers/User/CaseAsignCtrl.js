@@ -1354,9 +1354,10 @@ exports.getSummaryData = async (req, res) => {
       return (s.includes("submitted") || item.isReportSubmitted === true) && !s.includes("approved") && !s.includes("cancel");
     };
 
+    const PENDING_STATUSES_SET = new Set(["pending", "generated", "new", "created", "open"]);
     const pendingCount = filteredTotalSubmissions.filter((item) => {
       const s = normalizeS(item.status);
-      return s.includes("pending") && !isSubmittedCase(item);
+      return PENDING_STATUSES_SET.has(s) && !isSubmittedCase(item);
     }).length;
 
     const workingCount = filteredTotalSubmissions.filter((item) => {
