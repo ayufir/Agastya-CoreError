@@ -130,6 +130,7 @@ const exportAllowanceExcel = async (cases, filename = "allowance_sheet.xlsx", is
 
 const FieldOfficerDashboard = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const { cases, loading } = useSelector((state) => state.case) || {};
   const foCases = cases;
@@ -454,11 +455,17 @@ const FieldOfficerDashboard = () => {
         bankName: caseData.bankName
       });
       
-      toast.success("Query resolved! Case moved to Pending list.");
+      toast.success("Query resolved! Redirecting to form...");
       
       if (user?._id) {
         dispatch(fetchCases(user._id));
         dispatch(allCaseUserById());
+      }
+
+      // Navigate directly to the bank edit form
+      const bankRoute = getBankRoute(caseData);
+      if (bankRoute && caseId) {
+        navigate(`/bank/${bankRoute}/edit/${caseId}`);
       }
     } catch (err) {
       console.error("Error resolving query:", err.message);

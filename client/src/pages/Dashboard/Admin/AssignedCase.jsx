@@ -376,7 +376,7 @@ const AssignedCase = ({ selectedMonth }) => {
       title: "Action",
       render: (record) => (
         <div className="flex gap-3">
-          <Link to={`/bank/${getBankRoute(record)}/edit/${record._id}`}>
+          <Link to={`/bank/${getBankRoute(record)}/${record._id}`}>
             <Edit3 size={18} />
           </Link>
 
