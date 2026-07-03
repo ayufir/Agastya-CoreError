@@ -464,7 +464,7 @@ const IciciBankSchema = new mongoose.Schema({
 
   // imageFile: { type: String },
   fileName: { type: String },
-  uploadDate: { type: Date, default: Date.now },
+  uploadDate: { type: Date },
 
   // Remarks
   nfsaCheckRequired: { type: String },
