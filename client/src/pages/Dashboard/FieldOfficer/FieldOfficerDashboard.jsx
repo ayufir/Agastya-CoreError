@@ -143,6 +143,27 @@ const FieldOfficerDashboard = () => {
   const [selectedCaseDocs, setSelectedCaseDocs] = useState([]);
   const [isDocsModalOpen, setIsDocsModalOpen] = useState(false);
 
+  // Month filter — default to current month, clear to see all months
+  const getCurrentMonthValue = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  };
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthValue());
+
+  // Apply month filter on top of all FO cases
+  const monthFilteredFoCases = useMemo(() => {
+    const all = foCases || [];
+    if (!selectedMonth) return all;
+    return all.filter((c) => {
+      const dateStr = c.createdAt || c.uploadDate || c.createdDate || c.submissionDate || "";
+      if (!dateStr) return false;
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return false;
+      const yyyyMm = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      return yyyyMm === selectedMonth;
+    });
+  }, [foCases, selectedMonth]);
+
   // Deny reason modal state
   const [isDenyModalOpen, setIsDenyModalOpen] = useState(false);
   const [denyTargetCase, setDenyTargetCase] = useState(null); // { id, bankName }
@@ -249,8 +270,8 @@ const FieldOfficerDashboard = () => {
   }, [allCase]);
 
   const bankOptions = useMemo(() => {
-    return [...new Set(foCases?.map((caseItem) => caseItem.bankName).filter(Boolean))];
-  }, [foCases]);
+    return [...new Set(monthFilteredFoCases?.map((caseItem) => caseItem.bankName).filter(Boolean))];
+  }, [monthFilteredFoCases]);
 
   const handleAccept = async (id, bankName) => {
     try {
@@ -307,12 +328,15 @@ const FieldOfficerDashboard = () => {
   };
 
   const filterCases = () => {
-    let filtered = foCases || [];
+    let filtered = monthFilteredFoCases || [];
 
     if (selectedStatus !== "TOTAL_ASSIGNED") {
       if (selectedStatus === "QUERY_RAISED") {
+        // For query-raised, filter notes whose case is in the month-filtered set
+        const monthCaseIds = new Set((monthFilteredFoCases || []).map((c) => String(c._id)));
         return allCase?.filter((c) => {
           if (c.type === "call_not_attended") return false;
+          if (selectedMonth && !monthCaseIds.has(String(c.caseId))) return false;
           const status = getCaseStatus(String(c.caseId));
           return status === "Query Raised";
         }) || [];
@@ -379,7 +403,7 @@ const FieldOfficerDashboard = () => {
           .includes(searchText)
       );
     });
-  }, [foCases, searchText, selectedStatus, selectedBank, allCase, caseMap]);
+  }, [monthFilteredFoCases, searchText, selectedStatus, selectedBank, allCase, caseMap]);
 
   const sortedCases = useMemo(() => {
     return [...(filteredCasesList || [])].sort((a, b) => {
@@ -394,7 +418,8 @@ const FieldOfficerDashboard = () => {
   }, [filteredCasesList, selectedStatus]);
 
   const summaryCounts = useMemo(() => {
-    const items = foCases || [];
+    const items = monthFilteredFoCases || [];
+    const monthCaseIds = new Set(items.map((c) => String(c._id)));
     return {
       TOTAL_ASSIGNED: items.length,
       NEW_CASES: items.filter(
@@ -412,11 +437,12 @@ const FieldOfficerDashboard = () => {
       COMPLETED: items.filter((c) => c.isReportSubmitted === true).length,
       QUERY_RAISED: allCase?.filter((c) => {
         if (c.type === "call_not_attended") return false;
+        if (selectedMonth && !monthCaseIds.has(String(c.caseId))) return false;
         const status = getCaseStatus(String(c.caseId));
         return status === "Query Raised";
       }).length || 0,
     };
-  }, [foCases, allCase, caseMap]);
+  }, [monthFilteredFoCases, allCase, caseMap, selectedMonth]);
 
   const handleResolveAndEdit = async (caseId, caseData) => {
     if (!caseId || !caseData) return;
@@ -1068,6 +1094,40 @@ const FieldOfficerDashboard = () => {
 
       {/* Advanced Filter and Search Panel */}
       <div className="bg-white rounded-[24px] border border-[#d0e6df] p-4 md:p-5 shadow-sm mb-6 flex flex-col gap-4">
+        {/* Month Picker Row */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest shrink-0">
+            <Calendar size={14} className="text-slate-400" />
+            <span>Month:</span>
+          </div>
+          <div className="relative flex items-center gap-2">
+            <input
+              id="fo-month-picker"
+              type="month"
+              value={selectedMonth}
+              onChange={(e) => {
+                setSelectedMonth(e.target.value);
+                setSelectedStatus("TOTAL_ASSIGNED");
+                setSelectedBank(null);
+              }}
+              className="pl-3 pr-2 py-1.5 bg-[#f4faf8]/80 border border-[#d0e6df] text-[#1c2725] rounded-xl focus:outline-none focus:ring-4 focus:ring-[#3b6657]/10 focus:border-[#3b6657] transition-all text-xs font-bold shadow-inner cursor-pointer"
+            />
+            {selectedMonth && (
+              <button
+                onClick={() => setSelectedMonth("")}
+                className="text-[10px] text-slate-500 hover:text-rose-500 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200 font-bold flex items-center gap-1 transition-colors shrink-0 cursor-pointer shadow-sm hover:border-rose-100 hover:bg-rose-50"
+                title="Show all months"
+              >
+                All Months <X size={10} />
+              </button>
+            )}
+            {!selectedMonth && (
+              <span className="text-[10px] text-[#1b4d3e] bg-[#eef7f4] px-2.5 py-1.5 rounded-xl border border-[#c8e2da] font-bold">
+                Showing all months
+              </span>
+            )}
+          </div>
+        </div>
         <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
           <div className="relative w-full lg:max-w-md">
             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#5c706c]">
@@ -1108,7 +1168,7 @@ const FieldOfficerDashboard = () => {
             )}
             <div className="flex gap-2 shrink-0">
               {bankOptions.map((bank) => {
-                const todayCount = foCases.filter(
+                const todayCount = monthFilteredFoCases.filter(
                   (item) => item.bankName === bank && isToday(item.createdAt)
                 ).length;
                 const isBankSelected = selectedBank === bank;
@@ -1534,7 +1594,7 @@ const FieldOfficerDashboard = () => {
                     "Latitude",
                     "Longitude",
                     "Distance (km)",
-                    "OthersIfAny",
+                    "If Any (Others)",
                   ].map((col) => (
                     <th
                       key={col}
@@ -1615,8 +1675,8 @@ const FieldOfficerDashboard = () => {
                           {row["Longitude"]}
                         </span>
                       </td>
-                      {/* Distance — editable input */}
-                      <td className="px-3 py-2 whitespace-nowrap">
+                      {/* Distance (km) — editable input */}
+                      <td className="px-4 py-3 whitespace-nowrap">
                         <input
                           type="text"
                           value={allowanceEdits[record._id]?.distance !== undefined
@@ -1626,7 +1686,7 @@ const FieldOfficerDashboard = () => {
                           placeholder="km"
                           style={{
                             width: 80,
-                            padding: "3px 8px",
+                            padding: "5px 10px",
                             fontSize: 11,
                             fontWeight: 700,
                             color: "#92400e",
@@ -1639,18 +1699,18 @@ const FieldOfficerDashboard = () => {
                           onBlur={(e) => e.target.style.borderColor = "#fcd34d"}
                         />
                       </td>
-                      {/* OthersIfAny — editable input */}
-                      <td className="px-3 py-2">
+                      {/* If Any (Others) — editable input */}
+                      <td className="px-4 py-3">
                         <input
                           type="text"
                           value={allowanceEdits[record._id]?.othersIfAny !== undefined
                             ? allowanceEdits[record._id].othersIfAny
                             : (record.othersIfAny || record.others || record.remarks || "")}
                           onChange={(e) => updateAllowanceEdit(record._id, "othersIfAny", e.target.value)}
-                          placeholder=""
+                          placeholder="e.g. toll, parking..."
                           style={{
-                            width: 140,
-                            padding: "3px 8px",
+                            width: 160,
+                            padding: "5px 10px",
                             fontSize: 11,
                             fontWeight: 600,
                             color: "#5b21b6",
@@ -1666,20 +1726,73 @@ const FieldOfficerDashboard = () => {
                     </tr>
                   );
                 })}
+
+                {/* ── Total / Summary Row ── */}
+                {(() => {
+                  const totalDistanceNum = sortedCases.reduce((acc, record) => {
+                    const d = allowanceEdits[record._id]?.distance !== undefined
+                      ? allowanceEdits[record._id].distance
+                      : (record.distanceFromCityCentre || record.distance || "");
+                    const parsed = parseFloat(String(d).replace(/[^\d.]/g, ""));
+                    return acc + (isNaN(parsed) ? 0 : parsed);
+                  }, 0);
+                  return (
+                    <tr className="bg-[#1c2725] text-white border-t-2 border-emerald-300">
+                      {/* Bank col — "TOTAL" label */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#eef68f]">
+                          TOTAL
+                        </span>
+                      </td>
+                      {/* Customer Name col — case count */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className="text-[11px] font-extrabold text-white">
+                          {sortedCases.length} {sortedCases.length === 1 ? "Case" : "Cases"}
+                        </span>
+                      </td>
+                      {/* Assign / Visit / Submitted Date cols — blank */}
+                      <td className="px-4 py-3" />
+                      <td className="px-4 py-3" />
+                      <td className="px-4 py-3" />
+                      {/* Address col — blank */}
+                      <td className="px-4 py-3" />
+                      {/* City col — blank */}
+                      <td className="px-4 py-3" />
+                      {/* Lat / Lng cols — blank */}
+                      <td className="px-4 py-3" />
+                      <td className="px-4 py-3" />
+                      {/* Distance total */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span
+                          className="inline-block px-3 py-1.5 rounded-lg text-[11px] font-extrabold"
+                          style={{ background: "#fffbeb", color: "#92400e", border: "1.5px solid #fcd34d" }}
+                        >
+                          {totalDistanceNum > 0 ? `${totalDistanceNum.toFixed(1)} km` : "—"}
+                        </span>
+                      </td>
+                      {/* If Any col — blank */}
+                      <td className="px-4 py-3" />
+                    </tr>
+                  );
+                })()}
               </tbody>
             </table>
           </div>
 
-          {/* Panel Footer */}
+          {/* Panel Footer — clean summary only */}
           <div className="px-6 py-3 bg-[#f4faf8] border-t border-emerald-100 flex items-center justify-between">
             <span className="text-[10px] text-slate-400 font-semibold">
               Showing all {sortedCases.length} completed {sortedCases.length === 1 ? "case" : "cases"}
+              {selectedMonth
+                ? ` · ${dayjs(selectedMonth + "-01").format("MMMM YYYY")}`
+                : " · All Months"}
             </span>
             <div className="flex gap-2">
               <button
                 onClick={() => exportAllowanceCSV(
-                  sortedCases,
-                  `allowance_${(user?.name || "officer").replace(/\s+/g, "_")}_${dayjs().format("DDMMYYYY")}.csv`
+                  sortedCases.map(buildAllowanceRowWithEdits),
+                  `allowance_${(user?.name || "officer").replace(/\s+/g, "_")}_${dayjs().format("DDMMYYYY")}.csv`,
+                  true
                 )}
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] rounded-xl transition-all cursor-pointer active:scale-95 shadow-sm"
               >
@@ -1687,8 +1800,9 @@ const FieldOfficerDashboard = () => {
               </button>
               <button
                 onClick={() => exportAllowanceExcel(
-                  sortedCases,
-                  `allowance_${(user?.name || "officer").replace(/\s+/g, "_")}_${dayjs().format("DDMMYYYY")}.xlsx`
+                  sortedCases.map(buildAllowanceRowWithEdits),
+                  `allowance_${(user?.name || "officer").replace(/\s+/g, "_")}_${dayjs().format("DDMMYYYY")}.xlsx`,
+                  true
                 )}
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] rounded-xl transition-all cursor-pointer active:scale-95 shadow-sm"
               >

@@ -388,14 +388,20 @@ export default function BajajHousingView() {
               <tr>
                 <td style={{ padding: '6px 10px', border: '1px solid #999', fontWeight: 500, fontSize: 12, background: '#f9f9f9' }}>Name of Applicant</td>
                 <td style={{ padding: '6px 10px', border: '1px solid #999', fontSize: 12 }}>{s1.applicantName}</td>
-                <td style={{ padding: '6px 10px', border: '1px solid #999', fontWeight: 500, fontSize: 12, background: '#f9f9f9' }}>Contact Person</td>
-                <td style={{ padding: '6px 10px', border: '1px solid #999', fontSize: 12 }}>{s1.contactPerson}</td>
+                <td style={{ padding: '6px 10px', border: '1px solid #999', fontWeight: 500, fontSize: 12, background: '#f9f9f9' }}>Contact Person &amp; No.</td>
+                <td style={{ padding: '6px 10px', border: '1px solid #999', fontSize: 12 }}>{s1.contactPerson} {s1.contactNo ? `(${s1.contactNo})` : ""}</td>
               </tr>
               <tr>
                 <td style={{ padding: '6px 10px', border: '1px solid #999', fontWeight: 500, fontSize: 12, background: '#f9f9f9' }}>Loan Category</td>
                 <td style={{ padding: '6px 10px', border: '1px solid #999', fontSize: 12 }}>{s1.loanCategory}</td>
-                <td style={{ padding: '6px 10px', border: '1px solid #999', fontWeight: 500, fontSize: 12, background: '#f9f9f9' }}>Person Met at Site</td>
-                <td style={{ padding: '6px 10px', border: '1px solid #999', fontSize: 12 }}>{s1.personMetAtSite}</td>
+                <td style={{ padding: '6px 10px', border: '1px solid #999', fontWeight: 500, fontSize: 12, background: '#f9f9f9' }}>Person Met at Site &amp; Contact</td>
+                <td style={{ padding: '6px 10px', border: '1px solid #999', fontSize: 12 }}>{s1.personMetAtSite} {s1.personMetAtSiteContact ? `(${s1.personMetAtSiteContact})` : ""}</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '6px 10px', border: '1px solid #999', fontWeight: 500, fontSize: 12, background: '#f9f9f9' }}>Relationship at Site</td>
+                <td style={{ padding: '6px 10px', border: '1px solid #999', fontSize: 12 }}>{s1.relationshipMetAtSite || '-'}</td>
+                <td style={{ padding: '6px 10px', border: '1px solid #999', fontWeight: 500, fontSize: 12, background: '#f9f9f9' }}>Tenants Info</td>
+                <td style={{ padding: '6px 10px', border: '1px solid #999', fontSize: 12 }}>{s1.numberOfTenants ? `Tenants: ${s1.numberOfTenants}` : ""} {s1.tenantVintage ? ` (Vintage: ${s1.tenantVintage} yrs)` : ""}</td>
               </tr>
               <tr>
                 <td style={{ padding: '6px 10px', border: '1px solid #999', fontWeight: 500, fontSize: 12, background: '#f9f9f9' }}>Property Owner (Legal Document)</td>

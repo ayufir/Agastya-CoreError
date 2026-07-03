@@ -398,7 +398,7 @@ const PropertyDetails = ({
 
         {/* ── Section 8: Structural Details ── */}
         {showStructural && (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", width: "100%" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px", width: "100%" }}>
             <div className={`custom-form-item-wrapper ${hasValue("typeOfStructure") ? "has-value" : ""}`} style={{ position: "relative" }}>
               <label>Type of Structure</label>
               <Form.Item name="typeOfStructure" rules={[{ required: true, message: "Type of Structure is required" }]} style={{ margin: 0 }}>

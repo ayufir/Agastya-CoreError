@@ -106,7 +106,9 @@ const CancelledCases = ({ selectedMonth }) => {
       title: "Customer Name",
       render: (_, record) => (
         <Link
-          to={`/bank/${getBankRoute(record)}/${record._id}`}
+          to={getBankRoute(record) === "bajaj" || getBankRoute(record) === "bajaj-housing"
+            ? `/bank/${getBankRoute(record)}/view/${record._id}`
+            : `/bank/${getBankRoute(record)}/${record._id}`}
           className="text-blue-600 hover:underline"
         >
           {getDisplayCustomerName(record)}

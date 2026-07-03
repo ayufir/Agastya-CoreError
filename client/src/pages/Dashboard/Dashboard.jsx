@@ -20,7 +20,7 @@ import { fetchNotifications } from "../../redux/features/notification/notificati
 import { setZone, setSavedCity } from "../../redux/features/assignedCase/assignedCasesSlice";
 import axiosInstance from "../../config/axios";
 import socket from "../../config/socket";
-import { getDisplayCustomerName, getDisplayAddress } from "../../utils/dashboardRecord";
+import { getDisplayCustomerName, getDisplayAddress, getBankRoute } from "../../utils/dashboardRecord";
 
 const { Option } = Select;
 
@@ -81,7 +81,6 @@ const normalizeAllCaseRecord = (record, index) => {
         "city",
         "location",
         "propertyCity",
-        "propertyLocation",
         "nearestCityTown",
         "locationDetails.mainLocality",
         "basicDetails.city",
@@ -488,6 +487,7 @@ const Dashboard = () => {
         return (
           s.includes("final") ||
           s.includes("submit") ||
+          item.isReportSubmitted === true ||
           s.includes("done") ||
           s.includes("approved")
         );
@@ -1054,16 +1054,10 @@ const Dashboard = () => {
                         <tr><td colSpan="9" style={{ textAlign:"center", padding:48, color:"#94a3b8" }}>No data found</td></tr>
                       ) : paginatedBankCases.map((rec, idx) => {
                         const row = getRowStyle(rec.status, rec.createdAt);
-                        const baseBankName = selectedBankView ? selectedBankView.replace(/\s*\(.*?\)$/, "") : "";
-                        let bank;
-                        switch (baseBankName) {
-                          case "Home First": bank="home-first"; break;
-                          case "Home First Trench": bank="home-first-trench"; break;
-                          case "Aditya Bank": bank="aditya-birla"; break;
-                          case "Manappuram Bank": bank="manappuram"; break;
-                          case "ICICI Bank": bank="icici"; break;
-                          default: bank="bajaj";
-                        }
+                        const bank = getBankRoute(rec);
+                        const viewLink = bank === "bajaj" || bank === "bajaj-housing"
+                          ? `/bank/${bank}/view/${rec?.key}`
+                          : `/bank/${bank}/${rec?.key}`;
                         const s = normalizeStatus(rec.status);
                         const badge = (s.includes("final") || s.includes("done") || s.includes("submitted") || s.includes("approved"))
                           ? { background: "#ecfdf5", color: "#059669" }
@@ -1093,7 +1087,7 @@ const Dashboard = () => {
                               </Tooltip>
                             </td>
                             <td style={{ color:"#64748b", fontSize:13 }}>{rec.city}</td>
-                            <td><Link to={`/bank/${bank}/${rec?.key}`} style={{ color:"#6366f1", fontWeight:600, textDecoration:"none", fontSize:13 }}>{rec.engineer}</Link></td>
+                            <td><Link to={viewLink} style={{ color:"#6366f1", fontWeight:600, textDecoration:"none", fontSize:13 }}>{rec.engineer}</Link></td>
                             <td><span className="status-badge" style={badge}>{normalizeStatus(rec.status) === "pending" ? "Not Assigned" : rec.status}</span></td>
                             <td>
                               <Input
@@ -1172,6 +1166,7 @@ const Dashboard = () => {
                 onRefresh={fetchAllCases}
                 onCaseApproved={handleCaseApprovedLocal}
                 onCaseDeleted={handleCaseDeletedLocal}
+                preloadedCases={filteredCases.filter(isApprovalPending)}
               />
             )}
             {activeComponent==="ApprovedCases"   && <ApprovedCases selectedMonth={selectedMonth} onRefresh={fetchAllCases} />}

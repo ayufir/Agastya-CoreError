@@ -16,6 +16,8 @@ import Spinner from "../../../components/Spinner";
 import {
   getBankRoute,
   getDisplayCustomerName,
+  getDisplayAddress,
+  getDisplayCity,
 } from "../../../utils/dashboardRecord";
 
 const { Search } = Input;
@@ -251,6 +253,23 @@ const AssignedCase = ({ selectedMonth }) => {
           {getDisplayCustomerName(record)}
         </Link>
       ),
+    },
+    {
+      title: "Address",
+      render: (record) => {
+        const address = getDisplayAddress(record) || "N/A";
+        return (
+          <Tooltip title={address}>
+            <div style={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {address}
+            </div>
+          </Tooltip>
+        );
+      },
+    },
+    {
+      title: "City",
+      render: (record) => getDisplayCity(record) || "N/A",
     },
     {
       title: "Assigned To",

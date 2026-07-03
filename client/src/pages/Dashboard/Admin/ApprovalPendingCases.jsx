@@ -54,7 +54,7 @@ const isApprovalPending = (item) => {
   return isSubmitted && !isApproved && !isCancelled;
 };
 
-const ApprovalPendingCases = ({ selectedMonth, onRefresh, onCaseApproved, onCaseDeleted }) => {
+const ApprovalPendingCases = ({ selectedMonth, onRefresh, onCaseApproved, onCaseDeleted, preloadedCases }) => {
   const dispatch = useDispatch();
 
   const { user } = useSelector((state) => state.auth);
@@ -114,26 +114,64 @@ const ApprovalPendingCases = ({ selectedMonth, onRefresh, onCaseApproved, onCase
     dispatch(fetchFieldOfficers());
   }, [dispatch]);
 
+  const bankOptions = useMemo(() => {
+    if (preloadedCases) {
+      return [...new Set(preloadedCases.map((item) => item.bankName).filter(Boolean))].sort();
+    }
+    return assignedFilterOptions?.banks || [];
+  }, [preloadedCases, assignedFilterOptions]);
+
   useEffect(() => {
-    fetchList();
-  }, [fetchList]);
+    if (!preloadedCases) {
+      fetchList();
+    }
+  }, [fetchList, preloadedCases]);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedZone, selectedMonth, selectedBanks, debouncedSearch]);
 
   const filteredCasesList = useMemo(() => {
-    return (cases || []).filter((item) => {
+    const source = preloadedCases || (cases || []).filter((item) => {
       if (!isSameMonth(getCaseDate(item), selectedMonth)) return false;
       return isApprovalPending(item);
     });
-  }, [cases, selectedMonth]);
+
+    const getSearchableText = (item) => [
+      item.customerName, item.visitedPersonName, item.applicantName,
+      item.applicantsName, item.clientName, item.displayCustomerName,
+      item.personName, item.contactPersonName, item.contactPersonNumber,
+      item.bankName, item.bankSlug, item.status,
+      item.propertyAddress, item.addressLegal, item.address, item.displayAddress,
+      item.propertyCity, item.city, item.customerNo, item.contactNumber,
+      item.mobileNo, item.assignedTo?.name,
+    ].filter(Boolean).join(" ").toLowerCase();
+
+    const searchTokens = debouncedSearch
+      ? debouncedSearch.trim().toLowerCase().split(/\s+/).filter(Boolean)
+      : [];
+
+    return source.filter((item) => {
+      if (selectedBanks.length > 0) {
+        const bank = (item.bankName || item.bankSlug || "").toLowerCase();
+        if (!selectedBanks.some(b => bank.includes(b.toLowerCase()))) return false;
+      }
+      if (searchTokens.length > 0) {
+        const text = getSearchableText(item);
+        return searchTokens.every((token) => text.includes(token));
+      }
+      return true;
+    });
+  }, [preloadedCases, cases, selectedMonth, debouncedSearch, selectedBanks]);
 
   const handleRemoveAssignment = async (recordId) => {
     try {
       await axiosInstance.put(`/case/unassign-case/${recordId}`);
       toast.success("Assignment removed");
-      await fetchList();
+      if (onRefresh) onRefresh();
+      if (!preloadedCases) {
+        await fetchList();
+      }
     } catch (error) {
       toast.error("Failed to remove assignment");
       console.error(error);
@@ -212,14 +250,6 @@ const ApprovalPendingCases = ({ selectedMonth, onRefresh, onCaseApproved, onCase
           }>
             <div className="flex items-center gap-2 cursor-pointer">
               <span>{fo.name}</span>
-              {record.assignedTo && (user?.role === "Admin" || user?.role === "SuperAdmin") && (
-                <Popconfirm
-                  title="Remove assignment?"
-                  onConfirm={() => handleRemoveAssignment(record._id)}
-                >
-                  <button className="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs hover:bg-red-200">Unassign</button>
-                </Popconfirm>
-              )}
             </div>
           </Tooltip>
         );
@@ -299,8 +329,10 @@ const ApprovalPendingCases = ({ selectedMonth, onRefresh, onCaseApproved, onCase
                   });
                   toast.success("Case approved successfully!");
                   if (onCaseApproved) onCaseApproved(record._id);
-                  await fetchList();
                   if (onRefresh) onRefresh();
+                  if (!preloadedCases) {
+                    await fetchList();
+                  }
                 } catch (err) {
                   console.error("Approval error:", err);
                   toast.error(err.response?.data?.message || "Failed to approve case");
@@ -323,8 +355,10 @@ const ApprovalPendingCases = ({ selectedMonth, onRefresh, onCaseApproved, onCase
               await dispatch(deletedCases(record._id));
               toast.success("Deleted");
               if (onCaseDeleted) onCaseDeleted(record._id);
-              await fetchList();
               if (onRefresh) onRefresh();
+              if (!preloadedCases) {
+                await fetchList();
+              }
             }}
             okText="Yes"
             cancelText="No"
@@ -357,7 +391,7 @@ const ApprovalPendingCases = ({ selectedMonth, onRefresh, onCaseApproved, onCase
           allowClear
           maxTagCount={2}
         >
-          {(assignedFilterOptions?.banks || []).map((bank) => (
+          {bankOptions.map((bank) => (
             <Option key={bank} value={bank}>
               {bank}
             </Option>

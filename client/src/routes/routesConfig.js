@@ -89,11 +89,11 @@ export const routesConfig = [
   },
   {
     path: "/bank/aditya-birla/:id",
-    element: lazy(() => import("../pages/Bank-Details/AdityaBirlaForm/AdityaBirlaForm.jsx"))
+    element: lazy(() => import("../pages/Bank-Details/AdityaDetails"))
   },
   {
     path: "/bank/aditya/:id",
-    element: lazy(() => import("../pages/Bank-Details/AdityaBirlaForm/AdityaBirlaForm.jsx")),
+    element: lazy(() => import("../pages/Bank-Details/AdityaDetails")),
   },
   {
     path: "/bank/aditya/edit/:id",

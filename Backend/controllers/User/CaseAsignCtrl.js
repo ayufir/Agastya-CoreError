@@ -132,7 +132,6 @@ const getCaseDisplayCity = (record) =>
   readCaseValue(record, [
     "propertyCity",
     "city",
-    "propertyLocation",
     "nearestCityTown",
     "locationDetails.mainLocality",
     "basicDetails.city",
@@ -1375,7 +1374,7 @@ exports.getSummaryData = async (req, res) => {
 
     const finalSubmittedCount = filteredTotalSubmissions.filter((item) => {
       const s = normalizeS(item.status);
-      return s.includes("final") || s.includes("submit") || s.includes("done") || s.includes("approved");
+      return s.includes("final") || s.includes("submit") || item.isReportSubmitted === true || s.includes("done") || s.includes("approved");
     }).length;
 
     const queryRaisedCount = filteredTotalSubmissions.filter((item) =>

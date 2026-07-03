@@ -24,6 +24,7 @@ import AutoFillForm from "../../AutoFillForm";
 import AdvancedAutoFillForm from "../../../components/AdvancedAutoFillForm";
 import { createAutoFillAdapter } from "../../../utils/Autofilladapter";
 import { ICICI_MAPPING } from "../../../config/Bankfieldmappings";
+import { getDisplayCustomerName, getDisplayAddress, getDisplayContact, getDisplayCity } from "../../../utils/dashboardRecord";
 
 import toast from "react-hot-toast";
 import { Download } from "lucide-react";
@@ -340,7 +341,21 @@ const IciciBank = () => {
     setLoading(true);
     try {
       const response = await dispatch(getIciciBankById(id)).unwrap();
-      const merged = { ...response, ...readDraft(id) };
+      const docName = response.customerName || response.applicantName || getDisplayCustomerName(response);
+      const docContact = response.personContact || getDisplayContact(response);
+      const docAddress = response.plotNo || getDisplayAddress(response);
+      const docCity = response.city || response.propertyCity || getDisplayCity(response);
+
+      const enriched = {
+        ...response,
+        customerName: docName !== "N/A" ? docName : response.customerName,
+        applicantName: docName !== "N/A" ? docName : response.applicantName,
+        personContact: docContact !== "N/A" ? docContact : response.personContact,
+        plotNo: docAddress !== "N/A" ? docAddress : response.plotNo,
+        city: docCity !== "N/A" ? docCity : response.city,
+      };
+
+      const merged = { ...enriched, ...readDraft(id) };
       setEditData(merged);
       setFormData(merged);
     } catch (error) {
@@ -1055,84 +1070,6 @@ const IciciBank = () => {
             </div>
         </div>
 
-        {isFieldOfficer ? (
-          <div className="mt-4">
-
-            <div className="flex flex-col sm:flex-row justify-end gap-4 bg-white border border-gray-200 rounded-xl shadow-sm p-4 mb-10">
-              <Button
-                type="default"
-                onClick={async () => {
-                  setSaving(true);
-                  try {
-                    const payloadWithFiles = await prepareFormDataForServer(formData);
-                    const updated = sanitizeForSave(payloadWithFiles);
-                    setFormData(updated);
-                    setEditData(updated);
-                    writeDraft(id, updated);
-                    if (id) {
-                      await dispatch(updateIciciBank({ id, formData: { ...updated, isReportSubmitted: false } })).unwrap();
-                      await fetchEditData();
-                    }
-                    toast.success("Draft saved successfully");
-                  } catch (err) {
-                    console.error("Save failed:", err);
-                    toast.error("Failed to save draft");
-                  } finally {
-                    setSaving(false);
-                  }
-                }}
-                loading={saving}
-                style={{
-                  height: "40px",
-                  paddingLeft: "24px",
-                  paddingRight: "24px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  borderRadius: "8px",
-                }}
-              >
-                Save Draft
-              </Button>
-              <Button
-                type="primary"
-                onClick={async () => {
-                  setSaving(true);
-                  try {
-                    const payloadWithFiles = await prepareFormDataForServer(formData);
-                    const updated = sanitizeForSave(payloadWithFiles);
-                    setFormData(updated);
-                    setEditData(updated);
-                    writeDraft(id, updated);
-                    
-                    if (id) {
-                      await dispatch(updateIciciBank({ id, formData: { ...updated, isReportSubmitted: false } })).unwrap();
-                    }
-                    
-                    await handleSubmit(updated);
-                  } catch (err) {
-                    console.error("Submission failed:", err);
-                    toast.error("Failed to submit report");
-                  } finally {
-                    setSaving(false);
-                  }
-                }}
-                loading={saving}
-                style={{
-                  backgroundColor: "#235097",
-                  borderColor: "#285194",
-                  height: "40px",
-                  paddingLeft: "24px",
-                  paddingRight: "24px",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                  borderRadius: "8px",
-                }}
-              >
-                Submit Report
-              </Button>
-            </div>
-          </div>
-        ) : (
           <>
             {/* TOP COMPACT NAV (MOBILE ONLY) & GRID NAV (DESKTOP ONLY) */}
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 md:p-6 mb-6">
@@ -1302,7 +1239,6 @@ const IciciBank = () => {
               </div>
             </div>
           </>
-        )}
       </div>
     </div>
   );

@@ -19,6 +19,7 @@ import AdvancedAutoFillForm from "../../../components/AdvancedAutoFillForm";
 import { finalUpdate } from "../../../redux/features/case/caseThunks";
 import { Copy, Download, X } from "lucide-react";
 import axiosInstance from "../../../config/axios";
+import { getDisplayCustomerName, getDisplayContact, getDisplayAddress } from "../../../utils/dashboardRecord";
 
 // ─── Sidebar Nav Item ────────────────────────────────────────────────────────
 const SidebarItem = ({ id, label, isActive, onClick }) => (
@@ -129,7 +130,18 @@ const HomeFirstBank = () => {
   const fetchEditData = async (fetchId) => {
     try {
       const response = await dispatch(fetchHFBankById(fetchId)).unwrap();
-      setIsEdit(response);
+      const docName = response.customerName || getDisplayCustomerName(response);
+      const docContact = response.customerNo || getDisplayContact(response);
+      const docAddress = response.addressLegal || response.addressSite || getDisplayAddress(response);
+
+      const enriched = {
+        ...response,
+        customerName: docName !== "N/A" ? docName : response.customerName,
+        customerNo: docContact !== "N/A" ? docContact : response.customerNo,
+        addressLegal: docAddress !== "N/A" ? docAddress : response.addressLegal,
+        addressSite: docAddress !== "N/A" ? docAddress : response.addressSite,
+      };
+      setIsEdit(enriched);
     } catch (fetchError) {
       console.error("Error fetching data:", fetchError);
     }
@@ -1180,8 +1192,7 @@ const normalizeQualityOfConstruction = (val) => {
       </header>
 
       {/* ── AI Advanced Auto Fill (Admin/SuperAdmin only) ── */}
-      {!isFieldOfficer && (
-        <div style={{ maxWidth: 1280, margin: "20px auto 0", padding: "0 16px" }}>
+      <div style={{ maxWidth: 1280, margin: "20px auto 0", padding: "0 16px" }}>
           <div style={{
             background: "#ffffff",
             borderRadius: 12,
@@ -1299,7 +1310,6 @@ const normalizeQualityOfConstruction = (val) => {
             )}
           </div>
         </div>
-      )}
 
       {/* ── Technical Individual Assignment Title & Collapsible Property Details ── */}
       <div style={{ maxWidth: 1280, margin: "20px auto 0", padding: "0 16px" }}>
@@ -1436,8 +1446,8 @@ const normalizeQualityOfConstruction = (val) => {
                 <div>
                   <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Plot ID</div>
                   <input
-                    value={isEdit?.plotArea || ""}
-                    onChange={(e) => handleTopInputChange("plotArea", e.target.value)}
+                    value={isEdit?.plotNo || ""}
+                    onChange={(e) => handleTopInputChange("plotNo", e.target.value)}
                     disabled={isFieldOfficer && isEdit?.isReportSubmitted}
                     style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
                   />
@@ -1477,7 +1487,6 @@ const normalizeQualityOfConstruction = (val) => {
         }}
       >
         {/* ── Left Sidebar ── */}
-        {!isFieldOfficer && (
           <aside
             className="form-sidebar-aside"
             style={{
@@ -1520,7 +1529,6 @@ const normalizeQualityOfConstruction = (val) => {
               ))}
             </nav>
           </aside>
-        )}
 
         {/* ── Right Content Panel ── */}
         <main
@@ -1543,31 +1551,7 @@ const normalizeQualityOfConstruction = (val) => {
 
           {/* Form content */}
           <div className="form-content-body">
-            {isFieldOfficer ? (
-              <div className="mt-4">
-                <AdvancedAutoFillForm
-                  caseId={id}
-                  bankName="HomeFirst Bank"
-                  setFormData={setExtractedData}
-                  atsDocuments={
-                    isEdit?.atsDocuments && isEdit.atsDocuments.length > 0
-                      ? isEdit.atsDocuments
-                      : (isEdit?.AttachDocuments || [])
-                  }
-                  imageUrls={isEdit?.imageUrls || []}
-                  siteVisitVideo={isEdit?.siteVisitVideo || []}
-                  gpsFiles={isEdit?.gpsFiles || []}
-                  emailFiles={isEdit?.emailFiles || []}
-                  fieldFormFiles={isEdit?.fieldFormFiles || []}
-                  additionalFiles={isEdit?.additionalFiles || []}
-                  fetchData={() => fetchEditData(id)}
-                  onUploadingChange={setIsUploadingFiles}
-                  isSubmitted={isEdit?.isReportSubmitted}
-                />
-              </div>
-            ) : (
               activeContent?.component
-            )}
           </div>
 
           {/* Save & Proceed footer */}

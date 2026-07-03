@@ -15,6 +15,7 @@ import AutoFillForm from "../../AutoFillForm";
 import AdvancedAutoFillForm from "../../../components/AdvancedAutoFillForm";
 import { createAutoFillAdapter, applyMappedFields } from "../../../utils/Autofilladapter";
 import { BAJAJ_HOUSING_MAPPING } from "../../../config/Bankfieldmappings";
+import { getDisplayCustomerName, getDisplayAddress, getDisplayContact, getDisplayCity } from "../../../utils/dashboardRecord";
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 const getCoordinateSnapshot = (lat, lng) =>
@@ -435,15 +436,24 @@ export default function BajajHousingForm() {
         dispatch(fetchBajajHousingById(id))
             .unwrap()
             .then((data) => {
+                const docName = data.applicantDetails?.applicantName || getDisplayCustomerName(data);
+                const docContact = data.applicantDetails?.contactNo || getDisplayContact(data);
+                const docAddress = data.locationDetails?.addressAsPerSite || getDisplayAddress(data);
+                const docCity = data.locationDetails?.propertyCity || data.city || getDisplayCity(data);
+
                 const nextForm = {
                     ...INIT,
                     ...data,
                     applicantDetails: {
                         ...INIT.applicantDetails,
+                        applicantName: docName !== "N/A" ? docName : "",
+                        contactNo: docContact !== "N/A" ? docContact : "",
                         ...(data.applicantDetails || {}),
                     },
                     locationDetails: {
                         ...INIT.locationDetails,
+                        addressAsPerSite: docAddress !== "N/A" ? docAddress : "",
+                        propertyCity: docCity !== "N/A" ? docCity : "",
                         ...(data.locationDetails || {}),
                     },
                     boundaryDetails: {

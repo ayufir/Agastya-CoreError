@@ -75,7 +75,6 @@ export const getDisplayCity = (record) => {
     [
       "propertyCity",
       "city",
-      "propertyLocation",
       "nearestCityTown",
       "locationDetails.mainLocality",
       "basicDetails.city",

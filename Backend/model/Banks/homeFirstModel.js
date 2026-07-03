@@ -52,6 +52,8 @@ const ValuationReportSchema = new mongoose.Schema({
   propertyAreaLimits: { type: String },       // Municipal / GP / TP
   eraApplicable: { type: String },            // RERA No.
   projectName: { type: String },
+  propertyName: { type: String },
+  plotNo: { type: String },
 
   // ─── SECTION 3: Visit Details ─────────────────────────────────────────────
   customerName: { type: String },             // Applicant Name
