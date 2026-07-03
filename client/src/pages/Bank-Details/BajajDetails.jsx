@@ -6,7 +6,7 @@ import * as XLSX from "xlsx-js-style";
 
 import { Card, Descriptions, Skeleton, Typography } from "antd";
 import FileDownload from "../../components/FileDownload";
-import { finalUpdate } from "../../redux/features/assignedCase/assignedCasesThunk";
+import { finalUpdate } from "../../redux/features/case/caseThunks";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import React, { useState } from "react";

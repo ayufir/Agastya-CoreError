@@ -7,7 +7,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
 import { getDetailsById } from "../../redux/features/Banks/manappuram/ManappuramThunks";
 import { useEffect, useState } from "react";
-import { finalUpdate } from "../../redux/features/assignedCase/assignedCasesThunk";
+import { finalUpdate } from "../../redux/features/case/caseThunks";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 

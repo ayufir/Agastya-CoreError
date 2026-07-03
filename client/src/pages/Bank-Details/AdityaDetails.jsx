@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchDetailsById } from "../../redux/features/Banks/AdityaBank/adityaThunks";
 import FileDownload from "../../components/FileDownload";
-import { finalUpdate } from "../../redux/features/assignedCase/assignedCasesThunk";
+import { finalUpdate } from "../../redux/features/case/caseThunks";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
