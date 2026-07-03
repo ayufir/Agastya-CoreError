@@ -1174,7 +1174,21 @@ const Dashboard = () => {
             )}
             {activeComponent==="ApprovedCases"   && <ApprovedCases selectedMonth={selectedMonth} onRefresh={fetchAllCases} />}
             {activeComponent==="QueryRaised"     && <QueryRaised selectedMonth={selectedMonth} />}
-            {activeComponent==="ReportSubmitted" && <FinalSubmittedCase selectedMonth={selectedMonth} />}
+            {activeComponent==="ReportSubmitted" && (
+              <FinalSubmittedCase 
+                selectedMonth={selectedMonth} 
+                preloadedCases={filteredCases.filter((item) => {
+                  const s = String(item.status || "").toLowerCase().trim();
+                  return (
+                    s.includes("final") ||
+                    s.includes("submit") ||
+                    item.isReportSubmitted === true ||
+                    s.includes("done") ||
+                    s.includes("approved")
+                  );
+                })}
+              />
+            )}
             {activeComponent==="CancelCases"     && <CancelledCases selectedMonth={selectedMonth} />}
             {activeComponent==="Out_Tat_Cases"   && <OutOfTATCase selectedMonth={selectedMonth} />}
             {activeComponent==="Summary"         && <SummaryCard selectedMonth={selectedMonth} />}

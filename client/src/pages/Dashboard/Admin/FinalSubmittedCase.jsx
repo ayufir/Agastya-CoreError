@@ -39,7 +39,7 @@ const isSameMonth = (date, monthValue) => {
   );
 };
 
-const FinalSubmittedCases = ({ selectedMonth }) => {
+const FinalSubmittedCases = ({ selectedMonth, preloadedCases }) => {
   const dispatch = useDispatch();
 
   const {
@@ -88,8 +88,10 @@ const FinalSubmittedCases = ({ selectedMonth }) => {
   }, [searchText]);
 
   useEffect(() => {
-    fetchFinalList();
-  }, [fetchFinalList]);
+    if (!preloadedCases) {
+      fetchFinalList();
+    }
+  }, [fetchFinalList, preloadedCases]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -105,8 +107,36 @@ const FinalSubmittedCases = ({ selectedMonth }) => {
     downloadAnchorNode.remove();
   };
 
-  // API already filters by month — no need to re-filter on frontend
-  const monthFilteredFinal = final || [];
+  const monthFilteredFinal = useMemo(() => {
+    if (!preloadedCases) return final || [];
+
+    let filtered = [...preloadedCases];
+    if (debouncedSearch) {
+      const searchTokens = debouncedSearch.trim().toLowerCase().split(/\s+/);
+      filtered = filtered.filter((item) => {
+        const haystack = [
+          item.bankName,
+          item.customerName,
+          item.address,
+          item.city,
+          item.engineer,
+          item.status,
+          item.remark,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return searchTokens.every((token) => haystack.includes(token));
+      });
+    }
+    if (selectedBanks.length) {
+      filtered = filtered.filter((item) => selectedBanks.includes(item.bankName));
+    }
+    if (selectedStatuses.length) {
+      filtered = filtered.filter((item) => selectedStatuses.includes(item.status));
+    }
+    return filtered;
+  }, [preloadedCases, final, debouncedSearch, selectedBanks, selectedStatuses]);
 
   const columns = [
     {
@@ -226,7 +256,7 @@ const FinalSubmittedCases = ({ selectedMonth }) => {
         />
       </div>
 
-      {loading ? (
+      {loading && !preloadedCases ? (
         <Spinner />
       ) : (
         <Table
