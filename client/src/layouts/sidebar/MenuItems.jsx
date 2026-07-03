@@ -113,8 +113,8 @@ const MenuItems = () => {
     toast.success("Logged Out Successfully");
   };
 
-  const isFieldOfficer = ["FieldOfficer", "FIELDOFFICER"].includes(user?.role);
-  const isCentralStaff = ["Bhopal", "Gwalior", "Jabalpur", "Combined BJG"].includes(user?.assignedCity) && !["SuperAdmin", "Admin"].includes(user?.role);
+  const isFieldOfficer = user?.role?.toLowerCase() === "fieldofficer";
+  const isCentralStaff = ["Bhopal", "Gwalior", "Jabalpur", "Combined BJG"].includes(user?.assignedCity) && !["SuperAdmin", "Admin"].includes(user?.role) && !isFieldOfficer;
   const showCitySelector = !isFieldOfficer;
   const allowedCities = useMemo(() => {
     if (!user) return [];
