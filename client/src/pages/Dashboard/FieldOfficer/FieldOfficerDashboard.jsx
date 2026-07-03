@@ -58,6 +58,11 @@ const formatShortDate = (dateString) => {
 
 // ─── Allowance Sheet export helpers ─────────────────────────────────────────
 
+const stripHtml = (html) => {
+  if (!html) return "";
+  return String(html).replace(/<[^>]*>/g, "").trim();
+};
+
 /**
  * Build a flat row object from a case record for the Allowance Sheet.
  * Columns: Bank | Customer Name | Assign Date | Visit Date | Submitted Date
@@ -76,7 +81,7 @@ const buildAllowanceRow = (record) => ({
   "Latitude": record.latitude || "N/A",
   "Longitude": record.longitude || "N/A",
   "Distance (km)": record.distanceFromCityCentre || record.distance || "N/A",
-  "OthersIfAny": record.othersIfAny || record.others || record.remarks || "",
+  "OthersIfAny": record.othersIfAny || record.others || "",
 });
 
 /** Export array of case records (or pre-built row objects) to a .csv file */
@@ -188,8 +193,6 @@ const FieldOfficerDashboard = () => {
       "OthersIfAny": edits.othersIfAny !== undefined ? edits.othersIfAny : base["OthersIfAny"],
     };
   };
-
-  const navigate = useNavigate();
 
   const downloadFile = async (url, fileName) => {
     try {
@@ -1712,7 +1715,7 @@ const FieldOfficerDashboard = () => {
                           type="text"
                           value={allowanceEdits[record._id]?.othersIfAny !== undefined
                             ? allowanceEdits[record._id].othersIfAny
-                            : (record.othersIfAny || record.others || record.remarks || "")}
+                            : (record.othersIfAny || record.others || "")}
                           onChange={(e) => updateAllowanceEdit(record._id, "othersIfAny", e.target.value)}
                           placeholder="e.g. toll, parking..."
                           style={{

@@ -720,6 +720,102 @@ export default function BajajHousingForm() {
 
     const STEP_NAMES = ['', 'Applicant Details', 'Location Details', 'Boundaries On Site', 'NDMA Parameters', 'Technical Details', 'Accommodation Details', 'Valuation Details', 'Infrastructure & Docs'];
 
+    const isFieldOfficer = user?.role?.toLowerCase() === "fieldofficer";
+
+    if (isFieldOfficer) {
+        return (
+            <div style={s.app}>
+                <div style={s.header}>
+                    <div style={s.headerLeft}>
+                        <div style={s.headerLogo}>BAJAJ</div>
+                        <div style={s.headerSub}>Product of A Ameya Infovision Pvt. Ltd.</div>
+                    </div>
+                    <div style={s.headerRight}>
+                        <div style={s.headerBrand}>BAJAJ HOUSING FINANCE LIMITED</div>
+                        <div style={s.headerFin}>Site Visit Report | {AD.applicantName || 'New Application'}</div>
+                    </div>
+                </div>
+
+                <div style={{ maxWidth: 1280, margin: "24px auto", padding: "0 16px" }}>
+                    <div style={{
+                        background: "#ffffff",
+                        borderRadius: 12,
+                        border: "1px solid #e5e7eb",
+                        boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                        padding: "24px",
+                    }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                <span style={{ fontSize: 16, fontWeight: 700, color: "#1e40af" }}>AI Advanced Auto Fill</span>
+                                <span style={{
+                                    fontSize: 11, fontWeight: 500, color: "#6366f1",
+                                    background: "#ede9fe", borderRadius: 6, padding: "2px 8px"
+                                }}>AI Powered</span>
+                            </div>
+                            <button
+                                onClick={handleDownloadAll}
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 6,
+                                    padding: "8px 16px",
+                                    background: "linear-gradient(135deg, #10b981, #059669)",
+                                    color: "#ffffff",
+                                    border: "none",
+                                    borderRadius: 8,
+                                    fontSize: 12,
+                                    fontWeight: 700,
+                                    cursor: "pointer",
+                                }}
+                            >
+                                <Download size={13} /> Download All (ZIP)
+                            </button>
+                        </div>
+
+                        <AdvancedAutoFillForm
+                            bankName="Bajaj"
+                            setFormData={handleAutoFill}
+                            setFormDataDirect={setForm}
+                            imageUrls={form?.sitePhotographs || form?.imageUrls || []}
+                            atsDocuments={form?.atsDocuments && form.atsDocuments.length > 0 ? form.atsDocuments : (form?.AttachDocuments || [])}
+                            siteVisitVideo={form?.siteVisitVideo || []}
+                            gpsFiles={form?.gpsFiles || []}
+                            emailFiles={form?.emailFiles || []}
+                            fieldFormFiles={form?.fieldFormFiles || []}
+                            additionalFiles={form?.additionalFiles || []}
+                            fetchData={fetchData}
+                        />
+
+                        <div style={{ marginTop: 32, textAlign: "center" }}>
+                            <button
+                                type="button"
+                                onClick={() => handleSubmit()}
+                                disabled={saving || form?.isReportSubmitted}
+                                style={{
+                                    width: "100%",
+                                    maxWidth: 320,
+                                    padding: "14px 28px",
+                                    borderRadius: 24,
+                                    background: (saving || form?.isReportSubmitted) ? "#9ca3af" : "#2563eb",
+                                    color: "#fff",
+                                    fontWeight: 700,
+                                    fontSize: 14,
+                                    border: "none",
+                                    cursor: (saving || form?.isReportSubmitted) ? "not-allowed" : "pointer",
+                                    transition: "all 0.2s ease",
+                                    textAlign: "center",
+                                    boxShadow: "0 4px 12px rgba(37, 99, 235, 0.2)",
+                                }}
+                            >
+                                {form?.isReportSubmitted ? "Report Submitted ✓" : "Submit Report"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div style={s.app}>
             <div style={s.header}>

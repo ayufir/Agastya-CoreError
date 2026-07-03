@@ -95,7 +95,7 @@ const HomeFirstBank = () => {
     }));
   };
 
-  const isFieldOfficer = user?.role === "FieldOfficer";
+  const isFieldOfficer = user?.role?.toLowerCase() === "fieldofficer";
   const canFinalSubmit = id && (user?.role === "Admin" || user?.role === "SuperAdmin");
 
   const primaryActionLabel = isFieldOfficer
@@ -1160,6 +1160,122 @@ const normalizeQualityOfConstruction = (val) => {
     ? ""
     : activeContent?.label || "";
 
+  if (isFieldOfficer) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#f3f4f6", fontFamily: "sans-serif" }}>
+        {/* ── Top Header ── */}
+        <header className="form-sub-header">
+          <div className="form-sub-header-title-container">
+            <img
+              src="/assets/images/banks-img/homefrist.png"
+              alt="Home First Bank"
+              style={{ height: 72, maxWidth: 200, objectFit: "contain", display: "block" }}
+            />
+          </div>
+          <div className="form-sub-header-date-container">
+            <input
+              type="datetime-local"
+              onChange={(e) => setCreatedDate(e.target.value)}
+              style={{
+                outline: "none",
+                background: "transparent",
+                fontSize: 11,
+                color: "#B5121B",
+                fontWeight: 600,
+                border: "none",
+                width: "100%",
+              }}
+            />
+          </div>
+        </header>
+
+        {/* ── AI Advanced Auto Fill ── */}
+        <div style={{ maxWidth: 1280, margin: "24px auto", padding: "0 16px" }}>
+          <div style={{
+            background: "#ffffff",
+            borderRadius: 12,
+            border: "1px solid #e5e7eb",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+            padding: "24px",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 16, fontWeight: 700, color: "#1e40af" }}>AI Advanced Auto Fill</span>
+                <span style={{
+                  fontSize: 11, fontWeight: 500, color: "#6366f1",
+                  background: "#ede9fe", borderRadius: 6, padding: "2px 8px"
+                }}>AI Powered</span>
+              </div>
+              <button
+                onClick={handleDownloadAll}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "8px 16px",
+                  background: "linear-gradient(135deg, #10b981, #059669)",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: 8,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                <Download size={13} /> Download All (ZIP)
+              </button>
+            </div>
+
+            <AdvancedAutoFillForm
+              caseId={id}
+              bankName="HomeFirst Bank"
+              setFormData={setExtractedData}
+              atsDocuments={
+                isEdit?.atsDocuments && isEdit.atsDocuments.length > 0
+                  ? isEdit.atsDocuments
+                  : (isEdit?.AttachDocuments || [])
+              }
+              imageUrls={isEdit?.imageUrls || []}
+              siteVisitVideo={isEdit?.siteVisitVideo || []}
+              gpsFiles={isEdit?.gpsFiles || []}
+              emailFiles={isEdit?.emailFiles || []}
+              fieldFormFiles={isEdit?.fieldFormFiles || []}
+              additionalFiles={isEdit?.additionalFiles || []}
+              fetchData={() => id && fetchEditData(id)}
+              onUploadingChange={setIsUploadingFiles}
+              isSubmitted={isEdit?.isReportSubmitted}
+            />
+
+            <div style={{ marginTop: 32, textAlign: "center" }}>
+              <button
+                type="button"
+                onClick={() => handlePrimaryAction()}
+                disabled={loading || isUploadingFiles || isEdit?.isReportSubmitted}
+                style={{
+                  width: "100%",
+                  maxWidth: 320,
+                  padding: "14px 28px",
+                  borderRadius: 24,
+                  background: (loading || isUploadingFiles || isEdit?.isReportSubmitted) ? "#9ca3af" : "#2563eb",
+                  color: "#fff",
+                  fontWeight: 700,
+                  fontSize: 14,
+                  border: "none",
+                  cursor: (loading || isUploadingFiles || isEdit?.isReportSubmitted) ? "not-allowed" : "pointer",
+                  transition: "all 0.2s ease",
+                  textAlign: "center",
+                  boxShadow: "0 4px 12px rgba(37, 99, 235, 0.2)",
+                }}
+              >
+                {isEdit?.isReportSubmitted ? "Report Submitted ✓" : "Submit Report"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ minHeight: "100vh", background: "#f3f4f6", fontFamily: "sans-serif" }}>
 
@@ -1551,7 +1667,7 @@ const normalizeQualityOfConstruction = (val) => {
 
           {/* Form content */}
           <div className="form-content-body">
-              activeContent?.component
+              {activeContent?.component}
           </div>
 
           {/* Save & Proceed footer */}

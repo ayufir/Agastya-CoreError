@@ -34,12 +34,16 @@ const getBankMeta = (modelKey) => {
 const enrichCasesWithBankMeta = (cases, modelKey) => {
   const { displayName, route } = getBankMeta(modelKey);
 
-  return cases.map((caseItem) => ({
-    ...caseItem.toObject(),
-    bankName: displayName,
-    bankSlug: route,
-     route: route, // Add route field for easier access in frontend
-  }));
+  return cases.map((caseItem) => {
+    const obj = caseItem.toObject();
+    return {
+      ...obj,
+      bankName: displayName,
+      bankSlug: route,
+      route: route, // Add route field for easier access in frontend
+      createdAt: obj.createdAt || obj.uploadDate || null, // Fallback uploadDate to createdAt
+    };
+  });
 };
 
 
@@ -147,10 +151,21 @@ const buildRoleAwareQuery = (user, baseQuery = {}) => {
     query.assignedTo = user._id;
   } else if (user.role === "TechnicalManager") {
     // Technical Managers see cases assigned to them OR created by them
-    query.$or = [
-      { assignedTo: user._id },
-      { createdBy: user._id }
-    ];
+    const tmQuery = {
+      $or: [
+        { assignedTo: user._id },
+        { createdBy: user._id }
+      ]
+    };
+    if (query.$or) {
+      query.$and = [
+        { $or: query.$or },
+        tmQuery
+      ];
+      delete query.$or;
+    } else {
+      query.$or = tmQuery.$or;
+    }
   }
   // All other roles see all cases
 
@@ -216,13 +231,11 @@ const applyCommonCaseFilters = (cases, rawQuery = {}, user) => {
   // Month filter
   if (rawQuery.month) {
     const [year, month] = rawQuery.month.split('-').map(Number);
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 1);
     cases = cases.filter((caseItem) => {
       const createdDate = caseItem.createdAt ? new Date(caseItem.createdAt) : null;
       const uploadedDate = caseItem.uploadDate ? new Date(caseItem.uploadDate) : null;
-      const matchCreated = createdDate && !isNaN(createdDate.getTime()) && createdDate >= startDate && createdDate < endDate;
-      const matchUploaded = uploadedDate && !isNaN(uploadedDate.getTime()) && uploadedDate >= startDate && uploadedDate < endDate;
+      const matchCreated = createdDate && !isNaN(createdDate.getTime()) && createdDate.getUTCFullYear() === year && (createdDate.getUTCMonth() + 1) === month;
+      const matchUploaded = uploadedDate && !isNaN(uploadedDate.getTime()) && uploadedDate.getUTCFullYear() === year && (uploadedDate.getUTCMonth() + 1) === month;
       return matchCreated || matchUploaded;
     });
   }
@@ -840,6 +853,13 @@ exports.updateCaseStatus = async (req, res) => {
       },
     };
 
+    const PENDING_OR_WIP_STATUSES = [
+      "pending", "generated", "new", "created", "open", "assigned", "visited", "reported", "reviewed", "work in progress", "work in progress"
+    ];
+    if (status && PENDING_OR_WIP_STATUSES.includes(status.toLowerCase().trim())) {
+      updatePayload.$set.isReportSubmitted = false;
+    }
+
     if (status === "Work in Progress") {
       updatePayload.$set.isReportSubmitted = false;
       updatePayload.$set.queryResolved = true;
@@ -1159,7 +1179,10 @@ exports.getFinalSubmittedCases = async (req, res) => {
     const finalCases = await fetchCasesAcrossBanks({
       user,
       baseQuery: {
-        status: { $regex: /final|submit|done|approved/i }
+        $or: [
+          { status: { $regex: /final|submit|done|approved/i } },
+          { isReportSubmitted: true }
+        ]
       },
       populate: "assignedTo createdBy",
     });
@@ -1303,8 +1326,8 @@ exports.getSummaryData = async (req, res) => {
     const results = await Promise.all(
       filteredBankRegistry.map(async (bankConfig) => {
         const { key: modelKey, displayName, model: Model } = bankConfig;
-        const baseQuery = buildRoleAwareQuery(user);
-        const allCases = await Model.find({ ...baseQuery, ...monthFilter })
+        const finalQuery = buildRoleAwareQuery(user, monthFilter);
+        const allCases = await Model.find(finalQuery)
           .select("_id status approvalStatus declineReason createdAt uploadDate customerName visitedPersonName applicantName applicantsName clientName basicDetails.nameOfClient propertyInfo.applicantName summary.applicantName header.contactedPerson addressLegal legalAddress addressSite propertyAddress address locationDetails.propertyAddressAsVisit locationDetails.propertyAddressAsDocs locationDetails.propertyAddressAsTRF propertyInfo.addressAtSite propertyInfo.addressAsPerDocument summary.propertyAddress customerNo contactNumber mobileNo personContactNo personContact contactPerson contactPersonNumber propertyCity city propertyLocation nearestCityTown locationDetails.mainLocality basicDetails.city propertyInfo.city summary.city assignedTo createdBy AttachDocuments atsDocuments route customCaseId appIdNotes displayAddress displayCustomerName personName applicantDetails.applicantName applicantNames contactPersonName contactedPerson isReportSubmitted")
           .populate("assignedTo");
         return {

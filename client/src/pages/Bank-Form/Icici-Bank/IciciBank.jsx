@@ -324,7 +324,7 @@ const IciciBank = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const user = useSelector((state) => state.auth.user);
-  const isFieldOfficer = user?.role === "FieldOfficer";
+  const isFieldOfficer = user?.role?.toLowerCase() === "fieldofficer";
 
   useEffect(() => {
     if (id) {
@@ -752,6 +752,109 @@ const IciciBank = () => {
     return (
       <div className="flex justify-center items-center min-h-screen bg-white">
         <Spin size="large" />
+      </div>
+    );
+  }
+
+  if (isFieldOfficer) {
+    return (
+      <div className="min-h-screen bg-[#f8fafc]">
+        {/* APPLICATION INFO BANNER */}
+        <div className="bg-[#0b1d3a] text-white py-5 shadow-sm">
+          <div className="max-w-[1550px] mx-auto px-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="bg-[#b21b12] text-white text-[10px] font-bold px-2 py-0.5 rounded tracking-wide">
+                  ICICI BANK
+                </span>
+                <h1 className="text-xl font-bold tracking-tight">
+                  Valuation Report Wizard
+                </h1>
+              </div>
+              <p className="text-xs text-gray-300 mt-1">
+                {id ? `Editing Case: #${id}` : "Creating New Valuation Report"} • Draft auto-saved locally
+              </p>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[11px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full flex items-center gap-1.5 font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                Live Sync
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-[1550px] mx-auto px-4 mt-6">
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 md:p-6 mb-6">
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 16, fontWeight: 700, color: "#1e40af" }}>AI Advanced Auto Fill</span>
+                <span style={{
+                  fontSize: 11, fontWeight: 500, color: "#6366f1",
+                  background: "#ede9fe", borderRadius: 6, padding: "2px 8px"
+                }}>AI Powered</span>
+              </div>
+              <button
+                onClick={handleDownloadAll}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "8px 16px",
+                  background: "linear-gradient(135deg, #10b981, #059669)",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: 8,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+              >
+                <Download size={13} /> Download All (ZIP)
+              </button>
+            </div>
+
+            <AdvancedAutoFillForm
+              bankName="ICICI"
+              setFormData={handleAutoFill}
+              setFormDataDirect={setFormData}
+              setEditDataDirect={setEditData}
+              imageUrls={editData?.sitePhotographs || editData?.imageUrls || []}
+              atsDocuments={editData?.atsDocuments && editData.atsDocuments.length > 0 ? editData.atsDocuments : (editData?.AttachDocuments || [])}
+              siteVisitVideo={editData?.siteVisitVideo || []}
+              gpsFiles={editData?.gpsFiles || []}
+              emailFiles={editData?.emailFiles || []}
+              fieldFormFiles={editData?.fieldFormFiles || []}
+              additionalFiles={editData?.additionalFiles || []}
+              fetchData={fetchEditData}
+            />
+
+            <div style={{ marginTop: 32, textAlign: "center" }}>
+              <button
+                type="button"
+                onClick={() => handleFinalSubmit()}
+                disabled={saving || (editData?.isReportSubmitted === true)}
+                style={{
+                  width: "100%",
+                  maxWidth: 320,
+                  padding: "14px 28px",
+                  borderRadius: 24,
+                  background: (saving || editData?.isReportSubmitted === true) ? "#9ca3af" : "#2563eb",
+                  color: "#fff",
+                  fontWeight: 700,
+                  fontSize: 14,
+                  border: "none",
+                  cursor: (saving || editData?.isReportSubmitted === true) ? "not-allowed" : "pointer",
+                  transition: "all 0.2s ease",
+                  textAlign: "center",
+                  boxShadow: "0 4px 12px rgba(37, 99, 235, 0.2)",
+                }}
+              >
+                {editData?.isReportSubmitted === true ? "Report Submitted ✓" : "Submit Report"}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

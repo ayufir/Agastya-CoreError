@@ -34,7 +34,7 @@ const isSameMonth = (date, monthValue) => {
   if (isNaN(d.getTime())) return false;
 
   return (
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}` ===
+    `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}` ===
     monthValue
   );
 };

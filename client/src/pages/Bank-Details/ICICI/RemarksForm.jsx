@@ -679,6 +679,24 @@ const RemarksForm = ({
 
       <div className="flex flex-col sm:flex-row justify-end gap-4 sm:gap-6 w-full">
         <Button
+          onClick={handleSave}
+          loading={saving}
+          style={{
+            borderColor: "#003b70",
+            color: "#003b70",
+            height: "38px",
+            paddingLeft: "24px",
+            paddingRight: "24px",
+            fontSize: "14px",
+            fontWeight: "500",
+            borderRadius: "4px",
+          }}
+          className="h-[38px] px-6 text-sm font-medium rounded-[4px] hover:bg-gray-50 w-full sm:w-auto"
+        >
+          Save Draft
+        </Button>
+
+        <Button
           type="primary"
           onClick={handleSubmit}
           loading={saving}

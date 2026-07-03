@@ -688,6 +688,129 @@ export default function AdityaBirlaForm() {
     const BD = form.boundaryDetails;
     const E = form.engineerDetails;
 
+    const isFieldOfficer = user?.role?.toLowerCase() === "fieldofficer";
+
+    if (isFieldOfficer) {
+        return (
+            <div className="min-h-screen bg-[#f8fafc]">
+                {/* APPLICATION INFO BANNER */}
+                <div className="bg-[#0b1d3a] text-white py-5 shadow-sm">
+                    <div className="max-w-[1550px] mx-auto px-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <span className="bg-[#b21b12] text-white text-[10px] font-bold px-2 py-0.5 rounded tracking-wide">
+                                    ADITYA BIRLA
+                                </span>
+                                <h1 className="text-xl font-bold tracking-tight">
+                                    Valuation Report Wizard
+                                </h1>
+                            </div>
+                            <p className="text-xs text-gray-300 mt-1">
+                                {id ? `Editing Case: #${id}` : "Creating New Valuation Report"} • Draft auto-saved locally
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="max-w-[1550px] mx-auto px-4 mt-6">
+                    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 md:p-6 mb-6">
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                <span style={{ fontSize: 16, fontWeight: 700, color: "#1e40af" }}>AI Advanced Auto Fill</span>
+                                <span style={{
+                                    fontSize: 11, fontWeight: 500, color: "#6366f1",
+                                    background: "#ede9fe", borderRadius: 6, padding: "2px 8px"
+                                }}>AI Powered</span>
+                            </div>
+                            <button
+                                onClick={handleDownloadAll}
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 6,
+                                    padding: "8px 16px",
+                                    background: "linear-gradient(135deg, #10b981, #059669)",
+                                    color: "#ffffff",
+                                    border: "none",
+                                    borderRadius: 8,
+                                    fontSize: 12,
+                                    fontWeight: 700,
+                                    cursor: "pointer",
+                                }}
+                            >
+                                <Download size={13} /> Download All (ZIP)
+                            </button>
+                        </div>
+
+                        <AdvancedAutoFillForm
+                            bankName="Aditya"
+                            setFormData={handleAutoFill}
+                            setFormDataDirect={setForm}
+                            imageUrls={form?.imageUrls || []}
+                            atsDocuments={form?.atsDocuments && form.atsDocuments.length > 0 ? form.atsDocuments : (form?.AttachDocuments || [])}
+                            siteVisitVideo={form?.siteVisitVideo || []}
+                            gpsFiles={form?.gpsFiles || []}
+                            emailFiles={form?.emailFiles || []}
+                            fieldFormFiles={form?.fieldFormFiles || []}
+                            additionalFiles={form?.additionalFiles || []}
+                            fetchData={fetchData}
+                        />
+
+                        <div style={{ marginTop: 32, textAlign: "center" }}>
+                            <button
+                                type="button"
+                                onClick={async () => {
+                                    try {
+                                        setSaving(true);
+                                        const payload = {
+                                            ...form,
+                                            isReportSubmitted: true,
+                                            approvalStatus: "Submitted",
+                                            status: "FinalSubmitted"
+                                        };
+                                        let targetId = id;
+                                        if (targetId) {
+                                            await dispatch(updateAdityaDetails({ id: targetId, ...payload })).unwrap();
+                                        } else {
+                                            const res = await dispatch(createAditya(payload)).unwrap();
+                                            targetId = res._id;
+                                        }
+                                        await dispatch(finalUpdate({ id: targetId, bankName: "aditya", updateData: payload })).unwrap();
+                                        toast.success("Report Submitted successfully ✅");
+                                        navigate("/");
+                                    } catch (err) {
+                                        console.error(err);
+                                        toast.error("Submission failed");
+                                    } finally {
+                                        setSaving(false);
+                                    }
+                                }}
+                                disabled={saving || form?.isReportSubmitted}
+                                style={{
+                                    width: "100%",
+                                    maxWidth: 320,
+                                    padding: "14px 28px",
+                                    borderRadius: 24,
+                                    background: (saving || form?.isReportSubmitted) ? "#9ca3af" : "#2563eb",
+                                    color: "#fff",
+                                    fontWeight: 700,
+                                    fontSize: 14,
+                                    border: "none",
+                                    cursor: (saving || form?.isReportSubmitted) ? "not-allowed" : "pointer",
+                                    transition: "all 0.2s ease",
+                                    textAlign: "center",
+                                    boxShadow: "0 4px 12px rgba(37, 99, 235, 0.2)",
+                                }}
+                            >
+                                {form?.isReportSubmitted ? "Report Submitted ✓" : "Submit Report"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div id="print-section" className="aditya-print-section max-w-4xl mx-auto my-14 bg-white shadow-lg print:shadow-none print:m-0 print:max-w-full">
             {/* Action Bar (hidden in print) */}
@@ -750,16 +873,16 @@ export default function AdityaBirlaForm() {
                 </button>
             </div>
 
-           <div className="no-print w-full flex justify-end">
-  <div className="bg-[#fff4f4] border border-[#B5121B] px-3 py-1.5 rounded-lg shadow-sm">
-    <input
-      className="outline-none bg-transparent text-xs text-[#B5121B] font-medium text-right"
-      type="datetime-local"
-      value={B?.createdAt || ""}
-      onChange={e => set("basicDetails", "createdAt", e.target.value)}
-    />
-  </div>
-</div>
+            <div className="no-print w-full flex justify-end">
+                <div className="bg-[#fff4f4] border border-[#B5121B] px-3 py-1.5 rounded-lg shadow-sm">
+                    <input
+                        className="outline-none bg-transparent text-xs text-[#B5121B] font-medium text-right"
+                        type="datetime-local"
+                        value={B?.createdAt || ""}
+                        onChange={e => set("basicDetails", "createdAt", e.target.value)}
+                    />
+                </div>
+            </div>
 
             {/* Report Content */}
             <div className="p-4 print:p-0">

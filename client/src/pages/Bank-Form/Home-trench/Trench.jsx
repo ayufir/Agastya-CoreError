@@ -69,7 +69,7 @@ const Trench = () => {
 
   const [showAutoFill, setShowAutoFill] = useState(false);
   const [isPropertyDetailsOpen, setIsPropertyDetailsOpen] = useState(false);
-  const isFieldOfficer = user?.role === "FieldOfficer";
+  const isFieldOfficer = user?.role?.toLowerCase() === "fieldofficer";
 
   const watchedVisitedPersonName = Form.useWatch("visitedPersonName", form);
   const watchedContactNumber = Form.useWatch("contactNumber", form);
@@ -353,6 +353,102 @@ const Trench = () => {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
+
+  if (isFieldOfficer) {
+    return (
+      <div className="trench-portal">
+        <header className="trench-topbar">
+          <div className="trench-brand">
+            <span>home</span>first
+          </div>
+          <div className="trench-user">
+            {user?.name || "Assigned User"} · {user?.role || "User"}
+          </div>
+        </header>
+
+        <div style={{ maxWidth: 1280, margin: "24px auto", padding: "0 16px" }}>
+          <div style={{
+            background: "#ffffff",
+            borderRadius: 12,
+            border: "1px solid #e5e7eb",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+            padding: "24px",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifySpaceBetween: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 16, fontWeight: 700, color: "#1e40af" }}>AI Advanced Auto Fill</span>
+                <span style={{
+                  fontSize: 11, fontWeight: 500, color: "#6366f1",
+                  background: "#ede9fe", borderRadius: 6, padding: "2px 8px"
+                }}>AI Powered</span>
+              </div>
+              <button
+                onClick={handleDownloadAll}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "#10b981",
+                  border: "none",
+                  padding: "8px 16px",
+                  borderRadius: "8px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  color: "#ffffff",
+                  cursor: "pointer",
+                }}
+              >
+                <Download size={14} /> Download All (ZIP)
+              </button>
+            </div>
+
+            <AdvancedAutoFillForm
+              caseId={id}
+              bankName="Home First Tranche"
+              setFormData={setReportData}
+              atsDocuments={
+                reportData?.atsDocuments && reportData.atsDocuments.length > 0
+                  ? reportData.atsDocuments
+                  : (reportData?.AttachDocuments || [])
+              }
+              imageUrls={reportData?.imageUrls || []}
+              siteVisitVideo={reportData?.siteVisitVideo || []}
+              gpsFiles={reportData?.gpsFiles || []}
+              emailFiles={reportData?.emailFiles || []}
+              fieldFormFiles={reportData?.fieldFormFiles || []}
+              additionalFiles={reportData?.additionalFiles || []}
+              fetchData={() => id && dispatch(getHomeTrenchReportById(id)).unwrap().then(setReportData)}
+            />
+
+            <div style={{ marginTop: 32, textAlign: "center" }}>
+              <button
+                type="button"
+                onClick={handleFinalSubmit}
+                disabled={loading || (reportData?.isReportSubmitted === true)}
+                style={{
+                  width: "100%",
+                  maxWidth: 320,
+                  padding: "14px 28px",
+                  borderRadius: 24,
+                  background: (loading || reportData?.isReportSubmitted === true) ? "#9ca3af" : "#2563eb",
+                  color: "#fff",
+                  fontWeight: 700,
+                  fontSize: 14,
+                  border: "none",
+                  cursor: (loading || reportData?.isReportSubmitted === true) ? "not-allowed" : "pointer",
+                  transition: "all 0.2s ease",
+                  textAlign: "center",
+                  boxShadow: "0 4px 12px rgba(37, 99, 235, 0.2)",
+                }}
+              >
+                {reportData?.isReportSubmitted === true ? "Report Submitted ✓" : "Submit Report"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="trench-portal">
