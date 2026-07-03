@@ -373,7 +373,10 @@ const Dashboard = () => {
   const monthFiltered = useMemo(() => {
     return allCasesData.filter((item) => {
       if (!selectedMonth) return true;
-      return isSameMonth(item.createdAt, selectedMonth);
+      return (
+        isSameMonth(item.createdAt, selectedMonth) ||
+        isSameMonth(item.uploadDate, selectedMonth)
+      );
     });
   }, [allCasesData, selectedMonth]);
 
