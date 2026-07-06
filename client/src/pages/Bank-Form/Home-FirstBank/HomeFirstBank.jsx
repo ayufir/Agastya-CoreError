@@ -575,6 +575,12 @@ const normalizeQualityOfConstruction = (val) => {
   };
 
   useEffect(() => {
+    if (user?.role?.toLowerCase() === "fieldofficer" && !id) {
+      toast.error("You do not have permission to create cases");
+      navigate("/field/dashboard");
+      return;
+    }
+
     if (id) {
       fetchEditData(id);
     } else {
@@ -583,7 +589,7 @@ const normalizeQualityOfConstruction = (val) => {
       setExtractedData({});
       setActiveSection(1);
     }
-  }, [id]);
+  }, [id, user, navigate]);
 
 
 
@@ -1595,7 +1601,7 @@ const normalizeQualityOfConstruction = (val) => {
         className="form-container-flex"
         style={{
           display: "flex",
-          maxWidth: 1280,
+          maxWidth: 1140,
           margin: "24px auto",
           gap: 0,
           padding: "0 16px",

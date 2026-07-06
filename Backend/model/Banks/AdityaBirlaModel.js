@@ -31,6 +31,7 @@ const AdityaBirlaSchema = new mongoose.Schema(
       initiationDate: String,
       visitDate: String,
       reportDate: String,
+      contactNo: String,
     },
 
     // ── LOCATION DETAILS ───────────────────────────────────────────────

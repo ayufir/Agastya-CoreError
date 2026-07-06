@@ -678,7 +678,7 @@ const callClaudeAPI = async (system, messagesPrompt, mediaBlocks = []) => {
   }
 
   const requestBody = {
-    model: "claude-sonnet-4-6",
+    model: "claude-3-5-sonnet-20241022",
     max_tokens: 8192,
     system: system,
     messages: [

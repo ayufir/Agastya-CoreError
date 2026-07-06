@@ -487,6 +487,7 @@ const Dashboard = () => {
 
       finalSubmitted: filteredCases.filter((item) => {
         const s = normalizeStatus(item.status);
+        if (s.includes("work in progress") || s.includes("working")) return false;
         return (
           s.includes("final") ||
           s.includes("submit") ||
@@ -587,8 +588,8 @@ const Dashboard = () => {
         component: "Out_Tat_Cases",
       });
 
-      // 7. All Cases (SuperAdmin only)
-      if (user?.role === "SuperAdmin") {
+      // 7. All Cases (SuperAdmin & Admin)
+      if (["SuperAdmin", "Admin"].includes(user?.role)) {
         baseReports.push({
           title: "All Cases",
           total: cardCounts.allCases,
@@ -596,8 +597,8 @@ const Dashboard = () => {
         });
       }
 
-      // 8. Approval Pending (SuperAdmin only)
-      if (user?.role === "SuperAdmin") {
+      // 8. Approval Pending (SuperAdmin & Admin)
+      if (["SuperAdmin", "Admin"].includes(user?.role)) {
         baseReports.push({
           title: "Approval Pending",
           total: cardCounts.approvalPending,
@@ -605,8 +606,8 @@ const Dashboard = () => {
         });
       }
 
-      // 9. Approved (SuperAdmin only)
-      if (user?.role === "SuperAdmin") {
+      // 9. Approved (SuperAdmin & Admin)
+      if (["SuperAdmin", "Admin"].includes(user?.role)) {
         baseReports.push({
           title: "Approved",
           total: cardCounts.approved,
@@ -1179,6 +1180,7 @@ const Dashboard = () => {
                 selectedMonth={selectedMonth} 
                 preloadedCases={filteredCases.filter((item) => {
                   const s = String(item.status || "").toLowerCase().trim();
+                  if (s.includes("work in progress") || s.includes("working")) return false;
                   return (
                     s.includes("final") ||
                     s.includes("submit") ||

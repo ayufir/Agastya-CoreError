@@ -152,10 +152,15 @@ const SummaryCard = ({ selectedMonth }) => {
           search: debouncedSearch || undefined,
           bankName: bankFilter || undefined,
           status: statusFilter || undefined,
+          month: selectedMonth || undefined,
         },
       });
 
-      const items = (response.data?.tableItems || []).map(normalizeSummaryRecord);
+      const items = (
+        response.data?.totalSubmissions ||
+        response.data?.tableItems ||
+        []
+      ).map(normalizeSummaryRecord);
 
       setTableData(items);
       setFilterOptions(
@@ -166,7 +171,7 @@ const SummaryCard = ({ selectedMonth }) => {
     } finally {
       setLoading(false);
     }
-  }, [bankFilter, debouncedSearch, selectedZone, statusFilter]);
+  }, [bankFilter, debouncedSearch, selectedZone, statusFilter, selectedMonth]);
 
   useEffect(() => {
     const timer = setTimeout(() => {

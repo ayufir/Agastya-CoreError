@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { Select } from "antd";
 import { setSavedCity } from "../../redux/features/assignedCase/assignedCasesSlice";
@@ -11,8 +11,16 @@ const { Option } = Select;
 const BankHomePage = () => {
   const [search, setSearch] = useState("");
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const savedCity = useSelector((state) => state.assignedCases.savedCity);
+
+  useEffect(() => {
+    if (user?.role?.toLowerCase() === "fieldofficer") {
+      toast.error("You do not have permission to access this page");
+      navigate("/field/dashboard");
+    }
+  }, [user, navigate]);
 
   const isBJGUser =
     ["Bhopal", "Gwalior", "Jabalpur", "Combined BJG"].includes(user?.assignedCity) &&

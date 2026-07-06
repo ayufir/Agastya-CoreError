@@ -1614,7 +1614,7 @@ const AdvancedAutoFillForm = ({
       </div>
 
       {/* ── Field Officer: Uploaded Documents Preview Panel ─────────────────── */}
-      {isFieldOfficer && (() => {
+      {false && isFieldOfficer && (() => {
         const totalFoFiles = uploadedGpsUrls.length + atsDocsList.length + uploadedFieldFormUrls.length + uploadedPhotoUrls.length + uploadedVideoUrls.length;
         return (
           <div className="mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">

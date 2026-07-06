@@ -132,8 +132,8 @@ const getCaseDisplayContact = (record) =>
     "header.contactedPerson",
   ]);
 
-const getCaseDisplayCity = (record) =>
-  readCaseValue(record, [
+const getCaseDisplayCity = (record) => {
+  const city = readCaseValue(record, [
     "propertyCity",
     "city",
     "nearestCityTown",
@@ -142,6 +142,16 @@ const getCaseDisplayCity = (record) =>
     "propertyInfo.city",
     "summary.city",
   ]);
+  if (city && city !== "N/A" && city !== "") return city;
+
+  // Fallback: try to find common cities in address
+  const address = getCaseDisplayAddress(record).toLowerCase();
+  const commonCities = ["bhopal", "indore", "jabalpur", "gwalior", "dehradun"];
+  for (const c of commonCities) {
+    if (address.includes(c)) return c;
+  }
+  return "";
+};
 
 const buildRoleAwareQuery = (user, baseQuery = {}) => {
   const query = { ...baseQuery };
@@ -1373,6 +1383,7 @@ exports.getSummaryData = async (req, res) => {
     const normalizeS = (s) => String(s || "").toLowerCase().trim().replace(/\s+/g, " ");
     const isSubmittedCase = (item) => {
       const s = normalizeS(item.status);
+      if (s.includes("work in progress") || s.includes("working")) return false;
       return (s.includes("submitted") || item.isReportSubmitted === true) && !s.includes("approved") && !s.includes("cancel");
     };
 
@@ -1387,6 +1398,7 @@ exports.getSummaryData = async (req, res) => {
       if (isSubmittedCase(item)) return false;
       return (
         s.includes("working") ||
+        s.includes("work in progress") ||
         s.includes("assigned") ||
         s.includes("progress") ||
         s.includes("visited") ||
@@ -1397,6 +1409,7 @@ exports.getSummaryData = async (req, res) => {
 
     const finalSubmittedCount = filteredTotalSubmissions.filter((item) => {
       const s = normalizeS(item.status);
+      if (s.includes("work in progress") || s.includes("working")) return false;
       return s.includes("final") || s.includes("submit") || item.isReportSubmitted === true || s.includes("done") || s.includes("approved");
     }).length;
 

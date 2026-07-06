@@ -228,13 +228,19 @@ const Trench = () => {
   }, [dispatch, form, id]);
 
   useEffect(() => {
+    if (isFieldOfficer && !id) {
+      toast.error("You do not have permission to create cases");
+      navigate("/field/dashboard");
+      return;
+    }
+
     if (id) {
       fetchReport();
       return;
     }
 
     form.setFieldsValue(initialValues);
-  }, [fetchReport, form, id, initialValues]);
+  }, [fetchReport, form, id, initialValues, isFieldOfficer, navigate]);
 
   useEffect(() => {
     if (user?.role !== "FieldOfficer" || id) return;
@@ -354,123 +360,8 @@ const Trench = () => {
     }
   };
 
-  if (isFieldOfficer) {
-    return (
-      <div className="trench-portal">
-        <header className="trench-topbar">
-          <div className="trench-brand">
-            <span>home</span>first
-          </div>
-          <div className="trench-user">
-            {user?.name || "Assigned User"} · {user?.role || "User"}
-          </div>
-        </header>
-
-        <div style={{ maxWidth: 1280, margin: "24px auto", padding: "0 16px" }}>
-          <div style={{
-            background: "#ffffff",
-            borderRadius: 12,
-            border: "1px solid #e5e7eb",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-            padding: "24px",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", justifySpaceBetween: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 16, fontWeight: 700, color: "#1e40af" }}>AI Advanced Auto Fill</span>
-                <span style={{
-                  fontSize: 11, fontWeight: 500, color: "#6366f1",
-                  background: "#ede9fe", borderRadius: 6, padding: "2px 8px"
-                }}>AI Powered</span>
-              </div>
-              <button
-                onClick={handleDownloadAll}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  background: "#10b981",
-                  border: "none",
-                  padding: "8px 16px",
-                  borderRadius: "8px",
-                  fontSize: "12px",
-                  fontWeight: 600,
-                  color: "#ffffff",
-                  cursor: "pointer",
-                }}
-              >
-                <Download size={14} /> Download All (ZIP)
-              </button>
-            </div>
-
-            <AdvancedAutoFillForm
-              caseId={id}
-              bankName="Home First Tranche"
-              setFormData={setReportData}
-              atsDocuments={
-                reportData?.atsDocuments && reportData.atsDocuments.length > 0
-                  ? reportData.atsDocuments
-                  : (reportData?.AttachDocuments || [])
-              }
-              imageUrls={reportData?.imageUrls || []}
-              siteVisitVideo={reportData?.siteVisitVideo || []}
-              gpsFiles={reportData?.gpsFiles || []}
-              emailFiles={reportData?.emailFiles || []}
-              fieldFormFiles={reportData?.fieldFormFiles || []}
-              additionalFiles={reportData?.additionalFiles || []}
-              fetchData={() => id && dispatch(getHomeTrenchReportById(id)).unwrap().then(setReportData)}
-            />
-
-            <div style={{ marginTop: 32, textAlign: "center" }}>
-              <button
-                type="button"
-                onClick={handleFinalSubmit}
-                disabled={loading || (reportData?.isReportSubmitted === true)}
-                style={{
-                  width: "100%",
-                  maxWidth: 320,
-                  padding: "14px 28px",
-                  borderRadius: 24,
-                  background: (loading || reportData?.isReportSubmitted === true) ? "#9ca3af" : "#2563eb",
-                  color: "#fff",
-                  fontWeight: 700,
-                  fontSize: 14,
-                  border: "none",
-                  cursor: (loading || reportData?.isReportSubmitted === true) ? "not-allowed" : "pointer",
-                  transition: "all 0.2s ease",
-                  textAlign: "center",
-                  boxShadow: "0 4px 12px rgba(37, 99, 235, 0.2)",
-                }}
-              >
-                {reportData?.isReportSubmitted === true ? "Report Submitted ✓" : "Submit Report"}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="trench-portal">
-      <ConfirmModal
-        visible={showConfirm}
-        onCancel={() => setShowConfirm(false)}
-        onConfirm={handleSubmit}
-        title="Confirm Submission"
-        message="Are you sure you want to submit this report?"
-      />
-
-      <header className="trench-topbar">
-        <div className="trench-brand">
-          <span>home</span>first
-        </div>
-        <div className="trench-user">
-          {user?.name || "Assigned User"} · {user?.role || "User"}
-        </div>
-      </header>
-
       {/* ── Technical Individual Assignment Header & Panels ── */}
-      <div style={{ maxWidth: 1280, margin: "20px auto 0", padding: "0 16px" }}>
+      <div style={{ maxWidth: 1140, margin: "20px auto 0", padding: "0 16px" }}>
         <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#0f172a", marginBottom: "16px" }}>
           Technical Individual Assignment
         </h1>

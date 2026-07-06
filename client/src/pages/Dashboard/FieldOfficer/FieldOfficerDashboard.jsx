@@ -1590,7 +1590,7 @@ const FieldOfficerDashboard = () => {
 
           {/* Allowance Table — scrollable horizontally */}
           <div className="overflow-x-auto">
-            <table className="w-full text-xs font-outfit border-collapse">
+            <table className="w-full text-xs font-outfit border-collapse min-w-[1300px]">
               <thead>
                 <tr className="bg-[#f4faf8] border-b-2 border-emerald-100">
                   {[
@@ -1710,7 +1710,7 @@ const FieldOfficerDashboard = () => {
                         />
                       </td>
                       {/* If Any (Others) — editable input */}
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 whitespace-nowrap">
                         <input
                           type="text"
                           value={allowanceEdits[record._id]?.othersIfAny !== undefined

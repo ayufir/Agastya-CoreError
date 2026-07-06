@@ -499,8 +499,13 @@ export default function AdityaBirlaForm() {
     }, [dispatch, id]);
 
     useEffect(() => {
+        if (user?.role?.toLowerCase() === "fieldofficer" && !id) {
+            toast.error("You do not have permission to create cases");
+            navigate("/field/dashboard");
+            return;
+        }
         fetchData();
-    }, [fetchData]);
+    }, [fetchData, user, id, navigate]);
 
     // Generic section setter
     const set = (sec, field, val) =>
@@ -756,7 +761,50 @@ export default function AdityaBirlaForm() {
                             fetchData={fetchData}
                         />
 
-                        <div style={{ marginTop: 32, textAlign: "center" }}>
+                        <div style={{ marginTop: 32, display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+                            <button
+                                type="button"
+                                onClick={async () => {
+                                    try {
+                                        setSaving(true);
+                                        const payload = {
+                                            ...form,
+                                            isReportSubmitted: false,
+                                            status: "Work in Progress",
+                                        };
+                                        if (id) {
+                                            await dispatch(updateAdityaDetails({ id, ...payload })).unwrap();
+                                        } else {
+                                            const res = await dispatch(createAditya(payload)).unwrap();
+                                            navigate(`/bank/aditya/edit/${res._id}`);
+                                        }
+                                        toast.success("Progress Saved ✅");
+                                    } catch (err) {
+                                        console.error(err);
+                                        toast.error("Failed to save progress");
+                                    } finally {
+                                        setSaving(false);
+                                    }
+                                }}
+                                disabled={saving}
+                                style={{
+                                    width: "100%",
+                                    maxWidth: 240,
+                                    padding: "14px 28px",
+                                    borderRadius: 24,
+                                    background: saving ? "#9ca3af" : "#4b5563",
+                                    color: "#fff",
+                                    fontWeight: 700,
+                                    fontSize: 14,
+                                    border: "none",
+                                    cursor: saving ? "not-allowed" : "pointer",
+                                    transition: "all 0.2s ease",
+                                    textAlign: "center",
+                                    boxShadow: "0 4px 12px rgba(75, 85, 99, 0.2)",
+                                }}
+                            >
+                                Save Work
+                            </button>
                             <button
                                 type="button"
                                 onClick={async () => {
@@ -766,7 +814,7 @@ export default function AdityaBirlaForm() {
                                             ...form,
                                             isReportSubmitted: true,
                                             approvalStatus: "Submitted",
-                                            status: "FinalSubmitted"
+                                            status: "Submitted"
                                         };
                                         let targetId = id;
                                         if (targetId) {
@@ -775,9 +823,8 @@ export default function AdityaBirlaForm() {
                                             const res = await dispatch(createAditya(payload)).unwrap();
                                             targetId = res._id;
                                         }
-                                        await dispatch(finalUpdate({ id: targetId, bankName: "aditya", updateData: payload })).unwrap();
                                         toast.success("Report Submitted successfully ✅");
-                                        navigate("/");
+                                        navigate("/field/dashboard");
                                     } catch (err) {
                                         console.error(err);
                                         toast.error("Submission failed");
@@ -788,7 +835,7 @@ export default function AdityaBirlaForm() {
                                 disabled={saving || form?.isReportSubmitted}
                                 style={{
                                     width: "100%",
-                                    maxWidth: 320,
+                                    maxWidth: 240,
                                     padding: "14px 28px",
                                     borderRadius: 24,
                                     background: (saving || form?.isReportSubmitted) ? "#9ca3af" : "#2563eb",

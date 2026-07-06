@@ -327,6 +327,12 @@ const IciciBank = () => {
   const isFieldOfficer = user?.role?.toLowerCase() === "fieldofficer";
 
   useEffect(() => {
+    if (isFieldOfficer && !id) {
+      toast.error("You do not have permission to create cases");
+      navigate("/field/dashboard");
+      return;
+    }
+
     if (id) {
       fetchEditData();
     } else {
@@ -335,7 +341,7 @@ const IciciBank = () => {
       localStorage.removeItem("icici-bank-draft:new");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id, isFieldOfficer, navigate]);
 
   const fetchEditData = async () => {
     setLoading(true);
@@ -829,14 +835,36 @@ const IciciBank = () => {
               fetchData={fetchEditData}
             />
 
-            <div style={{ marginTop: 32, textAlign: "center" }}>
+            <div style={{ marginTop: 32, display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+              <button
+                type="button"
+                onClick={() => handleSave("propertyDetails", {})}
+                disabled={saving}
+                style={{
+                  width: "100%",
+                  maxWidth: 240,
+                  padding: "14px 28px",
+                  borderRadius: 24,
+                  background: saving ? "#9ca3af" : "#4b5563",
+                  color: "#fff",
+                  fontWeight: 700,
+                  fontSize: 14,
+                  border: "none",
+                  cursor: saving ? "not-allowed" : "pointer",
+                  transition: "all 0.2s ease",
+                  textAlign: "center",
+                  boxShadow: "0 4px 12px rgba(75, 85, 99, 0.2)",
+                }}
+              >
+                Save Work
+              </button>
               <button
                 type="button"
                 onClick={() => handleFinalSubmit()}
                 disabled={saving || (editData?.isReportSubmitted === true)}
                 style={{
                   width: "100%",
-                  maxWidth: 320,
+                  maxWidth: 240,
                   padding: "14px 28px",
                   borderRadius: 24,
                   background: (saving || editData?.isReportSubmitted === true) ? "#9ca3af" : "#2563eb",
@@ -850,7 +878,7 @@ const IciciBank = () => {
                   boxShadow: "0 4px 12px rgba(37, 99, 235, 0.2)",
                 }}
               >
-                {editData?.isReportSubmitted === true ? "Report Submitted ✓" : "Submit Report"}
+                {editData?.isReportSubmitted === true ? "Report Submitted ✓" : "Final Submit"}
               </button>
             </div>
           </div>

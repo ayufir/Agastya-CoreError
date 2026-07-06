@@ -67,10 +67,12 @@ const BellWithNotifications = () => {
         className='relative focus:outline-none'
       >
         <Bell className='h-6 w-6 text-gray-500 hover:text-gray-700' />
-        {unreadCount > 0 && (
-          <span className='absolute top-0 right-0 bg-red-600 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full'>
+        {unreadCount > 0 ? (
+          <span className='absolute top-0 right-0 bg-red-600 text-white text-[9px] w-4 h-4 flex items-center justify-center rounded-full font-bold'>
             {unreadCount}
           </span>
+        ) : (
+          <span className='absolute top-1 right-1 bg-gray-400 w-2 h-2 rounded-full' />
         )}
       </button>
 

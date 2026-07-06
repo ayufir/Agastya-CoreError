@@ -90,12 +90,26 @@ exports.updateIciciBank = async (req, res) => {
       updateBody.assignedTo = updateBody.assignedTo._id;
     }
 
+    if (existing && existing.assignedTo && !updateBody.assignedTo) {
+      updateBody.assignedTo = existing.assignedTo;
+    }
+
     if (req.user?.role === "FieldOfficer") {
       if (!updateBody.assignedTo) {
         updateBody.assignedTo = req.user._id;
       }
       updateBody.isReportSubmitted = req.body.isReportSubmitted === true || req.body.isSubmit === true;
       updateBody.status = "Work in Progress";
+    }
+
+    // Transition status to "Work in Progress" on save/update if case has assignment and is currently Pending/New/etc.
+    const hasAssignment = updateBody.assignedTo || (existing && existing.assignedTo);
+    if (hasAssignment) {
+      const currentStatus = updateBody.status || (existing && existing.status) || "Pending";
+      const s = currentStatus.toLowerCase().trim();
+      if (s === "pending" || s === "generated" || s === "new" || s === "created" || s === "open") {
+        updateBody.status = "Work in Progress";
+      }
     }
 
     const updatedJob = await IciciBank.findByIdAndUpdate(
