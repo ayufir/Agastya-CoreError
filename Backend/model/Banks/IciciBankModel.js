@@ -202,6 +202,8 @@ const IciciBankSchema = new mongoose.Schema({
       "Work in Progress",
       "FinalSubmitted",
       "Submitted",
+      "Generated",
+      "generated",
     ],
     default: "Pending",
   },
