@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Upload, Button, Spin, Modal } from "antd";
+import LazyImage from "./LazyImage";
 import {
   UploadOutlined,
   CloudUploadOutlined,
@@ -636,10 +637,11 @@ const ImageUploader = ({
                 key={getAssetKey(imageItem) || index}
                 className="relative w-40 h-40 border rounded overflow-hidden flex items-center justify-center bg-black"
               >
-                <img
+                <LazyImage
                   src={getAssetUrl(imageItem)}
                   alt={`uploaded-${index}`}
-                  className="max-w-full max-h-full object-contain"
+                  placeholderHeight="160px"
+                  style={{ objectFit: "contain" }}
                 />
 
                 <button
@@ -671,10 +673,11 @@ const ImageUploader = ({
                 key={getAssetKey(imageItem) || index}
                 className="relative group rounded-lg overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
               >
-                <img
+                <LazyImage
                   src={getAssetUrl(imageItem)}
                   alt={`uploaded-${index}`}
-                  className="w-full h-32 object-cover"
+                  placeholderHeight="128px"
+                  style={{ objectFit: "cover" }}
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                   <Button

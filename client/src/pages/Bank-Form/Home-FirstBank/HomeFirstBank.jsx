@@ -1227,8 +1227,9 @@ const normalizeQualityOfConstruction = (val) => {
       <header className="form-sub-header">
         <div className="form-sub-header-title-container">
           <img
-            src="/assets/images/banks-img/homefrist.png"
+            src="/assets/images/banks-img/homefrist.webp"
             alt="Home First Bank"
+            loading="lazy"
             style={{ height: 72, maxWidth: 200, objectFit: "contain", display: "block" }}
           />
         </div>

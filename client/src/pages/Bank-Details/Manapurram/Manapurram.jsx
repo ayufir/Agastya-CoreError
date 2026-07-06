@@ -541,7 +541,7 @@ function PrintArea({ form }) {
                             <tr>
                                 <td style={{ ...td, padding: 0, border: "none" }}>
                                     <img
-                                        src="/assets/images/header1.jpg"
+                                        src="/assets/images/header1.webp"
                                         alt="header"
                                         style={{
                                             width: "100%",
@@ -1663,7 +1663,7 @@ export default function ManappuramForm() {
                 <div className="border-2 border-black flex items-start p-2">
                     <div className="w-full text-center py-2">
                         <img
-                            src="/assets/images/header1.jpg"
+                            src="/assets/images/header1.webp"
                             alt="Logo"
                             className="w-full h-auto block"
                         />

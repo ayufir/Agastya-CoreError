@@ -341,7 +341,7 @@ const HFBankDetails = () => {
                 <thead>
                   <tr className="border">
                     <th colSpan="6" className="py-1 text-center">
-                      <img src="/assets/images/header1.jpg" alt="" />
+                      <img src="/assets/images/header1.webp" alt="" loading="lazy" />
                       <h1 className="text-center text-xl">VALUATION REPORT</h1>
                     </th>
                   </tr>

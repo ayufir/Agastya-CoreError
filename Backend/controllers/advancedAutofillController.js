@@ -1000,52 +1000,112 @@ const XLSX = require("xlsx");
 
 const callClaudeAPI = async (system, messagesPrompt, mediaBlocks = []) => {
   const api_key = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
+  const gemini_key = process.env.GEMINI_API_KEY;
 
-  if (!api_key) {
-    throw new Error("CLAUDE_API_KEY is not configured in the environment (.env file).");
+  if (!api_key && !gemini_key) {
+    throw new Error("Neither CLAUDE_API_KEY nor GEMINI_API_KEY is configured in the environment.");
   }
 
-  const headers = {
-    "content-type": "application/json",
-    "x-api-key": api_key,
-    "anthropic-version": "2023-06-01",
-  };
+  if (api_key) {
+    try {
+      const headers = {
+        "content-type": "application/json",
+        "x-api-key": api_key,
+        "anthropic-version": "2023-06-01",
+      };
 
-  const hasPdf = mediaBlocks.some((block) => block.type === "document");
-  if (hasPdf) {
-    headers["anthropic-beta"] = "pdfs-2024-09-25";
-  }
+      const hasPdf = mediaBlocks.some((block) => block.type === "document");
+      if (hasPdf) {
+        headers["anthropic-beta"] = "pdfs-2024-09-25";
+      }
 
-  // Filter out any invalid/empty content blocks to prevent Anthropic validation errors
-  const validContentBlocks = mediaBlocks.filter(block => {
-    if (!block) return false;
-    if (block.type === "text" && !block.text) return false;
-    if ((block.type === "image" || block.type === "document") && (!block.source || !block.source.data)) return false;
-    return true;
-  });
+      const validContentBlocks = mediaBlocks.filter(block => {
+        if (!block) return false;
+        if (block.type === "text" && !block.text) return false;
+        if ((block.type === "image" || block.type === "document") && (!block.source || !block.source.data)) return false;
+        return true;
+      });
 
-  const requestBody = {
-    model: "claude-3-5-sonnet-20241022",
-    max_tokens: 8192,
-    system: system,
-    messages: [
-      {
-        role: "user",
-        content: [
-          ...validContentBlocks,
+      const requestBody = {
+        model: "claude-3-5-sonnet-20241022",
+        max_tokens: 8192,
+        system: system,
+        messages: [
           {
-            type: "text",
-            text: messagesPrompt,
+            role: "user",
+            content: [
+              ...validContentBlocks,
+              {
+                type: "text",
+                text: messagesPrompt,
+              },
+            ],
           },
         ],
-      },
-    ],
-  };
+      };
 
-  console.log(`[Claude API] Requesting advanced autofill extraction (${hasPdf ? "with PDF" : "standard"})...`);
-  const response = await axios.post("https://api.anthropic.com/v1/messages", requestBody, { headers });
-  
-  return response.data?.content?.[0]?.text || "";
+      console.log(`[Claude API] Requesting advanced autofill extraction (${hasPdf ? "with PDF" : "standard"})...`);
+      const response = await axios.post("https://api.anthropic.com/v1/messages", requestBody, { headers });
+      
+      return response.data?.content?.[0]?.text || "";
+    } catch (claudeError) {
+      console.error("[Claude API] Extraction failed:", claudeError.message);
+      if (!gemini_key) {
+        throw new Error("Anthropic API returned 404 (Model Not Found). This usually indicates your Claude API Key is inactive, unfunded, or has zero credits. Please update CLAUDE_API_KEY or configure a GEMINI_API_KEY in your Backend/.env file.");
+      }
+      console.log("[Claude API] Falling back to Gemini API...");
+    }
+  }
+
+  // Gemini Fallback
+  if (gemini_key) {
+    try {
+      console.log("[Gemini API] Requesting advanced autofill extraction...");
+
+      const parts = [];
+
+      mediaBlocks.forEach((block) => {
+        if (!block) return;
+        if (block.type === "text" && block.text) {
+          parts.push({ text: block.text });
+        } else if (block.type === "image" && block.source?.data) {
+          parts.push({
+            inlineData: {
+              mimeType: block.source.media_type,
+              data: block.source.data,
+            },
+          });
+        } else if (block.type === "document" && block.source?.data) {
+          parts.push({
+            inlineData: {
+              mimeType: block.source.media_type,
+              data: block.source.data,
+            },
+          });
+        }
+      });
+
+      // Add system prompt and user prompt
+      parts.push({
+        text: `${system}\n\n${messagesPrompt}`,
+      });
+
+      const response = await axios.post(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${gemini_key}`,
+        {
+          contents: [{ parts }],
+          generationConfig: {
+            responseMimeType: "application/json",
+          },
+        }
+      );
+
+      return response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    } catch (geminiError) {
+      console.error("[Gemini API] Extraction failed:", geminiError.message);
+      throw geminiError;
+    }
+  }
 };
 
 const getFileContentBlock = async (file) => {

@@ -1,27 +1,30 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState, Suspense } from "react";
 import { Select, Input, Tooltip } from "antd";
 import { toast } from "react-hot-toast";
 import CountUp from "react-countup";
 import { DownOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import Pending from "./Pending";
-import QueryRaised from "./Admin/QueryRaised";
-import AssignedCase from "./Admin/AssignedCase";
-import ApprovalPendingCases from "./Admin/ApprovalPendingCases";
-import ApprovedCases from "./Admin/ApprovedCases";
-import MyWorklist from "./MyWorklist";
-import FinalSubmittedCase from "./Admin/FinalSubmittedCase";
-import CancelledCases from "./Admin/CancelledCases";
-import OutOfTATCase from "./Admin/OutOfTatCase";
-import SummaryCard from "./Admin/SummaryCard";
-import GeneratedCasesList from "./Admin/GeneratedCasesList";
+
+const Pending = React.lazy(() => import("./Pending"));
+const QueryRaised = React.lazy(() => import("./Admin/QueryRaised"));
+const AssignedCase = React.lazy(() => import("./Admin/AssignedCase"));
+const ApprovalPendingCases = React.lazy(() => import("./Admin/ApprovalPendingCases"));
+const ApprovedCases = React.lazy(() => import("./Admin/ApprovedCases"));
+const MyWorklist = React.lazy(() => import("./MyWorklist"));
+const FinalSubmittedCase = React.lazy(() => import("./Admin/FinalSubmittedCase"));
+const CancelledCases = React.lazy(() => import("./Admin/CancelledCases"));
+const OutOfTATCase = React.lazy(() => import("./Admin/OutOfTatCase"));
+const SummaryCard = React.lazy(() => import("./Admin/SummaryCard"));
+const GeneratedCasesList = React.lazy(() => import("./Admin/GeneratedCasesList"));
+
 import { fetchFieldOfficers } from "../../redux/features/auth/authThunks";
 import { fetchNotifications } from "../../redux/features/notification/notificationThunk";
 import { setZone, setSavedCity } from "../../redux/features/assignedCase/assignedCasesSlice";
 import axiosInstance from "../../config/axios";
 import socket from "../../config/socket";
 import { getDisplayCustomerName, getDisplayAddress, getBankRoute } from "../../utils/dashboardRecord";
+import { TableSkeleton } from "../../components/SkeletonLoader";
 
 const { Option } = Select;
 
@@ -237,6 +240,46 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, FO: fieldOfficers = [] } = useSelector((state) => state.auth);
+
+  const prefetchComponent = useCallback((componentName) => {
+    switch (componentName) {
+      case "Pending":
+        import("./Pending");
+        break;
+      case "Assigned":
+        import("./Admin/AssignedCase");
+        break;
+      case "ApprovalPending":
+        import("./Admin/ApprovalPendingCases");
+        break;
+      case "ApprovedCases":
+        import("./Admin/ApprovedCases");
+        break;
+      case "QueryRaised":
+        import("./Admin/QueryRaised");
+        break;
+      case "ReportSubmitted":
+        import("./Admin/FinalSubmittedCase");
+        break;
+      case "CancelCases":
+        import("./Admin/CancelledCases");
+        break;
+      case "Out_Tat_Cases":
+        import("./Admin/OutOfTatCase");
+        break;
+      case "Summary":
+        import("./Admin/SummaryCard");
+        break;
+      case "myworklist":
+        import("./MyWorklist");
+        break;
+      case "generated":
+        import("./Admin/GeneratedCasesList");
+        break;
+      default:
+        break;
+    }
+  }, []);
 
   const [activeTab, setActiveTab] = useState("dashboard");
   const [activeComponent, setActiveComponent] = useState("");
@@ -840,13 +883,21 @@ const Dashboard = () => {
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
             Dashboard
           </button>
-          <button className={`dash-tab ${activeTab==="myworklist"?"active":""}`} onClick={() => { setActiveTab("myworklist"); setActiveComponent(""); clearBankView(); }}>
+          <button
+            className={`dash-tab ${activeTab==="myworklist"?"active":""}`}
+            onClick={() => { setActiveTab("myworklist"); setActiveComponent(""); clearBankView(); }}
+            onMouseEnter={() => prefetchComponent("myworklist")}
+          >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
             My Worklist
           </button>
           {user?.role && ["Admin", "SuperAdmin"].includes(user.role) && (
             <>
-              <button className={`dash-tab ${activeTab==="generated"?"active":""}`} onClick={() => { setActiveTab("generated"); setActiveComponent(""); clearBankView(); }}>
+              <button
+                className={`dash-tab ${activeTab==="generated"?"active":""}`}
+                onClick={() => { setActiveTab("generated"); setActiveComponent(""); clearBankView(); }}
+                onMouseEnter={() => prefetchComponent("generated")}
+              >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                 Generated Cases
               </button>
@@ -920,7 +971,8 @@ const Dashboard = () => {
                   return (
                     <div key={i} className={`stat-card ${isActive?"selected":""}`}
                       style={{ background:m.bg, borderColor:isActive?m.color:m.border, boxShadow:isActive?`0 8px 24px ${m.color}28`:"0 2px 8px rgba(0,0,0,.05)" }}
-                      onClick={() => setActiveComponent(r.component)}>
+                      onClick={() => setActiveComponent(r.component)}
+                      onMouseEnter={() => prefetchComponent(r.component)}>
                       <div className="stat-card-icon" style={{ background:`${m.color}18` }}>{m.icon}</div>
                       <div className="stat-card-title">{r.title}</div>
                       <div className="stat-card-value" style={{ color:m.color }}>
@@ -981,11 +1033,11 @@ const Dashboard = () => {
                     </thead>
                     <tbody>
                       {loading ? (
-                        <tr><td colSpan="6" style={{ textAlign:"center", padding:"40px", color:"#94a3b8" }}>
-                          <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:10 }}>
-                            <div style={{ width:20, height:20, border:"2.5px solid #e2e8f0", borderTopColor:"#6366f1", borderRadius:"50%", animation:"spin .7s linear infinite" }} />Loading...
-                          </div>
-                        </td></tr>
+                        <tr>
+                          <td colSpan="6" style={{ padding: 0 }}>
+                            <TableSkeleton rows={4} cols={6} />
+                          </td>
+                        </tr>
                       ) : bankSummary.length === 0 ? (
                         <tr><td colSpan="6" style={{ textAlign:"center", padding:"48px", color:"#94a3b8" }}>
                           <div style={{ fontSize:32, marginBottom:8 }}>🏦</div><div style={{ fontWeight:600 }}>No data for this period</div>
@@ -1103,7 +1155,11 @@ const Dashboard = () => {
                     </thead>
                     <tbody>
                       {loading ? (
-                        <tr><td colSpan="9" style={{ textAlign:"center", padding:40, color:"#94a3b8" }}>Loading...</td></tr>
+                        <tr>
+                          <td colSpan="9" style={{ padding: 0 }}>
+                            <TableSkeleton rows={5} cols={9} />
+                          </td>
+                        </tr>
                       ) : paginatedBankCases.length === 0 ? (
                         <tr><td colSpan="9" style={{ textAlign:"center", padding:48, color:"#94a3b8" }}>No data found</td></tr>
                       ) : paginatedBankCases.map((rec, idx) => {
@@ -1209,72 +1265,78 @@ const Dashboard = () => {
                 </button>
               </div>
             )}
-            {activeComponent==="Pending"         && <Pending selectedMonth={selectedMonth} preloadedCases={filteredCases.filter((item) => {
-              const s = normalizeStatus(item.status);
-              return ["pending", "generated", "new", "created", "open"].includes(s);
-            })} />}
-            {activeComponent==="Assigned"        && <AssignedCase selectedMonth={selectedMonth} />}
-            {activeComponent==="ApprovalPending" && (
-              <ApprovalPendingCases
-                selectedMonth={selectedMonth}
-                onRefresh={fetchAllCases}
-                onCaseApproved={handleCaseApprovedLocal}
-                onCaseDeleted={handleCaseDeletedLocal}
-                preloadedCases={filteredCases.filter(isApprovalPending)}
-              />
-            )}
-            {activeComponent==="ApprovedCases"   && <ApprovedCases selectedMonth={selectedMonth} onRefresh={fetchAllCases} />}
-            {activeComponent==="QueryRaised"     && <QueryRaised selectedMonth={selectedMonth} />}
-            {activeComponent==="ReportSubmitted" && (
-              <FinalSubmittedCase 
-                selectedMonth={selectedMonth} 
-                preloadedCases={filteredCases.filter((item) => {
-                  const s = String(item.status || "").toLowerCase().trim();
-                  if (s.includes("work in progress") || s.includes("working")) return false;
-                  return (
-                    s.includes("final") ||
-                    s.includes("submit") ||
-                    item.isReportSubmitted === true ||
-                    s.includes("done") ||
-                    s.includes("approved")
-                  );
-                })}
-              />
-            )}
-            {activeComponent==="CancelCases"     && <CancelledCases selectedMonth={selectedMonth} />}
-            {activeComponent==="Out_Tat_Cases"   && <OutOfTATCase selectedMonth={selectedMonth} />}
-            {activeComponent==="Summary"         && <SummaryCard selectedMonth={selectedMonth} />}
+            <Suspense fallback={<div className="p-4 bg-white rounded-xl border"><TableSkeleton rows={5} cols={6} /></div>}>
+              {activeComponent==="Pending"         && <Pending selectedMonth={selectedMonth} preloadedCases={filteredCases.filter((item) => {
+                const s = normalizeStatus(item.status);
+                return ["pending", "generated", "new", "created", "open"].includes(s);
+              })} />}
+              {activeComponent==="Assigned"        && <AssignedCase selectedMonth={selectedMonth} />}
+              {activeComponent==="ApprovalPending" && (
+                <ApprovalPendingCases
+                  selectedMonth={selectedMonth}
+                  onRefresh={fetchAllCases}
+                  onCaseApproved={handleCaseApprovedLocal}
+                  onCaseDeleted={handleCaseDeletedLocal}
+                  preloadedCases={filteredCases.filter(isApprovalPending)}
+                />
+              )}
+              {activeComponent==="ApprovedCases"   && <ApprovedCases selectedMonth={selectedMonth} onRefresh={fetchAllCases} />}
+              {activeComponent==="QueryRaised"     && <QueryRaised selectedMonth={selectedMonth} />}
+              {activeComponent==="ReportSubmitted" && (
+                <FinalSubmittedCase 
+                  selectedMonth={selectedMonth} 
+                  preloadedCases={filteredCases.filter((item) => {
+                    const s = String(item.status || "").toLowerCase().trim();
+                    if (s.includes("work in progress") || s.includes("working")) return false;
+                    return (
+                      s.includes("final") ||
+                      s.includes("submit") ||
+                      item.isReportSubmitted === true ||
+                      s.includes("done") ||
+                      s.includes("approved")
+                    );
+                  })}
+                />
+              )}
+              {activeComponent==="CancelCases"     && <CancelledCases selectedMonth={selectedMonth} />}
+              {activeComponent==="Out_Tat_Cases"   && <OutOfTATCase selectedMonth={selectedMonth} />}
+              {activeComponent==="Summary"         && <SummaryCard selectedMonth={selectedMonth} />}
+            </Suspense>
           </>
         )}
 
         {activeTab === "myworklist" && (
-          <div style={{ background:"#fff", borderRadius:16, padding:"18px", border:"1px solid #e2e8f0", boxShadow:"0 4px 16px rgba(0,0,0,.06)" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:16 }}>
-              <div style={{ width:38, height:38, borderRadius:11, background:"#eef2ff", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>📋</div>
-              <div>
-                <div style={{ fontWeight:700, fontSize:15, color:"#1e293b" }}>My Worklist</div>
-                <div style={{ fontSize:11, color:"#94a3b8" }}>Your assigned tasks</div>
+          <Suspense fallback={<div className="p-4 bg-white rounded-xl border"><TableSkeleton rows={5} cols={5} /></div>}>
+            <div style={{ background:"#fff", borderRadius:16, padding:"18px", border:"1px solid #e2e8f0", boxShadow:"0 4px 16px rgba(0,0,0,.06)" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:16 }}>
+                <div style={{ width:38, height:38, borderRadius:11, background:"#eef2ff", display:"flex", alignItems:"center", justifyContent:"center", fontSize:18 }}>📋</div>
+                <div>
+                  <div style={{ fontWeight:700, fontSize:15, color:"#1e293b" }}>My Worklist</div>
+                  <div style={{ fontSize:11, color:"#94a3b8" }}>Your assigned tasks</div>
+                </div>
               </div>
+              <MyWorklist />
             </div>
-            <MyWorklist />
-          </div>
+          </Suspense>
         )}
 
         {activeTab === "generated" && (
-          <div style={{ background: "#fff", borderRadius: 16, padding: "24px", border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,.06)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-              <div style={{ width: 38, height: 38, borderRadius: 11, background: "#e0f2fe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>📁</div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 15, color: "#1e293b" }}>Generated Case Files</div>
-                <div style={{ fontSize: 11, color: "#94a3b8" }}>Manage and assign newly generated cases</div>
+          <Suspense fallback={<div className="p-4 bg-white rounded-xl border"><TableSkeleton rows={5} cols={5} /></div>}>
+            <div style={{ background: "#fff", borderRadius: 16, padding: "24px", border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,.06)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 11, background: "#e0f2fe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>📁</div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: "#1e293b" }}>Generated Case Files</div>
+                  <div style={{ fontSize: 11, color: "#94a3b8" }}>Manage and assign newly generated cases</div>
+                </div>
               </div>
+              <GeneratedCasesList
+                allCases={allCasesData}
+                refreshData={fetchAllCases}
+                fieldOfficers={fieldOfficers}
+              />
             </div>
-            <GeneratedCasesList
-              allCases={allCasesData}
-              refreshData={fetchAllCases}
-              fieldOfficers={fieldOfficers}
-            />
-          </div>
+          </Suspense>
         )}
 
         {activeTab === "settings" && (

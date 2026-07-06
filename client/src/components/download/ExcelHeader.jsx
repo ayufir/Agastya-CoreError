@@ -52,8 +52,9 @@ const ExcelHeader = () => {
             }}
           >
             <img
-              src='/assets/images/download.png'
+              src='/assets/images/download.webp'
               alt='Unique Engineering Logo'
+              loading="lazy"
               style={{
                 width: "96px",
                 height: "auto",

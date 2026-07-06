@@ -9,8 +9,9 @@ const ExcelHeader = () => {
         <div className='flex  w-full flex-col  mb-4'>
           <div className='flex items-center      justify-center'>
             <img
-              src='/assets/images/download.png'
+              src='/assets/images/download.webp'
               alt='Unique Engineering Logo'
+              loading="lazy"
               className='h-[100px] w-32 md:w-40'
             />
             <div className='text-start'>

@@ -4,6 +4,7 @@ require("dotenv").config();
 const cors = require("cors");
 const express = require("express");
 const cookieParser = require("cookie-parser");
+const compression = require("compression");
 const morgan = require("morgan");
 const path = require("path");
 const multer = require("multer");
@@ -43,6 +44,8 @@ const bajajHousingRoutes = require("./Routes/Banks/bajajHousingRoutes.js");
 
 
 const app = express();
+
+app.use(compression());
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Multer — accept multiple files, all stored in memory

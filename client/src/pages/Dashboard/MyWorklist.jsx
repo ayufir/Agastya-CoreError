@@ -7,6 +7,24 @@ import { setZone } from "../../redux/features/assignedCase/assignedCasesSlice";
 
 const { Option } = Select;
 
+// Static columns configs moved outside component body to prevent recreation on render
+const tatColumns = [
+  { name: "Type", selector: (row) => row.type, sortable: true },
+  { name: "Total Reports Issued", selector: (row) => row.total, sortable: true },
+  { name: "Within TAT", selector: (row) => row.withinTAT, sortable: true },
+  { name: "Outside TAT", selector: (row) => row.outsideTAT, sortable: true },
+  { name: "Request Sent Back", selector: (row) => row.sentBack, sortable: true },
+];
+
+const teamColumns = [
+  { name: "Team", selector: (row) => row.name, sortable: true },
+  { name: "Request", selector: (row) => row.request, sortable: true },
+  { name: "In Progress", selector: (row) => row.inProgress, sortable: true },
+  { name: "In Query", selector: (row) => row.inQuery, sortable: true },
+  { name: "Pending for Approval", selector: (row) => row.pendingApproval, sortable: true },
+  { name: "Request Approaching TAT", selector: (row) => row.approachingTAT, sortable: true },
+];
+
 const MyWorklist = () => {
   const dispatch = useDispatch();
   const selectedZone = useSelector((state) => state.assignedCases.selectedZone);
@@ -105,14 +123,7 @@ const MyWorklist = () => {
     return { breached, critical, warning, safe };
   }, [cases]);
 
-  // 3. TAT Table
-  const tatColumns = [
-    { name: "Type", selector: (row) => row.type, sortable: true },
-    { name: "Total Reports Issued", selector: (row) => row.total, sortable: true },
-    { name: "Within TAT", selector: (row) => row.withinTAT, sortable: true },
-    { name: "Outside TAT", selector: (row) => row.outsideTAT, sortable: true },
-    { name: "Request Sent Back", selector: (row) => row.sentBack, sortable: true },
-  ];
+
 
   const tatData = useMemo(() => {
     const stats = {
@@ -159,15 +170,7 @@ const MyWorklist = () => {
     return Object.values(stats);
   }, [cases]);
 
-  // 4. Team Activity Table
-  const teamColumns = [
-    { name: "Team", selector: (row) => row.name, sortable: true },
-    { name: "Request", selector: (row) => row.request, sortable: true },
-    { name: "In Progress", selector: (row) => row.inProgress, sortable: true },
-    { name: "In Query", selector: (row) => row.inQuery, sortable: true },
-    { name: "Pending for Approval", selector: (row) => row.pendingApproval, sortable: true },
-    { name: "Request Approaching TAT", selector: (row) => row.approachingTAT, sortable: true },
-  ];
+
 
   const teamData = useMemo(() => {
     const map = {};

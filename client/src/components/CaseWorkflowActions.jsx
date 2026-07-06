@@ -141,4 +141,4 @@ const CaseWorkflowActions = ({
   );
 };
 
-export default CaseWorkflowActions;
+export default React.memo(CaseWorkflowActions);

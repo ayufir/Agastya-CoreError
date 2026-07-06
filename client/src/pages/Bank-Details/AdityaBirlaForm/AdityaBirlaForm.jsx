@@ -1196,7 +1196,7 @@ export default function AdityaBirlaForm() {
                 <div className="border-2 border-black flex items-start p-2 gap-2 print:border-2">
                     <div className="hdr">
                         <div className="header-wrapper">
-                            <img src="/assets/images/header1.jpg" className="header-img-full" alt="header" />
+                            <img src="/assets/images/header1.webp" className="header-img-full" alt="header" loading="lazy" />
                         </div>
                     </div>
                 </div>

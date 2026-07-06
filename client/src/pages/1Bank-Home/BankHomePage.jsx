@@ -89,6 +89,7 @@ const BankHomePage = () => {
               <img
                 src={`assets/images/banks-img/${bank.logo}`}
                 alt={bank.name}
+                loading="lazy"
                 className='w-16 h-16 object-contain'
               />
               <p className='mt-3 text-sm font-medium text-gray-700 text-center'>

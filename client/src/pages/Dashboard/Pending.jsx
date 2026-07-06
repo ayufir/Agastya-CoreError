@@ -167,7 +167,7 @@ const Pending = ({ selectedMonth, preloadedCases }) => {
   }, [preloadedCases, pendingCases, debouncedSearch, selectedBanks, selectedStatuses]);
 
 
-  const handleDelete = async (recordId) => {
+  const handleDelete = useCallback(async (recordId) => {
     try {
       await dispatch(deletedCases(recordId)).unwrap();
       toast.success("Case deleted successfully.");
@@ -176,9 +176,9 @@ const Pending = ({ selectedMonth, preloadedCases }) => {
       toast.error("Failed to delete case.");
       console.error("Delete Error:", error);
     }
-  };
+  }, [dispatch, fetchPendingList]);
 
-  const assignToFieldOfficer = async () => {
+  const assignToFieldOfficer = useCallback(async () => {
     if (!selectedFO || !currentCase) {
       toast.error("Please select a Field Officer.");
       return;
@@ -202,9 +202,9 @@ const Pending = ({ selectedMonth, preloadedCases }) => {
       console.error("Assignment failed:", error);
       toast.error("Failed to assign case.");
     }
-  };
+  }, [selectedFO, currentCase, dispatch, fetchPendingList]);
 
-  const handleUpdateCustomFields = async (record, field, value) => {
+  const handleUpdateCustomFields = useCallback(async (record, field, value) => {
     const trimmed = value.trim();
     if ((record[field] || "") === trimmed) return;
 
@@ -219,9 +219,9 @@ const Pending = ({ selectedMonth, preloadedCases }) => {
       toast.error("Failed to update");
       console.error(error);
     }
-  };
+  }, [fetchPendingList]);
 
-  const columns = [
+  const columns = useMemo(() => [
     {
       title: "Bank",
       dataIndex: "bankName",
@@ -464,7 +464,7 @@ const Pending = ({ selectedMonth, preloadedCases }) => {
         </div>
       ),
     },
-  ];
+  ], [fieldOfficers, handleDelete, handleUpdateCustomFields]);
 
   const filteredColumns = useMemo(() => {
     const isFO = user?.role === "FieldOfficer" || user?.role === "FIELDOFFICER";

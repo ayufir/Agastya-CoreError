@@ -195,6 +195,11 @@ const fetchCasesAcrossBanks = async ({
         createdAt: -1,
       });
 
+      // Project only fields required for list/dashboard rendering to reduce memory usage and query time
+      mongoQuery = mongoQuery.select(
+        "_id status approvalStatus declineReason createdAt uploadDate customerName visitedPersonName applicantName applicantsName clientName basicDetails.nameOfClient propertyInfo.applicantName summary.applicantName header.contactedPerson addressLegal legalAddress addressSite propertyAddress address locationDetails.propertyAddressAsVisit locationDetails.propertyAddressAsDocs locationDetails.propertyAddressAsTRF propertyInfo.addressAtSite propertyInfo.addressAsPerDocument summary.propertyAddress customerNo contactNumber mobileNo personContactNo personContact contactPerson contactPersonNumber propertyCity city propertyLocation nearestCityTown locationDetails.mainLocality basicDetails.city propertyInfo.city summary.city assignedTo createdBy AttachDocuments atsDocuments route customCaseId appIdNotes displayAddress displayCustomerName personName applicantDetails.applicantName applicantNames contactPersonName contactedPerson isReportSubmitted"
+      );
+
       if (populate) {
         mongoQuery = mongoQuery.populate(populate);
       }
@@ -666,7 +671,11 @@ exports.getCasesByRole = async (req, res) => {
           ];
         }
 
-        const cases = await Model.find(query).populate("assignedTo");
+        const cases = await Model.find(query)
+          .select(
+            "_id status approvalStatus declineReason createdAt uploadDate customerName visitedPersonName applicantName applicantsName clientName basicDetails.nameOfClient propertyInfo.applicantName summary.applicantName header.contactedPerson addressLegal legalAddress addressSite propertyAddress address locationDetails.propertyAddressAsVisit locationDetails.propertyAddressAsDocs locationDetails.propertyAddressAsTRF propertyInfo.addressAtSite propertyInfo.addressAsPerDocument summary.propertyAddress customerNo contactNumber mobileNo personContactNo personContact contactPerson contactPersonNumber propertyCity city propertyLocation nearestCityTown locationDetails.mainLocality basicDetails.city propertyInfo.city summary.city assignedTo createdBy AttachDocuments atsDocuments route customCaseId appIdNotes displayAddress displayCustomerName personName applicantDetails.applicantName applicantNames contactPersonName contactedPerson isReportSubmitted"
+          )
+          .populate("assignedTo");
         return enrichCasesWithBankMeta(cases, modelKey);
       })
     );

@@ -230,59 +230,101 @@ DOCUMENT TEXT:
 ${text}
 `;
 
-    try {
-        const api_key = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
+    const api_key = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
+    const gemini_key = process.env.GEMINI_API_KEY;
 
-        if (!api_key) {
-            console.warn("CLAUDE_API_KEY or ANTHROPIC_API_KEY not found in env, skipping data extraction.");
-            return fields;
-        }
-
-        const headers = {
-            "content-type": "application/json",
-            "x-api-key": api_key,
-            "anthropic-version": "2023-06-01",
-        };
-
-        const response = await axios.post(
-            "https://api.anthropic.com/v1/messages",
-            {
-                model: "claude-3-5-sonnet-20241022",
-                max_tokens: 4096,
-                messages: [
-                    {
-                        role: "user",
-                        content: [
-                            {
-                                type: "text",
-                                text: prompt
-                            }
-                        ]
-                    }
-                ]
-            },
-            { headers }
-        );
-        const raw = response.data?.content?.[0]?.text || "";
-
-        console.log("RAW AI RESPONSE:\n", raw);
-
-        const match = raw.match(/\{[\s\S]*\}/);
-        if (!match) return fields;
-
-        const parsed = JSON.parse(match[0]);
-
-        const finalOutput = {};
-        fieldKeys.forEach(key => {
-            finalOutput[key] = parsed[key] ?? null;
-        });
-
-        return finalOutput;
-
-    } catch (err) {
-        console.log("AI ERROR:", err.message);
+    if (!api_key && !gemini_key) {
+        console.warn("Neither CLAUDE_API_KEY nor GEMINI_API_KEY found, skipping extraction.");
         return fields;
     }
+
+    // 1. Try Claude first if configured
+    if (api_key) {
+        try {
+            const headers = {
+                "content-type": "application/json",
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+            };
+
+            const response = await axios.post(
+                "https://api.anthropic.com/v1/messages",
+                {
+                    model: "claude-3-5-sonnet-20241022",
+                    max_tokens: 4096,
+                    messages: [
+                        {
+                            role: "user",
+                            content: [
+                                {
+                                    type: "text",
+                                    text: prompt
+                                }
+                            ]
+                        }
+                    ]
+                },
+                { headers }
+            );
+            const raw = response.data?.content?.[0]?.text || "";
+            console.log("RAW CLAUDE RESPONSE:\n", raw);
+
+            const match = raw.match(/\{[\s\S]*\}/);
+            if (match) {
+                const parsed = JSON.parse(match[0]);
+                const finalOutput = {};
+                fieldKeys.forEach(key => {
+                    finalOutput[key] = parsed[key] ?? null;
+                });
+                return finalOutput;
+            }
+        } catch (claudeErr) {
+            console.error("Claude extraction failed:", claudeErr.message);
+            if (!gemini_key) {
+                throw new Error("Anthropic API returned 404 (Model Not Found). Your Claude API Key may be inactive/unfunded. Please update CLAUDE_API_KEY or configure a GEMINI_API_KEY in your Backend/.env file.");
+            }
+            console.log("Falling back to Gemini API...");
+        }
+    }
+
+    // 2. Gemini fallback
+    if (gemini_key) {
+        try {
+            console.log("Requesting data extraction from Gemini...");
+            const response = await axios.post(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${gemini_key}`,
+                {
+                    contents: [
+                        {
+                            parts: [{ text: prompt }]
+                        }
+                    ],
+                    generationConfig: {
+                        responseMimeType: "application/json"
+                    }
+                }
+            );
+
+            const raw = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+            console.log("RAW GEMINI RESPONSE:\n", raw);
+
+            const match = raw.match(/\{[\s\S]*\}/);
+            if (!match) return fields;
+
+            const parsed = JSON.parse(match[0]);
+            const finalOutput = {};
+            fieldKeys.forEach(key => {
+                finalOutput[key] = parsed[key] ?? null;
+            });
+
+            return finalOutput;
+        } catch (geminiErr) {
+            console.error("Gemini extraction failed:", geminiErr.message);
+            return fields;
+        }
+    }
+
+    return fields;
 }
 
 module.exports = extractDataWithClaude;

@@ -1,12 +1,13 @@
 // src/routes/AppRoutes.jsx
 import React, { Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
-import Login from "../pages/auth/Login";
 import ProtectedLayout from "./ProtectedLayout";
 import { routesConfig } from "./routesConfig";
-import ValuationForm from "../components/BankForm/ValuationForm";
-import HrmsLogin from "../pages/hrms/HrmsLogin";
-import HrmsDashboard from "../pages/hrms/HrmsDashboard";
+
+const Login = React.lazy(() => import("../pages/auth/Login"));
+const ValuationForm = React.lazy(() => import("../components/BankForm/ValuationForm"));
+const HrmsLogin = React.lazy(() => import("../pages/hrms/HrmsLogin"));
+const HrmsDashboard = React.lazy(() => import("../pages/hrms/HrmsDashboard"));
 
 const
   AppRoutes = () => {

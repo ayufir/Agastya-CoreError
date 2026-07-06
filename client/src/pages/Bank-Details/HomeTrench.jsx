@@ -245,7 +245,7 @@ const HomeTrench = () => {
         <div className='flex items-center border-b pb-3'>
           <div className='w-full'>
             {/* <ExcelHeader /> */}
-            <img src='/assets/images/header1.jpg' alt='' />
+            <img src='/assets/images/header1.webp' alt='' loading="lazy" />
 
           </div>
         </div>
