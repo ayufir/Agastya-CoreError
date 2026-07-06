@@ -19,6 +19,7 @@ import AdvancedAutoFillForm from "../../../components/AdvancedAutoFillForm";
 import { finalUpdate } from "../../../redux/features/case/caseThunks";
 import { Copy, Download, X } from "lucide-react";
 import axiosInstance from "../../../config/axios";
+import CaseWorkflowActions from "../../../components/CaseWorkflowActions";
 import { getDisplayCustomerName, getDisplayContact, getDisplayAddress } from "../../../utils/dashboardRecord";
 
 // ─── Sidebar Nav Item ────────────────────────────────────────────────────────
@@ -68,7 +69,8 @@ const SidebarItem = ({ id, label, isActive, onClick }) => (
 // ─── Main Component ──────────────────────────────────────────────────────────
 const HomeFirstBank = () => {
   const dispatch = useDispatch();
-  const { loading, error } = useSelector((state) => state.hfBanks);
+  const { loading: apiLoading, error } = useSelector((state) => state.hfBanks);
+  const [loading, setLoading] = useState(false);
   const user = useSelector((state) => state.auth.user);
   const savedCity = useSelector((state) => state.assignedCases.savedCity);
   const navigate = useNavigate();
@@ -84,7 +86,7 @@ const HomeFirstBank = () => {
   const [showJsonModal, setShowJsonModal] = useState(false);
   const [jsonOutputData, setJsonOutputData] = useState(null);
   const [onModalCloseAction, setOnModalCloseAction] = useState(null);
-  const [isAutofillOpen, setIsAutofillOpen] = useState(false);
+  const [isAutofillOpen, setIsAutofillOpen] = useState(true);
   const [isPropertyDetailsOpen, setIsPropertyDetailsOpen] = useState(false);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
 
@@ -574,6 +576,8 @@ const normalizeQualityOfConstruction = (val) => {
     return mapped;
   };
 
+
+
   useEffect(() => {
     if (user?.role?.toLowerCase() === "fieldofficer" && !id) {
       toast.error("You do not have permission to create cases");
@@ -965,6 +969,61 @@ const normalizeQualityOfConstruction = (val) => {
 
 
 
+  const handleFOSave = async () => {
+    setLoading(true);
+    try {
+      const payload = { ...isEdit, ...extractedData, city: savedCity, isReportSubmitted: false };
+      if (id) {
+        await dispatch(updateDetails({ id, ...payload })).unwrap();
+      }
+    } catch (error) {
+      console.error(error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFOSubmit = async () => {
+    setLoading(true);
+    try {
+      const payload = { ...isEdit, ...extractedData, city: savedCity, isReportSubmitted: true };
+      if (id) {
+        await dispatch(updateDetails({ id, ...payload })).unwrap();
+      } else {
+        await dispatch(createHFBanks(payload)).unwrap();
+      }
+      navigate("/");
+    } catch (error) {
+      console.error(error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAdminGenerate = async () => {
+    setLoading(true);
+    try {
+      const latestSections = await collectSectionData();
+      const finalData = buildFinalData(latestSections);
+      let finalPayload = { ...finalData, city: savedCity, status: "Generated" };
+      if (createdDate) finalPayload = { ...finalPayload, createdAt: createdDate };
+
+      if (!id) {
+        await dispatch(createHFBanks(finalPayload)).unwrap();
+      } else {
+        await dispatch(updateDetails({ id, ...finalPayload })).unwrap();
+      }
+      navigate("/");
+    } catch (error) {
+      console.error(error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePrimaryAction = async (finalSubmit) => {
     try {
       const latestSections = await collectSectionData();
@@ -1159,128 +1218,7 @@ const normalizeQualityOfConstruction = (val) => {
     }
   };
 
-  // ─── Active section title ────────────────────────────────────────────────
-
-
-  const activeSectionLabel = isFieldOfficer
-    ? ""
-    : activeContent?.label || "";
-
-  if (isFieldOfficer) {
-    return (
-      <div style={{ minHeight: "100vh", background: "#f3f4f6", fontFamily: "sans-serif" }}>
-        {/* ── Top Header ── */}
-        <header className="form-sub-header">
-          <div className="form-sub-header-title-container">
-            <img
-              src="/assets/images/banks-img/homefrist.png"
-              alt="Home First Bank"
-              style={{ height: 72, maxWidth: 200, objectFit: "contain", display: "block" }}
-            />
-          </div>
-          <div className="form-sub-header-date-container">
-            <input
-              type="datetime-local"
-              onChange={(e) => setCreatedDate(e.target.value)}
-              style={{
-                outline: "none",
-                background: "transparent",
-                fontSize: 11,
-                color: "#B5121B",
-                fontWeight: 600,
-                border: "none",
-                width: "100%",
-              }}
-            />
-          </div>
-        </header>
-
-        {/* ── AI Advanced Auto Fill ── */}
-        <div style={{ maxWidth: 1280, margin: "24px auto", padding: "0 16px" }}>
-          <div style={{
-            background: "#ffffff",
-            borderRadius: 12,
-            border: "1px solid #e5e7eb",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-            padding: "24px",
-          }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 16, fontWeight: 700, color: "#1e40af" }}>AI Advanced Auto Fill</span>
-                <span style={{
-                  fontSize: 11, fontWeight: 500, color: "#6366f1",
-                  background: "#ede9fe", borderRadius: 6, padding: "2px 8px"
-                }}>AI Powered</span>
-              </div>
-              <button
-                onClick={handleDownloadAll}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "8px 16px",
-                  background: "linear-gradient(135deg, #10b981, #059669)",
-                  color: "#ffffff",
-                  border: "none",
-                  borderRadius: 8,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                <Download size={13} /> Download All (ZIP)
-              </button>
-            </div>
-
-            <AdvancedAutoFillForm
-              caseId={id}
-              bankName="HomeFirst Bank"
-              setFormData={setExtractedData}
-              atsDocuments={
-                isEdit?.atsDocuments && isEdit.atsDocuments.length > 0
-                  ? isEdit.atsDocuments
-                  : (isEdit?.AttachDocuments || [])
-              }
-              imageUrls={isEdit?.imageUrls || []}
-              siteVisitVideo={isEdit?.siteVisitVideo || []}
-              gpsFiles={isEdit?.gpsFiles || []}
-              emailFiles={isEdit?.emailFiles || []}
-              fieldFormFiles={isEdit?.fieldFormFiles || []}
-              additionalFiles={isEdit?.additionalFiles || []}
-              fetchData={() => id && fetchEditData(id)}
-              onUploadingChange={setIsUploadingFiles}
-              isSubmitted={isEdit?.isReportSubmitted}
-            />
-
-            <div style={{ marginTop: 32, textAlign: "center" }}>
-              <button
-                type="button"
-                onClick={() => handlePrimaryAction()}
-                disabled={loading || isUploadingFiles || isEdit?.isReportSubmitted}
-                style={{
-                  width: "100%",
-                  maxWidth: 320,
-                  padding: "14px 28px",
-                  borderRadius: 24,
-                  background: (loading || isUploadingFiles || isEdit?.isReportSubmitted) ? "#9ca3af" : "#2563eb",
-                  color: "#fff",
-                  fontWeight: 700,
-                  fontSize: 14,
-                  border: "none",
-                  cursor: (loading || isUploadingFiles || isEdit?.isReportSubmitted) ? "not-allowed" : "pointer",
-                  transition: "all 0.2s ease",
-                  textAlign: "center",
-                  boxShadow: "0 4px 12px rgba(37, 99, 235, 0.2)",
-                }}
-              >
-                {isEdit?.isReportSubmitted ? "Report Submitted ✓" : "Submit Report"}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const activeSectionLabel = activeContent?.label || "";
 
   return (
     <div style={{ minHeight: "100vh", background: "#f3f4f6", fontFamily: "sans-serif" }}>
@@ -1677,149 +1615,66 @@ const normalizeQualityOfConstruction = (val) => {
           </div>
 
           {/* Save & Proceed footer */}
-          <div className="form-footer" style={isFieldOfficer ? { justifyContent: "center", padding: "16px 20px" } : {}}>
-            {isFieldOfficer ? (
-              <button
-                type="button"
-                onClick={handlePrimaryAction}
-                disabled={loading || isUploadingFiles || (isFieldOfficer && isEdit?.isReportSubmitted)}
-                style={{
-                  width: "100%",
-                  padding: "12px 24px",
-                  borderRadius: 20,
-                  background: (loading || isUploadingFiles || (isFieldOfficer && isEdit?.isReportSubmitted)) ? "#9ca3af" : "#2563eb",
-                  color: "#fff",
-                  fontWeight: 700,
-                  fontSize: 14,
-                  border: "none",
-                  cursor: (loading || isUploadingFiles || (isFieldOfficer && isEdit?.isReportSubmitted)) ? "not-allowed" : "pointer",
-                  transition: "all 0.2s ease",
-                  textAlign: "center",
-                  boxShadow: "0 4px 10px rgba(37, 99, 235, 0.15)",
-                }}
-                onMouseEnter={(e) => {
-                  if (!loading && !isUploadingFiles && !(isFieldOfficer && isEdit?.isReportSubmitted)) {
-                    e.currentTarget.style.background = "#1d4ed8";
-                    e.currentTarget.style.boxShadow = "0 6px 15px rgba(37, 99, 235, 0.25)";
+          <div className="form-footer">
+            {/* Save & Proceed Navigation (Back + Proceed) */}
+            <div className="form-footer-nav-buttons" style={{ display: "flex", gap: 10, width: "100%", justifyContent: "flex-start" }}>
+              {activeSection > 1 && (
+                <button
+                  type="button"
+                  className="form-footer-back-btn"
+                  onClick={handleBack}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "9px 20px",
+                    background: "#fff",
+                    border: "2px solid #6b7280",
+                    borderRadius: 20,
+                    color: "#374151",
+                    fontWeight: 600,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    transition: "all 0.15s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "#f3f4f6";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "#fff";
+                  }}
+                >
+                  <svg width="16" height="16" fill="none" stroke="#374151" strokeWidth="2" viewBox="0 0 24 24">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                  </svg>
+                  Back
+                </button>
+              )}
+            </div>
+
+            {/* Submit / Save / Final Submit buttons */}
+            {activeSection === sections[sections.length - 1]?.id && (
+              <CaseWorkflowActions
+                caseId={id}
+                bankName="Home First"
+                onSave={handleFOSave}
+                onSubmit={(status) => {
+                  if (status === "Generated") {
+                    return handleAdminGenerate();
+                  } else {
+                    return handleFOSubmit();
                   }
                 }}
-                onMouseLeave={(e) => {
-                  if (!loading && !isUploadingFiles && !(isFieldOfficer && isEdit?.isReportSubmitted)) {
-                    e.currentTarget.style.background = "#2563eb";
-                    e.currentTarget.style.boxShadow = "0 4px 10px rgba(37, 99, 235, 0.15)";
-                  }
-                }}
-              >
-                {isFieldOfficer && isEdit?.isReportSubmitted ? "Already Submitted" : isUploadingFiles ? "Uploading Files..." : loading ? "Processing..." : "Submit"}
-              </button>
-            ) : (
-              <>
-                {/* Save & Proceed Navigation (Back + Proceed) */}
-                <div className="form-footer-nav-buttons" style={{ display: "flex", gap: 10, width: "100%", justifyContent: "flex-start" }}>
-                  {activeSection > 1 && (
-                    <button
-                      type="button"
-                      className="form-footer-back-btn"
-                      onClick={handleBack}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        padding: "9px 20px",
-                        background: "#fff",
-                        border: "2px solid #6b7280",
-                        borderRadius: 20,
-                        color: "#374151",
-                        fontWeight: 600,
-                        fontSize: 13,
-                        cursor: "pointer",
-                        transition: "all 0.15s",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "#f3f4f6";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "#fff";
-                      }}
-                    >
-                      <svg width="16" height="16" fill="none" stroke="#374151" strokeWidth="2" viewBox="0 0 24 24">
-                        <line x1="19" y1="12" x2="5" y2="12"></line>
-                        <polyline points="12 19 5 12 12 5"></polyline>
-                      </svg>
-                      Back
-                    </button>
-                  )}
-                </div>
-
-                {/* Submit / Update / Final Submit buttons */}
-                {activeSection === sections[sections.length - 1]?.id && (
-                  <div className="form-footer-actions-group">
-                    <button
-                      type="button"
-                      onClick={handlePrimaryAction}
-                      disabled={loading || isUploadingFiles}
-                      style={{
-                        padding: "9px 20px",
-                        borderRadius: 8,
-                        background: (loading || isUploadingFiles) ? "#9ca3af" : "#2563eb",
-                        color: "#fff",
-                        fontWeight: 600,
-                        fontSize: 13,
-                        border: "none",
-                        cursor: (loading || isUploadingFiles) ? "not-allowed" : "pointer",
-                        transition: "background 0.15s",
-                      }}
-                    >
-                      {isUploadingFiles ? "Uploading Files..." : loading ? "Processing..." : primaryActionLabel}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handlePrimaryAction("final")}
-                      disabled={loading || isUploadingFiles}
-                      style={{
-                        padding: "9px 20px",
-                        borderRadius: 8,
-                        background: (loading || isUploadingFiles) ? "#9ca3af" : "#2563eb",
-                        color: "#fff",
-                        fontWeight: 600,
-                        fontSize: 13,
-                        border: "none",
-                        cursor: (loading || isUploadingFiles) ? "not-allowed" : "pointer",
-                        transition: "background 0.15s",
-                      }}
-                    >
-                      {isUploadingFiles ? "Uploading..." : loading ? "Processing..." : "Final Submit"}
-                    </button>
-
-                    {canFinalSubmit && (
-                      <button
-                        type="button"
-                        onClick={handleFinalSubmit}
-                        disabled={finalSubmitting || loading || isUploadingFiles}
-                        style={{
-                          padding: "9px 20px",
-                          borderRadius: 8,
-                          background: finalSubmitting || loading || isUploadingFiles ? "#9ca3af" : "#dc2626",
-                          color: "#fff",
-                          fontWeight: 600,
-                          fontSize: 13,
-                          border: "none",
-                          cursor: finalSubmitting || loading || isUploadingFiles ? "not-allowed" : "pointer",
-                          transition: "background 0.15s",
-                        }}
-                      >
-                        {finalSubmitting ? "Finalizing..." : "Final Submit"}
-                      </button>
-                    )}
-                  </div>
-                )}
-              </>
+                loading={loading || apiLoading}
+                isReportSubmitted={isEdit?.isReportSubmitted}
+                status={isEdit?.status}
+              />
             )}
           </div>
 
           {/* Status messages */}
-          {loading && (
+          {(loading || apiLoading) && (
             <div
               style={{
                 margin: "0 28px 16px",
@@ -2287,4 +2142,42 @@ const normalizeQualityOfConstruction = (val) => {
   );
 };
 
-export default HomeFirstBank;
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 24, background: "#fff", border: "1px solid #f87171", borderRadius: 8, margin: 16 }}>
+          <h2 style={{ color: "#dc2626", fontSize: 18, fontWeight: 700 }}>Something went wrong.</h2>
+          <pre style={{ background: "#fef2f2", padding: 12, borderRadius: 6, color: "#991b1b", marginTop: 12, overflowX: "auto" }}>
+            {this.state.error?.stack || this.state.error?.toString()}
+          </pre>
+          <button 
+            onClick={() => window.location.reload()} 
+            style={{ marginTop: 12, padding: "8px 16px", background: "#3b82f6", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}
+          >
+            Reload Page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+const HomeFirstBankWithErrorBoundary = (props) => (
+  <ErrorBoundary>
+    <HomeFirstBank {...props} />
+  </ErrorBoundary>
+);
+
+export default HomeFirstBankWithErrorBoundary;

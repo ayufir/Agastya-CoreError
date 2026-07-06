@@ -327,12 +327,6 @@ const IciciBank = () => {
   const isFieldOfficer = user?.role?.toLowerCase() === "fieldofficer";
 
   useEffect(() => {
-    if (isFieldOfficer && !id) {
-      toast.error("You do not have permission to create cases");
-      navigate("/field/dashboard");
-      return;
-    }
-
     if (id) {
       fetchEditData();
     } else {
@@ -342,6 +336,7 @@ const IciciBank = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, isFieldOfficer, navigate]);
+
 
   const fetchEditData = async () => {
     setLoading(true);
@@ -362,6 +357,15 @@ const IciciBank = () => {
       };
 
       const merged = { ...enriched, ...readDraft(id) };
+      if (enriched._id) {
+        merged._id = enriched._id;
+        merged.status = enriched.status;
+        merged.approvalStatus = enriched.approvalStatus;
+        merged.assignedTo = enriched.assignedTo;
+        merged.createdBy = enriched.createdBy;
+        merged.isReportSubmitted = enriched.isReportSubmitted;
+        merged.customCaseId = enriched.customCaseId;
+      }
       setEditData(merged);
       setFormData(merged);
     } catch (error) {
@@ -658,14 +662,15 @@ const IciciBank = () => {
   const handleFinalSubmit = async (data) => {
     setSaving(true);
     try {
+      const isFO = user?.role === "FieldOfficer";
       const rawCombined = {
         ...formData,
         ...data,
         bankName: "Icici",
         route: "icici",
-        isReportSubmitted: true,
-        approvalStatus: "Submitted",
-        status: "FinalSubmitted",
+        isReportSubmitted: isFO ? false : true,
+        approvalStatus: isFO ? "Work in Progress" : "Submitted",
+        status: isFO ? "Work in Progress" : "FinalSubmitted",
       };
       const payloadWithFiles = await prepareFormDataForServer(rawCombined);
       const finalData = sanitizeForSave(payloadWithFiles);
@@ -674,23 +679,63 @@ const IciciBank = () => {
         const response = await dispatch(
           submitIciciBank({
             id,
-            formData: { ...finalData, status: "FinalSubmitted" },
+            formData: { ...finalData, status: isFO ? "Work in Progress" : "FinalSubmitted" },
           })
         ).unwrap();
         await dispatch(finalUpdate({ id, bankName: "Icici", updateData: finalData })).unwrap();
         writeDraft(id, finalData);
-        toast.success("Report finalized successfully");
-        navigate(`/bank/icici/${id}`);
+        toast.success(isFO ? "Report saved successfully" : "Report finalized successfully");
+        navigate(isFO ? "/field/dashboard" : `/bank/icici/${id}`);
       } else {
         const response = await dispatch(createIciciBank(finalData)).unwrap();
         await dispatch(finalUpdate({ id: response._id, bankName: "Icici", updateData: finalData })).unwrap();
         writeDraft(response._id, finalData);
-        toast.success("Report created and finalized successfully");
-        navigate(`/bank/icici/${response._id}`);
+        toast.success(isFO ? "Report saved successfully" : "Report created and finalized successfully");
+        navigate(isFO ? "/field/dashboard" : `/bank/icici/${response._id}`);
       }
     } catch (err) {
       console.error("Final submit failed:", err);
       toast.error("Failed to finalize report");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAdminGenerate = async (data) => {
+    setSaving(true);
+    try {
+      const rawCombined = {
+        ...formData,
+        ...data,
+        bankName: "Icici",
+        route: "icici",
+        isReportSubmitted: false,
+        approvalStatus: "Pending",
+        status: "Generated",
+      };
+      const payloadWithFiles = await prepareFormDataForServer(rawCombined);
+      const finalData = sanitizeForSave(payloadWithFiles);
+
+      if (id) {
+        await dispatch(
+          submitIciciBank({
+            id,
+            formData: { ...finalData, status: "Generated" },
+          })
+        ).unwrap();
+        await dispatch(finalUpdate({ id, bankName: "Icici", updateData: finalData })).unwrap();
+        writeDraft(id, finalData);
+        navigate("/");
+      } else {
+        const response = await dispatch(createIciciBank(finalData)).unwrap();
+        await dispatch(finalUpdate({ id: response._id, bankName: "Icici", updateData: finalData })).unwrap();
+        writeDraft(response._id, finalData);
+        navigate("/");
+      }
+    } catch (err) {
+      console.error("Generate Case failed:", err);
+      toast.error("Failed to generate case");
+      throw err;
     } finally {
       setSaving(false);
     }
@@ -738,6 +783,7 @@ const IciciBank = () => {
             {...commonProps}
             onSubmit={handleSubmit}
             onFinalSubmit={handleFinalSubmit}
+            onAdminGenerate={handleAdminGenerate}
             isAdmin={user?.role === "Admin" || user?.role === "SuperAdmin"}
           />
         );
@@ -762,130 +808,7 @@ const IciciBank = () => {
     );
   }
 
-  if (isFieldOfficer) {
-    return (
-      <div className="min-h-screen bg-[#f8fafc]">
-        {/* APPLICATION INFO BANNER */}
-        <div className="bg-[#0b1d3a] text-white py-5 shadow-sm">
-          <div className="max-w-[1550px] mx-auto px-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="bg-[#b21b12] text-white text-[10px] font-bold px-2 py-0.5 rounded tracking-wide">
-                  ICICI BANK
-                </span>
-                <h1 className="text-xl font-bold tracking-tight">
-                  Valuation Report Wizard
-                </h1>
-              </div>
-              <p className="text-xs text-gray-300 mt-1">
-                {id ? `Editing Case: #${id}` : "Creating New Valuation Report"} • Draft auto-saved locally
-              </p>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[11px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full flex items-center gap-1.5 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                Live Sync
-              </span>
-            </div>
-          </div>
-        </div>
 
-        <div className="max-w-[1550px] mx-auto px-4 mt-6">
-          <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 md:p-6 mb-6">
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 16, fontWeight: 700, color: "#1e40af" }}>AI Advanced Auto Fill</span>
-                <span style={{
-                  fontSize: 11, fontWeight: 500, color: "#6366f1",
-                  background: "#ede9fe", borderRadius: 6, padding: "2px 8px"
-                }}>AI Powered</span>
-              </div>
-              <button
-                onClick={handleDownloadAll}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "8px 16px",
-                  background: "linear-gradient(135deg, #10b981, #059669)",
-                  color: "#ffffff",
-                  border: "none",
-                  borderRadius: 8,
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                <Download size={13} /> Download All (ZIP)
-              </button>
-            </div>
-
-            <AdvancedAutoFillForm
-              bankName="ICICI"
-              setFormData={handleAutoFill}
-              setFormDataDirect={setFormData}
-              setEditDataDirect={setEditData}
-              imageUrls={editData?.sitePhotographs || editData?.imageUrls || []}
-              atsDocuments={editData?.atsDocuments && editData.atsDocuments.length > 0 ? editData.atsDocuments : (editData?.AttachDocuments || [])}
-              siteVisitVideo={editData?.siteVisitVideo || []}
-              gpsFiles={editData?.gpsFiles || []}
-              emailFiles={editData?.emailFiles || []}
-              fieldFormFiles={editData?.fieldFormFiles || []}
-              additionalFiles={editData?.additionalFiles || []}
-              fetchData={fetchEditData}
-            />
-
-            <div style={{ marginTop: 32, display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-              <button
-                type="button"
-                onClick={() => handleSave("propertyDetails", {})}
-                disabled={saving}
-                style={{
-                  width: "100%",
-                  maxWidth: 240,
-                  padding: "14px 28px",
-                  borderRadius: 24,
-                  background: saving ? "#9ca3af" : "#4b5563",
-                  color: "#fff",
-                  fontWeight: 700,
-                  fontSize: 14,
-                  border: "none",
-                  cursor: saving ? "not-allowed" : "pointer",
-                  transition: "all 0.2s ease",
-                  textAlign: "center",
-                  boxShadow: "0 4px 12px rgba(75, 85, 99, 0.2)",
-                }}
-              >
-                Save Work
-              </button>
-              <button
-                type="button"
-                onClick={() => handleFinalSubmit()}
-                disabled={saving || (editData?.isReportSubmitted === true)}
-                style={{
-                  width: "100%",
-                  maxWidth: 240,
-                  padding: "14px 28px",
-                  borderRadius: 24,
-                  background: (saving || editData?.isReportSubmitted === true) ? "#9ca3af" : "#2563eb",
-                  color: "#fff",
-                  fontWeight: 700,
-                  fontSize: 14,
-                  border: "none",
-                  cursor: (saving || editData?.isReportSubmitted === true) ? "not-allowed" : "pointer",
-                  transition: "all 0.2s ease",
-                  textAlign: "center",
-                  boxShadow: "0 4px 12px rgba(37, 99, 235, 0.2)",
-                }}
-              >
-                {editData?.isReportSubmitted === true ? "Report Submitted ✓" : "Final Submit"}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[#f8fafc]">

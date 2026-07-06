@@ -217,6 +217,57 @@ bankRegistry.forEach(({ model: Model }) => {
     if (!Model.schema.paths.appIdNotes) {
       Model.schema.add({ appIdNotes: { type: String, default: "" } });
     }
+    if (!Model.schema.paths.distance) {
+      Model.schema.add({ distance: { type: String, default: "" } });
+    }
+    if (!Model.schema.paths.othersIfAny) {
+      Model.schema.add({ othersIfAny: { type: String, default: "" } });
+    }
+    if (!Model.schema.paths.ratePerKm) {
+      Model.schema.add({ ratePerKm: { type: Number, default: 3.50 } });
+    }
+    if (!Model.schema.paths.totalAllowance) {
+      Model.schema.add({ totalAllowance: { type: Number, default: 0 } });
+    }
+
+    // Pre-save and pre-findOneAndUpdate hooks for customCaseId auto-generation
+    Model.schema.pre("save", function (next) {
+      if (!this.customCaseId) {
+        const prefix = Model.modelName.slice(0, 3).toUpperCase();
+        const rand = Math.floor(100000 + Math.random() * 900000);
+        this.customCaseId = `${prefix}-${rand}`;
+      }
+      next();
+    });
+
+    Model.schema.pre("findOneAndUpdate", function (next) {
+      const update = this.getUpdate();
+      if (update) {
+        let statusVal = "";
+        let customIdVal = "";
+        
+        if (update.$set) {
+          statusVal = update.$set.status || "";
+          customIdVal = update.$set.customCaseId || "";
+        } else {
+          statusVal = update.status || "";
+          customIdVal = update.customCaseId || "";
+        }
+        
+        if ((statusVal.toLowerCase() === "generated" || statusVal.toLowerCase() === "pending") && !customIdVal) {
+          const prefix = Model.modelName.slice(0, 3).toUpperCase();
+          const rand = Math.floor(100000 + Math.random() * 900000);
+          const generatedId = `${prefix}-${rand}`;
+          
+          if (update.$set) {
+            update.$set.customCaseId = generatedId;
+          } else {
+            update.customCaseId = generatedId;
+          }
+        }
+      }
+      next();
+    });
 
     // Add global post hooks for SuperAdmin notifications
     Model.schema.post("save", async function (doc, next) {

@@ -502,6 +502,7 @@ exports.assignCase = async (req, res) => {
         $set: {
           assignedTo: fieldOfficerId,
           status: WORK_IN_PROGRESS_STATUS,
+          approvalStatus: "Pending",
           route: route
         },
         $push: {
@@ -657,9 +658,12 @@ exports.getCasesByRole = async (req, res) => {
         const { key: modelKey, model: Model } = bankConfig;
         let query = {};
 
-        // Role-based ownership filtering (Field Officers only see cases assigned to them)
+        // Role-based ownership filtering (Field Officers see cases assigned to them OR created by them)
         if (user.role === "FieldOfficer" || user.role === "FIELDOFFICER") {
-          query.assignedTo = user._id;
+          query.$or = [
+            { assignedTo: user._id },
+            { createdBy: user._id },
+          ];
         }
 
         const cases = await Model.find(query).populate("assignedTo");
@@ -670,12 +674,30 @@ exports.getCasesByRole = async (req, res) => {
     allCases = results.flat();
 
     // City restriction for all non-SuperAdmin users if they have an assignedCity
+    // NOTE: FieldOfficer ke directly-assigned cases (assignedTo === user._id) ko
+    // city filter se exempt kiya gaya hai — taaki admin-assigned assets hamesha
+    // FO ke "New" section mein dikhen, chahe case ka city field empty/mismatch ho.
     if (user && user.role !== "SuperAdmin" && user.assignedCity) {
       const centralCities = ["bhopal", "gwalior", "jabalpur"];
       const normalizedUserCity = user.assignedCity.toLowerCase().trim();
-      
+
+      const isFieldOfficer =
+        user.role === "FieldOfficer" || user.role === "FIELDOFFICER";
+
       allCases = allCases.filter((caseItem) => {
+        // FieldOfficer: directly assigned cases always pass through city filter
+        if (isFieldOfficer) {
+          const assignedToId =
+            caseItem.assignedTo?._id?.toString() ||
+            caseItem.assignedTo?.toString();
+          if (assignedToId === user._id.toString()) return true;
+        }
+
         const caseCity = (getCaseDisplayCity(caseItem) || "").toLowerCase().trim();
+
+        // If case has no city info, don't hide it (safe fallback)
+        if (!caseCity) return true;
+
         if (centralCities.includes(normalizedUserCity) || normalizedUserCity === "combined bjg") {
           return ["bhopal", "gwalior", "jabalpur", "combined bjg"].some(c => caseCity === c || caseCity.includes(c));
         } else {
@@ -1113,13 +1135,14 @@ exports.finalUpdate = async (req, res) => {
     const existingCase = await Model.findById(id);
 
     const modelKey = toPascalCaseSmart(bankName);
+    const isFO = req.user?.role === "FieldOfficer" || req.user?.role === "FIELDOFFICER";
     const updateFields = {
       ...sanitizedUpdateData,
       bankName: sanitizedUpdateData.bankName || bankName,
       route: sanitizedUpdateData.route || getBankMeta(modelKey).route,
-      isReportSubmitted: true,
-      approvalStatus: "FinalSubmitted",
-      status: "FinalSubmitted", // lock status
+      isReportSubmitted: isFO ? (sanitizedUpdateData.isReportSubmitted !== undefined ? sanitizedUpdateData.isReportSubmitted : false) : true,
+      approvalStatus: isFO ? (sanitizedUpdateData.approvalStatus || "Work in Progress") : "FinalSubmitted",
+      status: isFO ? (sanitizedUpdateData.status || "Work in Progress") : "FinalSubmitted",
     };
 
     // Sanitize populated objects — sirf _id chahiye, object nahi
@@ -1688,3 +1711,56 @@ exports.updateCaseCustomFields = async (req, res) => {
     res.status(500).json({ error: "Failed to update custom case fields." });
   }
 };
+
+exports.updateCaseAllowance = async (req, res) => {
+  const { id } = req.params;
+  const { distance, othersIfAny, ratePerKm, totalAllowance, bankName } = req.body;
+
+  let Model = null;
+  if (bankName) {
+    Model = resolveModel(bankName);
+  }
+
+  if (!Model) {
+    const registry = modelMap.bankRegistry || Object.values(modelMap);
+    for (const bankConfig of registry) {
+      const M = bankConfig.model || bankConfig;
+      if (M && M.findById) {
+        try {
+          const doc = await M.findById(id);
+          if (doc) {
+            Model = M;
+            break;
+          }
+        } catch (err) {
+          // ignore
+        }
+      }
+    }
+  }
+
+  if (!Model) {
+    return res.status(400).json({ error: "Case not found in any bank model." });
+  }
+
+  try {
+    const updatePayload = {};
+    if (distance !== undefined) updatePayload.distance = distance;
+    if (othersIfAny !== undefined) updatePayload.othersIfAny = othersIfAny;
+    if (ratePerKm !== undefined) updatePayload.ratePerKm = ratePerKm;
+    if (totalAllowance !== undefined) updatePayload.totalAllowance = totalAllowance;
+
+    const updated = await Model.findByIdAndUpdate(
+      id,
+      { $set: updatePayload },
+      { new: true, strict: false }
+    );
+
+    res.json(updated);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update allowance details." });
+  }
+};
+
+

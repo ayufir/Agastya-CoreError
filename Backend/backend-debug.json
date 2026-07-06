@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-07-02T12:03:22.733Z",
+  "timestamp": "2026-07-06T12:58:24.594Z",
   "body": {
-    "_id": "6a3f0a02bdcbd294f312a66d",
+    "_id": "6a4b87ef8dc5fbf80c30387d",
     "status": "Work in Progress",
     "AttachDocuments": [],
     "atsDocuments": [],
@@ -10,40 +10,53 @@
     "fieldFormFiles": [],
     "additionalFiles": [],
     "siteVisitVideo": [],
-    "createdBy": "6a3eabf7240e9ac6b5cf128c",
+    "createdBy": "683070c765ba61b559c1ecc1",
     "bankName": "HomeFirst",
-    "city": "Gwalior",
+    "city": "",
     "approvalStatus": "Accepted",
     "isReportSubmitted": true,
-    "customerName": "tanveer",
-    "addressSite": "88 ram nagr pitampur ",
+    "customerName": "core erro",
+    "customerNo": "7418529630",
+    "addressSite": "ehuh hihiukuerhuhjkrhvuiqhierhvuihuqhkjvbeuqhk",
     "imageUrls": [],
     "valuationRemarks": [],
-    "customCaseId": "123456",
-    "appIdNotes": "remark",
+    "customCaseId": "",
+    "appIdNotes": "",
     "timeline": [
       {
         "status": "Work in Progress",
-        "updatedAt": "2026-06-30T09:04:46.250Z",
+        "updatedAt": "2026-07-06T10:48:29.495Z",
         "updatedBy": "683070c765ba61b559c1ecc1",
         "note": "Assigned to user 6a2a4ed58ddfdbd661279b46",
-        "_id": "6a4386aed7e45e8a056b6525"
+        "_id": "6a4b87fd8dc5fbf80c3038a0"
       },
       {
         "status": "Accepted",
-        "updatedAt": "2026-07-02T12:01:48.776Z",
+        "updatedAt": "2026-07-06T10:48:41.961Z",
         "updatedBy": "6a2a4ed58ddfdbd661279b46",
         "note": "Accepted by Field Officer",
-        "_id": "6a46532cef160fa98620766d"
+        "_id": "6a4b88098dc5fbf80c303b28"
+      },
+      {
+        "status": "submitted-by-fo",
+        "updatedAt": "2026-07-06T10:48:53.704Z",
+        "updatedBy": "6a2a4ed58ddfdbd661279b46",
+        "note": "Submitted by field officer",
+        "_id": "6a4b88158dc5fbf80c303d16"
       }
     ],
-    "dateOfReport": "2026-06-26",
-    "dateOfVisit": "2026-06-26",
+    "dateOfReport": "2026-07-06",
+    "dateOfVisit": "2026-07-06",
     "documents": [],
-    "createdAt": "2026-06-26T23:23:46.293Z",
-    "updatedAt": "2026-06-26T23:23:46.293Z",
+    "createdAt": "2026-07-06T10:48:15.876Z",
+    "updatedAt": "2026-07-06T10:48:15.894Z",
     "__v": 0,
     "assignedTo": "6a2a4ed58ddfdbd661279b46",
-    "route": "/bank/home-first/edit/6a3f0a02bdcbd294f312a66d"
+    "route": "/bank/homefirst/edit/6a4b87ef8dc5fbf80c30387d",
+    "addressLegal": "ehuh hihiukuerhuhjkrhvuiqhierhvuihuqhkjvbeuqhk",
+    "distance": "10",
+    "othersIfAny": "10",
+    "ratePerKm": 3.5,
+    "totalAllowance": 45
   }
 }

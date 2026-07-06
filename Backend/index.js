@@ -107,6 +107,7 @@ app.use("/api/uploads", require("./Routes/upload"));
 app.use("/api/remove", require("./Routes/removeRoutes"));
 app.use("/api/proxy", require("./Routes/proxyDownload"));
 app.use("/api/invoices", require("./Routes/InvoiceRoutes"));
+app.use("/api/settings", require("./Routes/settingsRoutes"));
 
 
 ////////////////////

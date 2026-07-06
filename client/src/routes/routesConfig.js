@@ -22,7 +22,7 @@ export const routesConfig = [
   },
   {
     path: "/bank/icici/:id",
-    element: lazy(() => import("../pages/Bank-Details/IciciBankDetails")),
+    element: lazy(() => import("../pages/Bank-Form/Icici-Bank/IciciBank")),
   },
   {
     path: "/bank/icici/edit/:id",
@@ -49,11 +49,15 @@ export const routesConfig = [
   },
   {
     path: "/bank/home-first/:id",
-    element: lazy(() => import("../pages/Bank-Details/HFBankDetails")),
+    element: lazy(() =>
+      import("../pages/Bank-Form/Home-FirstBank/HomeFirstBank")
+    ),
   },
   {
     path: "/bank/HomeFirst/:id",
-    element: lazy(() => import("../pages/Bank-Details/HFBankDetails")),
+    element: lazy(() =>
+      import("../pages/Bank-Form/Home-FirstBank/HomeFirstBank")
+    ),
   },
   {
     path: "/bank/home-first/edit/:id",
@@ -67,11 +71,11 @@ export const routesConfig = [
   },
   {
     path: "/bank/home-first-trench/:id",
-    element: lazy(() => import("../pages/Bank-Details/HomeTrench")),
+    element: lazy(() => import("../pages/Bank-Form/Home-trench/Trench")),
   },
   {
     path: "/bank/homefirsttrench/:id",
-    element: lazy(() => import("../pages/Bank-Details/HomeTrench")),
+    element: lazy(() => import("../pages/Bank-Form/Home-trench/Trench")),
   },
 
   {
@@ -89,11 +93,11 @@ export const routesConfig = [
   },
   {
     path: "/bank/aditya-birla/:id",
-    element: lazy(() => import("../pages/Bank-Details/AdityaDetails"))
+    element: lazy(() => import("../pages/Bank-Details/AdityaBirlaForm/AdityaBirlaForm.jsx"))
   },
   {
     path: "/bank/aditya/:id",
-    element: lazy(() => import("../pages/Bank-Details/AdityaDetails")),
+    element: lazy(() => import("../pages/Bank-Details/AdityaBirlaForm/AdityaBirlaForm.jsx")),
   },
   {
     path: "/bank/aditya/edit/:id",

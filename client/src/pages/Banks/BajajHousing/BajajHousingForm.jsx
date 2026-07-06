@@ -11,6 +11,7 @@ import {
 } from "../../../redux/features/Banks/BajajHousing/BajajHousingThunk";
 import { finalUpdate } from "../../../redux/features/case/caseThunks";
 import axiosInstance from "../../../config/axios";
+import CaseWorkflowActions from "../../../components/CaseWorkflowActions";
 import AutoFillForm from "../../AutoFillForm";
 import AdvancedAutoFillForm from "../../../components/AdvancedAutoFillForm";
 import { createAutoFillAdapter, applyMappedFields } from "../../../utils/Autofilladapter";
@@ -611,6 +612,99 @@ export default function BajajHousingForm() {
         link.download = "bajaj_housing_documents.zip";
         link.click();
         URL.revokeObjectURL(link.href);
+    };
+
+    const handleFOSave = async () => {
+        setSaving(true);
+        try {
+            const sanitizeImgArr = (arr) =>
+                arr
+                    .map((img) => (typeof img === "string" ? { url: img } : img))
+                    .filter((img) => img?.url?.startsWith("http") || img?.url?.startsWith("data:"));
+
+            const payload = {
+                ...form,
+                frontElevationImages: sanitizeImgArr(form.frontElevationImages),
+                kitchenImages: sanitizeImgArr(form.kitchenImages),
+                selfieImages: sanitizeImgArr(form.selfieImages),
+                otherImages: sanitizeImgArr(form.otherImages),
+                AttachDocuments: form.AttachDocuments.filter((d) => d?.url?.startsWith("http") || d?.url?.startsWith("data:")),
+                isReportSubmitted: false,
+            };
+            if (id) {
+                await dispatch(updateBajajHousingDetails({ id, ...payload })).unwrap();
+            }
+        } catch (err) {
+            console.error(err);
+            throw err;
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleFOSubmit = async () => {
+        setSaving(true);
+        try {
+            const sanitizeImgArr = (arr) =>
+                arr
+                    .map((img) => (typeof img === "string" ? { url: img } : img))
+                    .filter((img) => img?.url?.startsWith("http") || img?.url?.startsWith("data:"));
+
+            const payload = {
+                ...form,
+                frontElevationImages: sanitizeImgArr(form.frontElevationImages),
+                kitchenImages: sanitizeImgArr(form.kitchenImages),
+                selfieImages: sanitizeImgArr(form.selfieImages),
+                otherImages: sanitizeImgArr(form.otherImages),
+                AttachDocuments: form.AttachDocuments.filter((d) => d?.url?.startsWith("http") || d?.url?.startsWith("data:")),
+                isReportSubmitted: true,
+            };
+            if (id) {
+                await dispatch(updateBajajHousingDetails({ id, ...payload })).unwrap();
+            } else {
+                await dispatch(createBajajHousing(payload)).unwrap();
+            }
+            navigate("/");
+        } catch (err) {
+            console.error(err);
+            throw err;
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleAdminGenerate = async () => {
+        setSaving(true);
+        try {
+            const sanitizeImgArr = (arr) =>
+                arr
+                    .map((img) => (typeof img === "string" ? { url: img } : img))
+                    .filter((img) => img?.url?.startsWith("http") || img?.url?.startsWith("data:"));
+
+            const payload = {
+                ...form,
+                frontElevationImages: sanitizeImgArr(form.frontElevationImages),
+                kitchenImages: sanitizeImgArr(form.kitchenImages),
+                selfieImages: sanitizeImgArr(form.selfieImages),
+                otherImages: sanitizeImgArr(form.otherImages),
+                AttachDocuments: form.AttachDocuments.filter((d) => d?.url?.startsWith("http") || d?.url?.startsWith("data:")),
+                status: "Generated",
+            };
+
+            if (id) {
+                await dispatch(updateBajajHousingDetails({ id, ...payload })).unwrap();
+                await dispatch(finalUpdate({ id, bankName: "bajaj-housing", updateData: payload })).unwrap();
+            } else {
+                const res = await dispatch(createBajajHousing(payload)).unwrap();
+                await dispatch(finalUpdate({ id: res._id, bankName: "bajaj-housing", updateData: payload })).unwrap();
+            }
+            navigate("/");
+        } catch (err) {
+            console.error(err);
+            throw err;
+        } finally {
+            setSaving(false);
+        }
     };
 
     const handleSubmit = async () => {
@@ -1450,27 +1544,21 @@ export default function BajajHousingForm() {
                     {currentStep < 8 ? (
                         <button style={s.btnNext} onClick={nextStep}>Next →</button>
                     ) : (
-                        <>
-                            <button style={s.btnSubmit} onClick={handleSubmit} disabled={saving}>
-                                {saving ? "Saving..." : isEdit ? "Update" : "Submit"}
-                            </button>
-                            {isEdit && (
-                                <button 
-                                    style={s.btnView} 
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        window.open(`/bank/bajaj-housing/view/${id}`, '_blank');
-                                    }}
-                                >
-                                    📄 Save as PDF
-                                </button>
-                            )}
-                            {canFinalSubmit && (
-                                <button style={s.btnFinal} onClick={handleFinalSubmit} disabled={saving}>
-                                    {saving ? "Finalizing..." : "Final Submit"}
-                                </button>
-                            )}
-                        </>
+                        <CaseWorkflowActions
+                            caseId={id}
+                            bankName="Bajaj Housing"
+                            onSave={handleFOSave}
+                            onSubmit={(status) => {
+                                if (status === "Generated") {
+                                    return handleAdminGenerate();
+                                } else {
+                                    return handleFOSubmit();
+                                }
+                            }}
+                            loading={saving}
+                            isReportSubmitted={form?.isReportSubmitted}
+                            status={form?.status}
+                        />
                     )}
                 </div>
             </div>

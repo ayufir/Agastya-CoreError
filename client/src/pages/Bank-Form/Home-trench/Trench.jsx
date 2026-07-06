@@ -28,6 +28,7 @@ import ConfirmModal from "../../../components/ConfirmModal";
 import DocumentUploader from "../../../components/DocumentUploader";
 import ImageUploader from "../../../components/ImageUploader";
 import LocationPicker from "../../../components/GeoLocationInput";
+import CaseWorkflowActions from "../../../components/CaseWorkflowActions";
 
 const { TextArea } = Input;
 
@@ -67,7 +68,7 @@ const Trench = () => {
   const watchedLatitude = Form.useWatch("latitude", form);
   const watchedLongitude = Form.useWatch("longitude", form);
 
-  const [showAutoFill, setShowAutoFill] = useState(false);
+  const [showAutoFill, setShowAutoFill] = useState(true);
   const [isPropertyDetailsOpen, setIsPropertyDetailsOpen] = useState(false);
   const isFieldOfficer = user?.role?.toLowerCase() === "fieldofficer";
 
@@ -283,6 +284,90 @@ const Trench = () => {
     }
   };
 
+  const handleFOSave = async () => {
+    if (uploadedUrls.length === 0) {
+      toast.error("Please upload at least one site photograph");
+      throw new Error("Validation failed");
+    }
+    dispatch(ShowLoading());
+    setLoading(true);
+    try {
+      const payload = {
+        ...reportData,
+        imageUrls: uploadedUrls,
+        atsDocuments: atsDocuments,
+        city: savedCity,
+        isReportSubmitted: false
+      };
+      if (id) {
+        await dispatch(updateHomeTrenchReport({ id, fullData: payload })).unwrap();
+      }
+    } catch (error) {
+      throw error;
+    } finally {
+      setLoading(false);
+      dispatch(HideLoading());
+    }
+  };
+
+  const handleFOSubmit = async () => {
+    if (uploadedUrls.length === 0) {
+      toast.error("Please upload at least one site photograph");
+      throw new Error("Validation failed");
+    }
+    dispatch(ShowLoading());
+    setLoading(true);
+    try {
+      const payload = {
+        ...reportData,
+        imageUrls: uploadedUrls,
+        atsDocuments: atsDocuments,
+        city: savedCity,
+        isReportSubmitted: true
+      };
+      if (id) {
+        await dispatch(updateHomeTrenchReport({ id, fullData: payload })).unwrap();
+      }
+      navigate("/field/dashboard");
+    } catch (error) {
+      throw error;
+    } finally {
+      setLoading(false);
+      dispatch(HideLoading());
+    }
+  };
+
+  const handleAdminGenerate = async () => {
+    dispatch(ShowLoading());
+    setLoading(true);
+    try {
+      const values = await form.validateFields();
+      const payload = {
+        ...values,
+        laiNo: values.laiNo || "",
+        propertyCode: values.propertyCode || "",
+        dateOfVisit: values.dateOfVisit?.format("YYYY-MM-DD") || "",
+        dateOfReport: values.dateOfReport?.format("YYYY-MM-DD") || "",
+        imageUrls: uploadedUrls,
+        AttachDocuments: docUrls,
+        atsDocuments: atsDocuments,
+        city: savedCity,
+        status: "Generated"
+      };
+      if (id) {
+        await dispatch(updateHomeTrenchReport({ id, fullData: payload })).unwrap();
+      } else {
+        await dispatch(createHomeTrenchReport(payload)).unwrap();
+      }
+      navigate("/");
+    } catch (error) {
+      throw error;
+    } finally {
+      setLoading(false);
+      dispatch(HideLoading());
+    }
+  };
+
   const handleSubmit = async () => {
     if (!(await validateBeforeSubmit())) return;
 
@@ -427,76 +512,74 @@ const Trench = () => {
                   padding: "6px 12px",
                   borderRadius: "8px",
                   fontSize: "12px",
-                  fontWeight: 600,
-                  color: "#475569",
-                  cursor: "pointer",
-                  transition: "all 0.2s"
-                }}
-              >
-                <Download size={14} /> Download All (ZIP)
-              </button>
-              <button
-                onClick={() => setShowAutoFill(!showAutoFill)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  padding: 0,
-                  transform: showAutoFill ? "rotate(180deg)" : "rotate(0deg)",
-                  transition: "transform 0.2s ease"
-                }}
-              >
-                <svg width="14" height="14" fill="none" stroke="#64748b" strokeWidth="2.5" viewBox="0 0 24 24">
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
-              </button>
-            </div>
-          </div>
+                      fontWeight: 600,
+                      color: "#475569",
+                      cursor: "pointer",
+                      transition: "all 0.2s"
+                    }}
+                  >
+                    <Download size={14} /> Download All (ZIP)
+                  </button>
+                  <button
+                    onClick={() => setShowAutoFill(!showAutoFill)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      padding: 0,
+                      transform: showAutoFill ? "rotate(180deg)" : "rotate(0deg)",
+                      transition: "transform 0.2s ease"
+                    }}
+                  >
+                    <svg width="14" height="14" fill="none" stroke="#64748b" strokeWidth="2.5" viewBox="0 0 24 24">
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
 
-          {showAutoFill && (
-            <div style={{ padding: "20px 24px" }}>
-              <AdvancedAutoFillForm
-                bankName="Home First Tranche"
-                setFormData={handleAutoFill}
-                atsDocuments={atsDocuments && atsDocuments.length > 0 ? atsDocuments : (docUrls || [])}
-                imageUrls={uploadedUrls || []}
-                siteVisitVideo={reportData?.siteVisitVideo || []}
-                gpsFiles={reportData?.gpsFiles || []}
-                emailFiles={reportData?.emailFiles || []}
-                fieldFormFiles={reportData?.fieldFormFiles || []}
-                additionalFiles={reportData?.additionalFiles || []}
-                fetchData={fetchReport}
-              />
+              {showAutoFill && (
+                <div style={{ padding: "20px 24px" }}>
+                  <AdvancedAutoFillForm
+                    bankName="Home First Tranche"
+                    setFormData={handleAutoFill}
+                    atsDocuments={atsDocuments && atsDocuments.length > 0 ? atsDocuments : (docUrls || [])}
+                    imageUrls={uploadedUrls || []}
+                    siteVisitVideo={reportData?.siteVisitVideo || []}
+                    gpsFiles={reportData?.gpsFiles || []}
+                    emailFiles={reportData?.emailFiles || []}
+                    fieldFormFiles={reportData?.fieldFormFiles || []}
+                    additionalFiles={reportData?.additionalFiles || []}
+                    fetchData={fetchReport}
+                  />
+                </div>
+              )}
             </div>
-          )}
-        </div>
-
-        {/* Collapsible Property Details Panel */}
-        <div style={{
-          background: "#ffffff",
-          borderRadius: 12,
-          border: "1px solid #e5e7eb",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-          overflow: "hidden"
-        }}>
-          {/* Accordion Header Row */}
-          <div 
-            onClick={() => setIsPropertyDetailsOpen(!isPropertyDetailsOpen)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "16px 24px",
+            <div style={{
               background: "#ffffff",
-              borderBottom: isPropertyDetailsOpen ? "1px solid #e5e7eb" : "none",
-              cursor: "pointer",
-              userSelect: "none"
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
-              <span style={{ fontSize: "14px", fontWeight: 600, color: "#1e293b" }}>🏠 Property Details</span>
-              {(watchedVisitedPersonName || watchedLaiNo || watchedPropertyCode) && (
-                <div style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "12px", color: "#64748b", fontWeight: 500 }}>
+              borderRadius: 12,
+              border: "1px solid #e5e7eb",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+              overflow: "hidden"
+            }}>
+              {/* Accordion Header Row */}
+              <div 
+                onClick={() => setIsPropertyDetailsOpen(!isPropertyDetailsOpen)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "16px 24px",
+                  background: "#ffffff",
+                  borderBottom: isPropertyDetailsOpen ? "1px solid #e5e7eb" : "none",
+                  cursor: "pointer",
+                  userSelect: "none"
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+                  <span style={{ fontSize: "14px", fontWeight: 600, color: "#1e293b" }}>🏠 Property Details</span>
+                  {(watchedVisitedPersonName || watchedLaiNo || watchedPropertyCode) && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "12px", color: "#64748b", fontWeight: 500 }}>
                   {watchedVisitedPersonName && (
                     <>
                       <span style={{ color: "#cbd5e1" }}>|</span>
@@ -594,7 +677,8 @@ const Trench = () => {
         </div>
       </div>
 
-      <section className="trench-heading">
+      <>
+          <section className="trench-heading">
         <h1>Revisit One Off</h1>
         <div className="trench-summary">
           <strong>Property Details</strong>
@@ -799,19 +883,27 @@ const Trench = () => {
             {activeTab < 6 && (
               <Button onClick={nextTab}>Save &amp; Proceed</Button>
             )}
-            <div>
-              <Button type="primary" loading={loading} onClick={handleSubmitClick}>
-                {isEdit ? "Update Report" : "Submit Report"}
-              </Button>
-              {id && (
-                <Button danger loading={loading} onClick={handleFinalSubmit}>
-                  Final Submit
-                </Button>
-              )}
-            </div>
+            {activeTab === 6 && (
+              <CaseWorkflowActions
+                caseId={id}
+                bankName="Home First Trench"
+                onSave={handleFOSave}
+                onSubmit={(status) => {
+                  if (status === "Generated") {
+                    return handleAdminGenerate();
+                  } else {
+                    return handleFOSubmit();
+                  }
+                }}
+                loading={loading}
+                isReportSubmitted={reportData?.isReportSubmitted}
+                status={reportData?.status}
+              />
+            )}
           </div>
         </section>
       </main>
+    </>
 
       <style>{`
         .trench-portal {

@@ -15,6 +15,7 @@ import FinalSubmittedCase from "./Admin/FinalSubmittedCase";
 import CancelledCases from "./Admin/CancelledCases";
 import OutOfTATCase from "./Admin/OutOfTatCase";
 import SummaryCard from "./Admin/SummaryCard";
+import GeneratedCasesList from "./Admin/GeneratedCasesList";
 import { fetchFieldOfficers } from "../../redux/features/auth/authThunks";
 import { fetchNotifications } from "../../redux/features/notification/notificationThunk";
 import { setZone, setSavedCity } from "../../redux/features/assignedCase/assignedCasesSlice";
@@ -255,6 +256,43 @@ const Dashboard = () => {
   const [bankCasesPage, setBankCasesPage] = useState(1);
 
   const rowsPerPage = 20;
+
+  const [ratePerKm, setRatePerKm] = useState("3.50");
+  const [savingSettings, setSavingSettings] = useState(false);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const { data } = await axiosInstance.get("/settings");
+        if (data && data.ratePerKm !== undefined) {
+          setRatePerKm(data.ratePerKm.toString());
+        }
+      } catch (err) {
+        console.error("Error loading settings:", err);
+      }
+    };
+    if (user?.role && ["Admin", "SuperAdmin"].includes(user.role)) {
+      fetchSettings();
+    }
+  }, [user]);
+
+  const handleSaveSettings = async () => {
+    const rateNum = parseFloat(ratePerKm);
+    if (isNaN(rateNum) || rateNum < 0) {
+      toast.error("Please enter a valid non-negative rate.");
+      return;
+    }
+    try {
+      setSavingSettings(true);
+      await axiosInstance.put("/settings", { ratePerKm: rateNum });
+      toast.success("Settings saved successfully!");
+    } catch (err) {
+      console.error("Error saving settings:", err);
+      toast.error("Failed to save settings.");
+    } finally {
+      setSavingSettings(false);
+    }
+  };
 
   const handleUpdateCustomFields = async (record, field, value) => {
     const trimmed = value.trim();
@@ -806,6 +844,18 @@ const Dashboard = () => {
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
             My Worklist
           </button>
+          {user?.role && ["Admin", "SuperAdmin"].includes(user.role) && (
+            <>
+              <button className={`dash-tab ${activeTab==="generated"?"active":""}`} onClick={() => { setActiveTab("generated"); setActiveComponent(""); clearBankView(); }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                Generated Cases
+              </button>
+              <button className={`dash-tab ${activeTab==="settings"?"active":""}`} onClick={() => { setActiveTab("settings"); setActiveComponent(""); clearBankView(); }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.1a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                Settings
+              </button>
+            </>
+          )}
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8, paddingBottom: 6 }}>
           <span style={{ fontSize: 13, fontWeight: 600, color: "#475569" }}>City:</span>
@@ -1207,6 +1257,68 @@ const Dashboard = () => {
               </div>
             </div>
             <MyWorklist />
+          </div>
+        )}
+
+        {activeTab === "generated" && (
+          <div style={{ background: "#fff", borderRadius: 16, padding: "24px", border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,.06)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 11, background: "#e0f2fe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>📁</div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: "#1e293b" }}>Generated Case Files</div>
+                <div style={{ fontSize: 11, color: "#94a3b8" }}>Manage and assign newly generated cases</div>
+              </div>
+            </div>
+            <GeneratedCasesList
+              allCases={allCasesData}
+              refreshData={fetchAllCases}
+              fieldOfficers={fieldOfficers}
+            />
+          </div>
+        )}
+
+        {activeTab === "settings" && (
+          <div style={{ background: "#fff", borderRadius: 16, padding: "24px", border: "1px solid #e2e8f0", boxShadow: "0 4px 16px rgba(0,0,0,.06)", maxWidth: 500 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 11, background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>⚙️</div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 15, color: "#1e293b" }}>System Settings</div>
+                <div style={{ fontSize: 11, color: "#94a3b8" }}>Configure administrative parameters</div>
+              </div>
+            </div>
+            
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 600, color: "#475569", marginBottom: 6 }}>
+                Default Rate Per KM (₹)
+              </label>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                value={ratePerKm}
+                onChange={(e) => setRatePerKm(e.target.value)}
+                style={{ height: 38, borderRadius: 8 }}
+                placeholder="3.50"
+              />
+            </div>
+            
+            <button
+              onClick={handleSaveSettings}
+              disabled={savingSettings}
+              style={{
+                height: 38,
+                padding: "0 20px",
+                background: "#1c2725",
+                color: "#fff",
+                border: "none",
+                borderRadius: 8,
+                fontWeight: 600,
+                cursor: "pointer",
+                opacity: savingSettings ? 0.6 : 1,
+              }}
+            >
+              {savingSettings ? "Saving..." : "Save Settings"}
+            </button>
           </div>
         )}
       </div></div>

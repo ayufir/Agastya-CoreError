@@ -138,6 +138,7 @@
 //   updateValuationReport,
 //   getValuationReportById,
 // } from "../../../redux/features/Banks/bajaj/BajajAsyncThunks";
+import CaseWorkflowActions from "../../../components/CaseWorkflowActions";
 
 // import { getCurrentLocation } from "../../../utils/getCurrentLocation";
 
@@ -1540,6 +1541,67 @@ function ValuationForm({ id, onSave, onSubmit }) {
     }
   };
 
+  const handleFOSave = async () => {
+    setSaving(true);
+    try {
+      await fetch(`${API}/reports/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, isReportSubmitted: false }),
+      });
+    } catch (err) {
+      console.error(err);
+      throw err;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleFOSubmit = async () => {
+    setSaving(true);
+    try {
+      await fetch(`${API}/reports/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...formData, isReportSubmitted: true }),
+      });
+      navigate("/");
+    } catch (err) {
+      console.error(err);
+      throw err;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAdminGenerate = async () => {
+    setSaving(true);
+    try {
+      if (id) {
+        await fetch(`${API}/reports/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...formData, status: "Generated" }),
+        });
+        await dispatch(finalUpdate({ id, bankName: "bajaj", updateData: formData })).unwrap();
+      } else {
+        const response = await fetch(`${API}/reports`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...formData, status: "Generated" }),
+        }).then((r) => r.json());
+        const targetId = response._id || response.data?._id;
+        await dispatch(finalUpdate({ id: targetId, bankName: "bajaj", updateData: formData })).unwrap();
+      }
+      navigate("/");
+    } catch (err) {
+      console.error(err);
+      throw err;
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleImageUpload = async (step, field, file) => {
     try {
       const dataUrl = await readFileAsDataUrl(file);
@@ -1879,17 +1941,21 @@ function ValuationForm({ id, onSave, onSubmit }) {
           {currentStep > 1 && <button style={s.btnBack} onClick={prevStep}>← Back</button>}
           <button style={s.btnSave} onClick={saveDraft} disabled={saving}>{saving ? 'Saving...' : 'Save Draft'}</button>
           {currentStep < 8 ? <button style={s.btnNext} onClick={nextStep}>Save & Next →</button> : (
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button style={s.btnSubmit} onClick={submitForm}>Submit</button>
-              {id && (user?.role === "Admin" || user?.role === "SuperAdmin") && (
-                <button
-                  onClick={lastUpdate}
-                  style={{ ...s.btnSubmit, background: '#e31837' }}
-                >
-                  Final Submit
-                </button>
-              )}
-            </div>
+            <CaseWorkflowActions
+              caseId={id}
+              bankName="Bajaj"
+              onSave={handleFOSave}
+              onSubmit={(status) => {
+                if (status === "Generated") {
+                  return handleAdminGenerate();
+                } else {
+                  return handleFOSubmit();
+                }
+              }}
+              loading={saving}
+              isReportSubmitted={formData?.isReportSubmitted}
+              status={formData?.status}
+            />
           )}
         </div>
       </div>

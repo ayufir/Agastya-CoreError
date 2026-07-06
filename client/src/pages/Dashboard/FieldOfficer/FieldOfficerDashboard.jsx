@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   acceptCaseById,
@@ -80,8 +80,8 @@ const buildAllowanceRow = (record) => ({
   "City": getDisplayCity(record),
   "Latitude": record.latitude || "N/A",
   "Longitude": record.longitude || "N/A",
-  "Distance (km)": record.distanceFromCityCentre || record.distance || "N/A",
-  "OthersIfAny": record.othersIfAny || record.others || "",
+  "Distance (km)": record.distance || record.distanceFromCityCentre || "",
+  "If Any (Others)": record.othersIfAny || record.others || "",
 });
 
 /** Export array of case records (or pre-built row objects) to a .csv file */
@@ -176,21 +176,98 @@ const FieldOfficerDashboard = () => {
   const [denyReason, setDenyReason] = useState("");
   const [isDenyLoading, setIsDenyLoading] = useState(false);
 
+  // Default Rate Per KM from settings
+  const [defaultRate, setDefaultRate] = useState(3.50);
+  useEffect(() => {
+    const fetchDefaultRate = async () => {
+      try {
+        const { data } = await axiosInstance.get("/settings");
+        if (data && data.ratePerKm !== undefined) {
+          setDefaultRate(Number(data.ratePerKm));
+        }
+      } catch (err) {
+        console.error("Error loading default rate:", err);
+      }
+    };
+    fetchDefaultRate();
+  }, []);
+
+  // Save timeout ref for debouncing
+  const saveTimeoutRef = useRef({});
+
+  const debouncedSaveAllowance = (id, bankName, distance, othersIfAny, rate) => {
+    if (saveTimeoutRef.current[id]) {
+      clearTimeout(saveTimeoutRef.current[id]);
+    }
+    saveTimeoutRef.current[id] = setTimeout(async () => {
+      const d = Math.max(0, parseFloat(distance) || 0);
+      const o = Math.max(0, parseFloat(othersIfAny) || 0);
+      const r = Math.max(0, parseFloat(rate) || 0);
+      const total = parseFloat((d * r + o).toFixed(2));
+
+      try {
+        await axiosInstance.put(`/case/allowance/${id}`, {
+          distance: distance,
+          othersIfAny: othersIfAny,
+          ratePerKm: r,
+          totalAllowance: total,
+          bankName,
+        });
+      } catch (err) {
+        console.error("Failed to auto-save allowance:", err);
+      }
+    }, 800);
+  };
+
   // Allowance Sheet — inline editable fields per row (keyed by record._id)
   const [allowanceEdits, setAllowanceEdits] = useState({});
-  const updateAllowanceEdit = (id, field, value) =>
-    setAllowanceEdits((prev) => ({
-      ...prev,
-      [id]: { ...prev[id], [field]: value },
-    }));
+  const updateAllowanceEdit = (id, bankName, field, value) => {
+    setAllowanceEdits((prev) => {
+      const updatedRow = {
+        ...prev[id],
+        [field]: value,
+      };
+
+      if (field === "distance" || field === "othersIfAny") {
+        const numVal = parseFloat(value);
+        if (numVal < 0) {
+          updatedRow[field] = "0";
+        }
+      }
+
+      // Fetch case record to check current values and get rate
+      const caseItem = monthFilteredFoCases.find((c) => c._id === id);
+      const curDistance = field === "distance" ? value : (updatedRow.distance !== undefined ? updatedRow.distance : (caseItem?.distance || caseItem?.distanceFromCityCentre || ""));
+      const curOthers = field === "othersIfAny" ? value : (updatedRow.othersIfAny !== undefined ? updatedRow.othersIfAny : (caseItem?.othersIfAny || caseItem?.others || ""));
+      const curRate = caseItem?.ratePerKm || defaultRate;
+
+      debouncedSaveAllowance(id, bankName, curDistance, curOthers, curRate);
+
+      return {
+        ...prev,
+        [id]: updatedRow,
+      };
+    });
+  };
+
   // Build a row merging DB data with any user edits
   const buildAllowanceRowWithEdits = (record) => {
     const base = buildAllowanceRow(record);
     const edits = allowanceEdits[record._id] || {};
+    
+    const distanceStr = edits.distance !== undefined ? edits.distance : (record.distance || record.distanceFromCityCentre || "");
+    const othersStr = edits.othersIfAny !== undefined ? edits.othersIfAny : (record.othersIfAny || record.others || "");
+    const rateNum = record.ratePerKm || defaultRate;
+
+    const dVal = Math.max(0, parseFloat(distanceStr) || 0);
+    const oVal = Math.max(0, parseFloat(othersStr) || 0);
+    const totalVal = (dVal * rateNum) + oVal;
+
     return {
       ...base,
-      "Distance (km)": edits.distance !== undefined ? edits.distance : base["Distance (km)"],
-      "OthersIfAny": edits.othersIfAny !== undefined ? edits.othersIfAny : base["OthersIfAny"],
+      "Distance (km)": distanceStr,
+      "If Any (Others)": othersStr,
+      "Total (₹)": totalVal.toFixed(2),
     };
   };
 
@@ -348,7 +425,8 @@ const FieldOfficerDashboard = () => {
       if (selectedStatus === "NEW_CASES") {
         filtered = filtered?.filter(
           (caseItem) =>
-            caseItem.approvalStatus === "Pending" &&
+            (caseItem.approvalStatus === "Pending" ||
+             caseItem.approvalStatus === "Work in Progress") &&
             !caseItem.isReportSubmitted &&
             caseItem.status !== "Query Raised"
         );
@@ -356,6 +434,7 @@ const FieldOfficerDashboard = () => {
         filtered = filtered?.filter(
           (caseItem) =>
             caseItem.approvalStatus !== "Pending" &&
+            caseItem.approvalStatus !== "Work in Progress" &&
             !caseItem.isReportSubmitted &&
             caseItem.status !== "Query Raised"
         );
@@ -428,13 +507,14 @@ const FieldOfficerDashboard = () => {
       TOTAL_ASSIGNED: items.length,
       NEW_CASES: items.filter(
         (c) =>
-          c.approvalStatus === "Pending" &&
+          (c.approvalStatus === "Pending" || c.approvalStatus === "Work in Progress") &&
           !c.isReportSubmitted &&
           c.status !== "Query Raised"
       ).length,
       PENDING: items.filter(
         (c) =>
           c.approvalStatus !== "Pending" &&
+          c.approvalStatus !== "Work in Progress" &&
           !c.isReportSubmitted &&
           c.status !== "Query Raised"
       ).length,
@@ -500,7 +580,12 @@ const FieldOfficerDashboard = () => {
         const daysElapsed = dayjs().diff(dayjs(record.createdAt), 'day');
         const isDelayed = daysElapsed >= 3 && !record.isReportSubmitted;
         const isPending = record?.approvalStatus === "Pending";
+        const isCreatedByMe =
+          record?.createdBy === user?._id ||
+          record?.createdBy?._id === user?._id;
         const isNameNA = !customerName || customerName === "N/A";
+        // FO-created pending cases should still be clickable to continue filling
+        const showEditLink = !isPending || isCreatedByMe;
 
         return (
           <div className="flex flex-col gap-1 py-0.5 font-outfit">
@@ -513,11 +598,7 @@ const FieldOfficerDashboard = () => {
                 <span className="w-2.5 h-2.5 rounded-full inline-block shrink-0 led-amber" title="Delayed Work In Progress" />
               )}
 
-              {isPending ? (
-                <span className={`text-sm tracking-tight ${isNameNA ? 'font-medium text-slate-400 italic' : 'font-extrabold text-[#1c2725]'}`}>
-                  {isNameNA ? "Unnamed Customer" : customerName}
-                </span>
-              ) : (
+              {showEditLink ? (
                 <Link
                   to={`/bank/${getBankRoute(record)}/edit/${record._id}`}
                   className="text-sm font-extrabold text-[#1b4d3e] hover:text-[#1c2725] hover:underline flex items-center gap-1.5 group transition-all"
@@ -525,6 +606,10 @@ const FieldOfficerDashboard = () => {
                   {isNameNA ? "Unnamed Customer" : customerName}
                   <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-[#1b4d3e]" />
                 </Link>
+              ) : (
+                <span className={`text-sm tracking-tight ${isNameNA ? 'font-medium text-slate-400 italic' : 'font-extrabold text-[#1c2725]'}`}>
+                  {isNameNA ? "Unnamed Customer" : customerName}
+                </span>
               )}
             </div>
             
@@ -838,7 +923,7 @@ const FieldOfficerDashboard = () => {
                 </div>
 
                 {/* Label below the circle, positioned absolutely so it doesn't stretch the flex item */}
-                <div className={`absolute top-7 left-1/2 -translate-x-1/2 whitespace-nowrap text-[8.5px] font-extrabold uppercase tracking-tight ${
+                <div className={`absolute top-7 left-1/2 -translate-x-1/2 text-center text-[7px] sm:text-[8.5px] font-extrabold uppercase tracking-tight w-10 sm:w-16 break-words leading-tight ${
                   isActive ? "text-[#1b4d3e] font-black" : "text-[#7a928e]"
                 }`}>
                   {stage.label}
@@ -857,13 +942,13 @@ const FieldOfficerDashboard = () => {
           })}
         </div>
         {/* Extra spacing to clear the absolute labels */}
-        <div className="h-5" />
+        <div className="h-6 sm:h-5" />
       </div>
     );
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#c7e1d9] via-[#edf4f1] to-[#f4faf7] p-4 md:p-6 pb-24 dash-root">
+    <div className="min-h-screen bg-gradient-to-br from-[#c7e1d9] via-[#edf4f1] to-[#f4faf7] px-3 py-4 sm:p-4 md:p-6 pb-24 dash-root">
       <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
         
@@ -956,24 +1041,44 @@ const FieldOfficerDashboard = () => {
         .led-blue { background-color: #3b82f6; animation: led-blink-blue 0.9s infinite ease-in-out; }
 
         .chip-scroll::-webkit-scrollbar { display: none; }
+
+        /* Mobile layout enhancements */
+        @media (max-width: 640px) {
+          .dash-root {
+            padding-left: 12px !important;
+            padding-right: 12px !important;
+            padding-bottom: max(6.5rem, calc(20px + env(safe-area-inset-bottom, 16px))) !important;
+          }
+        }
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+          .dash-root {
+            padding-bottom: max(6.5rem, calc(24px + env(safe-area-inset-bottom))) !important;
+          }
+        }
+        @media (max-width: 767px) {
+          .custom-premium-table .ant-table-content {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
+          }
+        }
       `}} />
       
       {/* Premium Header Welcome Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-[#1c2725] via-[#243531] to-[#1c2725] rounded-[32px] p-6 md:p-8 text-white mb-6 border border-white/10 shadow-lg">
+      <div className="relative overflow-hidden bg-gradient-to-br from-[#1c2725] via-[#243531] to-[#1c2725] rounded-2xl sm:rounded-[32px] p-4 sm:p-6 md:p-8 text-white mb-6 border border-white/10 shadow-lg">
         <div className="absolute right-0 top-0 -mt-8 -mr-8 w-44 h-44 bg-[#a4d4c4]/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute left-1/3 bottom-0 -mb-8 w-36 h-36 bg-[#eef68f]/5 rounded-full blur-2xl pointer-events-none" />
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="bg-[#eef68f] text-[#1c2725] text-[10px] font-extrabold uppercase tracking-widest px-3.5 py-1 rounded-full shadow-sm">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <span className="bg-[#eef68f] text-[#1c2725] text-[10px] font-extrabold uppercase tracking-widest px-3 py-0.5 rounded-full shadow-sm">
                 Field Operations
               </span>
               <span className="text-[#a4d4c4] text-xs font-bold">
                 • Unique Engineering
               </span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight">
               Welcome back, <span className="text-[#eef68f]">{user?.name || "Officer"}</span>!
             </h1>
             <p className="text-[#7a928e] text-xs md:text-sm mt-1.5 max-w-xl font-bold leading-relaxed">
@@ -983,7 +1088,7 @@ const FieldOfficerDashboard = () => {
             </p>
           </div>
           
-          <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md rounded-2xl p-3.5 border border-white/10 self-start md:self-auto shadow-md">
+          <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md rounded-2xl p-3.5 border border-white/10 w-full sm:w-auto shadow-md">
             <div className="p-2.5 bg-white/10 rounded-xl text-[#eef68f]">
               <Calendar className="w-5 h-5" />
             </div>
@@ -998,7 +1103,7 @@ const FieldOfficerDashboard = () => {
       </div>
 
       {/* Mobile-only Horizontally Scrollable Category Tabs */}
-      <div className="md:hidden flex overflow-x-auto gap-2.5 pb-4.5 pt-0.5 chip-scroll -mx-4 px-4 mb-5">
+      <div className="md:hidden flex overflow-x-auto gap-2.5 pb-4 pt-0.5 chip-scroll -mx-3 px-3 sm:-mx-4 sm:px-4 mb-5">
         {STATUS_TYPES.map(({ title, value, icon: Icon, color, bg }) => {
           const isSelected = selectedStatus === value;
           const count = summaryCounts[value] || 0;
@@ -1103,7 +1208,7 @@ const FieldOfficerDashboard = () => {
       </div>
 
       {/* Advanced Filter and Search Panel */}
-      <div className="bg-white rounded-[24px] border border-[#d0e6df] p-4 md:p-5 shadow-sm mb-6 flex flex-col gap-4">
+      <div className="bg-white rounded-2xl border border-[#d0e6df] p-3.5 sm:p-4 md:p-5 shadow-sm mb-6 flex flex-col gap-4">
         {/* Month Picker Row */}
         <div className="flex items-center gap-3 flex-wrap">
           <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest shrink-0">
@@ -1308,10 +1413,10 @@ const FieldOfficerDashboard = () => {
                 return (
                   <div 
                     key={caseItem._id || caseItem.caseId}
-                    className="bg-white rounded-[24px] border border-[#d0e6df] p-4.5 shadow-sm hover:shadow-md transition-all relative overflow-hidden"
+                    className="bg-white rounded-2xl border border-[#d0e6df] p-4 shadow-sm hover:shadow-md transition-all relative overflow-hidden"
                     style={{ borderLeft: "4px solid #ef4444" }}
                   >
-                    <div className="flex justify-between items-start mb-3">
+                    <div className="flex justify-between items-start mb-3 gap-2 flex-wrap">
                       <Tag
                         color={getBankTagColor(bName)}
                         className="font-extrabold border-none rounded-lg px-2.5 py-0.5 text-[9px] uppercase tracking-wider"
@@ -1322,7 +1427,7 @@ const FieldOfficerDashboard = () => {
                         Query Raised
                       </span>
                     </div>
-                    <div className="text-[14.5px] font-extrabold text-[#1c2725] mb-1">
+                    <div className="text-[14.5px] font-extrabold text-[#1c2725] mb-1 break-words">
                       {custName}
                     </div>
                     <div className="text-[10px] text-[#5c706c] mb-3 flex items-center gap-1 font-bold">
@@ -1333,7 +1438,7 @@ const FieldOfficerDashboard = () => {
                     {/* Stepper on Query card */}
                     {cData && renderMobileProgress(cData)}
 
-                    <div className="text-xs text-[#1c2725] bg-[#f4faf8] rounded-2xl p-3.5 border border-[#d0e6df] min-h-[3.5rem] mb-4 leading-relaxed">
+                    <div className="text-xs text-[#1c2725] bg-[#f4faf8] rounded-2xl p-3 border border-[#d0e6df] min-h-[3.5rem] mb-4 leading-relaxed break-words">
                       <span className="font-extrabold text-[#5c706c] block mb-1 text-[9px] uppercase tracking-wider">Query Message:</span>
                       {caseItem.message || "No detailed query message provided."}
                     </div>
@@ -1353,10 +1458,10 @@ const FieldOfficerDashboard = () => {
               return (
                 <div
                   key={caseItem._id}
-                  className={`bg-white rounded-2xl border p-4.5 shadow-sm hover:shadow-md transition-all relative overflow-hidden ${
+                  className={`bg-white rounded-2xl border p-4 shadow-sm hover:shadow-md transition-all relative overflow-hidden ${
                     isDelayed 
-                      ? (isPending ? "animate-alert-red border-2 border-rose-350" : "animate-alert-amber border-2 border-amber-350")
-                      : (isPending ? "animate-alert-blue border-2 border-blue-300" : "border-slate-100")
+                      ? (isPending ? "animate-alert-red border-2 border-rose-300" : "animate-alert-amber border-2 border-amber-300")
+                      : (isPending ? "animate-alert-blue border-2 border-blue-300" : "border-slate-105")
                   }`}
                   style={{ 
                     borderLeftWidth: "4px",
@@ -1368,8 +1473,8 @@ const FieldOfficerDashboard = () => {
                   }}
                 >
                   {/* Mobile Card Header */}
-                  <div className="flex items-center justify-between gap-2 mb-3.5">
-                    <div className="flex items-center gap-1.5 flex-wrap">
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-1.5 flex-wrap min-w-0">
                       {/* LED Blinking Light Indicator */}
                       {isPending && (
                         <span className={`w-2.5 h-2.5 rounded-full inline-block shrink-0 ${isDelayed ? 'led-red' : 'led-blue'}`} />
@@ -1380,45 +1485,45 @@ const FieldOfficerDashboard = () => {
 
                       <Tag
                         color={getBankTagColor(caseItem.bankName)}
-                        className="font-extrabold border-none rounded-lg px-2.5 py-0.5 text-[9px] uppercase tracking-wider"
+                        className="font-extrabold border-none rounded-lg px-2 py-0.5 text-[9px] uppercase tracking-wider truncate"
                       >
                         {caseItem.bankName}
                       </Tag>
                       
                       {isDelayed && (
                         isPending ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[8.5px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200 animate-pulse">
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-extrabold bg-rose-50 text-rose-700 border border-rose-200 animate-pulse shrink-0">
                             NEW ALERT ({daysElapsed}d)
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[8.5px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200 animate-pulse shrink-0">
                             OVERDUE ({daysElapsed}d)
                           </span>
                         )
                       )}
                       {isPending && !isDelayed && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[8.5px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200 shrink-0">
                           NEW CASE
                         </span>
                       )}
                     </div>
                     <span className="text-[10px] text-slate-400 font-bold flex items-center gap-1 shrink-0">
-                      <Calendar size={12} className="text-slate-355" />
+                      <Calendar size={12} className="text-slate-400" />
                       {formatShortDate(caseItem.createdAt)}
                     </span>
                   </div>
 
                   {/* Customer Name info */}
-                  <div className="mb-3.5">
+                  <div className="mb-3">
                     <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Customer Name</div>
                     {isPending ? (
-                      <div className="text-[15.5px] font-extrabold text-slate-800 leading-snug">
+                      <div className="text-[15.5px] font-extrabold text-slate-800 leading-snug break-words">
                         {customerName || "Unnamed Customer"}
                       </div>
                     ) : (
                       <Link
                         to={`/bank/${bankRoute}/edit/${caseItem._id}`}
-                        className="text-[15.5px] font-extrabold text-[#1b4d3e] hover:text-[#1c2725] hover:underline flex items-center gap-1 group leading-snug"
+                        className="text-[15.5px] font-extrabold text-[#1b4d3e] hover:text-[#1c2725] hover:underline flex items-center gap-1 group leading-snug break-words"
                       >
                         {customerName || "Unnamed Customer"}
                         <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5 text-[#1b4d3e] shrink-0" />
@@ -1432,20 +1537,20 @@ const FieldOfficerDashboard = () => {
                   <div className="border-t border-slate-50 my-3" />
 
                   {/* Contact & Address Interactive Chips */}
-                  <div className="space-y-3 mb-4.5">
-                    <div className="flex flex-col gap-1.5">
+                  <div className="space-y-3 mb-4">
+                    <div className="flex flex-col gap-1">
                       <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Customer Contact</span>
                       <div className="flex gap-2">
                         {contact && contact !== "N/A" ? (
                           <a 
                             href={`tel:${contact}`}
-                            className="inline-flex items-center gap-2 px-3.5 py-2 bg-[#eef7f4] hover:bg-[#dceee8] text-[#1b4d3e] font-extrabold text-[11px] rounded-xl border border-[#c8e2da] transition-all cursor-pointer shadow-sm active:scale-95"
+                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#eef7f4] hover:bg-[#dceee8] text-[#1b4d3e] font-extrabold text-[11px] rounded-xl border border-[#c8e2da] transition-all cursor-pointer shadow-sm active:scale-95"
                           >
                             <Phone size={12} className="text-[#1b4d3e]" />
                             <span>Call {contact}</span>
                           </a>
                         ) : (
-                          <div className="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-50 text-slate-400 font-bold text-[11px] rounded-xl border border-slate-100">
+                          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-50 text-slate-400 font-bold text-[11px] rounded-xl border border-slate-100">
                             <Phone size={12} />
                             <span>No phone number</span>
                           </div>
@@ -1453,7 +1558,7 @@ const FieldOfficerDashboard = () => {
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-1.5">
+                    <div className="flex flex-col gap-1">
                       <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block font-outfit">Property Address</span>
                       <div className="flex gap-2 items-start bg-slate-50/60 p-2.5 rounded-xl border border-slate-100 relative group">
                         <MapPin size={13.5} className="text-slate-400 mt-0.5 shrink-0" />
@@ -1476,28 +1581,28 @@ const FieldOfficerDashboard = () => {
                   </div>
 
                   {/* Mobile Actions block */}
-                  <div className="border-t border-slate-100 pt-3.5 flex flex-col gap-2">
+                  <div className="border-t border-slate-100 pt-3 flex flex-col gap-2">
                     {isPending ? (
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           onClick={() => handleAccept(caseItem._id, caseItem.bankName)}
-                          className="py-3 px-4 bg-[#1c2725] hover:bg-[#2c3d3a] text-white font-bold text-xs rounded-xl transition-all shadow-sm text-center flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                          className="py-2.5 px-4 bg-[#1c2725] hover:bg-[#2c3d3a] text-white font-bold text-xs rounded-xl transition-all shadow-sm text-center flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                         >
                           <Check size={14} /> Accept
                         </button>
                         <button
                           onClick={() => openDenyModal(caseItem._id, caseItem.bankName)}
-                          className="py-3 px-4 bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 font-bold text-xs rounded-xl border border-rose-100 transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                          className="py-2.5 px-4 bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 font-bold text-xs rounded-xl border border-rose-100 transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                         >
                           <X size={14} /> Deny
                         </button>
                       </div>
                     ) : (
-                      <div className="flex flex-wrap items-center justify-between gap-2.5 mt-0.5">
-                        <div className="flex gap-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mt-0.5">
+                        <div className="flex flex-wrap gap-2">
                           <Link
                             to={`/bank/${bankRoute}/edit/${caseItem._id}`}
-                            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-[#eef7f4] text-[#1b4d3e] hover:bg-[#dceee8] font-bold text-xs rounded-xl transition-all border border-[#c8e2da]"
+                            className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#eef7f4] text-[#1b4d3e] hover:bg-[#dceee8] font-bold text-xs rounded-xl transition-all border border-[#c8e2da] shrink-0"
                             title="Edit Report"
                           >
                             <Eye size={13.5} className="text-[#1b4d3e]" />
@@ -1513,7 +1618,7 @@ const FieldOfficerDashboard = () => {
                                 setSelectedCaseDocs(docs);
                                 setIsDocsModalOpen(true);
                               }}
-                              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-amber-50 text-amber-700 hover:bg-amber-100 font-bold text-xs rounded-xl transition-all border border-amber-200"
+                              className="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-50 text-amber-700 hover:bg-amber-100 font-bold text-xs rounded-xl transition-all border border-amber-200 shrink-0"
                               title="Property Paper"
                             >
                               <FileText size={13} className="text-amber-500" />
@@ -1528,7 +1633,7 @@ const FieldOfficerDashboard = () => {
                             setSelectedCaseId(caseItem._id);
                             setIsModalOpen(true);
                           }}
-                          className={`inline-flex items-center gap-1 px-3.5 py-2.5 font-bold text-xs rounded-xl transition-all border ${
+                          className={`inline-flex items-center gap-1 px-3 py-2 font-bold text-xs rounded-xl transition-all border ${
                             caseItem.isReportSubmitted === true
                               ? "bg-slate-50 border-slate-200 text-slate-400 cursor-not-allowed"
                               : "bg-white hover:bg-slate-50 border-slate-300 text-slate-700 cursor-pointer active:scale-[0.97]"
@@ -1548,9 +1653,9 @@ const FieldOfficerDashboard = () => {
 
       {/* ─── Allowance Sheet Panel ─── shown below completed cases ─── */}
       {!loading && selectedStatus === "COMPLETED" && sortedCases.length > 0 && (
-        <div className="mt-6 bg-white rounded-[24px] border border-emerald-200 shadow-sm overflow-hidden">
+        <div className="mt-6 bg-white rounded-2xl border border-emerald-200 shadow-sm overflow-hidden">
           {/* Panel Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 py-4 bg-gradient-to-r from-[#1c2725] to-[#2e4a42] rounded-t-[24px]">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-4 sm:px-6 py-4 bg-gradient-to-r from-[#1c2725] to-[#2e4a42] rounded-t-2xl">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 bg-[#eef68f]/20 rounded-xl flex items-center justify-center shrink-0">
                 <FileSpreadsheet size={18} className="text-[#eef68f]" />
@@ -1562,14 +1667,14 @@ const FieldOfficerDashboard = () => {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
               <button
                 onClick={() => exportAllowanceCSV(
                   sortedCases.map(buildAllowanceRowWithEdits),
                   `allowance_${(user?.name || "officer").replace(/\s+/g, "_")}_${dayjs().format("DDMMYYYY")}.csv`,
                   true
                 )}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-400/20 hover:bg-emerald-400/30 text-[#eef68f] border border-emerald-400/30 hover:border-emerald-400/60 font-bold text-xs rounded-xl transition-all cursor-pointer active:scale-95 shadow-sm"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-400/20 hover:bg-emerald-400/30 text-[#eef68f] border border-emerald-400/30 hover:border-emerald-400/60 font-bold text-xs rounded-xl transition-all cursor-pointer active:scale-95 shadow-sm"
               >
                 <Download size={13} />
                 Export CSV
@@ -1580,7 +1685,7 @@ const FieldOfficerDashboard = () => {
                   `allowance_${(user?.name || "officer").replace(/\s+/g, "_")}_${dayjs().format("DDMMYYYY")}.xlsx`,
                   true
                 )}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-400/20 hover:bg-blue-400/30 text-blue-200 border border-blue-400/30 hover:border-blue-400/60 font-bold text-xs rounded-xl transition-all cursor-pointer active:scale-95 shadow-sm"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-400/20 hover:bg-blue-400/30 text-blue-200 border border-blue-400/30 hover:border-blue-400/60 font-bold text-xs rounded-xl transition-all cursor-pointer active:scale-95 shadow-sm"
               >
                 <FileSpreadsheet size={13} />
                 Export Excel
@@ -1590,7 +1695,7 @@ const FieldOfficerDashboard = () => {
 
           {/* Allowance Table — scrollable horizontally */}
           <div className="overflow-x-auto">
-            <table className="w-full text-xs font-outfit border-collapse min-w-[1300px]">
+            <table className="w-full text-xs font-outfit border-collapse min-w-[1420px]">
               <thead>
                 <tr className="bg-[#f4faf8] border-b-2 border-emerald-100">
                   {[
@@ -1605,6 +1710,7 @@ const FieldOfficerDashboard = () => {
                     "Longitude",
                     "Distance (km)",
                     "If Any (Others)",
+                    "Total (₹)",
                   ].map((col) => (
                     <th
                       key={col}
@@ -1691,8 +1797,8 @@ const FieldOfficerDashboard = () => {
                           type="text"
                           value={allowanceEdits[record._id]?.distance !== undefined
                             ? allowanceEdits[record._id].distance
-                            : (record.distanceFromCityCentre || record.distance || "")}
-                          onChange={(e) => updateAllowanceEdit(record._id, "distance", e.target.value)}
+                            : (record.distance || record.distanceFromCityCentre || "")}
+                          onChange={(e) => updateAllowanceEdit(record._id, record.bankName || record.bank || "system", "distance", e.target.value)}
                           placeholder="km"
                           style={{
                             width: 80,
@@ -1716,7 +1822,7 @@ const FieldOfficerDashboard = () => {
                           value={allowanceEdits[record._id]?.othersIfAny !== undefined
                             ? allowanceEdits[record._id].othersIfAny
                             : (record.othersIfAny || record.others || "")}
-                          onChange={(e) => updateAllowanceEdit(record._id, "othersIfAny", e.target.value)}
+                          onChange={(e) => updateAllowanceEdit(record._id, record.bankName || record.bank || "system", "othersIfAny", e.target.value)}
                           placeholder="e.g. toll, parking..."
                           style={{
                             width: 160,
@@ -1733,6 +1839,15 @@ const FieldOfficerDashboard = () => {
                           onBlur={(e) => e.target.style.borderColor = "#c4b5fd"}
                         />
                       </td>
+                      {/* Total (₹) — read-only */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span
+                          className="inline-block px-3 py-1.5 rounded-lg text-[11px] font-extrabold"
+                          style={{ background: "#f8fafc", color: "#1e293b", border: "1.5px solid #cbd5e1" }}
+                        >
+                          ₹{row["Total (₹)"]}
+                        </span>
+                      </td>
                     </tr>
                   );
                 })}
@@ -1742,8 +1857,13 @@ const FieldOfficerDashboard = () => {
                   const totalDistanceNum = sortedCases.reduce((acc, record) => {
                     const d = allowanceEdits[record._id]?.distance !== undefined
                       ? allowanceEdits[record._id].distance
-                      : (record.distanceFromCityCentre || record.distance || "");
+                      : (record.distance || record.distanceFromCityCentre || "");
                     const parsed = parseFloat(String(d).replace(/[^\d.]/g, ""));
+                    return acc + (isNaN(parsed) ? 0 : parsed);
+                  }, 0);
+                  const totalAllowanceSum = sortedCases.reduce((acc, record) => {
+                    const r = buildAllowanceRowWithEdits(record);
+                    const parsed = parseFloat(r["Total (₹)"]);
                     return acc + (isNaN(parsed) ? 0 : parsed);
                   }, 0);
                   return (
@@ -1782,6 +1902,15 @@ const FieldOfficerDashboard = () => {
                       </td>
                       {/* If Any col — blank */}
                       <td className="px-4 py-3" />
+                      {/* Total Allowance sum */}
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span
+                          className="inline-block px-3 py-1.5 rounded-lg text-[11px] font-extrabold"
+                          style={{ background: "#f0fdf4", color: "#166534", border: "1.5px solid #bbf7d0" }}
+                        >
+                          {totalAllowanceSum > 0 ? `₹${totalAllowanceSum.toFixed(2)}` : "—"}
+                        </span>
+                      </td>
                     </tr>
                   );
                 })()}
@@ -1790,21 +1919,21 @@ const FieldOfficerDashboard = () => {
           </div>
 
           {/* Panel Footer — clean summary only */}
-          <div className="px-6 py-3 bg-[#f4faf8] border-t border-emerald-100 flex items-center justify-between">
+          <div className="px-4 py-3 bg-[#f4faf8] border-t border-emerald-100 flex flex-col sm:flex-row gap-3 items-start sm:items-center sm:justify-between">
             <span className="text-[10px] text-slate-400 font-semibold">
               Showing all {sortedCases.length} completed {sortedCases.length === 1 ? "case" : "cases"}
               {selectedMonth
                 ? ` · ${dayjs(selectedMonth + "-01").format("MMMM YYYY")}`
                 : " · All Months"}
             </span>
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full sm:w-auto">
               <button
                 onClick={() => exportAllowanceCSV(
                   sortedCases.map(buildAllowanceRowWithEdits),
                   `allowance_${(user?.name || "officer").replace(/\s+/g, "_")}_${dayjs().format("DDMMYYYY")}.csv`,
                   true
                 )}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] rounded-xl transition-all cursor-pointer active:scale-95 shadow-sm"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] rounded-xl transition-all cursor-pointer active:scale-95 shadow-sm"
               >
                 <Download size={11} /> CSV
               </button>
@@ -1814,7 +1943,7 @@ const FieldOfficerDashboard = () => {
                   `allowance_${(user?.name || "officer").replace(/\s+/g, "_")}_${dayjs().format("DDMMYYYY")}.xlsx`,
                   true
                 )}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] rounded-xl transition-all cursor-pointer active:scale-95 shadow-sm"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] rounded-xl transition-all cursor-pointer active:scale-95 shadow-sm"
               >
                 <FileSpreadsheet size={11} /> Excel
               </button>
@@ -1834,7 +1963,8 @@ const FieldOfficerDashboard = () => {
         open={isDenyModalOpen}
         onCancel={() => !isDenyLoading && setIsDenyModalOpen(false)}
         footer={null}
-        width={520}
+        width="90%"
+        style={{ maxWidth: '520px' }}
         className="rounded-2xl overflow-hidden font-outfit"
         maskClosable={!isDenyLoading}
       >
@@ -1899,7 +2029,8 @@ const FieldOfficerDashboard = () => {
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
         footer={null}
-        width={600}
+        width="90%"
+        style={{ maxWidth: '600px' }}
         className="rounded-2xl overflow-hidden font-outfit"
       >
         <div className="py-2.5">
@@ -1935,7 +2066,8 @@ const FieldOfficerDashboard = () => {
             Close
           </button>
         ]}
-        width={600}
+        width="90%"
+        style={{ maxWidth: '600px' }}
         className="rounded-2xl overflow-hidden font-outfit"
       >
         <div className="py-2.5">

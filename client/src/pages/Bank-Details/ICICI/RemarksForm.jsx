@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import toast from "react-hot-toast";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
+import CaseWorkflowActions from "../../../components/CaseWorkflowActions";
 
 const DATE_FORMAT = "DD/MM/YYYY";
 
@@ -144,6 +145,7 @@ const RemarksForm = ({
   onSave,
   onSubmit,
   onFinalSubmit,
+  onAdminGenerate,
   isAdmin,
   saving,
   stateRef,
@@ -677,78 +679,37 @@ const RemarksForm = ({
         />
       </div>
 
-      <div className="flex flex-col sm:flex-row justify-end gap-4 sm:gap-6 w-full">
-        <Button
-          onClick={handleSave}
-          loading={saving}
-          style={{
-            borderColor: "#003b70",
-            color: "#003b70",
-            height: "38px",
-            paddingLeft: "24px",
-            paddingRight: "24px",
-            fontSize: "14px",
-            fontWeight: "500",
-            borderRadius: "4px",
+      <div className="flex flex-col sm:flex-row justify-end gap-4 sm:gap-6 w-full items-end">
+        <CaseWorkflowActions
+          caseId={editData?._id || data?._id}
+          bankName="Icici"
+          onSave={() => onSave(form)}
+          onSubmit={(status) => {
+            if (status === "Generated") {
+              return onAdminGenerate(form);
+            } else {
+              return onSubmit(form);
+            }
           }}
-          className="h-[38px] px-6 text-sm font-medium rounded-[4px] hover:bg-gray-50 w-full sm:w-auto"
-        >
-          Save Draft
-        </Button>
-
-        <Button
-          type="primary"
-          onClick={handleSubmit}
           loading={saving}
-          style={{
-              backgroundColor: "#235097",
-              borderColor: "#285194",
-              height: "38px",
-              paddingLeft: "24px",
-              paddingRight: "24px",
-              fontSize: "14px",
-              fontWeight: "500",
-              borderRadius: "4px",
-            }}
-          className="h-[38px] px-6 text-sm font-medium rounded-[4px] bg-[#003b70] hover:bg-[#003b70] text-white w-full sm:w-auto"
-        >
-          Submit
-        </Button>
-
-        {isAdmin && (
-          <Button
-            type="primary"
-            onClick={handleFinalSubmit}
-            loading={saving}
-            style={{
-              backgroundColor: "#1b3a6b",
-              borderColor: "#1b3a6b",
-              height: "38px",
-              paddingLeft: "24px",
-              paddingRight: "24px",
-              fontSize: "14px",
-              fontWeight: "500",
-              borderRadius: "4px",
-            }}
-            className="w-full sm:w-auto"
-          >
-            Final Submit
-          </Button>
-        )}
+          isReportSubmitted={editData?.isReportSubmitted || data?.isReportSubmitted}
+          status={editData?.status || data?.status}
+        />
         
         <Button
           onClick={handleDownloadJson}
           style={{
             borderColor: "#003b70",
             color: "#003b70",
-            height: "38px",
+            height: "44px",
             paddingLeft: "24px",
             paddingRight: "24px",
             fontSize: "14px",
-            fontWeight: "500",
-            borderRadius: "4px",
+            fontWeight: "600",
+            borderRadius: "8px",
+            marginTop: "32px"
           }}
-          className="h-[38px] px-6 text-sm font-medium rounded-[4px] hover:bg-gray-50 w-full sm:w-auto"
+          className="h-[44px] px-6 text-sm font-semibold rounded-[8px] hover:bg-gray-50 w-full sm:w-auto"
         >
           ⬇️ Download JSON
         </Button>

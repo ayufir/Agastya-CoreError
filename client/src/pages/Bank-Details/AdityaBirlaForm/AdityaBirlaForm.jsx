@@ -710,9 +710,11 @@ export default function AdityaBirlaForm() {
                                     Valuation Report Wizard
                                 </h1>
                             </div>
-                            <p className="text-xs text-gray-300 mt-1">
-                                {id ? `Editing Case: #${id}` : "Creating New Valuation Report"} • Draft auto-saved locally
-                            </p>
+                            {user?.role !== "FieldOfficer" && (
+                                <p className="text-xs text-gray-300 mt-1">
+                                    {id ? `Editing Case: #${id}` : "Creating New Valuation Report"} • Draft auto-saved locally
+                                </p>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -727,24 +729,26 @@ export default function AdityaBirlaForm() {
                                     background: "#ede9fe", borderRadius: 6, padding: "2px 8px"
                                 }}>AI Powered</span>
                             </div>
-                            <button
-                                onClick={handleDownloadAll}
-                                style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 6,
-                                    padding: "8px 16px",
-                                    background: "linear-gradient(135deg, #10b981, #059669)",
-                                    color: "#ffffff",
-                                    border: "none",
-                                    borderRadius: 8,
-                                    fontSize: 12,
-                                    fontWeight: 700,
-                                    cursor: "pointer",
-                                }}
-                            >
-                                <Download size={13} /> Download All (ZIP)
-                            </button>
+                            {user?.role !== "FieldOfficer" && (
+                                <button
+                                    onClick={handleDownloadAll}
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 6,
+                                        padding: "8px 16px",
+                                        background: "linear-gradient(135deg, #10b981, #059669)",
+                                        color: "#ffffff",
+                                        border: "none",
+                                        borderRadius: 8,
+                                        fontSize: 12,
+                                        fontWeight: 700,
+                                        cursor: "pointer",
+                                    }}
+                                >
+                                    <Download size={13} /> Download All (ZIP)
+                                </button>
+                            )}
                         </div>
 
                         <AdvancedAutoFillForm
@@ -762,59 +766,62 @@ export default function AdityaBirlaForm() {
                         />
 
                         <div style={{ marginTop: 32, display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-                            <button
-                                type="button"
-                                onClick={async () => {
-                                    try {
-                                        setSaving(true);
-                                        const payload = {
-                                            ...form,
-                                            isReportSubmitted: false,
-                                            status: "Work in Progress",
-                                        };
-                                        if (id) {
-                                            await dispatch(updateAdityaDetails({ id, ...payload })).unwrap();
-                                        } else {
-                                            const res = await dispatch(createAditya(payload)).unwrap();
-                                            navigate(`/bank/aditya/edit/${res._id}`);
+                            {user?.role !== "FieldOfficer" && (
+                                <button
+                                    type="button"
+                                    onClick={async () => {
+                                        try {
+                                            setSaving(true);
+                                            const payload = {
+                                                ...form,
+                                                isReportSubmitted: false,
+                                                status: "Work in Progress",
+                                            };
+                                            if (id) {
+                                                await dispatch(updateAdityaDetails({ id, ...payload })).unwrap();
+                                            } else {
+                                                const res = await dispatch(createAditya(payload)).unwrap();
+                                                navigate(`/bank/aditya/edit/${res._id}`);
+                                            }
+                                            toast.success("Progress Saved ✅");
+                                        } catch (err) {
+                                            console.error(err);
+                                            toast.error("Failed to save progress");
+                                        } finally {
+                                            setSaving(false);
                                         }
-                                        toast.success("Progress Saved ✅");
-                                    } catch (err) {
-                                        console.error(err);
-                                        toast.error("Failed to save progress");
-                                    } finally {
-                                        setSaving(false);
-                                    }
-                                }}
-                                disabled={saving}
-                                style={{
-                                    width: "100%",
-                                    maxWidth: 240,
-                                    padding: "14px 28px",
-                                    borderRadius: 24,
-                                    background: saving ? "#9ca3af" : "#4b5563",
-                                    color: "#fff",
-                                    fontWeight: 700,
-                                    fontSize: 14,
-                                    border: "none",
-                                    cursor: saving ? "not-allowed" : "pointer",
-                                    transition: "all 0.2s ease",
-                                    textAlign: "center",
-                                    boxShadow: "0 4px 12px rgba(75, 85, 99, 0.2)",
-                                }}
-                            >
-                                Save Work
-                            </button>
+                                    }}
+                                    disabled={saving}
+                                    style={{
+                                        width: "100%",
+                                        maxWidth: 240,
+                                        padding: "14px 28px",
+                                        borderRadius: 24,
+                                        background: saving ? "#9ca3af" : "#4b5563",
+                                        color: "#fff",
+                                        fontWeight: 700,
+                                        fontSize: 14,
+                                        border: "none",
+                                        cursor: saving ? "not-allowed" : "pointer",
+                                        transition: "all 0.2s ease",
+                                        textAlign: "center",
+                                        boxShadow: "0 4px 12px rgba(75, 85, 99, 0.2)",
+                                    }}
+                                >
+                                    Save Work
+                                </button>
+                            )}
                             <button
                                 type="button"
                                 onClick={async () => {
                                     try {
                                         setSaving(true);
+                                        const isFO = user?.role === "FieldOfficer";
                                         const payload = {
                                             ...form,
-                                            isReportSubmitted: true,
-                                            approvalStatus: "Submitted",
-                                            status: "Submitted"
+                                            isReportSubmitted: isFO ? false : true,
+                                            approvalStatus: isFO ? "Work in Progress" : "Submitted",
+                                            status: isFO ? "Work in Progress" : "Submitted"
                                         };
                                         let targetId = id;
                                         if (targetId) {
@@ -823,7 +830,7 @@ export default function AdityaBirlaForm() {
                                             const res = await dispatch(createAditya(payload)).unwrap();
                                             targetId = res._id;
                                         }
-                                        toast.success("Report Submitted successfully ✅");
+                                        toast.success(isFO ? "Report saved successfully ✅" : "Report Submitted successfully ✅");
                                         navigate("/field/dashboard");
                                     } catch (err) {
                                         console.error(err);
@@ -832,18 +839,18 @@ export default function AdityaBirlaForm() {
                                         setSaving(false);
                                     }
                                 }}
-                                disabled={saving || form?.isReportSubmitted}
+                                disabled={saving || (user?.role !== "FieldOfficer" && form?.isReportSubmitted)}
                                 style={{
                                     width: "100%",
                                     maxWidth: 240,
                                     padding: "14px 28px",
                                     borderRadius: 24,
-                                    background: (saving || form?.isReportSubmitted) ? "#9ca3af" : "#2563eb",
+                                    background: (saving || (user?.role !== "FieldOfficer" && form?.isReportSubmitted)) ? "#9ca3af" : "#2563eb",
                                     color: "#fff",
                                     fontWeight: 700,
                                     fontSize: 14,
                                     border: "none",
-                                    cursor: (saving || form?.isReportSubmitted) ? "not-allowed" : "pointer",
+                                    cursor: (saving || (user?.role !== "FieldOfficer" && form?.isReportSubmitted)) ? "not-allowed" : "pointer",
                                     transition: "all 0.2s ease",
                                     textAlign: "center",
                                     boxShadow: "0 4px 12px rgba(37, 99, 235, 0.2)",
@@ -969,38 +976,40 @@ export default function AdityaBirlaForm() {
                         }}>AI Powered</span>
 
                         {/* Download All ZIP Button next to the title */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDownloadAll();
-                          }}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 6,
-                            marginLeft: 12,
-                            padding: "6px 12px",
-                            background: "linear-gradient(135deg, #10b981, #059669)",
-                            color: "#ffffff",
-                            border: "none",
-                            borderRadius: 8,
-                            fontSize: 11,
-                            fontWeight: 700,
-                            cursor: "pointer",
-                            boxShadow: "0 2px 6px rgba(16, 185, 129, 0.25)",
-                            transition: "all 0.15s ease",
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = "translateY(-1px)";
-                            e.currentTarget.style.boxShadow = "0 4px 10px rgba(16, 185, 129, 0.35)";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = "translateY(0)";
-                            e.currentTarget.style.boxShadow = "0 2px 6px rgba(16, 185, 129, 0.25)";
-                          }}
-                        >
-                          <Download size={12} /> Download All (ZIP)
-                        </button>
+                        {user?.role !== "FieldOfficer" && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDownloadAll();
+                            }}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6,
+                              marginLeft: 12,
+                              padding: "6px 12px",
+                              background: "linear-gradient(135deg, #10b981, #059669)",
+                              color: "#ffffff",
+                              border: "none",
+                              borderRadius: 8,
+                              fontSize: 11,
+                              fontWeight: 700,
+                              cursor: "pointer",
+                              boxShadow: "0 2px 6px rgba(16, 185, 129, 0.25)",
+                              transition: "all 0.15s ease",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = "translateY(-1px)";
+                              e.currentTarget.style.boxShadow = "0 4px 10px rgba(16, 185, 129, 0.35)";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = "translateY(0)";
+                              e.currentTarget.style.boxShadow = "0 2px 6px rgba(16, 185, 129, 0.25)";
+                            }}
+                          >
+                            <Download size={12} /> Download All (ZIP)
+                          </button>
+                        )}
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <span style={{

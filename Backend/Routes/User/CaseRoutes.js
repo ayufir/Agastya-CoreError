@@ -20,7 +20,8 @@ const {
   getSummaryData,
   deleteImageFromCase,
   changeAssign,
-  updateCaseCustomFields
+  updateCaseCustomFields,
+  updateCaseAllowance
 } = require("../../controllers/User/CaseAsignCtrl");
 
 const { protect, restrictTo } = require("../../middleware/authMiddleware");
@@ -59,6 +60,8 @@ router.put("/unassign-case/:caseId", protect, unassignCase);
 router.put("/final-update/:id", protect, finalUpdate);
 
 router.put("/custom-fields/:id", protect, updateCaseCustomFields);
+
+router.put("/allowance/:id", protect, updateCaseAllowance);
 
 router.put("/accept/:id", protect, acceptCase);
 
