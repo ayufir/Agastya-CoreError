@@ -360,6 +360,25 @@ const Trench = () => {
     }
   };
 
+  return (
+    <div className="trench-portal">
+      <ConfirmModal
+        visible={showConfirm}
+        onCancel={() => setShowConfirm(false)}
+        onConfirm={handleSubmit}
+        title="Confirm Submission"
+        message="Are you sure you want to submit this report?"
+      />
+
+      <header className="trench-topbar">
+        <div className="trench-brand">
+          <span>home</span>first
+        </div>
+        <div className="trench-user">
+          {user?.name || "Assigned User"} · {user?.role || "User"}
+        </div>
+      </header>
+
       {/* ── Technical Individual Assignment Header & Panels ── */}
       <div style={{ maxWidth: 1140, margin: "20px auto 0", padding: "0 16px" }}>
         <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#0f172a", marginBottom: "16px" }}>
