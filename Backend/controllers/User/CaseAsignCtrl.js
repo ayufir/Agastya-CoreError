@@ -1149,9 +1149,15 @@ exports.finalUpdate = async (req, res) => {
       ...sanitizedUpdateData,
       bankName: sanitizedUpdateData.bankName || bankName,
       route: sanitizedUpdateData.route || getBankMeta(modelKey).route,
-      isReportSubmitted: isFO ? (sanitizedUpdateData.isReportSubmitted !== undefined ? sanitizedUpdateData.isReportSubmitted : false) : true,
-      approvalStatus: isFO ? (sanitizedUpdateData.approvalStatus || "Work in Progress") : "FinalSubmitted",
-      status: isFO ? (sanitizedUpdateData.status || "Work in Progress") : "FinalSubmitted",
+      isReportSubmitted: sanitizedUpdateData.isReportSubmitted !== undefined 
+        ? sanitizedUpdateData.isReportSubmitted 
+        : (isFO ? false : true),
+      approvalStatus: sanitizedUpdateData.approvalStatus 
+        ? sanitizedUpdateData.approvalStatus 
+        : (isFO ? "Work in Progress" : "FinalSubmitted"),
+      status: sanitizedUpdateData.status 
+        ? sanitizedUpdateData.status 
+        : (isFO ? "Work in Progress" : "FinalSubmitted"),
     };
 
     // Sanitize populated objects — sirf _id chahiye, object nahi
@@ -1171,17 +1177,21 @@ exports.finalUpdate = async (req, res) => {
       updateFields.assignedTo = req.user._id;
     }
 
+    const timelineEntry = {
+      status: updateFields.status || "FinalSubmitted",
+      updatedAt: new Date(),
+      updatedBy: req.user._id, // requires auth middleware
+      note: updateFields.status === "FinalSubmitted" 
+        ? "Case marked as final by admin." 
+        : `Case updated to ${updateFields.status || 'unknown'} by admin.`,
+    };
+
     const updatedCase = await Model.findByIdAndUpdate(
       id,
       {
-        ...updateFields,
+        $set: updateFields,
         $push: {
-          timeline: {
-            status: "FinalSubmitted",
-            updatedAt: new Date(),
-            updatedBy: req.user._id, // requires auth middleware
-            note: "Case marked as final by admin.",
-          },
+          timeline: timelineEntry,
         },
       },
       { new: true }
@@ -1191,18 +1201,20 @@ exports.finalUpdate = async (req, res) => {
       return res.status(404).json({ error: "Case not found." });
     }
 
-    try {
-      const Notification = require("../../model/Notification");
-      const notif = await Notification.create({
-        userId: req.user?._id,
-        caseId: id,
-        message: `Case report for ${updatedCase.customerName || updatedCase.applicantName || "customer"} was finalized/submitted by ${req.user?.name || "Admin"}`,
-        bankName: updatedCase.bankName || bankName,
-      });
-      if (req.io) req.io.emit("newNotification", notif);
-      else if (global.io) global.io.emit("newNotification", notif);
-    } catch (notifErr) {
-      console.error("Failed to create notification on finalUpdate:", notifErr.message);
+    if (updateFields.status === "FinalSubmitted") {
+      try {
+        const Notification = require("../../model/Notification");
+        const notif = await Notification.create({
+          userId: req.user?._id,
+          caseId: id,
+          message: `Case report for ${updatedCase.customerName || updatedCase.applicantName || "customer"} was finalized/submitted by ${req.user?.name || "Admin"}`,
+          bankName: updatedCase.bankName || bankName,
+        });
+        if (req.io) req.io.emit("newNotification", notif);
+        else if (global.io) global.io.emit("newNotification", notif);
+      } catch (notifErr) {
+        console.error("Failed to create notification on finalUpdate:", notifErr.message);
+      }
     }
 
     res.json(updatedCase);

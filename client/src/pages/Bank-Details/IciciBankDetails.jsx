@@ -393,6 +393,11 @@ const IciciBankDetails = () => {
       {/* ─── MAIN CONTENT ────────────────────────────────────────────────── */}
       <div id="icici-print-area" className="pt-6 max-w-5xl mx-auto px-4 py-8">
 
+        {/* Letterhead Header */}
+        <div className="mb-6 bg-white rounded-lg border border-gray-200 p-2">
+          <img src="/assets/images/header1.webp" className="w-full h-auto rounded" alt="Unique Engineering Header" loading="lazy" />
+        </div>
+
         {/* Invoice Header */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6 flex justify-between items-start">
           <div>
@@ -858,6 +863,51 @@ const IciciBankDetails = () => {
             {!data.doorPhotoFile && !data.societyRegisteredFile && !data.eastPhoto && !data.westPhoto && !data.northPhoto && !data.southPhoto && !data.sketchPhoto && !data.leakageCracksPhoto && (!data.sitePhotographs || data.sitePhotographs.length === 0) && (!data.images || data.images.length === 0) && (
               <p className="text-gray-500 text-sm">No photographs uploaded.</p>
             )}
+          </div>
+        </div>
+
+        {/* ─── 10. DECLARATION & SIGNATURE / STAMP ──────────────────────── */}
+        <div className="bg-white border border-gray-200 rounded-lg mb-4 overflow-hidden print-avoid-break">
+          <div className="bg-[#f8f9fa] px-5 py-3 border-b border-gray-200 no-print">
+            <h3 className="font-semibold text-[#061b3a] text-[15px]">10. Declaration & Signature</h3>
+          </div>
+          <div className="px-5 py-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-end">
+              <div>
+                <h4 className="font-semibold text-gray-800 text-sm mb-2">Declaration</h4>
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  I/We hereby declare that the representative (Named: {data.verifiedBy || 'ER. BHAGWAT PRAJAPATI'}) has personally inspected the property on date {data.visitDate || '_____________'}. We have no direct or indirect interest in the property valued. The information furnished above is true and correct to the best of my/our knowledge and belief.
+                </p>
+                <div className="mt-6 space-y-2">
+                  <p className="text-xs text-gray-600"><strong>Date of Site Visit:</strong> {data.visitDate || '_____________'}</p>
+                  <p className="text-xs text-gray-600"><strong>Place:</strong> Indore</p>
+                </div>
+              </div>
+              <div className="flex flex-col items-center justify-end text-center">
+                {/* Stamp & Seal Placeholders */}
+                <div className="border border-dashed border-gray-300 rounded-lg p-4 w-64 h-32 flex flex-col items-center justify-center relative bg-gray-50/50">
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider mb-2">Stamp / Seal & Signature</span>
+                  {/* Digital Stamp/Seal representation */}
+                  <div className="w-24 h-24 border-2 border-[#1e40af] rounded-full flex flex-col items-center justify-center p-1 text-center opacity-80 rotate-[-5deg]" style={{ borderColor: '#1e40af' }}>
+                    <span className="text-[7px] font-bold text-[#1e40af] uppercase" style={{ color: '#1e40af' }}>Unique Engineering</span>
+                    <span className="text-[6px] text-[#1e40af] font-medium" style={{ color: '#1e40af' }}>& Associates</span>
+                    <hr className="w-full border-[#1e40af] my-0.5" style={{ borderColor: '#1e40af' }} />
+                    <span className="text-[6px] text-[#1e40af] font-semibold" style={{ color: '#1e40af' }}>APPROVED VALUER</span>
+                    <span className="text-[5px] text-[#1e40af]" style={{ color: '#1e40af' }}>Indore (M.P.)</span>
+                  </div>
+                  {/* Digital Signature representation */}
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none opacity-90">
+                    <span className="font-serif italic text-lg text-blue-900 font-bold opacity-75 select-none" style={{ fontFamily: '"Brush Script MT", cursive', fontSize: '28px', color: '#1e3a8a' }}>
+                      Bhart Sharma
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-2">
+                  <p className="text-xs font-semibold text-gray-800">For UNIQUE ENGINEERING AND ASSOCIATE</p>
+                  <p className="text-[10px] text-gray-500">Chartered Engineer & Approved Valuer</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
