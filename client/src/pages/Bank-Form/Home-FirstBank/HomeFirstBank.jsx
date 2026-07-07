@@ -72,11 +72,12 @@ const HomeFirstBank = () => {
   const { loading: apiLoading, error } = useSelector((state) => state.hfBanks);
   const [loading, setLoading] = useState(false);
   const user = useSelector((state) => state.auth.user);
+  const isFieldOfficer = user?.role?.toLowerCase() === "fieldofficer";
   const savedCity = useSelector((state) => state.assignedCases.savedCity);
   const navigate = useNavigate();
   const { id } = useParams();
 
-  const [activeSection, setActiveSection] = useState(1);
+  const [activeSection, setActiveSection] = useState(isFieldOfficer ? 2 : 1);
   const [collectedData, setCollectedData] = useState({});
   const [isEdit, setIsEdit] = useState({});
   const [extractedData, setExtractedData] = useState({});
@@ -90,6 +91,12 @@ const HomeFirstBank = () => {
   const [isPropertyDetailsOpen, setIsPropertyDetailsOpen] = useState(false);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
 
+  useEffect(() => {
+    if (isFieldOfficer && activeSection === 1) {
+      setActiveSection(2);
+    }
+  }, [isFieldOfficer, activeSection]);
+
   const handleTopInputChange = (field, val) => {
     setIsEdit((prev) => ({
       ...prev,
@@ -97,7 +104,6 @@ const HomeFirstBank = () => {
     }));
   };
 
-  const isFieldOfficer = user?.role?.toLowerCase() === "fieldofficer";
   const canFinalSubmit = id && (user?.role === "Admin" || user?.role === "SuperAdmin");
 
   const primaryActionLabel = isFieldOfficer
@@ -654,7 +660,7 @@ const normalizeQualityOfConstruction = (val) => {
       setIsEdit({});
       setCollectedData({});
       setExtractedData({});
-      setActiveSection(1);
+      setActiveSection(isFieldOfficer ? 2 : 1);
     }
   }, [id, user, navigate]);
 
@@ -951,7 +957,12 @@ const normalizeQualityOfConstruction = (val) => {
     },
   ], [isEdit, extractedData, id, savedCity]);
 
-  const sections = allSections;
+  const sections = React.useMemo(() => {
+    if (isFieldOfficer) {
+      return allSections.filter((s) => s.id !== 1);
+    }
+    return allSections;
+  }, [allSections, isFieldOfficer]);
 
   const activeContent = sections.find((s) => s.id === activeSection);
 
