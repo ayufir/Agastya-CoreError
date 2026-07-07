@@ -1316,126 +1316,124 @@ const normalizeQualityOfConstruction = (val) => {
       </header>
 
       {/* ── AI Advanced Auto Fill (Admin/SuperAdmin only) ── */}
-      {!isFieldOfficer && (
-        <div style={{ maxWidth: 1280, margin: "20px auto 0", padding: "0 16px" }}>
-            <div style={{
-              background: "#ffffff",
-              borderRadius: 12,
-              border: "1px solid #e5e7eb",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-              overflow: "hidden",
-            }}>
-              {/* Collapsible Header */}
-              <div
-                onClick={() => setIsAutofillOpen(!isAutofillOpen)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "14px 20px",
-                  background: "linear-gradient(135deg, #f0f7ff, #e8f0fe)",
-                  borderBottom: isAutofillOpen ? "1px solid #e5e7eb" : "none",
-                  cursor: "pointer",
-                  userSelect: "none",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{
-                    width: 30, height: 30, borderRadius: 8,
-                    background: "linear-gradient(135deg, #3b82f6, #6366f1)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    flexShrink: 0,
-                  }}>
-                    <svg width="16" height="16" fill="none" stroke="white" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                    </svg>
-                  </div>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: "#1e40af" }}>AI Advanced Auto Fill</span>
-                  <span style={{
-                    fontSize: 11, fontWeight: 500, color: "#6366f1",
-                    background: "#ede9fe", borderRadius: 6, padding: "2px 8px"
-                  }}>AI Powered</span>
-
-                  {/* Download All ZIP Button next to the title */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDownloadAll();
-                    }}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      marginLeft: 12,
-                      padding: "6px 12px",
-                      background: "linear-gradient(135deg, #10b981, #059669)",
-                      color: "#ffffff",
-                      border: "none",
-                      borderRadius: 8,
-                      fontSize: 11,
-                      fontWeight: 700,
-                      cursor: "pointer",
-                      boxShadow: "0 2px 6px rgba(16, 185, 129, 0.25)",
-                      transition: "all 0.15s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "translateY(-1px)";
-                      e.currentTarget.style.boxShadow = "0 4px 10px rgba(16, 185, 129, 0.35)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "translateY(0)";
-                      e.currentTarget.style.boxShadow = "0 2px 6px rgba(16, 185, 129, 0.25)";
-                    }}
-                  >
-                    <Download size={12} /> Download All (ZIP)
-                  </button>
-                </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{
-                    fontSize: 11, fontWeight: 600,
-                    color: isAutofillOpen ? "#dc2626" : "#16a34a",
-                    background: isAutofillOpen ? "#fef2f2" : "#f0fdf4",
-                    border: `1px solid ${isAutofillOpen ? "#fecaca" : "#bbf7d0"}`,
-                    borderRadius: 6, padding: "3px 10px",
-                  }}>
-                    {isAutofillOpen ? "Hide" : "Show"}
-                  </span>
-                  <svg
-                    width="14" height="14" fill="none" stroke="#64748b" strokeWidth="2.5" viewBox="0 0 24 24"
-                    style={{ transform: isAutofillOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.25s ease" }}
-                  >
-                    <polyline points="6 9 12 15 18 9" />
+      <div style={{ maxWidth: 1280, margin: "20px auto 0", padding: "0 16px" }}>
+          <div style={{
+            background: "#ffffff",
+            borderRadius: 12,
+            border: "1px solid #e5e7eb",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+            overflow: "hidden",
+          }}>
+            {/* Collapsible Header */}
+            <div
+              onClick={() => setIsAutofillOpen(!isAutofillOpen)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "14px 20px",
+                background: "linear-gradient(135deg, #f0f7ff, #e8f0fe)",
+                borderBottom: isAutofillOpen ? "1px solid #e5e7eb" : "none",
+                cursor: "pointer",
+                userSelect: "none",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{
+                  width: 30, height: 30, borderRadius: 8,
+                  background: "linear-gradient(135deg, #3b82f6, #6366f1)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  flexShrink: 0,
+                }}>
+                  <svg width="16" height="16" fill="none" stroke="white" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                   </svg>
                 </div>
-              </div>
+                <span style={{ fontSize: 14, fontWeight: 700, color: "#1e40af" }}>AI Advanced Auto Fill</span>
+                <span style={{
+                  fontSize: 11, fontWeight: 500, color: "#6366f1",
+                  background: "#ede9fe", borderRadius: 6, padding: "2px 8px"
+                }}>AI Powered</span>
 
-              {/* Collapsible Content */}
-              {isAutofillOpen && (
-                <div style={{ padding: "16px" }}>
-                  <AdvancedAutoFillForm
-                    caseId={id}
-                    bankName="HomeFirst Bank"
-                    setFormData={setExtractedData}
-                    atsDocuments={
-                      isEdit?.atsDocuments && isEdit.atsDocuments.length > 0
-                        ? isEdit.atsDocuments
-                        : (isEdit?.AttachDocuments || [])
-                    }
-                    imageUrls={isEdit?.imageUrls || []}
-                    siteVisitVideo={isEdit?.siteVisitVideo || []}
-                    gpsFiles={isEdit?.gpsFiles || []}
-                    emailFiles={isEdit?.emailFiles || []}
-                    fieldFormFiles={isEdit?.fieldFormFiles || []}
-                    additionalFiles={isEdit?.additionalFiles || []}
-                    fetchData={() => id && fetchEditData(id)}
-                    onUploadingChange={setIsUploadingFiles}
-                    isSubmitted={isEdit?.isReportSubmitted}
-                  />
-                </div>
-              )}
+                {/* Download All ZIP Button next to the title */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDownloadAll();
+                  }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    marginLeft: 12,
+                    padding: "6px 12px",
+                    background: "linear-gradient(135deg, #10b981, #059669)",
+                    color: "#ffffff",
+                    border: "none",
+                    borderRadius: 8,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    boxShadow: "0 2px 6px rgba(16, 185, 129, 0.25)",
+                    transition: "all 0.15s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                    e.currentTarget.style.boxShadow = "0 4px 10px rgba(16, 185, 129, 0.35)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)";
+                    e.currentTarget.style.boxShadow = "0 2px 6px rgba(16, 185, 129, 0.25)";
+                  }}
+                >
+                  <Download size={12} /> Download All (ZIP)
+                </button>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{
+                  fontSize: 11, fontWeight: 600,
+                  color: isAutofillOpen ? "#dc2626" : "#16a34a",
+                  background: isAutofillOpen ? "#fef2f2" : "#f0fdf4",
+                  border: `1px solid ${isAutofillOpen ? "#fecaca" : "#bbf7d0"}`,
+                  borderRadius: 6, padding: "3px 10px",
+                }}>
+                  {isAutofillOpen ? "Hide" : "Show"}
+                </span>
+                <svg
+                  width="14" height="14" fill="none" stroke="#64748b" strokeWidth="2.5" viewBox="0 0 24 24"
+                  style={{ transform: isAutofillOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.25s ease" }}
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </div>
             </div>
+
+            {/* Collapsible Content */}
+            {isAutofillOpen && (
+              <div style={{ padding: "16px" }}>
+                <AdvancedAutoFillForm
+                  caseId={id}
+                  bankName="HomeFirst Bank"
+                  setFormData={setExtractedData}
+                  atsDocuments={
+                    isEdit?.atsDocuments && isEdit.atsDocuments.length > 0
+                      ? isEdit.atsDocuments
+                      : (isEdit?.AttachDocuments || [])
+                  }
+                  imageUrls={isEdit?.imageUrls || []}
+                  siteVisitVideo={isEdit?.siteVisitVideo || []}
+                  gpsFiles={isEdit?.gpsFiles || []}
+                  emailFiles={isEdit?.emailFiles || []}
+                  fieldFormFiles={isEdit?.fieldFormFiles || []}
+                  additionalFiles={isEdit?.additionalFiles || []}
+                  fetchData={() => id && fetchEditData(id)}
+                  onUploadingChange={setIsUploadingFiles}
+                  isSubmitted={isEdit?.isReportSubmitted}
+                />
+              </div>
+            )}
           </div>
-      )}
+        </div>
 
       {/* ── Technical Individual Assignment Title & Collapsible Property Details ── */}
       <div style={{ maxWidth: 1280, margin: "20px auto 0", padding: "0 16px" }}>
