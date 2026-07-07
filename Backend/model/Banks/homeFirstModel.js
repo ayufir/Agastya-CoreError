@@ -7,6 +7,7 @@ const ValuationReportSchema = new mongoose.Schema({
     enum: [
       "Pending", "Assigned", "Visited", "Reported",
       "Reviewed", "Approved", "Rejected", "Work in Progress", "FinalSubmitted",
+      "Generated", "generated", "Submitted"
     ],
     default: "Pending",
   },

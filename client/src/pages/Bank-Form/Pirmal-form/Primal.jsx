@@ -278,7 +278,7 @@ const Primal = () => {
         )}
 
         {loading && <p className='text-blue-600'>Submitting...</p>}
-        {error && <p className='text-red-600'>Error: {error}</p>}
+        {error && <p className='text-red-600'>Error: {typeof error === "object" ? (error.message || error.error || JSON.stringify(error)) : error}</p>}
       </div>
     </div>
   );

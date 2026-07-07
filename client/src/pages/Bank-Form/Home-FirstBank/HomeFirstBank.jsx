@@ -1776,7 +1776,7 @@ const normalizeQualityOfConstruction = (val) => {
                 fontSize: 13,
               }}
             >
-              Error: {error}
+              Error: {typeof error === "object" ? (error.message || error.error || JSON.stringify(error)) : error}
             </div>
           )}
         </main>
