@@ -1436,163 +1436,165 @@ const normalizeQualityOfConstruction = (val) => {
         </div>
 
       {/* ── Technical Individual Assignment Title & Collapsible Property Details ── */}
-      <div style={{ maxWidth: 1280, margin: "20px auto 0", padding: "0 16px" }}>
-        <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#0f172a", marginBottom: "16px" }}>
-          Technical Individual Assignment
-        </h1>
+      {!isFieldOfficer && (
+        <div style={{ maxWidth: 1280, margin: "20px auto 0", padding: "0 16px" }}>
+          <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#0f172a", marginBottom: "16px" }}>
+            Technical Individual Assignment
+          </h1>
 
-        {/* Collapsible Property Details Panel */}
-        <div style={{
-          background: "#ffffff",
-          borderRadius: 12,
-          border: "1px solid #e5e7eb",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-          overflow: "hidden"
-        }}>
-          {/* Accordion Header Row */}
-          <div 
-            onClick={() => setIsPropertyDetailsOpen(!isPropertyDetailsOpen)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "16px 24px",
-              background: "#ffffff",
-              borderBottom: isPropertyDetailsOpen ? "1px solid #e5e7eb" : "none",
-              cursor: "pointer",
-              userSelect: "none"
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
-              <span style={{ fontSize: "14px", fontWeight: 600, color: "#1e293b" }}>Property Details</span>
-              {(isEdit?.customerName || isEdit?.clContractNo || isEdit?.refNo) && (
-                <div style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "12px", color: "#64748b", fontWeight: 500 }}>
-                  {isEdit?.customerName && (
-                    <>
-                      <span style={{ color: "#cbd5e1" }}>|</span>
-                      <span>Applicant <strong style={{ color: "#0f172a", fontWeight: 600 }}>{isEdit.customerName}</strong></span>
-                    </>
-                  )}
-                  {isEdit?.clContractNo && (
-                    <>
-                      <span style={{ color: "#cbd5e1" }}>|</span>
-                      <span>Loan Code <strong style={{ color: "#0f172a", fontWeight: 600 }}>{isEdit.clContractNo}</strong></span>
-                    </>
-                  )}
-                  {isEdit?.refNo && (
-                    <>
-                      <span style={{ color: "#cbd5e1" }}>|</span>
-                      <span>Property <strong style={{ color: "#0f172a", fontWeight: 600 }}>{isEdit.refNo}</strong></span>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-            <button
+          {/* Collapsible Property Details Panel */}
+          <div style={{
+            background: "#ffffff",
+            borderRadius: 12,
+            border: "1px solid #e5e7eb",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+            overflow: "hidden"
+          }}>
+            {/* Accordion Header Row */}
+            <div 
+              onClick={() => setIsPropertyDetailsOpen(!isPropertyDetailsOpen)}
               style={{
-                background: "none",
-                border: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "16px 24px",
+                background: "#ffffff",
+                borderBottom: isPropertyDetailsOpen ? "1px solid #e5e7eb" : "none",
                 cursor: "pointer",
-                padding: 0,
-                transform: isPropertyDetailsOpen ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "transform 0.2s ease"
+                userSelect: "none"
               }}
             >
-              <svg width="14" height="14" fill="none" stroke="#64748b" strokeWidth="2.5" viewBox="0 0 24 24" style={{ transform: isPropertyDetailsOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Accordion Content Panel */}
-          {isPropertyDetailsOpen && (
-            <div style={{ padding: "20px 24px" }}>
-              {/* Row 1 */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px", marginBottom: "16px" }}>
-                <div>
-                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Applicant Name</div>
-                  <input
-                    value={isEdit?.customerName || ""}
-                    onChange={(e) => handleTopInputChange("customerName", e.target.value)}
-                    disabled={isFieldOfficer && isEdit?.isReportSubmitted}
-                    style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
-                  />
-                </div>
-                <div>
-                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Loan Code</div>
-                  <input
-                    value={isEdit?.clContractNo || ""}
-                    onChange={(e) => handleTopInputChange("clContractNo", e.target.value)}
-                    disabled={isFieldOfficer && isEdit?.isReportSubmitted}
-                    style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
-                  />
-                </div>
-                <div>
-                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Property Code</div>
-                  <input
-                    value={isEdit?.refNo || ""}
-                    onChange={(e) => handleTopInputChange("refNo", e.target.value)}
-                    disabled={isFieldOfficer && isEdit?.isReportSubmitted}
-                    style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
-                  />
-                </div>
-                <div>
-                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Contact No.</div>
-                  <input
-                    value={isEdit?.customerNo || ""}
-                    onChange={(e) => handleTopInputChange("customerNo", e.target.value)}
-                    disabled={isFieldOfficer && isEdit?.isReportSubmitted}
-                    style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
-                  />
-                </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+                <span style={{ fontSize: "14px", fontWeight: 600, color: "#1e293b" }}>Property Details</span>
+                {(isEdit?.customerName || isEdit?.clContractNo || isEdit?.refNo) && (
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "12px", color: "#64748b", fontWeight: 500 }}>
+                    {isEdit?.customerName && (
+                      <>
+                        <span style={{ color: "#cbd5e1" }}>|</span>
+                        <span>Applicant <strong style={{ color: "#0f172a", fontWeight: 600 }}>{isEdit.customerName}</strong></span>
+                      </>
+                    )}
+                    {isEdit?.clContractNo && (
+                      <>
+                        <span style={{ color: "#cbd5e1" }}>|</span>
+                        <span>Loan Code <strong style={{ color: "#0f172a", fontWeight: 600 }}>{isEdit.clContractNo}</strong></span>
+                      </>
+                    )}
+                    {isEdit?.refNo && (
+                      <>
+                        <span style={{ color: "#cbd5e1" }}>|</span>
+                        <span>Property <strong style={{ color: "#0f172a", fontWeight: 600 }}>{isEdit.refNo}</strong></span>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
-
-              {/* Row 2 */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px", marginBottom: "16px" }}>
-                <div>
-                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Property Name</div>
-                  <input
-                    value={isEdit?.propertyName || ""}
-                    onChange={(e) => handleTopInputChange("propertyName", e.target.value)}
-                    disabled={isFieldOfficer && isEdit?.isReportSubmitted}
-                    style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
-                  />
-                </div>
-                <div>
-                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Builder Name</div>
-                  <input
-                    value={isEdit?.projectName || ""}
-                    onChange={(e) => handleTopInputChange("projectName", e.target.value)}
-                    disabled={isFieldOfficer && isEdit?.isReportSubmitted}
-                    style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
-                  />
-                </div>
-                <div>
-                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Plot ID</div>
-                  <input
-                    value={isEdit?.plotNo || ""}
-                    onChange={(e) => handleTopInputChange("plotNo", e.target.value)}
-                    disabled={isFieldOfficer && isEdit?.isReportSubmitted}
-                    style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
-                  />
-                </div>
-                <div style={{ visibility: "hidden" }}></div>
-              </div>
-
-              {/* Row 3: Address */}
-              <div>
-                <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Address</div>
-                <input
-                  value={isEdit?.addressSite || isEdit?.addressLegal || ""}
-                  onChange={(e) => handleTopInputChange("addressSite", e.target.value)}
-                  disabled={isFieldOfficer && isEdit?.isReportSubmitted}
-                  style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
-                />
-              </div>
+              <button
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                  transform: isPropertyDetailsOpen ? "rotate(180deg)" : "rotate(0deg)",
+                  transition: "transform 0.2s ease"
+                }}
+              >
+                <svg width="14" height="14" fill="none" stroke="#64748b" strokeWidth="2.5" viewBox="0 0 24 24" style={{ transform: isPropertyDetailsOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
             </div>
-          )}
+
+            {/* Accordion Content Panel */}
+            {isPropertyDetailsOpen && (
+              <div style={{ padding: "20px 24px" }}>
+                {/* Row 1 */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px", marginBottom: "16px" }}>
+                  <div>
+                    <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Applicant Name</div>
+                    <input
+                      value={isEdit?.customerName || ""}
+                      onChange={(e) => handleTopInputChange("customerName", e.target.value)}
+                      disabled={isFieldOfficer && isEdit?.isReportSubmitted}
+                      style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                    />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Loan Code</div>
+                    <input
+                      value={isEdit?.clContractNo || ""}
+                      onChange={(e) => handleTopInputChange("clContractNo", e.target.value)}
+                      disabled={isFieldOfficer && isEdit?.isReportSubmitted}
+                      style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                    />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Property Code</div>
+                    <input
+                      value={isEdit?.refNo || ""}
+                      onChange={(e) => handleTopInputChange("refNo", e.target.value)}
+                      disabled={isFieldOfficer && isEdit?.isReportSubmitted}
+                      style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                    />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Contact No.</div>
+                    <input
+                      value={isEdit?.customerNo || ""}
+                      onChange={(e) => handleTopInputChange("customerNo", e.target.value)}
+                      disabled={isFieldOfficer && isEdit?.isReportSubmitted}
+                      style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                    />
+                  </div>
+                </div>
+
+                {/* Row 2 */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px", marginBottom: "16px" }}>
+                  <div>
+                    <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Property Name</div>
+                    <input
+                      value={isEdit?.propertyName || ""}
+                      onChange={(e) => handleTopInputChange("propertyName", e.target.value)}
+                      disabled={isFieldOfficer && isEdit?.isReportSubmitted}
+                      style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                    />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Builder Name</div>
+                    <input
+                      value={isEdit?.projectName || ""}
+                      onChange={(e) => handleTopInputChange("projectName", e.target.value)}
+                      disabled={isFieldOfficer && isEdit?.isReportSubmitted}
+                      style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                    />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Plot ID</div>
+                    <input
+                      value={isEdit?.plotNo || ""}
+                      onChange={(e) => handleTopInputChange("plotNo", e.target.value)}
+                      disabled={isFieldOfficer && isEdit?.isReportSubmitted}
+                      style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                    />
+                  </div>
+                  <div style={{ visibility: "hidden" }}></div>
+                </div>
+
+                {/* Row 3: Address */}
+                <div>
+                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Address</div>
+                  <input
+                    value={isEdit?.addressSite || isEdit?.addressLegal || ""}
+                    onChange={(e) => handleTopInputChange("addressSite", e.target.value)}
+                    disabled={isFieldOfficer && isEdit?.isReportSubmitted}
+                    style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
 
 
