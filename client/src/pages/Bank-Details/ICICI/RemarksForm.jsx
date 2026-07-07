@@ -182,8 +182,9 @@ const RemarksForm = ({
   });
 
   useEffect(() => {
-    const src = (data && Object.keys(data).length > 0) ? data : (editData || {});
+    const base = (data && Object.keys(data).length > 0) ? data : (editData || {});
     const autofillData = extractedData || {};
+    const src = { ...base, ...autofillData };
     if (src) {
       const rawContact = src.personContact || "";
       const hasCountryCode = rawContact.startsWith("+");
@@ -719,3 +720,6 @@ const RemarksForm = ({
 };
 
 export default RemarksForm;
+
+
+

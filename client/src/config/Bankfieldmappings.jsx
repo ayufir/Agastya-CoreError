@@ -12,6 +12,14 @@ const getDimensionParts = (value = "") => {
         depth: match[2],
     };
 };
+const yesNoToBool = (value) => {
+    if (typeof value === "boolean") return value;
+    const text = String(value ?? "").trim().toLowerCase();
+    if (!text) return "";
+    if (["yes", "y", "true", "available", "present", "nearby", "near"].includes(text)) return true;
+    if (["no", "n", "false", "not available", "absent", "none"].includes(text)) return false;
+    return Boolean(text);
+};
 
 export const TRENCH_MAPPING = {
     propertyAddress: [
@@ -314,76 +322,211 @@ export const MANAPPURAM_MAPPING = {
             : null,
 };
 
+const cleanMappingText = (value) => String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+const normalizeIciciUsage = (value) => {
+    const text = cleanMappingText(value);
+    if (!text) return null;
+    if (text.includes("residential") || text.includes("housing") || text.includes("home")) return "residential";
+    if (text.includes("commercial") || text.includes("shop") || text.includes("office")) return "commercial";
+    if (text.includes("industrial") || text.includes("factory") || text.includes("warehouse")) return "industrial";
+    if (text.includes("special") || text.includes("hospital") || text.includes("hotel") || text.includes("school")) return "special";
+    return value;
+};
+
+const normalizeIciciRawPropertyText = (data) => cleanMappingText([
+    data.usageOfProperty,
+    data.actualUsage,
+    data.propertySubType,
+    data.unitType,
+    data.property?.property_type,
+    data.property?.property_sub_type,
+    data.property?.property_use,
+    data.property?.actual_usage,
+].filter(Boolean).join(" "));
+
+const normalizeIciciPropertyType = (data) => {
+    const text = normalizeIciciRawPropertyText(data);
+    if (!text) return "non_residential";
+    const hasCommercial = text.includes("commercial") || text.includes("shop") || text.includes("office") || text.includes("godown") || text.includes("mixed use");
+    const hasIndustrial = text.includes("industrial") || text.includes("factory") || text.includes("warehouse");
+    const hasSpecial = text.includes("hospital") || text.includes("hotel") || text.includes("school") || text.includes("banquet") || text.includes("marriage") || text.includes("nursing");
+    if (hasCommercial || hasIndustrial || hasSpecial) return "non_residential";
+    return "residential";
+};
+
+const normalizeIciciSubType = (data) => {
+    if (normalizeIciciPropertyType(data) === "residential") return "";
+    const text = normalizeIciciRawPropertyText(data);
+    if (text.includes("industrial") || text.includes("factory") || text.includes("warehouse")) return "industrial";
+    if (text.includes("hospital") || text.includes("hotel") || text.includes("school") || text.includes("banquet") || text.includes("marriage") || text.includes("nursing")) return "special";
+    return "commercial";
+};
+
+const normalizeIciciUnitType = (data) => {
+    const text = cleanMappingText(data.unitType || data.propertySubType || data.typeOfStructure || data.property?.property_sub_type || data.property?.property_type || data.actualUsage || data.property?.actual_usage);
+    if (!text) return null;
+    if (text.includes("plot") || text.includes("land")) return "plot";
+    if (text.includes("flat") || text.includes("apartment")) return "flat";
+    if (text.includes("bungalow") || text.includes("villa")) return "bungalow";
+    if (text.includes("row house") || text.includes("rowhouse")) return "row_house";
+    if (text.includes("showroom")) return "showroom";
+    if (text.includes("shop")) return "shop";
+    if (text.includes("office")) return "office";
+    if (text.includes("gala")) return "gala";
+    if (text.includes("godown")) return "godown";
+    if (text.includes("warehouse")) return "warehouse";
+    return data.unitType || data.propertySubType || null;
+};
+
+const firstNumberText = (...values) => {
+    for (const value of values) {
+        const match = String(value || "").match(/[\d.]+/);
+        if (match) return match[0];
+    }
+    return null;
+};
+
+const normalizeIciciJurisdiction = (data) => {
+    const text = cleanMappingText(data.propertyJurisdiction || data.jurisdiction || data.propertyFallingWithin || data.property?.legal_and_compliance?.jurisdiction || data.property?.location_details?.property_falling_within);
+    if (!text) return null;
+    if (text.includes("gram") || text.includes("panchayat")) return "gram_panchayat";
+    if (text.includes("municipal") || text.includes("nagar nigam") || text.includes("corporation")) return "municipality_corp";
+    if (text.includes("dtcp") || text.includes("town planning")) return "dtcp";
+    if (text.includes("development authority")) return "other_development_authority";
+    if (text.includes("town") || text.includes("nagar panchayat")) return "town_nagar_panchayat";
+    return data.propertyJurisdiction || data.jurisdiction || null;
+};
+
+const normalizeIciciStructure = (data) => {
+    const text = cleanMappingText(data.typeOfStructure || data.property?.accommodation_details?.type_of_structure || data.property?.structural_engineering?.type_of_masonry);
+    if (!text) return null;
+    if (text.includes("load")) return "load_bearing";
+    if (text.includes("steel")) return "steel_structure";
+    if (text.includes("composite")) return "composite";
+    if (text.includes("rcc") || text.includes("frame")) return "rcc";
+    return data.typeOfStructure || null;
+};
+
+const extractFloorCount = (data) => {
+    const text = cleanMappingText(data.totalNoOfFloors || data.floorNumber || data.property?.accommodation_details?.total_floors || data.property?.floor_number);
+    if (!text) return null;
+    const explicit = text.match(/g\s*\+\s*(\d+)/);
+    if (explicit) return explicit[1];
+    if (text.includes("second")) return "2";
+    if (text.includes("first")) return "1";
+    if (text.includes("third")) return "3";
+    const nums = text.match(/\d+/g);
+    return nums?.[0] || null;
+};
+
+const extractBasementCount = (data) => cleanMappingText(data.totalNoOfFloors || data.floorNumber || data.property?.accommodation_details?.total_floors || data.property?.floor_number).includes("basement") ? "1" : "0";
+const extractParkingCount = (data) => /stilt|parking/i.test(String(data.totalNoOfFloors || data.floorNumber || data.property?.accommodation_details?.total_floors || data.property?.floor_number || "")) ? "1" : "0";
+const normalizeIciciClass = (data) => {
+    const text = cleanMappingText(data.classOfLocality || data.marketability || data.property?.accommodation_details?.marketability || data.property?.location_details?.occupancy_level);
+    if (text.includes("posh")) return "posh";
+    if (text.includes("slum")) return "slum";
+    if (text.includes("upper")) return "upper_class";
+    if (text.includes("lower")) return "lower_class";
+    return "middle_class";
+};
+
 export const ICICI_MAPPING = {
-    "customerName": ["customerName", "clientName", "borrowerName", "applicantName"],
-    "applicantName": ["applicantName", "customerName", "clientName", "borrowerName"],
+    "customerName": ["customerName", "property.applicant_name", "property.owner_name", "clientName", "borrowerName", "applicantName"],
+    "applicantName": ["applicantName", "customerName", "property.applicant_name", "property.owner_name", "clientName", "borrowerName"],
     // 1. Property Details
-    "pincode": "pincode",
-    "state": "state",
-    "city": "city",
-    "district": "district",
-    "locality": "locality",
-    "landmark": "landmark",
-    "plotNo": "plotNo",
-    "propertyType": ["usageOfProperty", "zone"],
-    "unitType": ["unitType", "propertySubType"],
-    "sanctionUsage": ["sanctionUsage", "usageOfProperty"],
-    "actualUsage": "usageOfProperty",
-    "propertyJurisdiction": "propertyJurisdiction",
-    "sanctionAuthorityName": "sanctionAuthorityName",
-    "constructionStatus": "constructionStatus",
-    "propertyEntranceFacing": "propertyEntranceFacing",
+    "pincode": ["pincode", "property.address.pincode"],
+    "state": ["state", "property.address.state"],
+    "city": ["city", "property.address.district", "property.address.tehsil"],
+    "district": ["district", "property.address.district"],
+    "locality": ["locality", "property.location_details.locality", "property.address.main_locality", "property.address.sub_locality"],
+    "projectSocietyName": ["propertyName", "property.property_name", "colonyArea", "property.address.colony_area"],
+    "revenueRecordTypeNumber": (data) => [data.khasraNumber || data.property?.address?.khasra_number ? `Khasra No. ${data.khasraNumber || data.property?.address?.khasra_number}` : "", data.surveyNumber || data.property?.address?.survey_number ? `Survey No. ${data.surveyNumber || data.property?.address?.survey_number}` : "", data.patwariHalkaNumber || data.property?.address?.patwari_halka_number ? `Patwari Halka No. ${data.patwariHalkaNumber || data.property?.address?.patwari_halka_number}` : ""].filter(Boolean).join(", "),
+    "withinGeoLimit": (data) => data.latitude || data.longitude ? true : null,
+    "classOfLocality": normalizeIciciClass,
+    "landmark": ["landmark", "property.location_details.landmark"],
+    "plotNo": ["plotNo", "property.address.plot_number"],
+    "propertyType": normalizeIciciPropertyType,
+    "propertySubType": normalizeIciciSubType,
+    "unitType": normalizeIciciUnitType,
+    "sanctionUsage": (data) => normalizeIciciUsage(data.sanctionUsage || data.usageOfProperty),
+    "actualUsage": (data) => normalizeIciciUsage(data.usageOfProperty || data.actualUsage),
+    "propertyJurisdiction": normalizeIciciJurisdiction,
+    "sanctionAuthorityName": ["sanctionAuthorityName", "property.legal_and_compliance.approving_authority"],
+    "constructionStatus": ["constructionStatus", "constructionStage"],
+    "approvedPlanNo": ["property.municipal_details.municipal_compliance", "municipalCompliance", "property.legal_and_compliance.approving_authority", "approvingAuthority"],
+    "propertyEntranceFacing": ["propertyEntranceFacing", "property.property_entrance_facing"],
     "floorNumber": "floorNumber",
-    "countOfProperties": "countOfProperties",
+    "countOfProperties": ["countOfProperties", "property.count_of_properties"],
 
     // 2. Maintenance & Boundaries
-    "propertyAge": "ageOfProperty",
+    "propertyAge": ["propertyAge", "ageOfProperty"],
     "residualAge": "residualAge",
     "internalMaintenance": "internalMaintenance",
     "externalMaintenance": "externalMaintenance",
-    "eastDocument": "eastDocument",
-    "eastSiteVisit": "eastActual",
-    "eastDimensions": "eastDimensions",
-    "westDocument": "westDocument",
-    "westSiteVisit": "westActual",
-    "westDimensions": "westDimensions",
-    "northDocument": "northDocument",
-    "northSiteVisit": "northActual",
-    "northDimensions": "northDimensions",
-    "southDocument": "southDocument",
-    "southSiteVisit": "southActual",
-    "southDimensions": "southDimensions",
+    "eastAsPerDocument": ["eastDocument", "property.boundaries.east_as_per_deed"],
+    "eastAsPerSiteVisit": ["eastActual", "property.boundaries.east_actual"],
+    "eastLinearDimensions": "eastDimensions",
+    "westAsPerDocument": ["westDocument", "property.boundaries.west_as_per_deed"],
+    "westAsPerSiteVisit": ["westActual", "property.boundaries.west_actual"],
+    "westLinearDimensions": "westDimensions",
+    "northAsPerDocument": ["northDocument", "property.boundaries.north_as_per_deed"],
+    "northAsPerSiteVisit": ["northActual", "property.boundaries.north_actual"],
+    "northLinearDimensions": "northDimensions",
+    "southAsPerDocument": ["southDocument", "property.boundaries.south_as_per_deed"],
+    "southAsPerSiteVisit": ["southActual", "property.boundaries.south_actual"],
+    "southLinearDimensions": "southDimensions",
+    "boundariesMatching": (data) => yesNoToBool(data.boundariesMatching || data.property?.boundaries?.boundaries_matching),
 
     // 3. Amenities
-    "airport": "airport",
-    "busStop": "busStop",
-    "metroStation": "metroStation",
-    "railwayStation": "railwayStation",
-    "college": "college",
-    "school": "school",
-    "hospital": "hospital",
-    "superMarket": "superMarket",
-    "mall": "mall",
-    "placeOfWorship": "placeOfWorship",
-    "rickshawStop": "rickshawStop",
+    "airport": (data) => yesNoToBool(data.airport || data.property?.surrounding_amenities?.airport),
+    "busStop": (data) => yesNoToBool(data.busStop || data.busStopAmenity || data.property?.surrounding_amenities?.bus_stop),
+    "metroStation": (data) => yesNoToBool(data.metroStation || data.property?.surrounding_amenities?.metro_station),
+    "railwayStation": (data) => yesNoToBool(data.railwayStation || data.railwayStationAmenity || data.property?.surrounding_amenities?.railway_station),
+    "college": (data) => yesNoToBool(data.college || data.property?.surrounding_amenities?.college),
+    "school": (data) => yesNoToBool(data.school || data.property?.surrounding_amenities?.school),
+    "hospital": (data) => yesNoToBool(data.hospital || data.hospitalAmenity || data.property?.surrounding_amenities?.hospital),
+    "superMarket": (data) => yesNoToBool(data.superMarket || data.property?.surrounding_amenities?.super_market),
+    "mall": (data) => yesNoToBool(data.mall || data.property?.surrounding_amenities?.mall),
+    "placeOfWorship": (data) => yesNoToBool(data.placeOfWorship || data.property?.surrounding_amenities?.place_of_worship),
+    "rickshawStop": (data) => yesNoToBool(data.rickshawStop || data.property?.surrounding_amenities?.rickshaw_stop),
+    "infraSurroundings": (data) => {
+        const value = String(data.infraSurroundings || data.microLocation || data.property?.location_details?.micro_location || "").toLowerCase();
+        if (value.includes("under")) return "underDeveloped";
+        if (value.includes("developing")) return "developing";
+        if (value.includes("developed")) return "developed";
+        return "";
+    },
+    "widthOfAccessRoad": ["widthApproachRoad", "property.location_details.width_approach_road"],
+    "anyOtherSurrounding": ["otherFeatures", "property.location_details.other_features"],
+    "accessibility": (data) => {
+        const value = String(data.accessibility || data.physicalApproach || data.property?.location_details?.physical_approach || "").toLowerCase();
+        if (value.includes("very good")) return "veryGood";
+        if (value.includes("very poor")) return "veryPoor";
+        if (value.includes("good")) return "good";
+        if (value.includes("poor")) return "poor";
+        if (value.includes("average")) return "average";
+        return "";
+    },
 
     // 4. Caution Area
-    "anyChemicalHazard": "anyChemicalHazard",
-    "nearCrematorium": "nearCrematorium",
-    "probableRoadExtension": "probableRoadExtension",
-    "statutoryNoticesOnProperty": "statutoryNoticesOnProperty",
-    "communityDominated": "communityDominated",
-    "nearGarbageDump": "nearGarbageDump",
-    "propertyAccessIssues": "propertyAccessIssues",
-    "underHighTensionLine": "underHighTensionLine",
-    "floodProne": "floodProne",
-    "nearNalla": "nearNalla",
-    "propertyIsLandLocked": "propertyIsLandLocked",
-    "landReservation": "landReservation",
-    "nearToRailTrack": "nearToRailTrack",
-    "slumArea": "slumArea",
+    "anyChemicalHazard": (data) => yesNoToBool(data.anyChemicalHazard || data.property?.risk_flags?.any_chemical_hazard),
+    "nearCrematorium": (data) => yesNoToBool(data.nearCrematorium || data.property?.risk_flags?.near_crematorium),
+    "probableRoadExtension": (data) => yesNoToBool(data.probableRoadExtension || data.property?.risk_flags?.probable_road_extension),
+    "statutoryNoticesOnProperty": (data) => yesNoToBool(data.statutoryNoticesOnProperty || data.property?.risk_flags?.statutory_notices_on_property),
+    "communityDominated": (data) => yesNoToBool(data.communityDominated || data.property?.risk_flags?.community_dominated),
+    "nearGarbageDump": (data) => yesNoToBool(data.nearGarbageDump || data.property?.risk_flags?.near_garbage_dump),
+    "propertyAccessIssues": (data) => yesNoToBool(data.propertyAccessIssues || data.property?.risk_flags?.property_access_issues),
+    "underHighTensionLine": (data) => yesNoToBool(data.underHighTensionLine || data.property?.risk_flags?.under_high_tension_line),
+    "floodProne": (data) => yesNoToBool(data.floodProne || data.property?.risk_flags?.flood_prone),
+    "nearNalla": (data) => yesNoToBool(data.nearNalla || data.property?.risk_flags?.near_nalla),
+    "propertyIsLandLocked": (data) => yesNoToBool(data.propertyIsLandLocked || data.property?.risk_flags?.property_is_land_locked),
+    "landReservation": (data) => yesNoToBool(data.landReservation || data.property?.risk_flags?.land_reservation),
+    "nearToRailTrack": (data) => yesNoToBool(data.nearToRailTrack || data.property?.risk_flags?.near_to_rail_track),
+    "slumArea": (data) => yesNoToBool(data.slumArea || data.property?.risk_flags?.slum_area),
 
     // 5. Realizable Value
+    "plotAreaSqft": (data) => firstNumberText(data.plotAreaSqft, data.plotAreaPhysical, data.plotAreaInDeed, data.landArea, data.plotArea),
     "landDataArea": ["landArea", "plotAreaInDeed", "plotAreaPhysical", "plotArea"],
     "landDataRatePerSqFt": "landRate",
     "landDataAmount": "landAmount",
@@ -400,31 +543,36 @@ export const ICICI_MAPPING = {
     "costOfConstruction": "costOfConstruction",
 
     // 6. Construction Progress
-    "typeOfStructure": "typeOfStructure",
+    "typeOfStructure": normalizeIciciStructure,
+    "basementLevels": extractBasementCount,
+    "parkingLevels": extractParkingCount,
+    "liveableFloors": extractFloorCount,
     "structureConfiguration": "structureConfiguration",
-    "structureCompletion": "completionPercentage",
-    "structureRecommendation": "recommendationPercentage",
-    "amenityCompletion": "amenityCompletion",
-    "amenityRecommendation": "amenityRecommendation",
+    "stageOfStructureCompletion": ["stageOfStructureCompletion", "completionPercentage"],
+    "stageOfStructureRecommendation": ["stageOfStructureRecommendation", "recommendationPercentage"],
+    "stageOfCompletionAmenities": ["stageOfCompletionAmenities", "amenityCompletion"],
+    "stageOfAmenityCompletion": ["stageOfAmenityCompletion", "amenityCompletion"],
+    "stageOfRecommendationAmenities": ["stageOfRecommendationAmenities", "amenityRecommendation"],
+    "stageOfAmenityRecommendation": ["stageOfAmenityRecommendation", "amenityRecommendation"],
     "resolutionAmenities": "resolutionAmenities",
     "recommendationAmenities": "recommendationAmenities",
     "recommendedValue": "recommendedValue",
-    "comments": "commentsOnProperty",
+    "commentsOnConstruction": ["commentsOnConstruction", "commentsOnProperty", "reportRemarks"],
 
     // 7. Distance Range
     "distanceFromCPC": "distanceFromCPC",
     "distanceFromCityCenter": ["distanceFromCityCenter", "distanceCityCentre"],
-    "distanceFromICICIBank": ["distanceFromICICIBank", "distanceABCLBranch"],
+    "distanceFromBank": ["distanceFromBank", "distanceFromICICIBank", "distanceABCLBranch"],
     "oneWayDistance": "oneWayDistance",
     "latitude": "latitude",
     "longitude": "longitude",
 
     // 8. Remarks
-    "nfsaCheckRequired": "nfsaCheckRequired",
-    "generalObservations": "generalObservations",
+    "nfsaCheckRequired": ["nfsaCheckRequired"],
+    "generalObservations": ["generalObservations", "reportRemarks", "commentsOnProperty", "property.report_remarks"],
     "raleReferences": "raleReferences",
-    "personName": ["customerName", "clientName", "personMetDuringVisit", "personName"],
-    "personContact": ["contactNumber", "customerNo", "personContact"],
+    "personName": ["personMetDuringVisit", "personName", "property.duringPropertyVisit", "property.contact_person", "customerName", "clientName"],
+    "personContact": ["personContact", "contactNumber", "customerNo", "property.person_met_at_site_contact", "property.contact_number"],
     "evaluationMode": "evaluationMode",
     "rejectionReason": "rejectionReason",
     "verifiedBy": ["valuerName", "visitedEngineer", "verifiedBy"],
@@ -639,4 +787,7 @@ export const BAJAJ_BANK_MAPPING = {
     "step7.valuationMethodology": ["valuationMethodology"],
     "step7.remarks": ["property.report_remarks", "property.location_details.comments_on_property", "reportRemarks", "commentsOnProperty", "remarks"],
 };
+
+
+
 

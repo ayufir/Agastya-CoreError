@@ -1357,6 +1357,28 @@ const AdvancedAutoFillForm = ({
         setUploadedAdditionalUrls(additionalUrls);
       }
 
+if (typeof setFormDataDirect === "function") {
+        setFormDataDirect((prev) => {
+          const next = { ...(prev || {}), ...finalData };
+          try {
+            const normBank = selectedBank.toLowerCase();
+            let draftKey = `icici-bank-draft:${caseId || "new"}`;
+            if (normBank.includes("first")) {
+              draftKey = `homefirst-bank-draft:${caseId || "new"}`;
+            } else if (normBank.includes("bajaj")) {
+              draftKey = `bajaj-bank-draft:${caseId || "new"}`;
+            }
+            localStorage.setItem(draftKey, JSON.stringify(next));
+          } catch (e) {
+            console.error("Draft auto-save failed:", e);
+          }
+          return next;
+        });
+      }
+      if (typeof setEditDataDirect === "function") {
+        setEditDataDirect((prev) => ({ ...(prev || {}), ...finalData }));
+      }
+
       setFormData(finalData);
       setUploadedPhotoUrls(photoUrls);
       setUploadedVideoUrls(videoUrls);
@@ -2299,3 +2321,4 @@ const AdvancedAutoFillForm = ({
 };
 
 export default AdvancedAutoFillForm;
+

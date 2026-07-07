@@ -398,7 +398,7 @@
 //   useEffect(() => {
 //     const src = editData || data;
 //     if (src) setForm((prev) => ({ ...prev, ...src }));
-//   }, [editData, data]);
+//   }, [editData, data, extractedData]);
 
 //   const handleChange = useCallback((field, value) => {
 //     setForm((prev) => {
@@ -1574,7 +1574,7 @@ const PropertyDetailsForm = ({ data, editData, extractedData, onSave, onSaveAndN
     setTimeout(() => {
       hydratingSavedFloorsRef.current = false;
     }, 0);
-  }, [editData, data]);
+  }, [editData, data, extractedData]);
 
   useEffect(() => {
     const closeFloorDropdown = (event) => {
@@ -2539,3 +2539,4 @@ const PropertyDetailsForm = ({ data, editData, extractedData, onSave, onSaveAndN
 };
 
 export default PropertyDetailsForm;
+

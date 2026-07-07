@@ -125,6 +125,9 @@ const inferUsage = (usage = "") => {
 
   if (!raw.trim()) return "";
   if (
+    raw.includes("mixed") ||
+    raw.includes("shop") ||
+    raw.includes("godown") ||
     raw.includes("commercial") ||
     raw.includes("vyavsayik") ||
     raw.includes("vanijyik")
@@ -159,6 +162,54 @@ const getValue = (...values) => {
   return "";
 };
 
+const getFirstPartyName = (parties = []) => {
+  if (!Array.isArray(parties) || parties.length === 0) return "";
+  const first = parties.find((party) => party && (party.name || party.full_name)) || parties[0];
+  return getValue(first?.name, first?.full_name);
+};
+
+const hasRelationshipMarker = (value = "") => /\b(S\/?o|D\/?o|W\/?o|C\/?o|H\/?o|Late)\b/i.test(String(value || ""));
+
+const preferFullPartyName = (...values) => {
+  const candidates = values.filter((value) => value !== null && value !== undefined && value !== "");
+  return candidates.find(hasRelationshipMarker) || candidates[0] || "";
+};
+
+const isUsefulName = (value = "") => {
+  const text = String(value || "").trim();
+  if (!text) return false;
+  if (/^(yes|no|na|n\/a|true|false)$/i.test(text)) return false;
+  if (text.length < 3) return false;
+  return /[a-z]/i.test(text);
+};
+
+const getUsefulName = (...values) => {
+  for (const value of values) {
+    if (isUsefulName(value)) return value;
+  }
+  return "";
+};
+
+const extractAmountText = (...values) => {
+  for (const value of values) {
+    const text = String(value || "");
+    const rupeeMatch = text.match(/(?:rs\.?|inr)\s*([\d,]+(?:\.\d+)?)/i);
+    if (rupeeMatch) return rupeeMatch[1].replace(/,/g, "");
+
+    const valueMatch = text.match(/(?:sale\s*(?:amount|value)|total\s*value|consideration)\D{0,30}([\d,]+(?:\.\d+)?)/i);
+    if (valueMatch) return valueMatch[1].replace(/,/g, "");
+  }
+  return "";
+};
+
+const numberOnlyText = (...values) => {
+  for (const value of values) {
+    const match = String(value || "").match(/[\d.]+/);
+    if (match) return match[0];
+  }
+  return "";
+};
+
 const buildFlatPayload = (rawResult = {}) => {
   const result = normalizeObject(rawResult);
   const property = result.property || {};
@@ -177,6 +228,20 @@ const buildFlatPayload = (rawResult = {}) => {
   const setbacks = property.setbacks || {};
   const amenities = property.surrounding_amenities || {};
   const riskFlags = property.risk_flags || {};
+const buyerName = getFirstPartyName(result.buyer);
+  const sellerName = getFirstPartyName(result.seller);
+  const applicantName = preferFullPartyName(property.applicant_name, buyerName, basic.client_name, property.owner_name);
+  const ownerName = preferFullPartyName(property.owner_name, buyerName, property.applicant_name);
+  const personMetName = getUsefulName(property.duringPropertyVisit, property.contact_person, property.person_met_at_site, propertyDetails.name_of_occupant, applicantName);
+  const totalValue = getValue(
+    valuation.total_value,
+    extractAmountText(
+      valuation.total_value,
+      property.document_details?.agreement_to_sale_details,
+      property.document_details?.sale_deed_details,
+      result.document_details?.agreement_to_sale_details
+    )
+  );
   const rawAddress = getValue(
     address.full_address,
     property.site_address,
@@ -238,13 +303,15 @@ const buildFlatPayload = (rawResult = {}) => {
     photo_analysis: result.photo_analysis || [],
     audit_notes: result.audit_notes || [],
 
-    customerName: getValue(property.applicant_name, property.owner_name),
-    propertyOwnerName: getValue(property.owner_name, property.applicant_name),
-    personMetDuringVisit: getValue(property.contact_person, property.duringPropertyVisit),
-    visitedPersonName: getValue(property.contact_person, property.duringPropertyVisit),
+    customerName: applicantName,
+    applicantName,
+    propertyOwnerName: ownerName,
+    sellerName,
+    personMetDuringVisit: personMetName,
+    visitedPersonName: personMetName,
     contactNumber,
     customerNo: contactNumber,
-    personName: getValue(property.contact_person, property.applicant_name, property.owner_name),
+    personName: personMetName,
     personContact: contactNumber,
 
     fileNo: bankSpecific.file_no || "",
@@ -303,7 +370,7 @@ const buildFlatPayload = (rawResult = {}) => {
 
     unitType,
     propertySubType: property.property_sub_type || "",
-    typeOfStructure: getValue(accommodation.type_of_structure, property.property_type),
+    typeOfStructure: getValue(accommodation.type_of_structure, structure.type_of_masonry, structure.roof_type, property.property_type),
     zone: useType,
     usageOfProperty: useType,
     sanctionUsage: getValue(property.sanction_usage, useType),
@@ -375,6 +442,7 @@ const buildFlatPayload = (rawResult = {}) => {
     ),
 
     plotArea,
+    plotAreaSqft: numberOnlyText(plotArea),
     landArea: plotArea,
     LandArea: getValue(property.LandArea, plotArea),
     landSiteArea: plotArea,
@@ -447,13 +515,13 @@ const buildFlatPayload = (rawResult = {}) => {
     amenitiesRate: valuation.amenities_rate || "",
     landRate: getValue(valuation.land_rate, valuation.plot_area_physical_rate),
     constructionRate: valuation.construction_rate || "",
-    totalValue: valuation.total_value || "",
-    distressValue: valuation.distress_value || "",
+    totalValue,
+    distressValue: getValue(valuation.distress_value, totalValue ? String(Math.round(Number(totalValue) * 0.8)) : ""),
     insuranceValue: valuation.insurance_value || "",
     governmentValue: valuation.government_value || "",
     completionPercentage: valuation.completion_percentage || "",
     recommendationPercentage: valuation.recommendation_percentage || "",
-    realizableValue: valuation.total_value || "",
+    realizableValue: totalValue,
     constructionStage: getValue(property.construction_stage, valuation.construction_status),
     constructionStatusPercent: valuation.completion_percentage || "",
 
@@ -507,11 +575,14 @@ const buildFlatPayload = (rawResult = {}) => {
     conversionDetails: property.document_details?.conversion_details || "",
 
     airport: amenities.airport || "",
+    busStop: amenities.bus_stop || "",
     busStopAmenity: amenities.bus_stop || "",
     metroStation: amenities.metro_station || "",
+    railwayStation: amenities.railway_station || "",
     railwayStationAmenity: amenities.railway_station || "",
     college: amenities.college || "",
     school: amenities.school || "",
+    hospital: amenities.hospital || "",
     hospitalAmenity: amenities.hospital || "",
     superMarket: amenities.super_market || "",
     mall: amenities.mall || "",
@@ -541,30 +612,84 @@ const buildFlatPayload = (rawResult = {}) => {
   };
 };
 
-const extractJsonFromText = (text = "") => {
-  const cleaned = String(text || "")
-    .replace(/```json/gi, "")
-    .replace(/```/g, "")
-    .trim();
+const stripJsonWrappers = (text = "") => String(text || "")
+  .replace(/^\uFEFF/, "")
+  .replace(/```(?:json)?/gi, "")
+  .replace(/```/g, "")
+  .trim();
 
-  const firstBrace = cleaned.indexOf("{");
-  const lastBrace = cleaned.lastIndexOf("}");
+const findBalancedJsonCandidate = (text = "") => {
+  const cleaned = stripJsonWrappers(text);
+  const start = cleaned.search(/[\[{]/);
 
-  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
+  if (start === -1) return "";
+
+  const opening = cleaned[start];
+  const closing = opening === "{" ? "}" : "]";
+  const stack = [];
+  let inString = false;
+  let escaped = false;
+
+  for (let index = start; index < cleaned.length; index++) {
+    const char = cleaned[index];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (char === "\\") {
+        escaped = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (char === '"') {
+      inString = true;
+      continue;
+    }
+
+    if (char === "{" || char === "[") {
+      stack.push(char);
+      continue;
+    }
+
+    if (char === "}" || char === "]") {
+      const expectedOpening = char === "}" ? "{" : "[";
+      if (stack[stack.length - 1] !== expectedOpening) return "";
+      stack.pop();
+      if (stack.length === 0 && char === closing) {
+        return cleaned.slice(start, index + 1);
+      }
+    }
+  }
+
+  return "";
+};
+
+const repairJsonText = (rawJson = "") => rawJson
+  .replace(/[��]/g, '"')
+  .replace(/[��]/g, "'")
+  .replace(/,\s*([}\]])/g, "$1")
+  .replace(/:\s*undefined\b/g, ': ""')
+  .replace(/:\s*NaN\b/g, ': ""');
+
+const parseModelJson = (text = "") => {
+  const rawJson = findBalancedJsonCandidate(text);
+
+  if (!rawJson) {
     throw new Error("AI response did not contain valid JSON.");
   }
 
-  return cleaned.slice(firstBrace, lastBrace + 1);
-};
-
-const parseModelJson = (text = "") => {
-  const rawJson = extractJsonFromText(text);
-
   try {
     return JSON.parse(rawJson);
-  } catch {
-    const repaired = rawJson.replace(/,\s*([}\]])/g, "$1");
-    return JSON.parse(repaired);
+  } catch (firstError) {
+    try {
+      return JSON.parse(repairJsonText(rawJson));
+    } catch (secondError) {
+      secondError.message = `AI response JSON parse failed: ${secondError.message}`;
+      throw secondError;
+    }
   }
 };
 
@@ -998,6 +1123,61 @@ const uploadToImageKit = async (file, folder = "site-visit-photos") => {
 
 const XLSX = require("xlsx");
 
+const getClaudeModelCandidates = () => {
+  const configuredModel = process.env.CLAUDE_MODEL || process.env.ANTHROPIC_MODEL;
+  return [
+    configuredModel,
+    "claude-sonnet-4-20250514",
+    "claude-3-7-sonnet-20250219",
+    "claude-3-5-sonnet-20241022",
+    "claude-3-5-haiku-20241022",
+  ].filter(Boolean);
+};
+
+const fetchAvailableClaudeModel = async (headers) => {
+  try {
+    const response = await axios.get("https://api.anthropic.com/v1/models", { headers });
+    const models = Array.isArray(response.data?.data) ? response.data.data : [];
+    const preferred = models.find((model) => /sonnet/i.test(model.id))
+      || models.find((model) => /opus/i.test(model.id))
+      || models.find((model) => /haiku/i.test(model.id))
+      || models[0];
+    return preferred?.id || null;
+  } catch (error) {
+    console.warn("[Claude API] Could not fetch model list:", error.response?.data?.error?.message || error.message);
+    return null;
+  }
+};
+
+const postClaudeMessage = async ({ headers, system, messagesPrompt, mediaBlocks, model }) => {
+  const validContentBlocks = mediaBlocks.filter(block => {
+    if (!block) return false;
+    if (block.type === "text" && !block.text) return false;
+    if ((block.type === "image" || block.type === "document") && (!block.source || !block.source.data)) return false;
+    return true;
+  });
+
+  const requestBody = {
+    model,
+    max_tokens: 8192,
+    system: system,
+    messages: [
+      {
+        role: "user",
+        content: [
+          ...validContentBlocks,
+          {
+            type: "text",
+            text: messagesPrompt,
+          },
+        ],
+      },
+    ],
+  };
+
+  return axios.post("https://api.anthropic.com/v1/messages", requestBody, { headers });
+};
+
 const callClaudeAPI = async (system, messagesPrompt, mediaBlocks = []) => {
   const api_key = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
   const gemini_key = process.env.GEMINI_API_KEY;
@@ -1019,39 +1199,43 @@ const callClaudeAPI = async (system, messagesPrompt, mediaBlocks = []) => {
         headers["anthropic-beta"] = "pdfs-2024-09-25";
       }
 
-      const validContentBlocks = mediaBlocks.filter(block => {
-        if (!block) return false;
-        if (block.type === "text" && !block.text) return false;
-        if ((block.type === "image" || block.type === "document") && (!block.source || !block.source.data)) return false;
-        return true;
-      });
+      let lastClaudeError = null;
+      const triedModels = new Set();
+      const modelCandidates = getClaudeModelCandidates();
 
-      const requestBody = {
-        model: "claude-3-5-sonnet-20241022",
-        max_tokens: 8192,
-        system: system,
-        messages: [
-          {
-            role: "user",
-            content: [
-              ...validContentBlocks,
-              {
-                type: "text",
-                text: messagesPrompt,
-              },
-            ],
-          },
-        ],
-      };
+      for (const model of modelCandidates) {
+        triedModels.add(model);
+        try {
+          console.log(`[Claude API] Requesting advanced autofill extraction with ${model} (${hasPdf ? "with PDF" : "standard"})...`);
+          const response = await postClaudeMessage({ headers, system, messagesPrompt, mediaBlocks, model });
+          return (response.data?.content || []).filter((block) => block?.type === "text" && block.text).map((block) => block.text).join("\n") || response.data?.content?.[0]?.text || "";
+        } catch (error) {
+          lastClaudeError = error;
+          const status = error.response?.status;
+          console.warn(`[Claude API] Model ${model} failed:`, error.response?.data?.error?.message || error.message);
+          if (status && status !== 404) break;
+        }
+      }
 
-      console.log(`[Claude API] Requesting advanced autofill extraction (${hasPdf ? "with PDF" : "standard"})...`);
-      const response = await axios.post("https://api.anthropic.com/v1/messages", requestBody, { headers });
-      
-      return response.data?.content?.[0]?.text || "";
+      if (lastClaudeError?.response?.status === 404) {
+        const discoveredModel = await fetchAvailableClaudeModel(headers);
+        if (discoveredModel && !triedModels.has(discoveredModel)) {
+          console.log(`[Claude API] Retrying with discovered model ${discoveredModel}...`);
+          const response = await postClaudeMessage({ headers, system, messagesPrompt, mediaBlocks, model: discoveredModel });
+          return (response.data?.content || []).filter((block) => block?.type === "text" && block.text).map((block) => block.text).join("\n") || response.data?.content?.[0]?.text || "";
+        }
+      }
+
+      throw lastClaudeError || new Error("Claude extraction failed.");
     } catch (claudeError) {
-      console.error("[Claude API] Extraction failed:", claudeError.message);
+      console.error("[Claude API] Extraction failed:", claudeError.response?.data?.error?.message || claudeError.message);
       if (!gemini_key) {
-        throw new Error("Anthropic API returned 404 (Model Not Found). This usually indicates your Claude API Key is inactive, unfunded, or has zero credits. Please update CLAUDE_API_KEY or configure a GEMINI_API_KEY in your Backend/.env file.");
+        const status = claudeError.response?.status;
+        const apiMessage = claudeError.response?.data?.error?.message;
+        if (status === 404) {
+          throw new Error(`Anthropic API returned 404 (Model Not Found). Set CLAUDE_MODEL to an available Anthropic model or configure GEMINI_API_KEY in Backend/.env.${apiMessage ? ` Anthropic message: ${apiMessage}` : ""}`);
+        }
+        throw new Error(apiMessage || claudeError.message || "Claude extraction failed.");
       }
       console.log("[Claude API] Falling back to Gemini API...");
     }
@@ -1201,10 +1385,11 @@ const getFileContentBlock = async (file) => {
 const advancedAutofill = async (req, res) => {
   try {
     const api_key = process.env.CLAUDE_API_KEY || process.env.ANTHROPIC_API_KEY;
-    if (!api_key) {
+    const gemini_key = process.env.GEMINI_API_KEY;
+    if (!api_key && !gemini_key) {
       return res.status(500).json({
         success: false,
-        message: "No Claude API key (CLAUDE_API_KEY or ANTHROPIC_API_KEY) found on the server.",
+        message: "No AI API key found on the server. Configure CLAUDE_API_KEY/ANTHROPIC_API_KEY or GEMINI_API_KEY in Backend/.env.",
       });
     }
 
@@ -1569,16 +1754,40 @@ const advancedAutofill = async (req, res) => {
       mediaBlocks
     );
 
-    const parsed     = parseModelJson(responseText);
+    const fs = require("fs");
+    const path = require("path");
+    const debugPath = path.join(__dirname, "../autofill-debug.json");
+
+    let parsed;
+    try {
+      parsed = parseModelJson(responseText);
+    } catch (parseError) {
+      fs.writeFileSync(
+        debugPath,
+        JSON.stringify({
+          timestamp: new Date().toISOString(),
+          parseError: parseError.message,
+          rawAiResponse: responseText,
+          rawAiResponsePreview: String(responseText || "").slice(0, 2000),
+        }, null, 2)
+      );
+
+      const repairedResponseText = await callClaudeAPI(
+        "You repair AI extraction output into strict JSON. Return ONLY valid JSON. No markdown, no explanation, no backticks.",
+        `Convert this response into the exact JSON object requested by the original bank autofill schema. Preserve all extracted values. If a field is unknown, use an empty string. Response to repair:\n\n${String(responseText || "").slice(0, 12000)}`,
+        []
+      );
+      parsed = parseModelJson(repairedResponseText);
+    }
+
     const normalized = normalizeObject(parsed);
     const flatPayload = buildFlatPayload(normalized);
 
-    const fs = require("fs");
-    const path = require("path");
     fs.writeFileSync(
-      path.join(__dirname, "../autofill-debug.json"),
+      debugPath,
       JSON.stringify({
         timestamp: new Date().toISOString(),
+        rawAiResponsePreview: String(responseText || "").slice(0, 2000),
         requestFiles: {
           gpsFiles: filesByCategory.gpsFiles.map(f => f.originalname),
           atsFiles: filesByCategory.atsFiles.map(f => f.originalname),
@@ -1630,4 +1839,5 @@ const advancedAutofill = async (req, res) => {
 module.exports = {
   advancedAutofill,
 };
+
 

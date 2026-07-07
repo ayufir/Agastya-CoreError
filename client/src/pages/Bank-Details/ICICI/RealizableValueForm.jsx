@@ -9,13 +9,21 @@ function getFloorLabel(key) {
   return `Floor ${n}`;
 }
 
-const plotAreaRows = (rows, area) => {
+const firstNumber = (...values) => {
+  for (const value of values) {
+    const match = String(value || "").replace(/,/g, "").match(/[\d.]+/);
+    if (match) return match[0];
+  }
+  return "";
+};
+
+const plotAreaRows = (rows, area, rate) => {
   const base = Array.isArray(rows) && rows.length
     ? rows
     : [{ description: "Plot Area (Sqft)", area: "", rate: "" }];
   return base.map((row, index) =>
     index === 0
-      ? { ...row, description: "Plot Area (Sqft)", area: area || row.area || "" }
+      ? { ...row, description: "Plot Area (Sqft)", area: area || row.area || "", rate: rate || row.rate || "" }
       : row
   );
 };
@@ -132,8 +140,10 @@ const RealizableValueForm = ({ data, editData, extractedData, onSave, onSaveAndN
     if (Object.keys(src).length === 0 && Object.keys(autofillData).length === 0) return;
 
     setMethodology(autofillData.valuationMethodology || src.valuationMethodology || src.methodology || "");
-    setLandRows(plotAreaRows(src.landRows, autofillData.plotAreaSqft || src.plotAreaSqft));
-    setSaleLandRows(plotAreaRows(src.saleLandRows, autofillData.plotAreaSqft || src.plotAreaSqft));
+    const extractedArea = firstNumber(autofillData.plotAreaSqft, autofillData.plotAreaPhysical, autofillData.landArea, src.plotAreaSqft, src.plotAreaPhysical, src.landArea);
+    const extractedRate = firstNumber(autofillData.landDataRatePerSqFt, autofillData.landRate, autofillData.plotAreaPhysicalRate, src.landDataRatePerSqFt, src.landRate, src.plotAreaPhysicalRate);
+    setLandRows(plotAreaRows(src.landRows, extractedArea, extractedRate));
+    setSaleLandRows(plotAreaRows(src.saleLandRows, extractedArea, extractedRate));
     if (Array.isArray(src.amenityRows)) setAmenityRows(src.amenityRows);
     if (src.scArea !== undefined) setScArea(src.scArea);
     if (src.scApproved !== undefined) setScApproved(src.scApproved);
@@ -824,3 +834,4 @@ const RealizableValueForm = ({ data, editData, extractedData, onSave, onSaveAndN
 };
 
 export default RealizableValueForm;
+

@@ -349,6 +349,66 @@ const normalizeDemolitionRiskDetails = (val) => {
   return "NA";
 };
 
+
+const normalizePlanAuthority = (val, fallback = "NA") => {
+  const s = String(val || "").toUpperCase();
+  if (!s) return fallback;
+  if (s.includes("MUNICIPAL") || s.includes("NAGAR") || s.includes("CORPORATION") || s.includes("NIGAM")) return "MUNICIPAL";
+  if (s.includes("GRAM") || s.includes("PANCHAYAT") || s.includes("GP")) return "GP";
+  if (s.includes("ZILLA") || s.includes("ZP")) return "ZP";
+  if (s.includes("TOWN") || s.includes("COUNTRY") || s.includes("TP") || s.includes("T&CP")) return "TP";
+  if (s.includes("ARCHITECT")) return "ARCHITECT";
+  if (s.includes("SURVEYOR")) return "LICENSED SURVEYOR";
+  if (s.includes("YES")) return "YES";
+  if (s.includes("NO")) return "NO";
+  if (s.includes("NA") || s.includes("N/A") || s.includes("NOT")) return "NA";
+  return fallback;
+};
+
+const firstText = (...values) => {
+  for (const value of values) {
+    if (value !== undefined && value !== null && String(value).trim() !== "") return String(value).trim();
+  }
+  return "";
+};
+
+const extractDateText = (...values) => {
+  const text = firstText(...values);
+  const match = text.match(/\b\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}\b|\b\d{4}[\/\-.]\d{1,2}[\/\-.]\d{1,2}\b/);
+  return match ? match[0] : "";
+};
+
+const buildHomeFirstDocuments = (extracted = {}, property = {}, previousDocs = []) => {
+  const municipal = property.municipal_details || {};
+  const legal = property.legal_and_compliance || {};
+  const docDetails = property.document_details || {};
+  const prevByType = new Map((Array.isArray(previousDocs) ? previousDocs : []).map((doc) => [doc.type, doc]));
+  const baseAuthority = firstText(extracted.approvingAuthority, extracted.sanctionAuthorityName, legal.approving_authority, municipal.municipal_compliance);
+  const sanctionText = firstText(extracted.sanctionedPlanDetails, docDetails.sanctioned_plan_details, municipal.sanction_plan_provided, municipal.municipal_compliance);
+  const ccText = firstText(extracted.ccOcDetails, docDetails.cc_oc_details);
+  const conversionText = firstText(extracted.conversionDetails, docDetails.conversion_details);
+
+  const makeDoc = (key, type, authority, details, date) => {
+    const prev = prevByType.get(type) || {};
+    return {
+      key,
+      type,
+      approvingAuthority: firstText(authority, prev.approvingAuthority),
+      selectedApprovingAuthority: firstText(authority, prev.selectedApprovingAuthority, prev.approvingAuthority),
+      approvalDetails: firstText(details, prev.approvalDetails),
+      approvalDate: firstText(date, prev.approvalDate),
+    };
+  };
+
+  return [
+    makeDoc("1", "NA Converted", normalizePlanAuthority(conversionText, conversionText ? "YES" : "NA"), conversionText, extractDateText(conversionText)),
+    makeDoc("2", "Layout Plan", normalizePlanAuthority(baseAuthority, "NA"), sanctionText, extractDateText(sanctionText, municipal.date_of_sanction, extracted.dateOfSanction)),
+    makeDoc("3", "Building Plan", normalizePlanAuthority(baseAuthority, "NA"), sanctionText, extractDateText(sanctionText, municipal.date_of_sanction, extracted.dateOfSanction)),
+    makeDoc("4", "Commencement Certificate", normalizePlanAuthority(baseAuthority, "NA"), firstText(extracted.commencementCertificateDetails, sanctionText), extractDateText(extracted.commencementCertificateDetails, municipal.date_of_sanction, extracted.dateOfSanction)),
+    makeDoc("5", "Occupancy / Completion / Building Usage Certificate", normalizePlanAuthority(ccText, ccText ? "YES" : "NA"), ccText, extractDateText(ccText)),
+    makeDoc("6", "Sub Plotting Plan", normalizePlanAuthority(extracted.subPlottingPlanDetails, "NA"), firstText(extracted.subPlottingPlanDetails), extractDateText(extracted.subPlottingPlanDetails)),
+  ];
+};
 const normalizeBoundariesMatching = (val) => {
   if (!val) return undefined;
   const s = String(val).toUpperCase();
@@ -520,6 +580,9 @@ const normalizeQualityOfConstruction = (val) => {
       electricityAvailability: normalizeYesNo(extracted.electricityAvailability || extracted.electricityAvailable || infra.electricity_available || prev.electricityAvailability || "YES"),
       waterAvailability: normalizeYesNo(extracted.waterAvailability || extracted.waterSupply || infra.water_supply || prev.waterAvailability || "YES"),
       drainageAvailability: normalizeYesNo(extracted.drainageAvailability || extracted.sewerLineConnected || infra.sewer_line_connected || prev.drainageAvailability || "YES"),
+
+      // Property Plan (Section 5)
+      documents: buildHomeFirstDocuments(extracted, p, prev.documents),
 
       // NDMA Guidelines (Section 6)
       seismicZone: normalizeSeismicZone(extracted.seismicZone || struct.seismic_zone || prev.seismicZone || "II"),
@@ -2182,3 +2245,5 @@ const HomeFirstBankWithErrorBoundary = (props) => (
 );
 
 export default HomeFirstBankWithErrorBoundary;
+
+
