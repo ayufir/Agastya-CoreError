@@ -176,11 +176,9 @@ const MyWorklist = () => {
     const map = {};
 
     cases.forEach((item) => {
-      let engineer = item.engineer;
-      if (!engineer) {
-        const engObj = item.engineerDetails || item.assignedTo || item.fieldOfficer || item.employee;
-        engineer = engObj?.name || "Unassigned";
-      }
+      const assignedFO = item.assignedTo;
+      // Use the actual assigned user object as the single source of truth
+      const engineer = (assignedFO && typeof assignedFO === "object") ? assignedFO.name : "Unassigned";
 
       if (!map[engineer]) {
         map[engineer] = {
@@ -194,29 +192,22 @@ const MyWorklist = () => {
       }
 
       const row = map[engineer];
-      row.request++;
 
       const statusRaw = item.status || item.caseStatus || item.portalStatus || "";
       const s = statusRaw.toString().toLowerCase().trim().replace(/\s+/g, " ");
 
       const inQuery = s.includes("query");
-      const isSubmitted = s.includes("submitted") || item.isReportSubmitted === true;
-      const isApproved = s.includes("approved");
-      const isCancelled = s.includes("cancel");
-      const pendingApproval = isSubmitted && !isApproved && !isCancelled;
+      const pendingApproval = item.isReportSubmitted === true;
 
-      const inProgress = (
-        s.includes("working") ||
-        s.includes("assigned") ||
-        s.includes("progress") ||
-        s.includes("visited") ||
-        s.includes("reported") ||
-        s.includes("reviewed")
-      ) && !pendingApproval;
+      // New Case Request: Assigned but not accepted yet (approvalStatus is Pending/Work in Progress, and not yet submitted, and not in query)
+      const isNew = (item.approvalStatus === "Pending" || item.approvalStatus === "Work in Progress") && !item.isReportSubmitted && !inQuery;
+
+      // In Progress (WIP): Accepted by FO, not yet submitted, not in query
+      const inProgress = item.approvalStatus !== "Pending" && item.approvalStatus !== "Work in Progress" && !item.isReportSubmitted && !inQuery;
 
       let approachingTAT = false;
       const createdStr = item.createdAt || item.uploadDate || item.createdDate || item.submissionDate;
-      if (createdStr && (inProgress || s.includes("assigned"))) {
+      if (createdStr && (inProgress || isNew)) {
         const d = new Date(createdStr);
         if (!isNaN(d.getTime())) {
           const hours = (new Date() - d) / (1000 * 60 * 60);
@@ -226,6 +217,7 @@ const MyWorklist = () => {
         }
       }
 
+      if (isNew) row.request++;
       if (inProgress) row.inProgress++;
       if (inQuery) row.inQuery++;
       if (pendingApproval) row.pendingApproval++;
@@ -233,7 +225,7 @@ const MyWorklist = () => {
     });
 
     return Object.values(map)
-      .filter((eng) => eng.name !== "Unassigned" || eng.request > 0)
+      .filter((eng) => eng.name !== "Unassigned" || (eng.request + eng.inProgress + eng.inQuery + eng.pendingApproval) > 0)
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [cases]);
 
