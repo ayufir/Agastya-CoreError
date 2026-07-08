@@ -1,60 +1,36 @@
 {
-  "timestamp": "2026-07-07T10:50:48.802Z",
-  "rawAiResponsePreview": "```json\n{\n  \"document_type\": \"Registered Sale Deed (Registry) with General Power of Attorney\",\n  \"registration_number\": \"\",\n  \"registration_date\": \"23/10/2013\",\n  \"seller\": [\n    {\n      \"name\": \"Dr. Dilip Singh Sisodiya\",\n      \"relation\": \"S/o\",\n      \"relation_name\": \"R.C. Sisodiya\",\n      \"address\": \"F-4, Indraprasth Colony, Airport Road, Bhopal (acting through Registered General Power of Attorney holder Sanjay Kashyap S/o Rajendra Kashyap, House No. 17/1, Risaldar Colony, Chhola, Bhopal, Proprietor - Messrs Mansarovar Real Estate, Bhopal)\"\n    }\n  ],\n  \"buyer\": [\n    {\n      \"name\": \"Brihma Singh\",\n      \"relation\": \"S/o\",\n      \"relation_name\": \"Dasrath\",\n      \"address\": \"141, Village Fanda Kala, Tehsil Huzur, District Bhopal (M.P.)\"\n    }\n  ],\n  \"property\": {\n    \"applicant_name\": \"Brimha Singh Solanki\",\n    \"owner_name\": \"Brihma Singh S/o Dasrath\",\n    \"contact_person\": \"Brimha Singh Solanki\",\n    \"duringPropertyVisit\": \"Yes\",\n    \"contact_number\": \"8319551529\",\n    \"relationship_met_at_site\": \"Owner (Self)\",\n    \"person_met_at_site_contact\": \"8319551529\",\n    \"number_of_tenants\": \"\",\n    \"tenant_vintage\": \"\",\n    \"documents_provided\": \"Sale Deed\",\n    \"property_code\": \"265595\",\n    \"property_name\": \"Mansarovar Residency\",\n    \"property_type\": \"Residential cum Commercial\",\n    \"property_sub_type\": \"Independent Building (G+2)\",\n    \"property_use\": \"Mixed (Commercial Ground Floor + Residential Upper Floors)\",\n    \"sanction_usage\": \"Residential\",\n    \"actual_usage\": \"Ground Floor - Shop/Godown (Commercial); First & Second Floor - Residential\",\n    \"construction_stage\": \"Completed (Old, completed in year 2015)\",\n    \"plot_area\": \"1250 sq.ft\",\n    \"plot_dimensions\": \"25 ft x 50 ft\",\n    \"dimension_width\": \"25\",\n    \"dimension_depth\": \"50\",\n    \"latitude\": \"23.228582\",\n    \"longitude\": \"77.208680\",\n    \"dateOfReport\": \"25/05/2026\",\n    \"boundary_matching\": \"Partial match - East/North boundaries align with deed (Kachcha Road/Main Road), West/South boundaries as pe",
+  "timestamp": "2026-07-08T06:44:31.605Z",
+  "rawAiResponsePreview": "```json\n{\n  \"document_type\": \"Sale Deed (Vikray Patra)\",\n  \"registration_number\": \"16/2\",\n  \"registration_date\": \"23/10/2013\",\n  \"seller\": [\n    {\n      \"name\": \"Dr. Dileep Singh Sisodiya\",\n      \"relation\": \"S/o\",\n      \"relation_name\": \"R.C. Sisodiya\",\n      \"address\": \"F-4, Indraprasth Colony, Airport Road, Bhopal (through registered POA holder Sanjay Kashyap S/o Rajendra Kashyap, resident House No. 17/1, Risaldar Colony, Chhola, Bhopal, Proprietor - M/s Mansarovar Real Estate, Bhopal)\"\n    }\n  ],\n  \"buyer\": [\n    {\n      \"name\": \"Brihma Singh\",\n      \"relation\": \"S/o\",\n      \"relation_name\": \"Dasrath\",\n      \"address\": \"House No. 141, Village Fanda Kala, Tehsil Hujur, District Bhopal (M.P.)\"\n    }\n  ],\n  \"property\": {\n    \"applicant_name\": \"Brimha Singh Solanki\",\n    \"owner_name\": \"Brihma Singh S/o Dasrath\",\n    \"contact_person\": \"Brimha Singh Solanki\",\n    \"duringPropertyVisit\": \"Owner met at site\",\n    \"contact_number\": \"8319551529\",\n    \"relationship_met_at_site\": \"Owner\",\n    \"person_met_at_site_contact\": \"8319551529\",\n    \"number_of_tenants\": \"\",\n    \"tenant_vintage\": \"\",\n    \"documents_provided\": \"Sale Deed / ATS\",\n    \"property_code\": \"265595\",\n    \"property_name\": \"Mansarovar Residency\",\n    \"property_type\": \"Residential cum Commercial\",\n    \"property_sub_type\": \"Independent Building\",\n    \"property_use\": \"Mixed (Residential + Commercial)\",\n    \"sanction_usage\": \"Residential\",\n    \"actual_usage\": \"Mixed Use (Shop/Godown at Ground Floor, Residential upper floors)\",\n    \"construction_stage\": \"Completed\",\n    \"plot_area\": \"1250 sq.ft (116.17 sq.m)\",\n    \"plot_dimensions\": \"25' x 50'\",\n    \"dimension_width\": \"25 ft\",\n    \"dimension_depth\": \"50 ft\",\n    \"latitude\": \"23.228720\",\n    \"longitude\": \"77.208657\",\n    \"dateOfReport\": \"25/05/2026\",\n    \"boundary_matching\": \"Matching\",\n    \"property_entrance_facing\": \"East\",\n    \"floor_number\": \"Ground + 2 Upper Floors + Basement/Stilt\",\n    \"count_of_properties\": \"1\",\n    \"evaluation_mode\": \"Physical Site Visit\",\n   ",
   "requestFiles": {
     "gpsFiles": [
-      "WhatsApp_Image_2026-05-25_at_5.30.39_PM_tllrczxYl.jpeg"
+      "WhatsApp_Image_2026-05-25_at_5.30.39_PM_GHiI2nEOF.jpeg"
     ],
     "atsFiles": [
-      "registry_documents_sWwpDHjjV.pdf"
+      "registry_documents_6vWpS0L4b.pdf"
     ],
     "siteVisitPhotos": [
-      "WhatsApp_Image_2026-05-25_at_5.29.59_PM_fhpCPXvwJ.jpeg",
-      "WhatsApp_Image_2026-05-25_at_5.30.00_PM_l1eB8ocFj.jpeg",
-      "WhatsApp_Image_2026-05-25_at_5.30.03_PM_FuAyRzIex.jpeg",
-      "WhatsApp_Image_2026-05-25_at_5.30.07_PM__HtBjBgJw.jpeg",
-      "WhatsApp_Image_2026-05-25_at_5.30.08_PM__1__5LVj8UJ2-.jpeg",
-      "WhatsApp_Image_2026-05-25_at_5.30.08_PM__2__xn_kBnpAj.jpeg"
+      "WhatsApp_Image_2026-05-25_at_5.30.02_PM__1__GUq9vnQ-t.jpeg",
+      "WhatsApp_Image_2026-05-25_at_5.30.02_PM_UJCK18zBJ.jpeg"
     ],
     "siteVisitVideo": []
   },
   "atsDocumentUrls": [
     {
-      "url": "https://ik.imagekit.io/54awj0ru5/uploads/registry_documents_sWwpDHjjV.pdf",
-      "fileId": "6a4cd67f5c7cd75eb8ab5516",
-      "name": "registry_documents_sWwpDHjjV.pdf"
+      "url": "https://ik.imagekit.io/54awj0ru5/uploads/registry_documents_6vWpS0L4b.pdf",
+      "fileId": "6a4df0c45c7cd75eb8b919d4",
+      "name": "registry_documents_6vWpS0L4b.pdf"
     }
   ],
   "siteVisitPhotoUrls": [
     {
-      "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.29.59_PM_fhpCPXvwJ.jpeg",
-      "fileId": "6a4cd69a5c7cd75eb8abf0d9",
-      "name": "WhatsApp_Image_2026-05-25_at_5.29.59_PM_fhpCPXvwJ.jpeg"
+      "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.02_PM__1__GUq9vnQ-t.jpeg",
+      "fileId": "6a4df1065c7cd75eb8baf94c",
+      "name": "WhatsApp_Image_2026-05-25_at_5.30.02_PM__1__GUq9vnQ-t.jpeg"
     },
     {
-      "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.00_PM_l1eB8ocFj.jpeg",
-      "fileId": "6a4cd69b5c7cd75eb8abf878",
-      "name": "WhatsApp_Image_2026-05-25_at_5.30.00_PM_l1eB8ocFj.jpeg"
-    },
-    {
-      "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.03_PM_FuAyRzIex.jpeg",
-      "fileId": "6a4cd69d5c7cd75eb8ac075e",
-      "name": "WhatsApp_Image_2026-05-25_at_5.30.03_PM_FuAyRzIex.jpeg"
-    },
-    {
-      "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.07_PM__HtBjBgJw.jpeg",
-      "fileId": "6a4cd69e5c7cd75eb8ac122d",
-      "name": "WhatsApp_Image_2026-05-25_at_5.30.07_PM__HtBjBgJw.jpeg"
-    },
-    {
-      "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.08_PM__1__5LVj8UJ2-.jpeg",
-      "fileId": "6a4cd6a05c7cd75eb8ac18d5",
-      "name": "WhatsApp_Image_2026-05-25_at_5.30.08_PM__1__5LVj8UJ2-.jpeg"
-    },
-    {
-      "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.08_PM__2__xn_kBnpAj.jpeg",
-      "fileId": "6a4cd6a15c7cd75eb8ac21ba",
-      "name": "WhatsApp_Image_2026-05-25_at_5.30.08_PM__2__xn_kBnpAj.jpeg"
+      "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-05-25_at_5.30.02_PM_UJCK18zBJ.jpeg",
+      "fileId": "6a4df1085c7cd75eb8bb002a",
+      "name": "WhatsApp_Image_2026-05-25_at_5.30.02_PM_UJCK18zBJ.jpeg"
     }
   ],
   "siteVisitVideoUrls": []
