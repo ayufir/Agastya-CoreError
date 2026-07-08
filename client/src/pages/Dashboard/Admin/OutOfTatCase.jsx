@@ -36,7 +36,7 @@ const isSameMonth = (date, monthValue) => {
   );
 };
 
-const OutOfTATCase = ({ selectedMonth }) => {
+const OutOfTATCase = ({ selectedMonth, selectedAgent }) => {
   const dispatch = useDispatch();
 
   const {
@@ -90,13 +90,28 @@ const OutOfTATCase = ({ selectedMonth }) => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedZone, selectedMonth, selectedBanks, selectedStatuses, debouncedSearch]);
+  }, [selectedZone, selectedMonth, selectedBanks, selectedStatuses, debouncedSearch, selectedAgent]);
 
   const monthFilteredOutOfTatCases = useMemo(() => {
-    return (outOfTatCases || []).filter((item) =>
+    let list = (outOfTatCases || []).filter((item) =>
       isSameMonth(getCaseDate(item), selectedMonth)
     );
-  }, [outOfTatCases, selectedMonth]);
+
+    if (selectedAgent && selectedAgent !== "All Agents") {
+      list = list.filter((item) => {
+        const eng =
+          item.engineer ||
+          item.engineerName ||
+          item.assignedTo?.name ||
+          item.fieldOfficer?.name ||
+          item.employee?.name ||
+          "N/A";
+        return eng === selectedAgent;
+      });
+    }
+
+    return list;
+  }, [outOfTatCases, selectedMonth, selectedAgent]);
 
   const columns = [
     {

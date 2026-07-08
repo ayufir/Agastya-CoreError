@@ -167,6 +167,42 @@ const FinalSubmittedCases = ({ selectedMonth, preloadedCases }) => {
       render: (_, record) => record?.assignedTo?.name || "N/A",
     },
     {
+      title: "Created By",
+      key: "createdBy",
+      render: (_, record) => {
+        const creator =
+          record.createdBy?.name ||
+          record.submittedBy?.name ||
+          record.engineer ||
+          record.engineerName ||
+          null;
+        const creatorRole =
+          record.createdBy?.role ||
+          record.submittedBy?.role ||
+          null;
+        const now = new Date();
+        const cDate = new Date(record.createdAt || record.uploadDate || "");
+        const isToday =
+          !isNaN(cDate.getTime()) &&
+          cDate.getDate() === now.getDate() &&
+          cDate.getMonth() === now.getMonth() &&
+          cDate.getFullYear() === now.getFullYear();
+        return (
+          <div className="flex flex-col gap-0.5">
+            <span className="font-semibold text-sm text-slate-800">
+              {creator || <span className="text-gray-400">—</span>}
+            </span>
+            {creatorRole && (
+              <span className="text-xs text-slate-400">{creatorRole}</span>
+            )}
+            {isToday && (
+              <span className="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 rounded px-1 inline-block w-fit mt-0.5">📅 Today</span>
+            )}
+          </div>
+        );
+      },
+    },
+    {
       title: "Action",
       key: "action",
       render: (record) => (

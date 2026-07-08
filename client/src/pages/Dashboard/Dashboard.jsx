@@ -1299,7 +1299,7 @@ const Dashboard = () => {
                 />
               )}
               {activeComponent==="CancelCases"     && <CancelledCases selectedMonth={selectedMonth} />}
-              {activeComponent==="Out_Tat_Cases"   && <OutOfTATCase selectedMonth={selectedMonth} />}
+              {activeComponent==="Out_Tat_Cases"   && <OutOfTATCase selectedMonth={selectedMonth} selectedAgent={selectedAgent} />}
               {activeComponent==="Summary"         && <SummaryCard selectedMonth={selectedMonth} />}
             </Suspense>
           </>
