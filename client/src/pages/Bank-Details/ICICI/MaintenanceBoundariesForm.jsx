@@ -672,7 +672,7 @@ const RichTextEditor = ({ value, onChange, maxLength = 1000 }) => {
 };
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
-const MaintenanceBoundariesForm = ({ data, editData, extractedData, onSave, onSaveAndNext, saving, stateRef }) => {
+const MaintenanceBoundariesForm = ({ data, editData, extractedData, onSave, onSaveAndNext, saving, stateRef,constructionStatus  }) => {
   const [form, setForm] = useState({
     // ── Property Maintenance ──
     propertyAge: "",
@@ -711,6 +711,11 @@ const MaintenanceBoundariesForm = ({ data, editData, extractedData, onSave, onSa
     // Remarks (HTML)
     remarks: "",
   });
+  // ── DERIVED STATE ──
+const isResidential = form.propertyType === "residential";
+const subType = form.propertySubType;
+const unitType = form.unitType;
+const isPlot = unitType === "plot" && (isResidential || !!subType);
 
   const [toast, setToast] = useState(null);
   const lcFileInputRef = useRef(null);
@@ -801,7 +806,7 @@ const MaintenanceBoundariesForm = ({ data, editData, extractedData, onSave, onSa
       <div className="mb-wrap">
 
         {/* ══ PROPERTY MAINTENANCE ══════════════════════════════════════════ */}
-        <div className="mb-pm-section">
+     {!isPlot && constructionStatus!=="under_construction" && (  <div className="mb-pm-section">
           <div className="mb-section-title">Property Maintenance</div>
           <div className="mb-pm-grid">
             {/* Property Age */}
@@ -878,6 +883,7 @@ const MaintenanceBoundariesForm = ({ data, editData, extractedData, onSave, onSa
             </div>
           </div>
         </div>
+)}
 
         {/* ══ LEAKAGE & CRACKS ══════════════════════════════════════════════ */}
         <div className="mb-lc-section">

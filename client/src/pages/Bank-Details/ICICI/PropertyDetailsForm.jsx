@@ -1069,6 +1069,12 @@ const UNIT_TYPE_MAP = {
     { value: "nursing_home", label: "Nursing Home" }, { value: "plot", label: "Plot" },
     { value: "godown", label: "Godown" }, { value: "school", label: "School" },
     { value: "warehouse", label: "Warehouse" },
+    { value: "clinic", label: "Clinic" },{ value: "service_apartent", label: "Service apartment" },
+    { value: "restaurant", label: "Restaurant" },{ value: "resort", label: "Resort" },
+    { value: "cinema_hall", label: "Cinema Hall" },{ value: "club_house", label: "Club House" },
+    { value: "coaching_centre", label: "Coaching Centre" },{ value: "petrol_bunk", label: "Petrol Bunk" },
+    { value: "crusher", label: "Crusher" },{ value: "cold_storage", label: "Cold Storage" },
+    { value: "hostel", label: "Hostel" },{ value: "old_age_home", label: "Old age Home" },
   ],
   residential: [
     { value: "bungalow", label: "Bungalow" }, { value: "flat", label: "Flat" },
@@ -1104,51 +1110,164 @@ const OCCUPIED_BY_OPTIONS = [
 ];
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
+// function getFloorLabel(key) {
+//   if (key.startsWith("basement_")) {
+//     const n = key.replace("basement_", "");
+//     return `Basement ${n}`;
+//   }
+//   if (key.startsWith("parking_")) {
+//     const n = key.replace("parking_", "");
+//     return `Parking ${n}`;
+//   }
+//   if (key === "ground") return "Ground Floor";
+//   const n = parseInt(key);
+//   return `Floor ${n}`;
+// }
 function getFloorLabel(key) {
   if (key.startsWith("basement_")) {
     const n = key.replace("basement_", "");
     return `Basement ${n}`;
   }
+
   if (key.startsWith("parking_")) {
     const n = key.replace("parking_", "");
     return `Parking ${n}`;
+//     const n = key.replace("parking_", "");
+// return n === "1" ? "Parking" : `Parking ${n}`;
   }
+
   if (key === "ground") return "Ground Floor";
+
   const n = parseInt(key);
-  return `Floor ${n}`;
+
+  if (n === 1) return "1st Floor";
+  if (n === 2) return "2nd Floor";
+  if (n === 3) return "3rd Floor";
+
+  return `${n}th Floor`;
 }
 
-function getAllFloorKeys(basementLevels, parkingLevels, liveableFloors, includeGroundFloor = true) {
+// function getAllFloorKeys(basementLevels, parkingLevels, liveableFloors, includeGroundFloor = true) {
+//   const b = parseInt(basementLevels) || 0;
+//   const p = parseInt(parkingLevels) || 0;
+//   const f = parseInt(liveableFloors) || 0;
+//   const keys = [];
+//   for (let i = b; i >= 1; i--) keys.push(`basement_${i}`);
+//   for (let i = p; i >= 1; i--) keys.push(`parking_${i}`);
+//   if (f > 0) {
+//     if (includeGroundFloor) {
+//       keys.push("ground");
+//       for (let i = 1; i < f; i++) keys.push(String(i));
+//     } else {
+//       for (let i = 1; i <= f; i++) keys.push(String(i));
+//     }
+//   }
+//   return keys;
+// }
+
+
+function getAllFloorKeys(
+  basementLevels,
+  parkingLevels,
+  liveableFloors
+) {
   const b = parseInt(basementLevels) || 0;
   const p = parseInt(parkingLevels) || 0;
   const f = parseInt(liveableFloors) || 0;
+
   const keys = [];
-  for (let i = b; i >= 1; i--) keys.push(`basement_${i}`);
-  for (let i = p; i >= 1; i--) keys.push(`parking_${i}`);
+
+  // Basement
+  for (let i = b; i >= 1; i--) {
+    keys.push(`basement_${i}`);
+  }
+
+  // Parking
+  for (let i = p; i >= 1; i--) {
+    keys.push(`parking_${i}`);
+  }
+
   if (f > 0) {
-    if (includeGroundFloor) {
+    // Parking hai to Ground Floor nahi
+    if (p > 0) {
+      for (let i = 1; i <= f; i++) {
+        keys.push(String(i));
+      }
+    }
+    // Parking nahi hai to Ground Floor add karo
+    else {
       keys.push("ground");
-      for (let i = 1; i < f; i++) keys.push(String(i));
-    } else {
-      for (let i = 1; i <= f; i++) keys.push(String(i));
+
+      for (let i = 1; i < f; i++) {
+        keys.push(String(i));
+      }
     }
   }
+
   return keys;
 }
 
-function computeStructureConfig(basementLevels, parkingLevels, liveableFloors, isLB) {
-  if (isLB) {
-    const f = parseInt(liveableFloors) || 0;
-    if (f <= 0) return "";
-    return f === 1 ? "G" : `G+${f - 1}`;
-  }
+
+
+// function computeStructureConfig(basementLevels, parkingLevels, liveableFloors, isLB) {
+//   if (isLB) {
+//     const f = parseInt(liveableFloors) || 0;
+//     if (f <= 0) return "";
+//     return f === 1 ? "G" : `G+${f - 1}`;
+//   }
+//   const b = parseInt(basementLevels) || 0;
+//   const p = parseInt(parkingLevels) || 0;
+//   const f = parseInt(liveableFloors) || 0;
+//   const parts = [];
+//   if (b > 0) parts.push(b === 1 ? "B" : `${b}B`);
+//   if (p > 0) parts.push(p === 1 ? "P" : `${p}P`);
+//   // if (f > 0) parts.push(String(f));
+//   if (f > 0) {
+//     if (f === 1)
+//         parts.push("G");
+//     else
+//         parts.push(`G+${f-1}`);
+// }
+//   return parts.join("+");
+// }
+
+function computeStructureConfig(
+  basementLevels,
+  parkingLevels,
+  liveableFloors,
+  isLB
+) {
   const b = parseInt(basementLevels) || 0;
   const p = parseInt(parkingLevels) || 0;
   const f = parseInt(liveableFloors) || 0;
+
   const parts = [];
-  if (b > 0) parts.push(b === 1 ? "B" : `${b}B`);
-  if (p > 0) parts.push(p === 1 ? "P" : `${p}P`);
-  if (f > 0) parts.push(String(f));
+
+  // Basement
+  if (b > 0) {
+    parts.push(b === 1 ? "B" : `${b}B`);
+  }
+
+  // Parking
+  if (p > 0) {
+    parts.push(p === 1 ? "P" : `${p}P`);
+  }
+
+  // Livable Floors
+  if (f > 0) {
+    if (p > 0) {
+      // Parking present -> iLens logic
+      parts.push(String(f));
+    } else {
+      // No Parking -> Ground based
+      if (f === 1) {
+        parts.push("G");
+      } else {
+        parts.push(`G+${f - 1}`);
+      }
+    }
+  }
+
   return parts.join("+");
 }
 
@@ -1506,7 +1625,7 @@ function floorKeyType(key) {
 }
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
-const PropertyDetailsForm = ({ data, editData, extractedData, onSave, onSaveAndNext, saving, stateRef }) => {
+const PropertyDetailsForm = ({ data, editData, extractedData, onSave, onSaveAndNext, saving, stateRef,onConstructionStatusChange }) => {
   const [form, setForm] = useState({
     customerName: "", applicantName: "", personContact: "",
     pincode: "", state: "", city: "", district: "", taluka: "", village: "",
@@ -1515,7 +1634,7 @@ const PropertyDetailsForm = ({ data, editData, extractedData, onSave, onSaveAndN
     buildingWingName: "", revenueRecordTypeNumber: "",
     withinGeoLimit: false, classOfLocality: "", propertyJurisdiction: "",
     sanctionAuthorityName: "", approvedPlanNo: "", sanctionUsage: "", actualUsage: "",
-    typeOfStructure: "", plotAreaSqft: "", basementLevels: "", parkingLevels: "",
+    typeOfStructure: "rcc", plotAreaSqft: "", basementLevels: "", parkingLevels: "",
     liveableFloors: "", structureConfiguration: "", societyRegistered: false,
     uniquePropertyId: "", propertyEntranceFacing: "", constructionStatus: "",
     apfFlag: "", apfId: "", propertyTransactionType: "", countOfProperties: "",
@@ -1525,6 +1644,7 @@ const PropertyDetailsForm = ({ data, editData, extractedData, onSave, onSaveAndN
     // Single occupancy fields (applied to whole property, not per-unit)
     singleOccupiedBy: "", singleOccupantName: "", singleOccupiedSince: "",
   });
+  
 
   const [toast, setToast] = useState(null);
   const showToast = useCallback((msg, type = "success") => {
@@ -1559,7 +1679,25 @@ const PropertyDetailsForm = ({ data, editData, extractedData, onSave, onSaveAndN
 
     hydratingSavedFloorsRef.current = true;
     
-    setForm((p) => ({ ...p, ...src, ...autofillData }));
+    // setForm((p) => ({ ...p, ...src, ...autofillData }));
+    setForm((p) => {
+  const merged = { ...p };
+  // Merge src (skip empty/undefined/null)
+  Object.keys(src).forEach((key) => {
+    const val = src[key];
+    if (val !== undefined && val !== null && val !== '') {
+      merged[key] = val;
+    }
+  });
+  // Merge autofillData (skip empty/undefined/null)
+  Object.keys(autofillData).forEach((key) => {
+    const val = autofillData[key];
+    if (val !== undefined && val !== null && val !== '') {
+      merged[key] = val;
+    }
+  });
+  return merged;
+});
 
     if (Array.isArray(src.selectedFloors)) {
       setSelectedFloors(src.selectedFloors);
@@ -1612,11 +1750,16 @@ const PropertyDetailsForm = ({ data, editData, extractedData, onSave, onSaveAndN
           u.structureConfiguration = computeStructureConfig(bl, pl, lf, isLB);
         }
       }
+
+        if (field === "constructionStatus") {
+  onConstructionStatusChange?.(value);
+}
       if (field === "doorPhotoWithNamePlate" && value === false) u.doorPhotoFile = null;
       if (field === "societyRegistered" && value === false) u.societyRegisteredFile = null;
+    
       return u;
     });
-  }, []);
+  }, [onConstructionStatusChange]);
 
   // ── PINCODE ────────────────────────────────────────────────────────────────
   const fetchPincode = useCallback(async (pin) => {
@@ -1716,7 +1859,8 @@ const PropertyDetailsForm = ({ data, editData, extractedData, onSave, onSaveAndN
     showBasementParking ? form.basementLevels : "",
     showBasementParking ? form.parkingLevels : "",
     showFloorInputs ? form.liveableFloors : "",
-    isLB
+    // isLB
+    true
   );
 
   useEffect(() => {
@@ -2000,11 +2144,14 @@ const PropertyDetailsForm = ({ data, editData, extractedData, onSave, onSaveAndN
                 { value: "residential", label: "Residential" }, { value: "commercial", label: "Commercial" },
                 { value: "industrial", label: "Industrial" }, { value: "special", label: "Special" },
               ]} {...fp} />
+
             </DF>
             <DF label="Actual Usage" required info>
               <Sel field="actualUsage" options={[
                 { value: "residential", label: "Residential" }, { value: "commercial", label: "Commercial" },
                 { value: "industrial", label: "Industrial" }, { value: "special", label: "Special" },
+                // add this in dropdown 
+                {value:"mixed", label:"Mixed"}
               ]} {...fp} />
             </DF>
             {showStructuralFields && (
@@ -2129,7 +2276,8 @@ const PropertyDetailsForm = ({ data, editData, extractedData, onSave, onSaveAndN
               <Sel field="collateralScope" options={[{value:"entire_property",label:"Entire Property"},{value:"part_property",label:"Part Property"}]} {...fp} />
             </DF>
             <DF label="Ownership Type" required>
-              <Sel field="ownershipType" options={[{value:"free_hold",label:"Free hold"},{value:"lease_hold",label:"Lease hold"},{value:"government",label:"Government"}]} {...fp} />
+              {/* <Sel field="ownershipType" options={[{value:"free_hold",label:"Free hold"},{value:"lease_hold",label:"Lease hold"},{value:"government",label:"Government"}]} {...fp} /> */}
+              <Sel field="ownershipType" options={[{value:"free_hold",label:"Free hold"},{value:"lease_hold",label:"Lease hold"}]} {...fp} />
             </DF>
             <DF label="APF ID"><Inp field="apfId" {...fp} /></DF>
           </div>

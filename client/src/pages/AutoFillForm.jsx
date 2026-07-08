@@ -338,11 +338,25 @@ const mapDocumentToFormData = (doc) => {
     const buyerRaw =
         extractedProperty.applicant_name || get(doc, "buyer.0.name");
     if (buyerRaw) data.customerName = buyerRaw;
+    data.applicantName = buyerRaw;
 
-    // propertyOwnerName ← seller[0].name
+    // propertyOwnerName ? seller[0].name
     const sellerRaw =
         extractedProperty.owner_name || get(doc, "seller.0.name");
     if (sellerRaw) data.propertyOwnerName = sellerRaw;
+    data.ownerName = sellerRaw;
+
+    if (doc.registration_number) data.applicationNo = doc.registration_number;
+    if (extractedProperty.bank_specific_details?.file_no) {
+        data.applicationNo = extractedProperty.bank_specific_details.file_no;
+    }
+    if (extractedProperty.bank_specific_details?.branch) {
+        data.branchName = extractedProperty.bank_specific_details.branch;
+    }
+    if (extractedProperty.bank_specific_details?.loan_category) {
+        data.productType = extractedProperty.bank_specific_details.loan_category;
+        data.requestFor = extractedProperty.bank_specific_details.loan_category;
+    }
 
     if (extractedProperty.contact_person) {
         data.personMetDuringVisit = extractedProperty.contact_person;

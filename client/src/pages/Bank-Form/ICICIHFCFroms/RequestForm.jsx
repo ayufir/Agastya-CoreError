@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-const RequestForm = ({ onDataChange, onNext }) => {
+const RequestForm = ({ extractedData, onDataChange, onNext }) => {
   const [formData, setFormData] = useState({
     status: "Work in progress",
     type: "Individual Technical Request",
@@ -16,12 +16,66 @@ const RequestForm = ({ onDataChange, onNext }) => {
     products: "",
   });
 
+  useEffect(() => {
+    if (!extractedData || Object.keys(extractedData).length === 0) return;
+
+    const property = extractedData.property || {};
+    const buyer = Array.isArray(extractedData.buyer) ? extractedData.buyer[0] || {} : {};
+    const bankSpecific = property.bank_specific_details || {};
+
+    const nextFormData = {
+      ...formData,
+      customerName:
+        extractedData.customerName ||
+        property.applicant_name ||
+        buyer.name ||
+        formData.customerName,
+      branch:
+        extractedData.branchName ||
+        bankSpecific.branch ||
+        property.branch_name ||
+        formData.branch,
+      applicationNo:
+        extractedData.applicationNo ||
+        bankSpecific.file_no ||
+        extractedData.registration_number ||
+        formData.applicationNo,
+      requestFor: extractedData.requestFor || "HFC",
+      productType:
+        extractedData.productType ||
+        property.loan_category ||
+        formData.productType,
+      products:
+        extractedData.products ||
+        property.product_name ||
+        property.requested_product ||
+        formData.products,
+      technicalAdmin:
+        extractedData.technicalAdmin ||
+        formData.technicalAdmin,
+      dateOfRequest:
+        extractedData.dateOfRequest ||
+        property.dateOfReport ||
+        extractedData.registration_date ||
+        formData.dateOfRequest,
+      status: extractedData.status || formData.status,
+      type: extractedData.type || formData.type,
+      businessGroup: extractedData.businessGroup || formData.businessGroup,
+    };
+
+    setFormData(nextFormData);
+    onDataChange?.(nextFormData);
+  }, [extractedData, onDataChange]);
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+    setFormData((prevData) => {
+      const nextData = {
+        ...prevData,
+        [name]: value,
+      };
+      onDataChange?.(nextData);
+      return nextData;
+    });
   };
   const handleSubmit = () => {
     onNext(formData);
@@ -189,3 +243,4 @@ const RequestForm = ({ onDataChange, onNext }) => {
 };
 
 export default RequestForm;
+

@@ -24,6 +24,7 @@ import AutoFillForm from "../../AutoFillForm";
 import AdvancedAutoFillForm from "../../../components/AdvancedAutoFillForm";
 import { createAutoFillAdapter } from "../../../utils/Autofilladapter";
 import { ICICI_MAPPING } from "../../../config/Bankfieldmappings";
+import axiosInstance from "../../../config/axios";
 import { getDisplayCustomerName, getDisplayAddress, getDisplayContact, getDisplayCity } from "../../../utils/dashboardRecord";
 
 import toast from "react-hot-toast";
@@ -221,14 +222,14 @@ const CardStatusIcon = ({ done }) => {
   if (done) {
     return (
       <span className="absolute md:top-[6px] md:right-[7px] right-4 w-[16px] h-[16px] rounded-full bg-[#67c915] text-white text-[12px] leading-[16px] font-bold flex items-center justify-center">
-        ✓
+        Ã¢Å“â€œ
       </span>
     );
   }
 
   return (
     <span className="absolute md:top-[6px] md:right-[7px] right-4 text-[#f59e0b] text-[18px] leading-none">
-      △
+      Ã¢â€“Â³
     </span>
   );
 };
@@ -247,7 +248,7 @@ const IciciBank = () => {
   const [autoFilledFields, setAutoFilledFields] = useState([]);
 
   const handleDownloadAll = async () => {
-    const toastId = toast.loading("Fetching latest files and generating ZIP…");
+    const toastId = toast.loading("Fetching latest files and generating ZIP...");
     try {
       const { saveAs } = await import("file-saver");
       let freshData = formData;
@@ -308,8 +309,8 @@ const IciciBank = () => {
       saveAs(res.data, zipFilename);
       toast.success(
         urls.length > 0
-          ? `Downloaded ${urls.length} file(s) + form data ✓`
-          : "Form data downloaded as JSON ✓",
+          ? `Downloaded ${urls.length} file(s) + form data Ã¢Å“â€œ`
+          : "Form data downloaded as JSON Ã¢Å“â€œ",
         { id: toastId }
       );
     } catch (error) {
@@ -825,7 +826,7 @@ const IciciBank = () => {
               </h1>
             </div>
             <p className="text-xs text-gray-300 mt-1">
-              {id ? `Editing Case: #${id}` : "Creating New Valuation Report"} • Draft auto-saved locally
+              {id ? `Editing Case: #${id}` : "Creating New Valuation Report"} Ã¢â‚¬Â¢ Draft auto-saved locally
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -1158,7 +1159,7 @@ const IciciBank = () => {
                     onClick={() => setShowMobileSteps((v) => !v)}
                     className="bg-red-50 hover:bg-red-100 text-[#a50000] px-2.5 py-1 rounded text-xs font-semibold flex items-center gap-1 transition-colors border border-red-100"
                   >
-                    {showMobileSteps ? "Hide Steps ▴" : "Show Steps ▾"}
+                    {showMobileSteps ? "Hide Steps Ã¢â€“Â´" : "Show Steps Ã¢â€“Â¾"}
                   </button>
                 </div>
                 
@@ -1194,11 +1195,11 @@ const IciciBank = () => {
                           </div>
                           <div className="relative w-4 h-4 flex-shrink-0 text-right">
                             {isDone ? (
-                              <span className="text-[#67c915] text-[12px] font-bold">✓</span>
+                              <span className="text-[#67c915] text-[12px] font-bold">Ã¢Å“â€œ</span>
                             ) : isActive ? (
                               <span className="w-1.5 h-1.5 rounded-full bg-[#b21b12] inline-block"></span>
                             ) : (
-                              <span className="text-[#f59e0b] text-[12px]">△</span>
+                              <span className="text-[#f59e0b] text-[12px]">Ã¢â€“Â³</span>
                             )}
                           </div>
                         </button>

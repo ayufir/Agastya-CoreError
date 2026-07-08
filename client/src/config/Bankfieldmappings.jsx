@@ -408,6 +408,39 @@ const normalizeIciciStructure = (data) => {
     return data.typeOfStructure || null;
 };
 
+const normalizeIciciConstructionStatus = (data) => {
+    const rawValue =
+        data.constructionStatus ||
+        data.constructionStage ||
+        data.property?.construction_stage ||
+        data.property?.valuation_details?.construction_status;
+    const text = cleanMappingText(rawValue);
+    if (!text) return null;
+    if (text.includes("under")) return "under_construction";
+    if (
+        text.includes("complete") ||
+        text.includes("completed") ||
+        text.includes("ready") ||
+        text.includes("finished")
+    ) {
+        return "completed";
+    }
+    return rawValue || null;
+};
+
+const normalizeIciciOwnershipType = (data) => {
+    const rawValue =
+        data.ownershipType ||
+        data.propertyHolding ||
+        data.property?.accommodation_details?.property_holding ||
+        data.property?.property_holding;
+    const text = cleanMappingText(rawValue);
+    if (!text) return null;
+    if (text.includes("free")) return "free_hold";
+    if (text.includes("lease")) return "lease_hold";
+    return rawValue || null;
+};
+
 const extractFloorCount = (data) => {
     const text = cleanMappingText(data.totalNoOfFloors || data.floorNumber || data.property?.accommodation_details?.total_floors || data.property?.floor_number);
     if (!text) return null;
@@ -453,17 +486,18 @@ export const ICICI_MAPPING = {
     "actualUsage": (data) => normalizeIciciUsage(data.usageOfProperty || data.actualUsage),
     "propertyJurisdiction": normalizeIciciJurisdiction,
     "sanctionAuthorityName": ["sanctionAuthorityName", "property.legal_and_compliance.approving_authority"],
-    "constructionStatus": ["constructionStatus", "constructionStage"],
+    "constructionStatus": normalizeIciciConstructionStatus,
     "approvedPlanNo": ["property.municipal_details.municipal_compliance", "municipalCompliance", "property.legal_and_compliance.approving_authority", "approvingAuthority"],
     "propertyEntranceFacing": ["propertyEntranceFacing", "property.property_entrance_facing"],
     "floorNumber": "floorNumber",
     "countOfProperties": ["countOfProperties", "property.count_of_properties"],
+    "ownershipType": normalizeIciciOwnershipType,
 
     // 2. Maintenance & Boundaries
-    "propertyAge": ["propertyAge", "ageOfProperty"],
-    "residualAge": "residualAge",
-    "internalMaintenance": "internalMaintenance",
-    "externalMaintenance": "externalMaintenance",
+    "propertyAge": ["propertyAge", "ageOfProperty", "property.accommodation_details.age_of_property"],
+    "residualAge": ["residualAge", "property.accommodation_details.residual_age"],
+    "internalMaintenance": ["internalMaintenance", "maintenanceOfProperty", "property.accommodation_details.maintenance_of_property"],
+    "externalMaintenance": ["externalMaintenance", "maintenanceOfProperty", "property.accommodation_details.maintenance_of_property"],
     "eastAsPerDocument": ["eastDocument", "property.boundaries.east_as_per_deed"],
     "eastAsPerSiteVisit": ["eastActual", "property.boundaries.east_actual"],
     "eastLinearDimensions": "eastDimensions",
@@ -787,6 +821,8 @@ export const BAJAJ_BANK_MAPPING = {
     "step7.valuationMethodology": ["valuationMethodology"],
     "step7.remarks": ["property.report_remarks", "property.location_details.comments_on_property", "reportRemarks", "commentsOnProperty", "remarks"],
 };
+
+
 
 
 
