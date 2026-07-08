@@ -1635,9 +1635,10 @@ if (typeof setFormDataDirect === "function") {
         />
       </div>
 
-      {/* ── Field Officer: Uploaded Documents Preview Panel ─────────────────── */}
-      {false && isFieldOfficer && (() => {
+      {/* ── Uploaded Documents Preview Panel — visible to ALL roles ──────── */}
+      {(() => {
         const totalFoFiles = uploadedGpsUrls.length + atsDocsList.length + uploadedFieldFormUrls.length + uploadedPhotoUrls.length + uploadedVideoUrls.length;
+        if (totalFoFiles === 0) return null;
         return (
           <div className="mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             {/* Panel Header - always visible */}
@@ -1646,17 +1647,16 @@ if (typeof setFormDataDirect === "function") {
                 <CheckCircle2 className="w-4 h-4" />
               </div>
               <div>
-                <div className="text-sm font-extrabold text-slate-800">Uploaded Documents</div>
+                <div className="text-sm font-extrabold text-slate-800">📎 Uploaded Documents & Media</div>
                 <div className="text-[10px] text-slate-500 font-semibold">
-                  {totalFoFiles > 0 ? `${totalFoFiles} file(s) saved to this case` : "No files uploaded yet — upload files above"}
+                  {totalFoFiles} file(s) uploaded by Field Officer — GPS, Property Papers, Site Photos & More
                 </div>
               </div>
-              {totalFoFiles > 0 && (
-                <span className="ml-auto px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-100">
-                  {totalFoFiles} Files
-                </span>
-              )}
+              <span className="ml-auto px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                {totalFoFiles} Files
+              </span>
             </div>
+
 
             <div className="p-5 space-y-5">
               {/* Empty State */}
