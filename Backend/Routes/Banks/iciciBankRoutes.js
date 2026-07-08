@@ -11,7 +11,7 @@ const {
 
 router.post("/", protect, createIciciBank);           // Create
 router.get("/", protect, getAllIciciBanks);           // Get all
-router.get("/:id", getIciciBankById);        // Get by ID
+router.get("/:id", protect, getIciciBankById);        // Get by ID
 router.put("/:id", protect, updateIciciBank);         // Save / Save & Next
 router.put("/:id/submit", protect, submitIciciBank);  // Final Submit button
 

@@ -155,11 +155,12 @@ const getCaseDisplayCity = (record) => {
 
 const buildRoleAwareQuery = (user, baseQuery = {}) => {
   const query = { ...baseQuery };
+  const userRole = (user.role || "").toLowerCase().trim();
 
-  if (user.role === "FieldOfficer" || user.role === "FIELDOFFICER") {
+  if (userRole === "fieldofficer") {
     // Field Officers only see cases assigned to them
     query.assignedTo = user._id;
-  } else if (user.role === "TechnicalManager") {
+  } else if (userRole === "technicalmanager") {
     // Technical Managers see cases assigned to them OR created by them
     const tmQuery = {
       $or: [
@@ -663,8 +664,9 @@ exports.getCasesByRole = async (req, res) => {
         const { key: modelKey, model: Model } = bankConfig;
         let query = {};
 
+        const userRole = (user.role || "").toLowerCase().trim();
         // Role-based ownership filtering (Field Officers see cases assigned to them OR created by them)
-        if (user.role === "FieldOfficer" || user.role === "FIELDOFFICER") {
+        if (userRole === "fieldofficer") {
           query.$or = [
             { assignedTo: user._id },
             { createdBy: user._id },
@@ -682,23 +684,30 @@ exports.getCasesByRole = async (req, res) => {
 
     allCases = results.flat();
 
+    const userRole = (user.role || "").toLowerCase().trim();
     // City restriction for all non-SuperAdmin users if they have an assignedCity
     // NOTE: FieldOfficer ke directly-assigned cases (assignedTo === user._id) ko
     // city filter se exempt kiya gaya hai — taaki admin-assigned assets hamesha
     // FO ke "New" section mein dikhen, chahe case ka city field empty/mismatch ho.
-    if (user && user.role !== "SuperAdmin" && user.assignedCity) {
+    if (user && userRole !== "superadmin" && user.assignedCity) {
       const centralCities = ["bhopal", "gwalior", "jabalpur"];
       const normalizedUserCity = user.assignedCity.toLowerCase().trim();
 
-      const isFieldOfficer =
-        user.role === "FieldOfficer" || user.role === "FIELDOFFICER";
+      const isFieldOfficer = userRole === "fieldofficer";
 
       allCases = allCases.filter((caseItem) => {
-        // FieldOfficer: directly assigned cases always pass through city filter
+        // FieldOfficer: must be assigned to or created by this user
         if (isFieldOfficer) {
           const assignedToId =
             caseItem.assignedTo?._id?.toString() ||
             caseItem.assignedTo?.toString();
+          const createdById =
+            caseItem.createdBy?._id?.toString() ||
+            caseItem.createdBy?.toString();
+
+          if (assignedToId !== user._id.toString() && createdById !== user._id.toString()) {
+            return false;
+          }
           if (assignedToId === user._id.toString()) return true;
         }
 

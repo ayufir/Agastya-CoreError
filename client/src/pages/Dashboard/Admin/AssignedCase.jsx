@@ -218,18 +218,25 @@ const AssignedCase = ({ selectedMonth }) => {
           ? record.timeline[record.timeline.length - 1]?.status
           : record.timeline?.[0]?.status;
 
-        switch (latestTimelineStatus) {
-          case "submitted-by-fo":
-            indicatorColor = "red";
-            break;
-          case "submitted-by-tm":
-            indicatorColor = "yellow";
-            break;
-          case "complete":
-            indicatorColor = "green";
-            break;
-          default:
-            indicatorColor = "gray";
+        const isSubmittedByFO = 
+          isApprovalPending(record) ||
+          latestTimelineStatus === "submitted-by-fo" ||
+          (record.approvalStatus || "").toLowerCase().trim() === "submitted" ||
+          (record.status || "").toLowerCase().trim() === "submitted";
+
+        if (isSubmittedByFO) {
+          indicatorColor = "red";
+        } else {
+          switch (latestTimelineStatus) {
+            case "submitted-by-tm":
+              indicatorColor = "yellow";
+              break;
+            case "complete":
+              indicatorColor = "green";
+              break;
+            default:
+              indicatorColor = "gray";
+          }
         }
 
         return (

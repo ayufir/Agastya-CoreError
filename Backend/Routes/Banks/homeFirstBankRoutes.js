@@ -17,7 +17,7 @@ router.put("/remove-image/:id", homeFirstBank.deleteImageFromValuationReport);
 router.put("/remove-document/:id", homeFirstBank.deleteDocumentFromValuationReport);
 
 // Get a single valuation report by ID
-router.get("/:id", homeFirstBank.getValuationReportById);
+router.get("/:id", protect, homeFirstBank.getValuationReportById);
 
 router.put("/:id", protect, homeFirstBank.updateValuationReportById);
 

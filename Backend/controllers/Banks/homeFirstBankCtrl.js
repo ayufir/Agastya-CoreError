@@ -57,10 +57,13 @@ exports.createValuationReport = async (req, res) => {
 exports.getAllValuationReports = async (req, res) => {
   try {
     let query = {};
-    if (req.user?.role === "Admin") {
-      query.createdBy = req.user._id;
-    } else if (req.user?.role === "FieldOfficer") {
-      query.assignedTo = req.user._id;
+    if (req.user) {
+      const userRole = (req.user.role || "").toLowerCase().trim();
+      if (userRole === "admin") {
+        query.createdBy = req.user._id;
+      } else if (userRole === "fieldofficer") {
+        query.assignedTo = req.user._id;
+      }
     }
 
     const reports = await ValuationReport.find(query).sort({ createdAt: -1 });
@@ -88,6 +91,22 @@ exports.getValuationReportById = async (req, res) => {
         message: "Valuation report not found",
       });
     }
+
+    // Access control for FieldOfficer
+    if (req.user) {
+      const userRole = (req.user.role || "").toLowerCase().trim();
+      if (userRole === "fieldofficer") {
+        const assignedId = report.assignedTo?.toString();
+        const createdById = report.createdBy?.toString();
+        if (assignedId !== req.user._id.toString() && createdById !== req.user._id.toString()) {
+          return res.status(403).json({
+            success: false,
+            message: "Access denied. This case is not assigned to you.",
+          });
+        }
+      }
+    }
+
     res.status(200).json({
       success: true,
       data: report,
@@ -126,7 +145,8 @@ exports.updateValuationReportById = async (req, res) => {
     }
 
     // Add timeline entry if user is a field officer
-    if (req.user.role === "FieldOfficer") {
+    const isFO = (req.user?.role || "").toLowerCase().trim() === "fieldofficer";
+    if (isFO) {
       if (!updateQuery.$set) updateQuery.$set = {};
       
       const isSubmitting = req.body.isReportSubmitted === true || req.body.isSubmit === true;

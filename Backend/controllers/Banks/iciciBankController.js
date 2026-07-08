@@ -35,7 +35,14 @@ exports.createIciciBank = async (req, res) => {
 // GET all ICICI bank entries
 exports.getAllIciciBanks = async (req, res) => {
   try {
-    const reports = await IciciBank.find().sort({ createdAt: -1 });
+    let query = {};
+    if (req.user) {
+      const userRole = (req.user.role || "").toLowerCase().trim();
+      if (userRole === "fieldofficer") {
+        query.assignedTo = req.user._id;
+      }
+    }
+    const reports = await IciciBank.find(query).sort({ createdAt: -1 });
     res.status(200).json(reports);
   } catch (error) {
     res
@@ -52,6 +59,18 @@ exports.getIciciBankById = async (req, res) => {
 
     if (!report) {
       return res.status(404).json({ message: "Report not found" });
+    }
+
+    // Access control for FieldOfficer
+    if (req.user) {
+      const userRole = (req.user.role || "").toLowerCase().trim();
+      if (userRole === "fieldofficer") {
+        const assignedId = report.assignedTo?.toString();
+        const createdById = report.createdBy?.toString();
+        if (assignedId !== req.user._id.toString() && createdById !== req.user._id.toString()) {
+          return res.status(403).json({ message: "Access denied. This case is not assigned to you." });
+        }
+      }
     }
 
     res.status(200).json(report);
@@ -94,7 +113,8 @@ exports.updateIciciBank = async (req, res) => {
       updateBody.assignedTo = existing.assignedTo;
     }
 
-    if (req.user?.role === "FieldOfficer") {
+    const isFO = (req.user?.role || "").toLowerCase().trim() === "fieldofficer";
+    if (isFO) {
       if (!updateBody.assignedTo) {
         updateBody.assignedTo = req.user._id;
       }
@@ -154,13 +174,14 @@ exports.submitIciciBank = async (req, res) => {
       updateData.assignedTo = updateData.assignedTo._id;
     }
 
-    if (req.user?.role === "FieldOfficer" && !updateData.assignedTo) {
+    const isFO = (req.user?.role || "").toLowerCase().trim() === "fieldofficer";
+    if (isFO && !updateData.assignedTo) {
       updateData.assignedTo = req.user._id;
     }
 
     const updateQuery = { $set: updateData };
 
-    if (req.user?.role === "FieldOfficer") {
+    if (isFO) {
       updateData.status = "Work in Progress";
       updateData.approvalStatus = "Submitted";
       
