@@ -206,19 +206,31 @@ exports.submitIciciBank = async (req, res) => {
       return res.status(404).json({ message: "Report not found" });
     }
 
-    // Notification (non-blocking)
+    // Notification to ASSIGNER (createdBy) — non-blocking
     try {
       const Notification = require("../../model/Notification");
+      const assignerId = updated.createdBy;  // The person who assigned this case to FO
+      const foDisplayName = req.user?.name || req.user?.email || "Field Officer";
+      const customerName = updated.customerName || updated.applicantName || "N/A";
+
       const notif = await Notification.create({
-        userId: req.user?._id,
-        caseId: id,
-        message: `ICICI Bank report submitted for ${updated.customerName || updated.applicantName || "N/A"}`,
+        userId:   assignerId,             // → ASSIGNER gets the notification (not the FO)
+        caseId:   id,
         bankName: "ICICI Bank",
+        message:  `📋 ${foDisplayName} ne case submit kiya: ${customerName} (ICICI Bank)`,
+        type:     "fo_submit",
+        route:    `/bank/icici/edit/${id}`,
+        foName:   foDisplayName,
+        isRead:   false,
       });
-      if (req.io) req.io.emit("newNotification", notif);
-      else if (global.io) global.io.emit("newNotification", notif);
+
+      // Emit only to the assigner's personal socket room
+      const io = req.io || global.io;
+      if (io && assignerId) {
+        io.to(assignerId.toString()).emit("newNotification", notif);
+      }
     } catch (_) {
-      /* notification failure should not break update */
+      /* notification failure should not break submit */
     }
 
     res.status(200).json({

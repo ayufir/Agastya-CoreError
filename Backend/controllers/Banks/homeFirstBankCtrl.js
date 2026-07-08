@@ -175,17 +175,37 @@ exports.updateValuationReportById = async (req, res) => {
       return res.status(404).json({ message: "Job not found" });
     }
 
-    const notif = await Notification.create({
-      userId: req.user._id,
-      caseId,
-      message: `Updated by ${req.user.name || "User"}`,
-      bankName: "Home First",
-    });
+    // Notify ASSIGNER (createdBy) when FO submits — non-blocking
+    try {
+      const isSubmitting = req.body.isReportSubmitted === true || req.body.isSubmit === true;
+      const isFO = (req.user?.role || "").toLowerCase().trim() === "fieldofficer";
+      const assignerId = updatedJob.createdBy;
+      const foDisplayName = req.user?.name || req.user?.email || "Field Officer";
+      const customerName = updatedJob.customerName || updatedJob.applicantName || "N/A";
 
-    if (req.io) {
-      console.log(req.io, "HOME FIRS CTRL");
-      req.io.emit("newNotification", notif);
-    }
+      const notif = await Notification.create({
+        userId:   isFO && isSubmitting ? assignerId : req.user._id,
+        caseId,
+        bankName: "Home First",
+        message:  isFO && isSubmitting
+          ? `📋 ${foDisplayName} ne case submit kiya: ${customerName} (Home First Bank)`
+          : `Updated by ${foDisplayName}`,
+        type:     isFO && isSubmitting ? "fo_submit" : "status_update",
+        route:    `/bank/first/${caseId}`,
+        foName:   foDisplayName,
+        isRead:   false,
+      });
+
+      const io = req.io || global.io;
+      if (io) {
+        const targetRoom = (isFO && isSubmitting && assignerId) ? assignerId.toString() : null;
+        if (targetRoom) {
+          io.to(targetRoom).emit("newNotification", notif);
+        } else {
+          io.emit("newNotification", notif);
+        }
+      }
+    } catch (_) { /* non-blocking */ }
 
     res.status(200).json({
       message: "Updated successfully",
