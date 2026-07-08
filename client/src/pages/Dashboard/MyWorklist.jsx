@@ -22,6 +22,7 @@ const teamColumns = [
   { name: "In Progress", selector: (row) => row.inProgress, sortable: true },
   { name: "In Query", selector: (row) => row.inQuery, sortable: true },
   { name: "Pending for Approval", selector: (row) => row.pendingApproval, sortable: true },
+  { name: "Completed", selector: (row) => row.completed, sortable: true },
   { name: "Request Approaching TAT", selector: (row) => row.approachingTAT, sortable: true },
 ];
 
@@ -187,6 +188,7 @@ const MyWorklist = () => {
           inProgress: 0,
           inQuery: 0,
           pendingApproval: 0,
+          completed: 0,
           approachingTAT: 0,
         };
       }
@@ -196,14 +198,16 @@ const MyWorklist = () => {
       const statusRaw = item.status || item.caseStatus || item.portalStatus || "";
       const s = statusRaw.toString().toLowerCase().trim().replace(/\s+/g, " ");
 
-      const inQuery = s.includes("query");
-      const pendingApproval = item.isReportSubmitted === true;
+      const isCompleted = s.includes("final") || s.includes("done") || s.includes("approved") || s.includes("complete") || s.includes("cancel") || item.approvalStatus === "FinalSubmitted";
+      const inQuery = s.includes("query") && !isCompleted;
+      const pendingApproval = item.isReportSubmitted === true && !isCompleted && !inQuery;
 
-      // New Case Request: Assigned but not accepted yet (approvalStatus is Pending/Work in Progress, and not yet submitted, and not in query)
-      const isNew = (item.approvalStatus === "Pending" || item.approvalStatus === "Work in Progress") && !item.isReportSubmitted && !inQuery;
+      const approvalStatusNormalized = (item.approvalStatus || "Pending").trim();
+      // New Case Request: Assigned but not accepted yet (approvalStatus is Pending, and not yet submitted, and not in query/completed)
+      const isNew = approvalStatusNormalized === "Pending" && !item.isReportSubmitted && !isCompleted && !inQuery;
 
-      // In Progress (WIP): Accepted by FO, not yet submitted, not in query
-      const inProgress = item.approvalStatus !== "Pending" && item.approvalStatus !== "Work in Progress" && !item.isReportSubmitted && !inQuery;
+      // In Progress (WIP): Accepted by FO, not yet submitted, not in query/completed
+      const inProgress = (approvalStatusNormalized === "Accepted" || approvalStatusNormalized === "Work in Progress" || s.includes("work in progress") || s.includes("working")) && !item.isReportSubmitted && !isCompleted && !inQuery;
 
       let approachingTAT = false;
       const createdStr = item.createdAt || item.uploadDate || item.createdDate || item.submissionDate;
@@ -221,11 +225,12 @@ const MyWorklist = () => {
       if (inProgress) row.inProgress++;
       if (inQuery) row.inQuery++;
       if (pendingApproval) row.pendingApproval++;
+      if (isCompleted) row.completed++;
       if (approachingTAT) row.approachingTAT++;
     });
 
     return Object.values(map)
-      .filter((eng) => eng.name !== "Unassigned" || (eng.request + eng.inProgress + eng.inQuery + eng.pendingApproval) > 0)
+      .filter((eng) => eng.name !== "Unassigned" || (eng.request + eng.inProgress + eng.inQuery + eng.pendingApproval + eng.completed) > 0)
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [cases]);
 
