@@ -543,27 +543,40 @@ const AdvancedAutoFillForm = ({
   }, [propAtsDocuments]);
 
   useEffect(() => {
-    setUploadedPhotoUrls(propImageUrls || []);
+    if (propImageUrls && propImageUrls.length > 0) {
+      setUploadedPhotoUrls(propImageUrls);
+    }
   }, [propImageUrls]);
 
   useEffect(() => {
-    setUploadedVideoUrls(propSiteVisitVideo || []);
+    if (propSiteVisitVideo && propSiteVisitVideo.length > 0) {
+      setUploadedVideoUrls(propSiteVisitVideo);
+    }
   }, [propSiteVisitVideo]);
 
   useEffect(() => {
-    setUploadedGpsUrls(propGpsFiles || []);
+    // Only sync from parent prop if it has actual data — avoids wiping freshly uploaded files
+    if (propGpsFiles && propGpsFiles.length > 0) {
+      setUploadedGpsUrls(propGpsFiles);
+    }
   }, [propGpsFiles]);
 
   useEffect(() => {
-    setUploadedEmailUrls(propEmailFiles || []);
+    if (propEmailFiles && propEmailFiles.length > 0) {
+      setUploadedEmailUrls(propEmailFiles);
+    }
   }, [propEmailFiles]);
 
   useEffect(() => {
-    setUploadedFieldFormUrls(propFieldFormFiles || []);
+    if (propFieldFormFiles && propFieldFormFiles.length > 0) {
+      setUploadedFieldFormUrls(propFieldFormFiles);
+    }
   }, [propFieldFormFiles]);
 
   useEffect(() => {
-    setUploadedAdditionalUrls(propAdditionalFiles || []);
+    if (propAdditionalFiles && propAdditionalFiles.length > 0) {
+      setUploadedAdditionalUrls(propAdditionalFiles);
+    }
   }, [propAdditionalFiles]);
 
   // Fetch ALL document fields from DB using authenticated axiosInstance (plain fetch() has no auth and returns 401)

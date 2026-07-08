@@ -364,7 +364,18 @@ const IciciBank = () => {
         city: docCity !== "N/A" ? docCity : response.city,
       };
 
-      const merged = { ...enriched, ...readDraft(id) };
+      const draft = readDraft(id);
+
+      // ── Never let the draft overwrite file/media fields saved directly in DB ──
+      // These fields are always authoritative from the server response.
+      const FILE_FIELDS = [
+        "gpsFiles", "fieldFormFiles", "emailFiles", "additionalFiles",
+        "sitePhotographs", "imageUrls", "otherImages",
+        "siteVisitVideo", "atsDocuments", "AttachDocuments", "atsFiles",
+      ];
+      FILE_FIELDS.forEach((f) => { delete draft[f]; });
+
+      const merged = { ...enriched, ...draft };
       if (enriched._id) {
         merged._id = enriched._id;
         merged.status = enriched.status;
