@@ -1441,6 +1441,26 @@ const normalizeQualityOfConstruction = (val) => {
                   onUploadingChange={setIsUploadingFiles}
                   isSubmitted={isEdit?.isReportSubmitted}
                 />
+
+                {isFieldOfficer && (
+                  <div style={{ marginTop: 24 }}>
+                    <CaseWorkflowActions
+                      caseId={id}
+                      bankName="Home First"
+                      onSave={handleFOSave}
+                      onSubmit={(status) => {
+                        if (status === "Generated") {
+                          return handleAdminGenerate();
+                        } else {
+                          return handleFOSubmit();
+                        }
+                      }}
+                      loading={loading || apiLoading}
+                      isReportSubmitted={isEdit?.isReportSubmitted}
+                      status={isEdit?.status}
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1612,17 +1632,18 @@ const normalizeQualityOfConstruction = (val) => {
 
       {/* ── Body: Sidebar + Content ── */}
 
-      <div
-        className="form-container-flex"
-        style={{
-          display: "flex",
-          maxWidth: 1140,
-          margin: "24px auto",
-          gap: 0,
-          padding: "0 16px",
-          alignItems: "flex-start",
-        }}
-      >
+      {!isFieldOfficer && (
+        <div
+          className="form-container-flex"
+          style={{
+            display: "flex",
+            maxWidth: 1140,
+            margin: "24px auto",
+            gap: 0,
+            padding: "0 16px",
+            alignItems: "flex-start",
+          }}
+        >
         {/* ── Left Sidebar ── */}
           <aside
             className="form-sidebar-aside"
@@ -1793,73 +1814,74 @@ const normalizeQualityOfConstruction = (val) => {
             </div>
           )}
         </main>
+      </div>
+      )}
 
-        {/* ── JSON Modal Output ── */}
-        {showJsonModal && (
-          <div className="json-modal-overlay">
-            <div className="json-modal-container">
-              <div className="json-modal-header">
-                <div className="json-modal-title">
-                  <span style={{ fontSize: "20px" }}>📋</span> Final JSON Output Generated
-                </div>
-                <button className="json-modal-close-btn" onClick={handleJustCloseModal}>
-                  <X size={20} />
-                </button>
+      {/* ── JSON Modal Output ── */}
+      {showJsonModal && (
+        <div className="json-modal-overlay">
+          <div className="json-modal-container">
+            <div className="json-modal-header">
+              <div className="json-modal-title">
+                <span style={{ fontSize: "20px" }}>📋</span> Final JSON Output Generated
               </div>
+              <button className="json-modal-close-btn" onClick={handleJustCloseModal}>
+                <X size={20} />
+              </button>
+            </div>
 
-              {/* Success Summary Banner */}
+            {/* Success Summary Banner */}
+            <div style={{
+              background: "linear-gradient(135deg, #ecfdf5, #d1fae5)",
+              border: "1px solid #6ee7b7",
+              borderRadius: 10,
+              margin: "16px 20px 0",
+              padding: "14px 18px",
+              display: "flex",
+              alignItems: "center",
+              gap: 14,
+            }}>
               <div style={{
-                background: "linear-gradient(135deg, #ecfdf5, #d1fae5)",
-                border: "1px solid #6ee7b7",
-                borderRadius: 10,
-                margin: "16px 20px 0",
-                padding: "14px 18px",
-                display: "flex",
-                alignItems: "center",
-                gap: 14,
+                width: 40, height: 40, borderRadius: "50%",
+                background: "#10b981",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0,
               }}>
-                <div style={{
-                  width: 40, height: 40, borderRadius: "50%",
-                  background: "#10b981",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  flexShrink: 0,
-                }}>
-                  <svg width="20" height="20" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#065f46" }}>Form Submitted Successfully!</div>
-                  <div style={{ fontSize: 12, color: "#047857", marginTop: 2 }}>
-                    Case ID: <strong>{jsonOutputData?._id || id || "—"}</strong>
-                    &nbsp;·&nbsp;
-                    Status: <strong>{jsonOutputData?.status || "Submitted"}</strong>
-                    &nbsp;·&nbsp;
-                    Images: <strong>{(jsonOutputData?.imageUrls?.length || jsonOutputData?.gpsFiles?.length || 0)}</strong>
-                  </div>
-                </div>
+                <svg width="20" height="20" fill="none" stroke="white" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
               </div>
-
-              <div className="json-modal-body">
-                <pre className="json-code-block">
-                  {JSON.stringify(jsonOutputData, null, 2)}
-                </pre>
-              </div>
-              <div className="json-modal-footer">
-                <button className="json-btn json-btn-copy" onClick={handleCopyJson}>
-                  <Copy size={16} /> Copy JSON
-                </button>
-                <button className="json-btn json-btn-download" onClick={handleDownloadJson}>
-                  <Download size={16} /> Download JSON
-                </button>
-                <button className="json-btn json-btn-close" onClick={handleCloseJsonModal}>
-                  Close &amp; Go to Dashboard
-                </button>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#065f46" }}>Form Submitted Successfully!</div>
+                <div style={{ fontSize: 12, color: "#047857", marginTop: 2 }}>
+                  Case ID: <strong>{jsonOutputData?._id || id || "—"}</strong>
+                  &nbsp;·&nbsp;
+                  Status: <strong>{jsonOutputData?.status || "Submitted"}</strong>
+                  &nbsp;·&nbsp;
+                  Images: <strong>{(jsonOutputData?.imageUrls?.length || jsonOutputData?.gpsFiles?.length || 0)}</strong>
+                </div>
               </div>
             </div>
+
+            <div className="json-modal-body">
+              <pre className="json-code-block">
+                {JSON.stringify(jsonOutputData, null, 2)}
+              </pre>
+            </div>
+            <div className="json-modal-footer">
+              <button className="json-btn json-btn-copy" onClick={handleCopyJson}>
+                <Copy size={16} /> Copy JSON
+              </button>
+              <button className="json-btn json-btn-download" onClick={handleDownloadJson}>
+                <Download size={16} /> Download JSON
+              </button>
+              <button className="json-btn json-btn-close" onClick={handleCloseJsonModal}>
+                Close &amp; Go to Dashboard
+              </button>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
 
       <style>{`
