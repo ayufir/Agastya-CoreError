@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { Button, Input, Select, message } from "antd";
 import { useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
+import axiosInstance from "../config/axios";
 import { 
   Sparkles, 
   Trash2, 
@@ -565,39 +566,50 @@ const AdvancedAutoFillForm = ({
     setUploadedAdditionalUrls(propAdditionalFiles || []);
   }, [propAdditionalFiles]);
 
-  // Fetch as fallback if caseId exists
+  // Fetch ALL document fields from DB using authenticated axiosInstance (plain fetch() has no auth and returns 401)
   useEffect(() => {
-    if (caseId) {
-      fetch(`${import.meta.env.VITE_API_URL}/api/case/${caseId}`)
-        .then((res) => res.json())
-        .then((resData) => {
-          if (resData) {
-            if (!propAtsDocuments || propAtsDocuments.length === 0) {
-              const rawAts = resData.atsDocuments && resData.atsDocuments.length > 0
-                ? resData.atsDocuments
-                : (resData.AttachDocuments || []);
-              setAtsDocsList(normalizeDocumentsList(rawAts));
-            }
-            if ((!propSiteVisitVideo || propSiteVisitVideo.length === 0) && Array.isArray(resData.siteVisitVideo)) {
-              setUploadedVideoUrls(resData.siteVisitVideo);
-            }
-            if ((!propGpsFiles || propGpsFiles.length === 0) && Array.isArray(resData.gpsFiles)) {
-              setUploadedGpsUrls(resData.gpsFiles);
-            }
-            if ((!propEmailFiles || propEmailFiles.length === 0) && Array.isArray(resData.emailFiles)) {
-              setUploadedEmailUrls(resData.emailFiles);
-            }
-            if ((!propFieldFormFiles || propFieldFormFiles.length === 0) && Array.isArray(resData.fieldFormFiles)) {
-              setUploadedFieldFormUrls(resData.fieldFormFiles);
-            }
-            if ((!propAdditionalFiles || propAdditionalFiles.length === 0) && Array.isArray(resData.additionalFiles)) {
-              setUploadedAdditionalUrls(resData.additionalFiles);
-            }
-          }
-        })
-        .catch((err) => console.error("Error fetching case details:", err));
-    }
-  }, [caseId, propAtsDocuments?.length, propSiteVisitVideo?.length, propGpsFiles?.length, propEmailFiles?.length, propFieldFormFiles?.length, propAdditionalFiles?.length]);
+    if (!caseId) return;
+    axiosInstance.get(`/case/${caseId}`)
+      .then((res) => {
+        const resData = res.data;
+        if (!resData) return;
+
+        // ATS docs
+        if (!propAtsDocuments || propAtsDocuments.length === 0) {
+          const rawAts = resData.atsDocuments && resData.atsDocuments.length > 0
+            ? resData.atsDocuments
+            : (resData.AttachDocuments || []);
+          setAtsDocsList(normalizeDocumentsList(rawAts));
+        }
+        // Site visit videos
+        if ((!propSiteVisitVideo || propSiteVisitVideo.length === 0) && Array.isArray(resData.siteVisitVideo)) {
+          setUploadedVideoUrls(resData.siteVisitVideo);
+        }
+        // GPS screenshots — always sync from DB to ensure up-to-date
+        if (Array.isArray(resData.gpsFiles)) {
+          setUploadedGpsUrls(resData.gpsFiles);
+        }
+        // Email / MIS screenshots
+        if (Array.isArray(resData.emailFiles)) {
+          setUploadedEmailUrls(resData.emailFiles);
+        }
+        // Field visit form
+        if (Array.isArray(resData.fieldFormFiles)) {
+          setUploadedFieldFormUrls(resData.fieldFormFiles);
+        }
+        // Additional files
+        if (Array.isArray(resData.additionalFiles)) {
+          setUploadedAdditionalUrls(resData.additionalFiles);
+        }
+        // Site photos (ICICI = sitePhotographs, Bajaj = otherImages, others = imageUrls)
+        const bankLower = (propBankName || "").toLowerCase();
+        const photoField = bankLower.includes("icici") ? "sitePhotographs" : bankLower.includes("bajaj") ? "otherImages" : "imageUrls";
+        if ((!propImageUrls || propImageUrls.length === 0) && Array.isArray(resData[photoField])) {
+          setUploadedPhotoUrls(resData[photoField]);
+        }
+      })
+      .catch((err) => console.error("Error fetching case documents:", err));
+  }, [caseId]);
 
   const handleGenericFileUpload = async (categoryKey, incomingFiles) => {
     const files = Array.from(incomingFiles || []);
