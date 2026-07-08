@@ -7,7 +7,7 @@ export const routesConfig = [
   { path: "/", element: lazy(() => import("../pages/Dashboard/Dashboard")) },
   {
     path: "/bank-logo",
-    element: lazy(() => import("../pages/1Bank-Home/BankHomePage")),
+    element: lazy(() => import("../pages/1Bank-Home/BankHomePage")),      
   },
   // Bank Forms & Details
   {
@@ -61,6 +61,24 @@ export const routesConfig = [
   },
   {
     path: "/bank/home-first/edit/:id",
+    element: lazy(() =>
+      import("../pages/Bank-Form/Home-FirstBank/HomeFirstBank")
+    ),
+  },
+  {
+    path: "/bank/homefirst/:id",
+    element: lazy(() =>
+      import("../pages/Bank-Form/Home-FirstBank/HomeFirstBank")
+    ),
+  },
+  {
+    path: "/bank/homefirst/edit/:id",
+    element: lazy(() =>
+      import("../pages/Bank-Form/Home-FirstBank/HomeFirstBank")
+    ),
+  },
+  {
+    path: "/bank/HomeFirst/edit/:id",
     element: lazy(() =>
       import("../pages/Bank-Form/Home-FirstBank/HomeFirstBank")
     ),
