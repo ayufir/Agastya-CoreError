@@ -286,6 +286,50 @@ const findBestMatch = (value, options) => {
  *   - Strips out null/undefined values
  *   - Calls onMapped with the clean result
  */
+const NUMERIC_FIELDS = new Set([
+    "plotArea", "landDataArea", "govtLandArea", "constructionAreaSqFt", "approvedCoverageSqFt", "bua", "landArea",
+    "propertyAge", "residualAge", "ageOfTheProperty", "residualAgeOfTheProperty",
+    "landDataRatePerSqFt", "landDataAmount", "totalAppraisedValue", "roundOffTotal",
+    "govtLandRate", "govtLandAmount", "govtConstructionRate", "govtConstructionArea", "govtConstructionAmount",
+    "costOfConstruction", "ratePerUnit", "replacementCost", "depreciation", "lessDepreciation",
+    "netDepreciatedValue", "buildingValue", "amenities", "totalBuildingValue", "totalValueOfProperty",
+    "marketValue", "distressedSaleValue", "govtGuidelineValue", "landValue", "totalGovtValue",
+    "areaValuation", "constructionCost", "extensionEstimate", "totalAmenitiesCost", "variancePercentage",
+    "distressValue", "rentalValue",
+    "distanceFromCPC", "distanceFromCityCenter", "distanceFromBank", "oneWayDistance", "latitude", "longitude",
+    "countOfProperties", "noOfBasements", "noOfGroundFloors", "noOfPodiums", "noOfUpperFloors", "totalNoOfFloors", "siteVisits"
+]);
+
+const parseToNumber = (val) => {
+    if (val === null || val === undefined || val === "") return null;
+    if (typeof val === "number") return val;
+    const s = String(val).trim();
+    const match = s.match(/-?\d+(\.\d+)?/);
+    if (match) {
+        const num = parseFloat(match[0]);
+        return isNaN(num) ? null : num;
+    }
+    return null;
+};
+
+const cleanNumericFields = (obj) => {
+    if (!obj || typeof obj !== "object") return obj;
+    if (Array.isArray(obj)) {
+        return obj.map(cleanNumericFields);
+    }
+    const next = {};
+    Object.entries(obj).forEach(([key, val]) => {
+        if (NUMERIC_FIELDS.has(key)) {
+            next[key] = parseToNumber(val);
+        } else if (val && typeof val === "object" && !Array.isArray(val)) {
+            next[key] = cleanNumericFields(val);
+        } else {
+            next[key] = val;
+        }
+    });
+    return next;
+};
+
 export const createAutoFillAdapter = (mapping, onMapped) => {
     return (extractedData) => {
         if (!extractedData || typeof extractedData !== "object") return;
@@ -305,13 +349,15 @@ export const createAutoFillAdapter = (mapping, onMapped) => {
         });
 
         // Preserve all unmapped data from extractedData as well
-        const finalMapped = { ...extractedData, ...mapped };
+        const rawFinalMapped = { ...extractedData, ...mapped };
 
         // Strip database/metadata keys to prevent duplicate/incorrect keys on save
         const keysToStrip = ['_id', 'id', '__v', 'createdAt', 'updatedAt', 'createdBy', 'assignedTo', 'status', 'approvalStatus', 'isReportSubmitted'];
         keysToStrip.forEach(k => {
-            delete finalMapped[k];
+            delete rawFinalMapped[k];
         });
+
+        const finalMapped = cleanNumericFields(rawFinalMapped);
 
         if (Object.keys(finalMapped).length > 0) {
             onMapped(finalMapped, extractedData);
