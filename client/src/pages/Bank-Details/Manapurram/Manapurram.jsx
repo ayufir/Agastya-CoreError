@@ -1643,8 +1643,10 @@ export default function ManappuramForm() {
                         <AutoFillForm setFormData={handleAutoFill} />
                     </div>
                     <AdvancedAutoFillForm
+                        caseId={id}
                         bankName="Manappuram"
                         setFormData={handleAutoFill}
+                        setFormDataDirect={setForm}
                         atsDocuments={form?.atsDocuments && form.atsDocuments.length > 0 ? form.atsDocuments : (form?.AttachDocuments || [])}
                         imageUrls={form?.imageUrls || []}
                         siteVisitVideo={form?.siteVisitVideo || []}
@@ -1652,6 +1654,8 @@ export default function ManappuramForm() {
                         emailFiles={form?.emailFiles || []}
                         fieldFormFiles={form?.fieldFormFiles || []}
                         additionalFiles={form?.additionalFiles || []}
+                        fetchData={() => dispatch(fetchManappuramById(id))}
+                        isSubmitted={form?.isReportSubmitted}
                     />
                     {autoFilledFields.length > 0 && (
                         <div className="mt-3 text-xs text-slate-600">

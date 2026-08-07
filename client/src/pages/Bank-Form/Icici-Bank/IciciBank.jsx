@@ -959,6 +959,7 @@ const IciciBank = () => {
                         </div>
                         )}
                         <AdvancedAutoFillForm
+                            caseId={id}
                             bankName="ICICI"
                             setFormData={handleAutoFill}
                             setFormDataDirect={setFormData}
@@ -971,6 +972,7 @@ const IciciBank = () => {
                             fieldFormFiles={editData?.fieldFormFiles || []}
                             additionalFiles={editData?.additionalFiles || []}
                             fetchData={fetchEditData}
+                            isSubmitted={editData?.isReportSubmitted}
                         />
                         {autoFilledFields.length > 0 && (
                             <div className="mt-3 text-xs text-slate-600">

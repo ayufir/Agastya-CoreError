@@ -5,12 +5,22 @@ export const createHomeTrenchReport = createAsyncThunk(
   "homeTrenchReport/create",
   async (reportData, { rejectWithValue, getState }) => {
     try {
-      const savedCity = getState().assignedCases?.savedCity || "";
-      const payload = { ...(reportData || {}), city: savedCity };
+      const state = getState();
+      const savedCity = state.assignedCases?.savedCity || "";
+      const authCity = state.auth?.user?.assignedCity || "";
+      const payload = {
+        ...(reportData || {}),
+        city: reportData?.city || savedCity || authCity || "",
+      };
       const response = await axios.post("/home-trench-reports", payload);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data.error);
+      return rejectWithValue(
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to create Trench report"
+      );
     }
   }
 );
@@ -22,7 +32,11 @@ export const getAllHomeTrenchReports = createAsyncThunk(
       const response = await axios.get("/home-trench-reports");
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data.error);
+      return rejectWithValue(
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        error.message
+      );
     }
   }
 );
@@ -34,7 +48,11 @@ export const getHomeTrenchReportById = createAsyncThunk(
       const response = await axios.get(`/home-trench-reports/${id}`);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data.error);
+      return rejectWithValue(
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        error.message
+      );
     }
   }
 );
@@ -46,7 +64,12 @@ export const updateHomeTrenchReport = createAsyncThunk(
       const response = await axios.put(`/home-trench-reports/${id}`, fullData);
       return response.data;
     } catch (error) {
-      return rejectWithValue(error.response.data.error);
+      return rejectWithValue(
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to update Trench report"
+      );
     }
   }
 );

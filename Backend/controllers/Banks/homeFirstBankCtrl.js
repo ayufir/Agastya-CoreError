@@ -34,6 +34,10 @@ exports.createValuationReport = async (req, res) => {
 
     if (req.body.createdAt) {
       body.createdAt = new Date(req.body.createdAt);
+    } else if (req.body.dateOfVisit) {
+      body.createdAt = new Date(req.body.dateOfVisit);
+    } else if (req.body.dateOfReport) {
+      body.createdAt = new Date(req.body.dateOfReport);
     }
 
 
@@ -135,6 +139,20 @@ exports.updateValuationReportById = async (req, res) => {
     const updateQuery = {};
 
     if (Object.keys(otherFields).length > 0) {
+      const dateCandidate =
+        otherFields.createdAt ||
+        otherFields.dateOfVisit ||
+        otherFields.dateOfReport ||
+        otherFields.dateOfInspection ||
+        otherFields.visitDate ||
+        otherFields.inspectionDate;
+
+      if (dateCandidate) {
+        const parsed = new Date(dateCandidate);
+        if (!isNaN(parsed.getTime())) {
+          otherFields.createdAt = parsed;
+        }
+      }
       updateQuery.$set = otherFields;
     }
 

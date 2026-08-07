@@ -17,15 +17,26 @@ const buildAssetPullQuery = (fieldName, asset) => {
 exports.createHomeTrenchReport = async (req, res) => {
   try {
     const body = { ...req.body };
+    if (req.user) {
+      body.createdBy = req.user._id;
+    }
     if (req.body.createdAt) {
       body.createdAt = new Date(req.body.createdAt);
+    } else if (req.body.dateOfVisit) {
+      body.createdAt = new Date(req.body.dateOfVisit);
+    } else if (req.body.dateOfReport) {
+      body.createdAt = new Date(req.body.dateOfReport);
+    }
+    if (!body.bankName) {
+      body.bankName = "HomeFirstTrench";
     }
 
     const report = new HomeTrenchReport(body);
     await report.save();
     res.status(201).json(report);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error("createHomeTrenchReport error:", error);
+    res.status(400).json({ error: error.message, message: error.message });
   }
 };
 
@@ -125,9 +136,24 @@ exports.getHomeTrenchReportById = async (req, res) => {
 // Update a Home Trench Report by ID
 exports.updateHomeTrenchReport = async (req, res) => {
   try {
+    const body = { ...req.body };
+    const dateCandidate =
+      req.body.createdAt ||
+      req.body.dateOfVisit ||
+      req.body.dateOfReport ||
+      req.body.dateOfInspection ||
+      req.body.visitDate ||
+      req.body.inspectionDate;
+
+    if (dateCandidate) {
+      const parsed = new Date(dateCandidate);
+      if (!isNaN(parsed.getTime())) {
+        body.createdAt = parsed;
+      }
+    }
     const report = await HomeTrenchReport.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      { $set: body },
       { new: true }
     );
     if (!report) {
@@ -135,6 +161,7 @@ exports.updateHomeTrenchReport = async (req, res) => {
     }
     res.status(200).json(report);
   } catch (error) {
+    console.error("updateHomeTrenchReport error:", error);
     res.status(400).json({ error: error.message });
   }
 };

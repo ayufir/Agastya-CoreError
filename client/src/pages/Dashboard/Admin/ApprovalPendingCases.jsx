@@ -15,18 +15,23 @@ import Spinner from "../../../components/Spinner";
 import {
   getBankRoute,
   getDisplayCustomerName,
+  getDisplayCity,
+  getCityTagColor,
 } from "../../../utils/dashboardRecord";
 
 const { Search } = Input;
 const { Option } = Select;
 
 const getCaseDate = (item) =>
+  item.dateOfVisit ||
+  item.dateOfReport ||
+  item.dateOfInspection ||
+  item.visitDate ||
+  item.inspectionDate ||
   item.createdAt ||
   item.uploadDate ||
   item.createdDate ||
   item.submissionDate ||
-  item.dateOfVisit ||
-  item.dateOfReport ||
   item.basicDetails?.createdAt ||
   item.header?.createdAt ||
   "";
@@ -233,6 +238,19 @@ const ApprovalPendingCases = ({ selectedMonth, onRefresh, onCaseApproved, onCase
           {getDisplayCustomerName(record)}
         </Link>
       ),
+    },
+    {
+      title: "City",
+      key: "city",
+      width: 110,
+      render: (record) => {
+        const city = getDisplayCity(record);
+        return city && city !== "Other" ? (
+          <Tag color={getCityTagColor(city)}>{city}</Tag>
+        ) : (
+          <span className="text-gray-400 text-xs">—</span>
+        );
+      },
     },
     {
       title: "Assigned To",

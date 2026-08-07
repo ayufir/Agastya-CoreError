@@ -1081,8 +1081,15 @@ const normalizeQualityOfConstruction = (val) => {
     try {
       const latestSections = await collectSectionData();
       const finalData = buildFinalData(latestSections);
+      const visitDate = finalData.dateOfVisit || finalData.dateOfReport;
+      const targetCreatedAt = finalData.createdAt
+        ? new Date(finalData.createdAt)
+        : (visitDate ? new Date(visitDate) : undefined);
+
       let finalPayload = { ...finalData, city: savedCity, status: "Generated" };
-      if (createdDate) finalPayload = { ...finalPayload, createdAt: createdDate };
+      if (targetCreatedAt && !isNaN(targetCreatedAt.getTime())) {
+        finalPayload.createdAt = targetCreatedAt;
+      }
 
       if (!id) {
         await dispatch(createHFBanks(finalPayload)).unwrap();
@@ -1102,9 +1109,15 @@ const normalizeQualityOfConstruction = (val) => {
     try {
       const latestSections = await collectSectionData();
       const finalData = buildFinalData(latestSections);
-      let finalPayload = { ...finalData, city: savedCity };
+      const visitDate = finalData.dateOfVisit || finalData.dateOfReport;
+      const targetCreatedAt = finalData.createdAt
+        ? new Date(finalData.createdAt)
+        : (visitDate ? new Date(visitDate) : undefined);
 
-      if (createdDate) finalPayload = { ...finalData, createdAt: createdDate };
+      let finalPayload = { ...finalData, city: savedCity };
+      if (targetCreatedAt && !isNaN(targetCreatedAt.getTime())) {
+        finalPayload.createdAt = targetCreatedAt;
+      }
       if (!id) {
         finalPayload.status = "Pending";
       } else if (finalSubmit === "final") {
@@ -1159,8 +1172,15 @@ const normalizeQualityOfConstruction = (val) => {
     try {
       const latestSections = await collectSectionData();
       const finalData = buildFinalData(latestSections);
+      const visitDate = finalData.dateOfVisit || finalData.dateOfReport;
+      const targetCreatedAt = finalData.createdAt
+        ? new Date(finalData.createdAt)
+        : (visitDate ? new Date(visitDate) : undefined);
+
       let finalPayload = { ...finalData, city: savedCity };
-      if (createdDate) finalPayload = { ...finalData, createdAt: createdDate };
+      if (targetCreatedAt && !isNaN(targetCreatedAt.getTime())) {
+        finalPayload.createdAt = targetCreatedAt;
+      }
 
       const res = await dispatch(updateDetails({ id, ...finalPayload })).unwrap();
       await dispatch(
@@ -1426,6 +1446,7 @@ const normalizeQualityOfConstruction = (val) => {
                   caseId={id}
                   bankName="HomeFirst Bank"
                   setFormData={setExtractedData}
+                  setFormDataDirect={setIsEdit}
                   atsDocuments={
                     isEdit?.atsDocuments && isEdit.atsDocuments.length > 0
                       ? isEdit.atsDocuments

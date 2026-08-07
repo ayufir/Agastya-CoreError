@@ -752,6 +752,7 @@ export default function AdityaBirlaForm() {
                         </div>
 
                         <AdvancedAutoFillForm
+                            caseId={id}
                             bankName="Aditya"
                             setFormData={handleAutoFill}
                             setFormDataDirect={setForm}
@@ -763,6 +764,7 @@ export default function AdityaBirlaForm() {
                             fieldFormFiles={form?.fieldFormFiles || []}
                             additionalFiles={form?.additionalFiles || []}
                             fetchData={fetchData}
+                            isSubmitted={form?.isReportSubmitted}
                         />
 
                         <div style={{ marginTop: 32, display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
@@ -1039,6 +1041,7 @@ export default function AdityaBirlaForm() {
                                 caseId={id}
                                 bankName="Aditya Birla"
                                 setFormData={handleAutoFill}
+                                setFormDataDirect={setForm}
                                 atsDocuments={form?.atsDocuments && form.atsDocuments.length > 0 ? form.atsDocuments : (form?.AttachDocuments || [])}
                                 imageUrls={form?.imageUrls || []}
                                 siteVisitVideo={form?.siteVisitVideo || []}
@@ -1047,6 +1050,7 @@ export default function AdityaBirlaForm() {
                                 fieldFormFiles={form?.fieldFormFiles || []}
                                 additionalFiles={form?.additionalFiles || []}
                                 fetchData={fetchData}
+                                isSubmitted={form?.isReportSubmitted}
                             />
                             {autoFilledFields.length > 0 && (
                                 <div className="mt-3 text-xs text-slate-600">

@@ -18,17 +18,23 @@ import {
   getDisplayAddress,
   getDisplayContact,
   getDisplayCustomerName,
+  getDisplayCity,
+  getCityTagColor,
 } from "../../utils/dashboardRecord";
 
 const { Search } = Input;
 const { Option } = Select;
 
 const getCaseDate = (item) =>
+  item.dateOfVisit ||
+  item.dateOfReport ||
+  item.dateOfInspection ||
+  item.visitDate ||
+  item.inspectionDate ||
   item.createdAt ||
   item.uploadDate ||
   item.createdDate ||
   item.submissionDate ||
-  item.dateOfVisit ||
   item.basicDetails?.createdAt ||
   item.header?.createdAt ||
   "";
@@ -148,6 +154,9 @@ const Pending = ({ selectedMonth, preloadedCases }) => {
       : (pendingCases || []);
 
     return source.filter((item) => {
+      const s = (item.status || "").toLowerCase();
+      if (s.includes("cancel")) return false;
+
       // Local bank filter
       if (selectedBanks.length > 0) {
         const bank = (item.bankName || item.bankSlug || "").toLowerCase();
@@ -243,6 +252,19 @@ const Pending = ({ selectedMonth, preloadedCases }) => {
           {getDisplayCustomerName(record)}
         </Link>
       ),
+    },
+    {
+      title: "City",
+      key: "city",
+      width: 110,
+      render: (_, record) => {
+        const city = getDisplayCity(record);
+        return city && city !== "Other" ? (
+          <Tag color={getCityTagColor(city)}>{city}</Tag>
+        ) : (
+          <span className="text-gray-400 text-xs">—</span>
+        );
+      },
     },
     {
       title: "Address as per Legal Document",

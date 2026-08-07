@@ -867,6 +867,7 @@ export default function BajajHousingForm() {
                         </div>
 
                         <AdvancedAutoFillForm
+                            caseId={id}
                             bankName="Bajaj"
                             setFormData={handleAutoFill}
                             setFormDataDirect={setForm}
@@ -878,6 +879,7 @@ export default function BajajHousingForm() {
                             fieldFormFiles={form?.fieldFormFiles || []}
                             additionalFiles={form?.additionalFiles || []}
                             fetchData={fetchData}
+                            isSubmitted={form?.isReportSubmitted}
                         />
 
                         <div style={{ marginTop: 32, textAlign: "center" }}>
@@ -1043,6 +1045,7 @@ export default function BajajHousingForm() {
                                 caseId={id}
                                 bankName="Bajaj Housing"
                                 setFormData={handleAutoFill}
+                                setFormDataDirect={setForm}
                                 atsDocuments={form?.atsDocuments && form.atsDocuments.length > 0 ? form.atsDocuments : (form?.AttachDocuments || [])}
                                 imageUrls={form?.otherImages || []}
                                 siteVisitVideo={form?.siteVisitVideo || []}
@@ -1051,6 +1054,7 @@ export default function BajajHousingForm() {
                                 fieldFormFiles={form?.fieldFormFiles || []}
                                 additionalFiles={form?.additionalFiles || []}
                                 fetchData={fetchData}
+                                isSubmitted={form?.isReportSubmitted}
                             />
                             {autoFilledFields.length > 0 && (
                                 <div className="mt-3 text-xs text-slate-600">

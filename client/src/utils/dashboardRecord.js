@@ -84,7 +84,20 @@ export const getDisplayCity = (record) => {
     ""
   );
 
-  if (city && city !== "N/A") return city;
+  if (city && city !== "N/A") {
+    const trimmed = String(city).trim();
+    const lower = trimmed.toLowerCase();
+    if (lower === "bhopal") return "Bhopal";
+    if (lower === "gwalior") return "Gwalior";
+    if (lower === "jabalpur") return "Jabalpur";
+    if (lower === "indore") return "Indore";
+    if (lower === "dehradun") return "Dehradun";
+    if (lower.includes("combined") || lower.includes("bjg")) return "Combined BJG";
+    return trimmed
+      .split(/\s+/)
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(" ");
+  }
 
   // Fallback: try to find common cities in address
   const address = getDisplayAddress(record).toLowerCase();
@@ -94,6 +107,24 @@ export const getDisplayCity = (record) => {
   }
 
   return "Other";
+};
+
+export const BJG_CITIES = ["Bhopal", "Jabalpur", "Gwalior"];
+
+export const isBJGMember = (assignedCity) => {
+  const norm = String(assignedCity || "").toLowerCase().trim();
+  return ["bhopal", "gwalior", "jabalpur", "combined bjg", "bjg"].includes(norm);
+};
+
+export const getCityTagColor = (cityName) => {
+  const norm = String(cityName || "").toLowerCase().trim();
+  if (norm.includes("bhopal")) return "blue";
+  if (norm.includes("gwalior")) return "green";
+  if (norm.includes("jabalpur")) return "purple";
+  if (norm.includes("indore")) return "orange";
+  if (norm.includes("dehradun")) return "cyan";
+  if (norm.includes("combined") || norm.includes("bjg")) return "gold";
+  return "default";
 };
 
 const BANK_ROUTE_ALIASES = {
@@ -173,13 +204,18 @@ export const getBankRoute = (recordOrBankName) => {
         .replace(/^\/+|\/+$/g, "")
         .split("/");
 
-      return normalizedRoute[0] === "bank"
-        ? normalizedRoute[1] || ""
-        : normalizedRoute[0] || "";
+      const rawRoute =
+        normalizedRoute[0] === "bank"
+          ? normalizedRoute[1] || ""
+          : normalizedRoute[0] || "";
+      const lower = rawRoute.toLowerCase().trim();
+      return BANK_ROUTE_ALIASES[lower] || rawRoute;
     }
 
     if (recordOrBankName.bankSlug) {
-      return String(recordOrBankName.bankSlug).trim();
+      const rawSlug = String(recordOrBankName.bankSlug).trim();
+      const lower = rawSlug.toLowerCase();
+      return BANK_ROUTE_ALIASES[lower] || rawSlug;
     }
   }
 

@@ -33,7 +33,7 @@ const MyWorklist = () => {
 
   // Allowed cities logic
   const cities = ["Combined BJG", "Bhopal", "Indore", "Jabalpur", "Gwalior", "Dehradun"];
-  const isCentralStaff = ["Bhopal", "Gwalior", "Jabalpur"].includes(user?.assignedCity) && !["SuperAdmin", "Admin"].includes(user?.role);
+  const isCentralStaff = ["Bhopal", "Gwalior", "Jabalpur", "Combined BJG"].includes(user?.assignedCity) && !["SuperAdmin", "Admin"].includes(user?.role);
   const allowedCities = isCentralStaff ? ["Combined BJG", "Bhopal", "Jabalpur", "Gwalior"] : cities;
 
   const [loading, setLoading] = useState(false);
@@ -47,7 +47,7 @@ const MyWorklist = () => {
         params: {
           page: 1,
           limit: 1000,
-          city: selectedZone === "Combined BJG" ? undefined : selectedZone || undefined,
+          city: selectedZone || undefined,
         },
       });
       const items = res.data?.totalSubmissions || res.data?.tableItems || [];

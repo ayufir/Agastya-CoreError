@@ -190,7 +190,19 @@ const SummaryCard = ({ selectedMonth }) => {
   }, [selectedZone, selectedMonth, selectedBanks, selectedStatuses, debouncedSearch]);
 
   const monthFilteredData = useMemo(() => {
-    return tableData.filter((item) => isSameMonth(item.createdAt, selectedMonth));
+    return tableData.filter((item) => {
+      const caseDate =
+        item.dateOfVisit ||
+        item.dateOfReport ||
+        item.dateOfInspection ||
+        item.visitDate ||
+        item.inspectionDate ||
+        item.createdAt ||
+        item.uploadDate ||
+        item.createdDate ||
+        item.submissionDate;
+      return isSameMonth(caseDate, selectedMonth);
+    });
   }, [tableData, selectedMonth]);
 
   return (

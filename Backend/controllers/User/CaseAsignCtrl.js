@@ -1,6 +1,12 @@
 const Case = require("../../model/Banks/BajajModel");
 const modelMap = require("../../controllers/modelMap");
 const { deleteImage } = require("../../config/imageUploader"); // 👈 storage delete logic
+const {
+  isBJGCluster,
+  isBJGMember,
+  matchesCity,
+  isUserAllowedCaseCity,
+} = require("../../utils/clusterHelper");
 
 const dictionaryFix = {
   homefirsttrench: "Homefirsttrench",
@@ -132,6 +138,23 @@ const getCaseDisplayContact = (record) =>
     "header.contactedPerson",
   ]);
 
+const formatCityTitleCase = (cityName) => {
+  if (!cityName || cityName === "N/A" || cityName === "undefined" || cityName === "null") return "";
+  const trimmed = String(cityName).trim();
+  if (!trimmed) return "";
+  const lower = trimmed.toLowerCase();
+  if (lower === "bhopal") return "Bhopal";
+  if (lower === "gwalior") return "Gwalior";
+  if (lower === "jabalpur") return "Jabalpur";
+  if (lower === "indore") return "Indore";
+  if (lower === "dehradun") return "Dehradun";
+  if (lower.includes("combined") || lower.includes("bjg")) return "Combined BJG";
+  return trimmed
+    .split(/\s+/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+};
+
 const getCaseDisplayCity = (record) => {
   const city = readCaseValue(record, [
     "propertyCity",
@@ -142,13 +165,13 @@ const getCaseDisplayCity = (record) => {
     "propertyInfo.city",
     "summary.city",
   ]);
-  if (city && city !== "N/A" && city !== "") return city;
+  if (city && city !== "N/A" && city !== "") return formatCityTitleCase(city);
 
   // Fallback: try to find common cities in address
   const address = getCaseDisplayAddress(record).toLowerCase();
   const commonCities = ["bhopal", "indore", "jabalpur", "gwalior", "dehradun"];
   for (const c of commonCities) {
-    if (address.includes(c)) return c;
+    if (address.includes(c)) return formatCityTitleCase(c);
   }
   return "";
 };
@@ -160,25 +183,8 @@ const buildRoleAwareQuery = (user, baseQuery = {}) => {
   if (userRole === "fieldofficer") {
     // Field Officers only see cases assigned to them
     query.assignedTo = user._id;
-  } else if (userRole === "technicalmanager") {
-    // Technical Managers see cases assigned to them OR created by them
-    const tmQuery = {
-      $or: [
-        { assignedTo: user._id },
-        { createdBy: user._id }
-      ]
-    };
-    if (query.$or) {
-      query.$and = [
-        { $or: query.$or },
-        tmQuery
-      ];
-      delete query.$or;
-    } else {
-      query.$or = tmQuery.$or;
-    }
   }
-  // All other roles see all cases
+  // Technical Managers, Admins, etc. see all cases in their assignedCity/cluster via applyCommonCaseFilters
 
   return query;
 };
@@ -216,23 +222,12 @@ const fetchCasesAcrossBanks = async ({
 const applyCommonCaseFilters = (cases, rawQuery = {}, user) => {
   // Enforce regional visibility for all non-SuperAdmin users if they have an assignedCity
   if (user && user.role !== "SuperAdmin" && user.assignedCity) {
-    const userCity = (user.assignedCity || "").toLowerCase().trim();
-    const centralCities = ["bhopal", "gwalior", "jabalpur"];
-    if (userCity) {
-      cases = cases.filter((caseItem) => {
-        const caseCity = (getCaseDisplayCity(caseItem) || "").toLowerCase().trim();
-
-        // Cases with no city set → always show to the user who owns them
-        // (buildRoleAwareQuery already filtered to their cases)
-        if (!caseCity) return true;
-
-        if (centralCities.includes(userCity) || userCity === "combined bjg") {
-          return ["bhopal", "gwalior", "jabalpur", "combined bjg"].some(c => caseCity === c || caseCity.includes(c));
-        } else {
-          return caseCity === userCity || caseCity.includes(userCity);
-        }
-      });
-    }
+    cases = cases.filter((caseItem) => {
+      const caseCity = getCaseDisplayCity(caseItem);
+      // Cases with no city set → always show to the user who owns them
+      if (!caseCity) return true;
+      return isUserAllowedCaseCity(user.assignedCity, caseCity, user.role);
+    });
   }
 
   const selectedBanks = parseMultiValueParam(
@@ -248,11 +243,27 @@ const applyCommonCaseFilters = (cases, rawQuery = {}, user) => {
   if (rawQuery.month) {
     const [year, month] = rawQuery.month.split('-').map(Number);
     cases = cases.filter((caseItem) => {
-      const createdDate = caseItem.createdAt ? new Date(caseItem.createdAt) : null;
-      const uploadedDate = caseItem.uploadDate ? new Date(caseItem.uploadDate) : null;
-      const matchCreated = createdDate && !isNaN(createdDate.getTime()) && createdDate.getUTCFullYear() === year && (createdDate.getUTCMonth() + 1) === month;
-      const matchUploaded = uploadedDate && !isNaN(uploadedDate.getTime()) && uploadedDate.getUTCFullYear() === year && (uploadedDate.getUTCMonth() + 1) === month;
-      return matchCreated || matchUploaded;
+      const dates = [
+        caseItem.createdAt,
+        caseItem.dateOfVisit,
+        caseItem.dateOfReport,
+        caseItem.uploadDate,
+        caseItem.createdDate,
+        caseItem.submissionDate,
+      ]
+        .filter(Boolean)
+        .map((d) => new Date(d))
+        .filter((d) => !isNaN(d.getTime()));
+
+      if (dates.length === 0) return false;
+
+      return dates.some((d) => {
+        const localMatch =
+          d.getFullYear() === year && d.getMonth() + 1 === month;
+        const utcMatch =
+          d.getUTCFullYear() === year && d.getUTCMonth() + 1 === month;
+        return localMatch || utcMatch;
+      });
     });
   }
 
@@ -285,13 +296,10 @@ const applyCommonCaseFilters = (cases, rawQuery = {}, user) => {
     }
 
     if (selectedCities.length > 0) {
-      const caseCity = normalizeText(getCaseDisplayCity(caseItem));
-      const cityMatched = selectedCities.some((selectedCity) => {
-        if (selectedCity === "combined bjg") {
-          return ["bhopal", "gwalior", "jabalpur"].some(c => caseCity === c || caseCity.includes(c));
-        }
-        return caseCity && (caseCity === selectedCity || caseCity.includes(selectedCity));
-      });
+      const caseCity = getCaseDisplayCity(caseItem);
+      const cityMatched = selectedCities.some((selectedCity) =>
+        matchesCity(caseCity, selectedCity)
+      );
 
       if (!cityMatched) {
         return false;
@@ -711,16 +719,11 @@ exports.getCasesByRole = async (req, res) => {
           if (assignedToId === user._id.toString()) return true;
         }
 
-        const caseCity = (getCaseDisplayCity(caseItem) || "").toLowerCase().trim();
-
+        const caseCity = getCaseDisplayCity(caseItem);
         // If case has no city info, don't hide it (safe fallback)
         if (!caseCity) return true;
 
-        if (centralCities.includes(normalizedUserCity) || normalizedUserCity === "combined bjg") {
-          return ["bhopal", "gwalior", "jabalpur", "combined bjg"].some(c => caseCity === c || caseCity.includes(c));
-        } else {
-          return caseCity === normalizedUserCity || caseCity.includes(normalizedUserCity);
-        }
+        return isUserAllowedCaseCity(user.assignedCity, caseCity, user.role);
       });
     }
 
@@ -1041,6 +1044,7 @@ exports.getPendingCases = async (req, res) => {
 
     const pendingCases = allCases.filter((c) => {
       const s = String(c.status || "").toLowerCase().trim();
+      if (s.includes("cancel")) return false;
       return PENDING_STATUSES.includes(s);
     });
 
@@ -1184,6 +1188,22 @@ exports.finalUpdate = async (req, res) => {
     }
     if (req.user?.role === "FieldOfficer" && !updateFields.assignedTo) {
       updateFields.assignedTo = req.user._id;
+    }
+
+    const dateCandidate =
+      updateFields.createdAt ||
+      updateFields.dateOfVisit ||
+      updateFields.dateOfReport ||
+      updateFields.dateOfInspection ||
+      updateFields.visitDate ||
+      updateFields.inspectionDate ||
+      updateFields.date;
+
+    if (dateCandidate) {
+      const parsed = new Date(dateCandidate);
+      if (!isNaN(parsed.getTime())) {
+        updateFields.createdAt = parsed;
+      }
     }
 
     const timelineEntry = {
@@ -1350,10 +1370,14 @@ exports.getSummaryData = async (req, res) => {
       const [year, month] = req.query.month.split('-').map(Number);
       const startDate = new Date(year, month - 1, 1);
       const endDate = new Date(year, month, 1);
+      const startStr = `${year}-${String(month).padStart(2, '0')}-01`;
+      const endStr = `${month === 12 ? year + 1 : year}-${String(month === 12 ? 1 : month + 1).padStart(2, '0')}-01`;
       monthFilter = {
         $or: [
           { createdAt: { $gte: startDate, $lt: endDate } },
-          { uploadDate: { $gte: startDate, $lt: endDate } }
+          { uploadDate: { $gte: startDate, $lt: endDate } },
+          { dateOfVisit: { $gte: startStr, $lt: endStr } },
+          { dateOfReport: { $gte: startStr, $lt: endStr } },
         ]
       };
     }
@@ -1434,21 +1458,22 @@ exports.getSummaryData = async (req, res) => {
 
     // Calculate actual counts from the filtered data
     const normalizeS = (s) => String(s || "").toLowerCase().trim().replace(/\s+/g, " ");
-    const isSubmittedCase = (item) => {
+
+    const isApprovalPendingCase = (item) => {
       const s = normalizeS(item.status);
-      if (s.includes("work in progress") || s.includes("working")) return false;
-      return (s.includes("submitted") || item.isReportSubmitted === true) && !s.includes("approved") && !s.includes("cancel");
+      if (s.includes("cancel") || s.includes("approved")) return false;
+      return s.includes("submit") || s.includes("final") || item.isReportSubmitted === true;
     };
 
-    const PENDING_STATUSES_SET = new Set(["pending", "generated", "new", "created", "open"]);
-    const pendingCount = filteredTotalSubmissions.filter((item) => {
+    const isTotalSubmittedCase = (item) => {
       const s = normalizeS(item.status);
-      return PENDING_STATUSES_SET.has(s) && !isSubmittedCase(item);
-    }).length;
+      if (s.includes("cancel")) return false;
+      return s.includes("final") || s.includes("submit") || item.isReportSubmitted === true || s.includes("done") || s.includes("approved");
+    };
 
-    const workingCount = filteredTotalSubmissions.filter((item) => {
+    const isWIPCase = (item) => {
       const s = normalizeS(item.status);
-      if (isSubmittedCase(item)) return false;
+      if (s.includes("cancel") || s.includes("query") || isTotalSubmittedCase(item)) return false;
       return (
         s.includes("working") ||
         s.includes("work in progress") ||
@@ -1456,15 +1481,22 @@ exports.getSummaryData = async (req, res) => {
         s.includes("progress") ||
         s.includes("visited") ||
         s.includes("reported") ||
-        s.includes("reviewed")
+        s.includes("reviewed") ||
+        (s.includes("pending") && !!item.assignedTo)
       );
+    };
+
+    const PENDING_STATUSES_SET = new Set(["pending", "generated", "new", "created", "open"]);
+    const pendingCount = filteredTotalSubmissions.filter((item) => {
+      const s = normalizeS(item.status);
+      if (s.includes("cancel") || s.includes("query") || isTotalSubmittedCase(item) || isWIPCase(item)) return false;
+      return PENDING_STATUSES_SET.has(s) || !item.assignedTo;
     }).length;
 
-    const finalSubmittedCount = filteredTotalSubmissions.filter((item) => {
-      const s = normalizeS(item.status);
-      if (s.includes("work in progress") || s.includes("working")) return false;
-      return s.includes("final") || s.includes("submit") || item.isReportSubmitted === true || s.includes("done") || s.includes("approved");
-    }).length;
+    const workingCount = filteredTotalSubmissions.filter(isWIPCase).length;
+    const approvalPendingCount = filteredTotalSubmissions.filter(isApprovalPendingCase).length;
+    const finalSubmittedCount = filteredTotalSubmissions.filter(isTotalSubmittedCase).length;
+    const approvedCount = filteredTotalSubmissions.filter((item) => !normalizeS(item.status).includes("cancel") && normalizeS(item.status).includes("approved")).length;
 
     const queryRaisedCount = filteredTotalSubmissions.filter((item) =>
       normalizeS(item.status).includes("query")
@@ -1492,6 +1524,8 @@ exports.getSummaryData = async (req, res) => {
         allCases: filteredTotalSubmissions.length,
         pending: pendingCount,
         working: workingCount,
+        approvalPending: approvalPendingCount,
+        approved: approvedCount,
         finalSubmitted: finalSubmittedCount,
         queryRaised: queryRaisedCount,
         cancelled: cancelledCount,

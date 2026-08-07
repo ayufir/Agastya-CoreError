@@ -1,283 +1,50 @@
 {
-  "timestamp": "2026-07-08T04:54:39.521Z",
+  "timestamp": "2026-08-07T10:38:01.963Z",
   "body": {
-    "directions": {
-      "North": {
-        "document": "Seller's land",
-        "actual": "House of Tulsiram Adiwasi",
-        "plan": "Seller's land"
-      },
-      "South": {
-        "document": "Harikunwar's plot",
-        "actual": "Open plot",
-        "plan": "Harikunwar's plot"
-      },
-      "East": {
-        "document": "Narayan Singh's land",
-        "actual": "Agricultural land of Kushwaha Ji",
-        "plan": "Narayan Singh's land"
-      },
-      "West": {
-        "document": "Road 20 ft",
-        "actual": "Colony Road",
-        "plan": "Road 20 ft"
-      }
-    },
-    "_id": "6a4cededd706f92322c4ba21",
+    "_id": "6a75b55b5036989fc05aa9d2",
     "status": "Work in Progress",
-    "AttachDocuments": [
-      {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/2026-06-12_14-20-40-1-15_compressed_1__yIBxts2RE.pdf",
-        "fileId": "6a4cedcf5c7cd75eb85b4d95",
-        "name": "2026-06-12_14-20-40-1-15_compressed_1__yIBxts2RE.pdf"
-      }
-    ],
-    "atsDocuments": [
-      {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/2026-06-12_14-20-40-1-15_compressed_1__yIBxts2RE.pdf",
-        "fileId": "6a4cedcf5c7cd75eb85b4d95",
-        "name": "2026-06-12_14-20-40-1-15_compressed_1__yIBxts2RE.pdf"
-      }
-    ],
-    "gpsFiles": [
-      {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-06-18_at_3.07.32_PM__1__V2xs-R3nl.jpeg",
-        "fileId": "6a4ceee35c7cd75eb8624cc8",
-        "name": "WhatsApp_Image_2026-06-18_at_3.07.32_PM__1__V2xs-R3nl.jpeg"
-      }
-    ],
-    "emailFiles": [
-      {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/mail_Nv5qSaxBF.jpg",
-        "fileId": "6a4ceede5c7cd75eb8623003",
-        "name": "mail_Nv5qSaxBF.jpg"
-      }
-    ],
-    "fieldFormFiles": [
-      {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-06-18_at_3.07.30_PM_Cwtn6BHQM.jpeg",
-        "fileId": "6a4ceed95c7cd75eb8621235",
-        "name": "WhatsApp_Image_2026-06-18_at_3.07.30_PM_Cwtn6BHQM.jpeg"
-      }
-    ],
+    "AttachDocuments": [],
+    "atsDocuments": [],
+    "gpsFiles": [],
+    "emailFiles": [],
+    "fieldFormFiles": [],
     "additionalFiles": [],
     "siteVisitVideo": [],
-    "createdBy": "6a3bbb07003d7113b353da1e",
+    "createdBy": "683070c765ba61b559c1ecc1",
     "bankName": "HomeFirst",
-    "city": "Bhopal",
-    "approvalStatus": "Accepted",
+    "city": "",
+    "approvalStatus": "Pending",
     "isReportSubmitted": true,
-    "refNo": "MP35242020A1721505",
-    "dateOfReport": "18/06/2026",
-    "dateOfVisit": "18/06/2026",
-    "projectPinCode": "",
-    "latitude": "23.022002",
-    "longitude": "76.733676",
-    "propertyCategory": "INDIVIDUAL",
-    "unitType": "Open Plot",
-    "typeOfLoan": "OWN PLOT + SECO",
-    "propertyLocation": "VILLAGE",
-    "populationCensus2011": "10000",
-    "ruralUrban": "RURAL",
-    "zone": "RESIDENTIAL",
-    "propertyAreaLimits": "GP",
-    "eraApplicable": "Sub Divisional Officer, Ashta",
-    "projectName": "",
-    "customerName": "vikash rajju",
-    "customerNo": "8463846043",
-    "personMetDuringVisit": "Rahul Damadiya met at site",
-    "personContactNo": "8463846043",
-    "relationshipOfPersonMet": "OTHER",
-    "propertyOwnerName": "Sumitra Bai W/o Rajju Singh",
-    "howFoundOwnerName": "SALE DEED",
-    "documentsAvailable": "YES",
-    "nameOnSocietyBoard": "",
-    "addressLegal": "Khasra No. 148, Patwari Halka No. 49, Plot No. Ward No.16, Anikant Colony, Musli Road, Kasba Ashta, Tehsil Ashta, District Sehore, Madhya Pradesh",
-    "addressSite": "Khasra No. 148, Patwari Halka No. 49, Plot No. Ward No.16, Anikant Colony, Musli Road, Kasba Ashta, Tehsil Ashta, District Sehore, Madhya Pradesh",
-    "nameOnDoor": "NA",
-    "nearbyLandmark": "Near Model School",
-    "statusOfOccupancy": "VACANT",
-    "occupiedBy": "OWNER",
-    "usageOfProperty": "RESIDENTIAL",
-    "propertyEasilyIdentifiable": "YES",
-    "imageUrls": [
-      {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-06-18_at_3.07.32_PM__2__vl9NQc0jj.jpeg",
-        "fileId": "6a4cee2c5c7cd75eb85df509",
-        "name": "WhatsApp_Image_2026-06-18_at_3.07.32_PM__2__vl9NQc0jj.jpeg"
-      },
-      {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-06-18_at_3.07.32_PM_6MjL-MKj3.jpeg",
-        "fileId": "6a4cee305c7cd75eb85e0cb6",
-        "name": "WhatsApp_Image_2026-06-18_at_3.07.32_PM_6MjL-MKj3.jpeg"
-      },
-      {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-06-18_at_3.07.34_PM__1__znSTQzhw0.jpeg",
-        "fileId": "6a4cee325c7cd75eb85e1c5d",
-        "name": "WhatsApp_Image_2026-06-18_at_3.07.34_PM__1__znSTQzhw0.jpeg"
-      },
-      {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-06-18_at_3.07.34_PM__2__MPuFquXEuQ.jpeg",
-        "fileId": "6a4cee335c7cd75eb85e2311",
-        "name": "WhatsApp_Image_2026-06-18_at_3.07.34_PM__2__MPuFquXEuQ.jpeg"
-      },
-      {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-06-18_at_3.07.34_PM_uz1Vnvyqe.jpeg",
-        "fileId": "6a4cee345c7cd75eb85e289a",
-        "name": "WhatsApp_Image_2026-06-18_at_3.07.34_PM_uz1Vnvyqe.jpeg"
-      },
-      {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-06-18_at_3.07.35_PM__1__KBUfAcMQr.jpeg",
-        "fileId": "6a4cee365c7cd75eb85e35e6",
-        "name": "WhatsApp_Image_2026-06-18_at_3.07.35_PM__1__KBUfAcMQr.jpeg"
-      },
-      {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-06-18_at_3.07.35_PM_J5tm4j02tD.jpeg",
-        "fileId": "6a4cee375c7cd75eb85e3947",
-        "name": "WhatsApp_Image_2026-06-18_at_3.07.35_PM_J5tm4j02tD.jpeg"
-      },
-      {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-06-18_at_3.07.36_PM__1__Bf0Cd8Lqi.jpeg",
-        "fileId": "6a4cee385c7cd75eb85e41a4",
-        "name": "WhatsApp_Image_2026-06-18_at_3.07.36_PM__1__Bf0Cd8Lqi.jpeg"
-      },
-      {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-06-18_at_3.07.36_PM_qag76NDGx.jpeg",
-        "fileId": "6a4cee385c7cd75eb85e469f",
-        "name": "WhatsApp_Image_2026-06-18_at_3.07.36_PM_qag76NDGx.jpeg"
-      }
-    ],
-    "nearestCityTown": "SEHORE",
-    "locationCategory": "OTHER",
-    "localityDevelopment": "MEDIUM",
-    "approachRoadType": "OTHER",
-    "approachRoadWidth": "20 ft",
-    "distanceFromCityCentre": "",
-    "distanceFromRailwayStation": "40 km",
-    "distanceFromBusStand": "1 km",
-    "distanceFromHospital": "",
-    "occupancyPercentage": "50%",
-    "habitationPercentage": "MEDIUM",
-    "nallahRiverHighTension": "NA",
-    "electricityAvailability": "YES",
-    "waterAvailability": "YES",
-    "drainageAvailability": "YES",
-    "documents": [
-      {
-        "key": "1",
-        "type": "NA Converted",
-        "approvingAuthority": "NA",
-        "approvalDate": "",
-        "approvalDetails": "",
-        "_id": "6a4cef7bd706f92322c4bf7a"
-      },
-      {
-        "key": "2",
-        "type": "Layout Plan",
-        "approvingAuthority": "NA",
-        "approvalDate": "",
-        "approvalDetails": "",
-        "_id": "6a4cef7bd706f92322c4bf7b"
-      },
-      {
-        "key": "3",
-        "type": "Building Plan",
-        "approvingAuthority": "NA",
-        "approvalDate": "",
-        "approvalDetails": "",
-        "_id": "6a4cef7bd706f92322c4bf7c"
-      },
-      {
-        "key": "4",
-        "type": "Commencement Certificate",
-        "approvingAuthority": "NA",
-        "approvalDate": "",
-        "approvalDetails": "",
-        "_id": "6a4cef7bd706f92322c4bf7d"
-      },
-      {
-        "key": "5",
-        "type": "Occupancy / Completion / Building Usage Certificate",
-        "approvingAuthority": "NA",
-        "approvalDate": "",
-        "approvalDetails": "",
-        "_id": "6a4cef7bd706f92322c4bf7e"
-      },
-      {
-        "key": "6",
-        "type": "Sub Plotting Plan",
-        "approvingAuthority": "NA",
-        "approvalDate": "",
-        "approvalDetails": "",
-        "_id": "6a4cef7bd706f92322c4bf7f"
-      }
-    ],
-    "seismicZone": "II",
-    "cycloneZone": "NO",
-    "landslideProneZone": "NO",
-    "floodZone": "NO",
-    "crZone": "NO",
-    "demolitionRisk": "NO",
-    "demolitionRiskDetails": "NA",
-    "followsNDMAGuidelines": "YES",
-    "boundariesMatching": "PARTIAL",
-    "propertyDemarcated": "YES",
-    "boundaryRemarks": "",
-    "marketability": "AVERAGE",
-    "landArea": "830 sq.ft",
-    "linearDimension": "North side 40 ft x 20 ft; South side 43 ft x 20 ft",
-    "plotArea": "0",
-    "typeOfStructure": "RCC",
-    "typeOfRoof": "RCC",
-    "noOfFloorsPermissible": "NA",
-    "noOfFloorsActual": "0",
-    "noOfUnitFlatOnEachFloor": "NA",
-    "qualityOfConstruction": "Average",
-    "approxAgeOfProperty": "0",
-    "residualAge": "0",
+    "refNo": "462042",
+    "propertyName": "ashu",
+    "customerName": "ankit skyinfo",
+    "customerNo": "9897949596",
+    "addressSite": "king of bhopal",
+    "imageUrls": [],
     "valuationRemarks": [],
     "customCaseId": "",
     "appIdNotes": "",
-    "distance": "40",
-    "othersIfAny": "55",
+    "distance": "",
+    "othersIfAny": "",
     "ratePerKm": 3.5,
-    "totalAllowance": 195,
+    "totalAllowance": 0,
     "timeline": [
       {
         "status": "Work in Progress",
-        "updatedAt": "2026-07-07T12:15:51.199Z",
-        "updatedBy": "6a3bbb07003d7113b353da1e",
+        "updatedAt": "2026-08-07T10:37:35.070Z",
+        "updatedBy": "683070c765ba61b559c1ecc1",
         "note": "Assigned to user 6a2a4ed58ddfdbd661279b46",
-        "_id": "6a4cedf7d706f92322c4ba61"
-      },
-      {
-        "status": "Accepted",
-        "updatedAt": "2026-07-07T12:16:06.874Z",
-        "updatedBy": "6a2a4ed58ddfdbd661279b46",
-        "note": "Accepted by Field Officer",
-        "_id": "6a4cee06d706f92322c4bb8f"
-      },
-      {
-        "status": "submitted-by-fo",
-        "updatedAt": "2026-07-07T12:18:36.912Z",
-        "updatedBy": "6a2a4ed58ddfdbd661279b46",
-        "note": "Submitted by field officer",
-        "_id": "6a4cee9cd706f92322c4bda7"
+        "_id": "6a75b56f5036989fc05aa9f2"
       }
     ],
-    "createdAt": "2026-07-07T12:15:41.615Z",
-    "updatedAt": "2026-07-07T12:15:41.617Z",
+    "dateOfReport": "2026-08-07",
+    "dateOfVisit": "2026-08-07",
+    "documents": [],
+    "createdAt": "2026-08-07T10:37:15.390Z",
+    "updatedAt": "2026-08-07T10:37:15.504Z",
     "__v": 0,
     "assignedTo": "6a2a4ed58ddfdbd661279b46",
-    "route": "/bank/homefirst/edit/6a4cededd706f92322c4ba21",
-    "constructionStage": "Foundation/Brickwork stage - under construction (8 days old as per field visit form)",
-    "constructionStatus": "Foundation/Brickwork stage - under construction (8 days old as per field visit form)",
-    "landDocumentArea": "830 sq.ft (77.13 sq.m)",
-    "landPlanArea": "830 sq.ft (77.13 sq.m)",
-    "landSiteArea": "830 sq.ft",
-    "liftAvailable": "No",
-    "plotNo": "",
-    "propertyName": "Anikant Colony, Musli Road, Kasba Ashta, Ashta, Sehore",
-    "realizableValue": ""
+    "route": "/bank/home-first/edit/6a75b55b5036989fc05aa9d2",
+    "addressLegal": "king of bhopal"
   }
 }

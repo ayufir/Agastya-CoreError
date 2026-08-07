@@ -24,12 +24,15 @@ const { Search } = Input;
 const { Option } = Select;
 
 const getCaseDate = (item) =>
+  item.dateOfVisit ||
+  item.dateOfReport ||
+  item.dateOfInspection ||
+  item.visitDate ||
+  item.inspectionDate ||
   item.createdAt ||
   item.uploadDate ||
   item.createdDate ||
   item.submissionDate ||
-  item.dateOfVisit ||
-  item.dateOfReport ||
   item.basicDetails?.createdAt ||
   item.header?.createdAt ||
   "";
@@ -57,7 +60,7 @@ const isApprovalPending = (item) => {
   return isSubmitted && !isApproved && !isCancelled;
 };
 
-const AssignedCase = ({ selectedMonth }) => {
+const AssignedCase = ({ selectedMonth, preloadedCases }) => {
   const dispatch = useDispatch();
 
   const { user } = useSelector((state) => state.auth);
@@ -126,15 +129,17 @@ const AssignedCase = ({ selectedMonth }) => {
   }, [dispatch]);
 
   useEffect(() => {
-    fetchAssignedList();
-  }, [fetchAssignedList]);
+    if (!preloadedCases) {
+      fetchAssignedList();
+    }
+  }, [fetchAssignedList, preloadedCases]);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedZone, selectedMonth, selectedBanks, selectedStatuses, debouncedSearch]);
 
   const monthFilteredAssignedCases = useMemo(() => {
-    return (cases || []).filter((item) => {
+    let source = preloadedCases || (cases || []).filter((item) => {
       if (!isSameMonth(getCaseDate(item), selectedMonth)) return false;
       const status = (item.status || "").toLowerCase().trim();
       if (
@@ -142,13 +147,43 @@ const AssignedCase = ({ selectedMonth }) => {
         status.includes("done") ||
         status.includes("complete") ||
         status.includes("approved") ||
+        status.includes("submit") ||
+        item.isReportSubmitted === true ||
         status.includes("cancel")
       ) {
         return false;
       }
       return true;
     });
-  }, [cases, selectedMonth]);
+
+    if (debouncedSearch) {
+      const searchTokens = debouncedSearch.trim().toLowerCase().split(/\s+/);
+      source = source.filter((item) => {
+        const haystack = [
+          item.bankName,
+          item.customerName,
+          item.address,
+          item.city,
+          item.engineer || item.assignedTo?.name,
+          item.status,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return searchTokens.every((token) => haystack.includes(token));
+      });
+    }
+
+    if (selectedBanks.length) {
+      source = source.filter((item) => selectedBanks.includes(item.bankName));
+    }
+
+    if (selectedStatuses.length) {
+      source = source.filter((item) => selectedStatuses.includes(item.status));
+    }
+
+    return source;
+  }, [cases, preloadedCases, selectedMonth, debouncedSearch, selectedBanks, selectedStatuses]);
 
   const handleRemoveAssignment = async (recordId) => {
     try {

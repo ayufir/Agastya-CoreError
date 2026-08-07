@@ -23,7 +23,10 @@ import {
   AlertTriangle,
   Clock,
   ExternalLink,
-  FileUp
+  FileUp,
+  ChevronDown,
+  ChevronUp,
+  EyeOff
 } from "lucide-react";
 
 const { TextArea } = Input;
@@ -501,6 +504,7 @@ const AdvancedAutoFillForm = ({
   const [uploadedFieldFormUrls, setUploadedFieldFormUrls] = useState([]);
   const [uploadedAdditionalUrls, setUploadedAdditionalUrls] = useState([]);
 
+  const [isExpanded, setIsExpanded]               = useState(false);
   const [uploadingCategory, setUploadingCategory] = useState({});
   const [deleteConfirm, setDeleteConfirm] = useState(null); // { doc, animating }
 
@@ -538,46 +542,54 @@ const AdvancedAutoFillForm = ({
     }
   };
 
+  console.log("AdvancedAutoFillForm render props:", {
+    caseId,
+    propGpsFiles,
+    propFieldFormFiles,
+    propImageUrls,
+    isFieldOfficer,
+    isSubmitted
+  });
+
   useEffect(() => {
     setAtsDocsList(normalizeDocumentsList(propAtsDocuments));
   }, [propAtsDocuments]);
 
   useEffect(() => {
-    if (propImageUrls && propImageUrls.length > 0) {
-      setUploadedPhotoUrls(propImageUrls);
+    if (!uploadingCategory["siteVisitPhotos"]) {
+      setUploadedPhotoUrls(propImageUrls || []);
     }
-  }, [propImageUrls]);
+  }, [propImageUrls, uploadingCategory]);
 
   useEffect(() => {
-    if (propSiteVisitVideo && propSiteVisitVideo.length > 0) {
-      setUploadedVideoUrls(propSiteVisitVideo);
+    if (!uploadingCategory["siteVisitVideo"]) {
+      setUploadedVideoUrls(propSiteVisitVideo || []);
     }
-  }, [propSiteVisitVideo]);
+  }, [propSiteVisitVideo, uploadingCategory]);
 
   useEffect(() => {
-    // Only sync from parent prop if it has actual data — avoids wiping freshly uploaded files
-    if (propGpsFiles && propGpsFiles.length > 0) {
-      setUploadedGpsUrls(propGpsFiles);
+    if (!uploadingCategory["gpsFiles"]) {
+      setUploadedGpsUrls(propGpsFiles || []);
     }
-  }, [propGpsFiles]);
+  }, [propGpsFiles, uploadingCategory]);
 
   useEffect(() => {
-    if (propEmailFiles && propEmailFiles.length > 0) {
-      setUploadedEmailUrls(propEmailFiles);
+    if (!uploadingCategory["emailFiles"]) {
+      setUploadedEmailUrls(propEmailFiles || []);
     }
-  }, [propEmailFiles]);
+  }, [propEmailFiles, uploadingCategory]);
 
   useEffect(() => {
-    if (propFieldFormFiles && propFieldFormFiles.length > 0) {
-      setUploadedFieldFormUrls(propFieldFormFiles);
+    if (!uploadingCategory["fieldFormFiles"]) {
+      setUploadedFieldFormUrls(propFieldFormFiles || []);
     }
-  }, [propFieldFormFiles]);
+  }, [propFieldFormFiles, uploadingCategory]);
 
   useEffect(() => {
-    if (propAdditionalFiles && propAdditionalFiles.length > 0) {
-      setUploadedAdditionalUrls(propAdditionalFiles);
+    if (!uploadingCategory["additionalFiles"]) {
+      setUploadedAdditionalUrls(propAdditionalFiles || []);
     }
-  }, [propAdditionalFiles]);
+  }, [propAdditionalFiles, uploadingCategory]);
 
   // Fetch ALL document fields from DB using authenticated axiosInstance (plain fetch() has no auth and returns 401)
   useEffect(() => {
@@ -598,20 +610,20 @@ const AdvancedAutoFillForm = ({
         if ((!propSiteVisitVideo || propSiteVisitVideo.length === 0) && Array.isArray(resData.siteVisitVideo)) {
           setUploadedVideoUrls(resData.siteVisitVideo);
         }
-        // GPS screenshots — always sync from DB to ensure up-to-date
-        if (Array.isArray(resData.gpsFiles)) {
+        // GPS screenshots
+        if ((!propGpsFiles || propGpsFiles.length === 0) && Array.isArray(resData.gpsFiles)) {
           setUploadedGpsUrls(resData.gpsFiles);
         }
         // Email / MIS screenshots
-        if (Array.isArray(resData.emailFiles)) {
+        if ((!propEmailFiles || propEmailFiles.length === 0) && Array.isArray(resData.emailFiles)) {
           setUploadedEmailUrls(resData.emailFiles);
         }
         // Field visit form
-        if (Array.isArray(resData.fieldFormFiles)) {
+        if ((!propFieldFormFiles || propFieldFormFiles.length === 0) && Array.isArray(resData.fieldFormFiles)) {
           setUploadedFieldFormUrls(resData.fieldFormFiles);
         }
         // Additional files
-        if (Array.isArray(resData.additionalFiles)) {
+        if ((!propAdditionalFiles || propAdditionalFiles.length === 0) && Array.isArray(resData.additionalFiles)) {
           setUploadedAdditionalUrls(resData.additionalFiles);
         }
         // Site photos (ICICI = sitePhotographs, Bajaj = otherImages, others = imageUrls)
@@ -1485,37 +1497,70 @@ if (typeof setFormDataDirect === "function") {
         </div>
       )}
 
-      {/* Header Panel */}
-      {!isFieldOfficer && (
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-150/70 pb-5">
-          <div className="flex items-start gap-3">
-            <div className="p-2.5 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-2xl text-white shadow-md flex items-center justify-center shrink-0">
-              <Sparkles className="w-5 h-5 animate-pulse" />
-            </div>
-            <div>
-              <div className="text-base font-extrabold text-slate-900 tracking-tight flex items-center gap-2 flex-wrap">
-                <span>AI Advanced Auto Fill</span>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-white border border-slate-200 text-slate-700 shadow-sm">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  {user?.role === "SuperAdmin" ? "Super Admin Mode" : `${user?.role || "Guest"} Mode`}
+      {/* Header Panel with Expand / Collapse Toggle */}
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${isExpanded ? "border-b border-slate-150/70 pb-4 mb-6" : ""}`}>
+        <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
+          <div className="p-2.5 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-2xl text-white shadow-md flex items-center justify-center shrink-0">
+            <Sparkles className="w-5 h-5 animate-pulse" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-base font-extrabold text-slate-900 tracking-tight flex items-center gap-2 flex-wrap">
+              <span>AI Advanced Auto Fill</span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-white border border-slate-200 text-slate-700 shadow-sm">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                {user?.role === "SuperAdmin" ? "Super Admin Mode" : user?.role === "Admin" ? "Admin Mode" : user?.role === "Coordinator" ? "Coordinator Mode" : `${user?.role || "Guest"} Mode`}
+              </span>
+              {!isExpanded && (uploadedGpsUrls.length + atsDocsList.length + uploadedFieldFormUrls.length + uploadedPhotoUrls.length + uploadedVideoUrls.length + uploadedEmailUrls.length > 0) && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-50 border border-indigo-200 text-indigo-700">
+                  📎 {uploadedGpsUrls.length + atsDocsList.length + uploadedFieldFormUrls.length + uploadedPhotoUrls.length + uploadedVideoUrls.length + uploadedEmailUrls.length} Files Attached
                 </span>
-              </div>
-              <div className="mt-1 text-xs text-slate-500 font-semibold leading-relaxed">
-                Upload site media and property documents to auto-populate files using intelligent Claude AI extraction.
-              </div>
+              )}
+            </div>
+            <div className="mt-1 text-xs text-slate-500 font-semibold leading-relaxed">
+              Upload site media and property documents to auto-populate files using intelligent Claude AI extraction.
             </div>
           </div>
         </div>
-      )}
 
-      {/* Bank + Property Type + Notes row */}
-      {!isFieldOfficer && (
-        <div className="mb-6 grid gap-4 md:grid-cols-3 bg-white/70 backdrop-blur-sm p-4.5 rounded-2xl border border-slate-200/60 shadow-sm">
-          <div className="space-y-1">
-            <div className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-1">
-              <span>🏦 Target Bank</span>
-              <span className="text-red-500 font-bold">*</span>
-            </div>
+        {/* Toggle Button on Right */}
+        <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+          <button
+            type="button"
+            onClick={() => setIsExpanded((prev) => !prev)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition-all cursor-pointer shadow-sm ${
+              isExpanded
+                ? "bg-white hover:bg-slate-50 text-slate-700 border border-slate-250 shadow-slate-100 hover:border-slate-350"
+                : "bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 hover:from-indigo-700 hover:via-purple-700 hover:to-indigo-700 text-white border-none shadow-indigo-200 hover:shadow-md hover:scale-[1.02]"
+            }`}
+          >
+            {isExpanded ? (
+              <>
+                <EyeOff className="w-3.5 h-3.5 text-slate-500" />
+                <span>Hide AI Auto Fill</span>
+                <ChevronUp className="w-3.5 h-3.5 text-slate-500" />
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3.5 h-3.5 text-indigo-200 animate-pulse" />
+                <span>Show / Unhide AI Auto Fill</span>
+                <ChevronDown className="w-3.5 h-3.5 text-indigo-200" />
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Collapsible Form Body */}
+      {isExpanded && (
+        <>
+          {/* Bank + Property Type + Notes row */}
+          {!isFieldOfficer && (
+            <div className="mb-6 grid gap-4 md:grid-cols-3 bg-white/70 backdrop-blur-sm p-4.5 rounded-2xl border border-slate-200/60 shadow-sm">
+              <div className="space-y-1">
+                <div className="text-[11px] font-extrabold text-slate-700 uppercase tracking-wider flex items-center gap-1">
+                  <span>🏦 Target Bank</span>
+                  <span className="text-red-500 font-bold">*</span>
+                </div>
             <Select
               value={selectedBank}
               onChange={setSelectedBank}
@@ -2220,6 +2265,8 @@ if (typeof setFormDataDirect === "function") {
             </div>
           )}
         </div>
+      )}
+        </>
       )}
     </div>
 

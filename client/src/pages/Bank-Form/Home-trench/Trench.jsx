@@ -197,8 +197,9 @@ const Trench = () => {
         ...response,
         laiNo: response.laiNo || "",
         propertyCode: response.propertyCode || "",
-        dateOfVisit: response.dateOfVisit ? dayjs(response.dateOfVisit) : TODAY(),
-        dateOfReport: response.dateOfReport ? dayjs(response.dateOfReport) : TODAY(),
+        dateOfVisit: response.dateOfVisit ? dayjs(response.dateOfVisit) : (response.createdAt ? dayjs(response.createdAt) : TODAY()),
+        dateOfReport: response.dateOfReport ? dayjs(response.dateOfReport) : (response.createdAt ? dayjs(response.createdAt) : TODAY()),
+        createdAt: response.createdAt ? dayjs(response.createdAt) : TODAY(),
         charges: response.charges === "" || response.charges == null
           ? 1000
           : Number(response.charges),
@@ -256,12 +257,21 @@ const Trench = () => {
 
   const buildPayload = async () => {
     const values = await form.validateFields();
+    const visitDate = values.dateOfVisit?.format("YYYY-MM-DD") || "";
+    const reportDate = values.dateOfReport?.format("YYYY-MM-DD") || "";
+    const customCreatedAt = values.createdAt
+      ? (dayjs.isDayjs(values.createdAt)
+          ? values.createdAt.toDate()
+          : new Date(values.createdAt))
+      : (visitDate ? new Date(visitDate) : (reportDate ? new Date(reportDate) : undefined));
+
     return {
       ...values,
       laiNo: values.laiNo || "",
       propertyCode: values.propertyCode || "",
-      dateOfVisit: values.dateOfVisit?.format("YYYY-MM-DD") || "",
-      dateOfReport: values.dateOfReport?.format("YYYY-MM-DD") || "",
+      dateOfVisit: visitDate,
+      dateOfReport: reportDate,
+      ...(customCreatedAt && !isNaN(customCreatedAt.getTime()) ? { createdAt: customCreatedAt } : {}),
       imageUrls: uploadedUrls,
       AttachDocuments: docUrls,
       atsDocuments: atsDocuments,
@@ -341,18 +351,36 @@ const Trench = () => {
     dispatch(ShowLoading());
     setLoading(true);
     try {
-      const values = await form.validateFields();
+      const formValues = form.getFieldsValue(true) || {};
+      const visitDate = formValues.dateOfVisit
+        ? (dayjs.isDayjs(formValues.dateOfVisit)
+            ? formValues.dateOfVisit.format("YYYY-MM-DD")
+            : formValues.dateOfVisit)
+        : "";
+      const reportDate = formValues.dateOfReport
+        ? (dayjs.isDayjs(formValues.dateOfReport)
+            ? formValues.dateOfReport.format("YYYY-MM-DD")
+            : formValues.dateOfReport)
+        : "";
+      const customCreatedAt = formValues.createdAt
+        ? (dayjs.isDayjs(formValues.createdAt)
+            ? formValues.createdAt.toDate()
+            : new Date(formValues.createdAt))
+        : (visitDate ? new Date(visitDate) : (reportDate ? new Date(reportDate) : undefined));
+
       const payload = {
-        ...values,
-        laiNo: values.laiNo || "",
-        propertyCode: values.propertyCode || "",
-        dateOfVisit: values.dateOfVisit?.format("YYYY-MM-DD") || "",
-        dateOfReport: values.dateOfReport?.format("YYYY-MM-DD") || "",
-        imageUrls: uploadedUrls,
-        AttachDocuments: docUrls,
-        atsDocuments: atsDocuments,
-        city: savedCity,
-        status: "Generated"
+        ...formValues,
+        laiNo: formValues.laiNo || "",
+        propertyCode: formValues.propertyCode || "",
+        dateOfVisit: visitDate,
+        dateOfReport: reportDate,
+        ...(customCreatedAt && !isNaN(customCreatedAt.getTime()) ? { createdAt: customCreatedAt } : {}),
+        imageUrls: uploadedUrls || [],
+        AttachDocuments: docUrls || [],
+        atsDocuments: atsDocuments || [],
+        city: savedCity || user?.assignedCity || "",
+        bankName: "HomeFirstTrench",
+        status: "Generated",
       };
       if (id) {
         await dispatch(updateHomeTrenchReport({ id, fullData: payload })).unwrap();
@@ -361,6 +389,7 @@ const Trench = () => {
       }
       navigate("/");
     } catch (error) {
+      console.error("Trench handleAdminGenerate error:", error);
       throw error;
     } finally {
       setLoading(false);
@@ -541,8 +570,10 @@ const Trench = () => {
               {showAutoFill && (
                 <div style={{ padding: "20px 24px" }}>
                   <AdvancedAutoFillForm
+                    caseId={id}
                     bankName="Home First Tranche"
                     setFormData={handleAutoFill}
+                    setFormDataDirect={setReportData}
                     atsDocuments={atsDocuments && atsDocuments.length > 0 ? atsDocuments : (docUrls || [])}
                     imageUrls={uploadedUrls || []}
                     siteVisitVideo={reportData?.siteVisitVideo || []}
@@ -551,6 +582,7 @@ const Trench = () => {
                     fieldFormFiles={reportData?.fieldFormFiles || []}
                     additionalFiles={reportData?.additionalFiles || []}
                     fetchData={fetchReport}
+                    isSubmitted={reportData?.isReportSubmitted}
                   />
                 </div>
               )}

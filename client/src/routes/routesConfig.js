@@ -92,12 +92,43 @@ export const routesConfig = [
     element: lazy(() => import("../pages/Bank-Form/Home-trench/Trench")),
   },
   {
+    path: "/bank/home-first-trench/edit/:id",
+    element: lazy(() => import("../pages/Bank-Form/Home-trench/Trench")),
+  },
+  {
+    path: "/bank/homefirsttrench",
+    element: lazy(() => import("../pages/Bank-Form/Home-trench/Trench")),
+  },
+  {
     path: "/bank/homefirsttrench/:id",
     element: lazy(() => import("../pages/Bank-Form/Home-trench/Trench")),
   },
-
   {
-    path: "/bank/home-first-trench/edit/:id",
+    path: "/bank/homefirsttrench/edit/:id",
+    element: lazy(() => import("../pages/Bank-Form/Home-trench/Trench")),
+  },
+  {
+    path: "/bank/home-first-tranche",
+    element: lazy(() => import("../pages/Bank-Form/Home-trench/Trench")),
+  },
+  {
+    path: "/bank/home-first-tranche/:id",
+    element: lazy(() => import("../pages/Bank-Form/Home-trench/Trench")),
+  },
+  {
+    path: "/bank/home-first-tranche/edit/:id",
+    element: lazy(() => import("../pages/Bank-Form/Home-trench/Trench")),
+  },
+  {
+    path: "/bank/homefirsttranche",
+    element: lazy(() => import("../pages/Bank-Form/Home-trench/Trench")),
+  },
+  {
+    path: "/bank/homefirsttranche/:id",
+    element: lazy(() => import("../pages/Bank-Form/Home-trench/Trench")),
+  },
+  {
+    path: "/bank/homefirsttranche/edit/:id",
     element: lazy(() => import("../pages/Bank-Form/Home-trench/Trench")),
   },
 

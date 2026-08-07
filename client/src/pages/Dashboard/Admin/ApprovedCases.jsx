@@ -17,12 +17,15 @@ const { Search } = Input;
 const { Option } = Select;
 
 const getCaseDate = (item) =>
+  item.dateOfVisit ||
+  item.dateOfReport ||
+  item.dateOfInspection ||
+  item.visitDate ||
+  item.inspectionDate ||
   item.createdAt ||
   item.uploadDate ||
   item.createdDate ||
   item.submissionDate ||
-  item.dateOfVisit ||
-  item.dateOfReport ||
   item.basicDetails?.createdAt ||
   item.header?.createdAt ||
   "";
@@ -42,7 +45,7 @@ const isSameMonth = (date, monthValue) => {
 const normalizeStatus = (status = "") =>
   status.toString().toLowerCase().trim().replace(/\s+/g, " ");
 
-const ApprovedCases = ({ selectedMonth }) => {
+const ApprovedCases = ({ selectedMonth, preloadedCases }) => {
   const dispatch = useDispatch();
 
   const {
@@ -85,8 +88,10 @@ const ApprovedCases = ({ selectedMonth }) => {
   }, [searchText]);
 
   useEffect(() => {
-    fetchFinalList();
-  }, [fetchFinalList]);
+    if (!preloadedCases) {
+      fetchFinalList();
+    }
+  }, [fetchFinalList, preloadedCases]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -103,10 +108,35 @@ const ApprovedCases = ({ selectedMonth }) => {
   };
 
   const monthFilteredApproved = useMemo(() => {
-    return (final || [])
+    let source = preloadedCases || (final || [])
       .filter((item) => isSameMonth(getCaseDate(item), selectedMonth))
       .filter((item) => normalizeStatus(item.status).includes("approved"));
-  }, [final, selectedMonth]);
+
+    if (debouncedSearch) {
+      const searchTokens = debouncedSearch.trim().toLowerCase().split(/\s+/);
+      source = source.filter((item) => {
+        const haystack = [
+          item.bankName,
+          item.customerName,
+          item.address,
+          item.city,
+          item.engineer,
+          item.status,
+          item.remark,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return searchTokens.every((token) => haystack.includes(token));
+      });
+    }
+
+    if (selectedBanks.length) {
+      source = source.filter((item) => selectedBanks.includes(item.bankName));
+    }
+
+    return source;
+  }, [final, preloadedCases, selectedMonth, debouncedSearch, selectedBanks]);
 
   const columns = [
     {

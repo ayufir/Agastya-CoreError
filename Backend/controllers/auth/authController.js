@@ -2,6 +2,7 @@
 const User = require("../../model/auth/authModel");
 const bcrypt = require("bcryptjs");
 const generateToken = require("../../utils/generateToken");
+const { isBJGMember, getCityMongoRegex } = require("../../utils/clusterHelper");
 
 exports.register = async (req, res, next) => {
   console.log("Registering User:", req.body);
@@ -191,15 +192,7 @@ exports.getAllUsers = async (req, res, next) => {
 
       // Apply city filtering if they have an assignedCity
       if (req.user.assignedCity) {
-        const userCity = req.user.assignedCity.toLowerCase().trim();
-        const centralCities = ["bhopal", "gwalior", "jabalpur"];
-        
-        if (centralCities.includes(userCity) || userCity === "combined bjg") {
-          // Bhopal, Gwalior, Jabalpur are grouped
-          query.assignedCity = { $regex: /^\s*(bhopal|gwalior|jabalpur|combined bjg)\s*$/i };
-        } else {
-          query.assignedCity = { $regex: new RegExp(`^\\s*${userCity}\\s*$`, "i") };
-        }
+        query.assignedCity = getCityMongoRegex(req.user.assignedCity);
       }
     }
 

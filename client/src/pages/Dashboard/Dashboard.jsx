@@ -41,10 +41,29 @@ const normalizeStatus = (status = "") =>
 
 const isApprovalPending = (item) => {
   const s = normalizeStatus(item.status);
-  const isSubmitted = s.includes("submitted") || item.isReportSubmitted === true;
-  const isApproved = s.includes("approved");
-  const isCancelled = s.includes("cancel");
-  return isSubmitted && !isApproved && !isCancelled;
+  if (s.includes("cancel") || s.includes("approved")) return false;
+  return s.includes("submit") || s.includes("final") || item.isReportSubmitted === true;
+};
+
+const isTotalSubmitted = (item) => {
+  const s = normalizeStatus(item.status);
+  if (s.includes("cancel")) return false;
+  return s.includes("final") || s.includes("submit") || item.isReportSubmitted === true || s.includes("done") || s.includes("approved");
+};
+
+const isWorkInProgress = (item) => {
+  const s = normalizeStatus(item.status);
+  if (s.includes("cancel") || s.includes("query") || isTotalSubmitted(item)) return false;
+  return (
+    s.includes("work in progress") ||
+    s.includes("working") ||
+    s.includes("assigned") ||
+    s.includes("progress") ||
+    s.includes("visited") ||
+    s.includes("reported") ||
+    s.includes("reviewed") ||
+    (s.includes("pending") && !!item.assignedTo)
+  );
 };
 
 const getCurrentMonthValue = () => {
@@ -56,8 +75,100 @@ const isSameMonth = (date, monthValue) => {
   if (!date || !monthValue) return false;
   const d = new Date(date);
   if (isNaN(d.getTime())) return false;
-  const yyyyMm = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
-  return yyyyMm === monthValue;
+  const [year, month] = monthValue.split("-").map(Number);
+  const localMatch = d.getFullYear() === year && d.getMonth() + 1 === month;
+  const utcMatch = d.getUTCFullYear() === year && d.getUTCMonth() + 1 === month;
+  return localMatch || utcMatch;
+};
+
+const normalizeBankName = (bankName, bankSlug = "") => {
+  if (!bankName && !bankSlug) return "Other Bank";
+  const raw = String(bankName || bankSlug || "").trim();
+  if (!raw || raw === "N/A") return "Other Bank";
+  const lower = raw.toLowerCase().replace(/[-_]/g, " ").trim();
+
+  if (lower.includes("home first trench") || lower.includes("homefirst trench") || lower.includes("homefirsttrench") || lower === "home-first-trench") {
+    return "Home First Trench";
+  }
+  if (lower.includes("home first") || lower.includes("homefirst") || lower === "home-first") {
+    return "Home First";
+  }
+  if (lower.includes("icici hfc") || lower.includes("icicihfc") || lower === "icici-hfc") {
+    return "ICICI HFC";
+  }
+  if (lower.includes("icici") || lower === "icici") {
+    return "ICICI Bank";
+  }
+  if (lower.includes("aditya") || lower === "aditya") {
+    return "Aditya Bank";
+  }
+  if (lower.includes("bajaj housing") || lower.includes("bajajhousing") || lower === "bajaj-housing") {
+    return "Bajaj Housing";
+  }
+  if (lower.includes("bajaj ameriya") || lower.includes("bajajameriya") || lower === "bajaj-ameriya-bank") {
+    return "Bajaj Ameriya Bank";
+  }
+  if (lower.includes("bajaj") || lower === "bajaj") {
+    return "Bajaj Bank";
+  }
+  if (lower.includes("piramal npa") || lower.includes("piramalnpa") || lower === "piramalnpa-form") {
+    return "Piramal NPA";
+  }
+  if (lower.includes("piramal") || lower === "piramal") {
+    return "Piramal Bank";
+  }
+  if (lower.includes("manappuram") || lower === "manappuram") {
+    return "Manappuram Bank";
+  }
+  if (lower.includes("sundaram") || lower === "sundaram") {
+    return "Sundaram Bank";
+  }
+  if (lower.includes("chola") || lower === "chola") {
+    return "Chola Bank";
+  }
+  if (lower.includes("agriwise") || lower === "agriwise") {
+    return "Agriwise Bank";
+  }
+  if (lower.includes("hero fincorp") || lower.includes("herofincorp") || lower === "hero-fincorp") {
+    return "Hero FinCorp Bank";
+  }
+  if (lower.includes("samasta") || lower === "samasta") {
+    return "Samasta Bank";
+  }
+  if (lower.includes("federal") || lower === "federal-bank") {
+    return "Federal Bank";
+  }
+  if (lower.includes("profectus") || lower === "profectus") {
+    return "Profectus Bank";
+  }
+  if (lower.includes("protium") || lower === "protium") {
+    return "Protium Bank";
+  }
+  if (lower.includes("idfc") || lower === "idfc-first-bank") {
+    return "IDFC Bank";
+  }
+  if (lower.includes("dmi finance") || lower.includes("dmifinance") || lower === "dmi-finance") {
+    return "DMI Finance";
+  }
+
+  return raw;
+};
+
+const normalizeCityName = (city) => {
+  if (!city || city === "N/A" || city === "undefined" || city === "null") return "";
+  const trimmed = String(city).trim();
+  if (!trimmed) return "";
+  const lower = trimmed.toLowerCase();
+  if (lower === "bhopal") return "Bhopal";
+  if (lower === "gwalior") return "Gwalior";
+  if (lower === "jabalpur") return "Jabalpur";
+  if (lower === "indore") return "Indore";
+  if (lower === "dehradun") return "Dehradun";
+  if (lower.includes("combined") || lower.includes("bjg")) return "Combined BJG";
+  return trimmed
+    .split(/\s+/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
 };
 
 const normalizeAllCaseRecord = (record, index) => {
@@ -73,24 +184,28 @@ const normalizeAllCaseRecord = (record, index) => {
   const status =
     readValue(record, ["status", "caseStatus", "portalStatus"]) || "Pending";
 
+  const rawBank = readValue(record, ["bankName", "bank", "bankDetails.bankName", "bankSlug"]) || "N/A";
+  const rawCity = readValue(record, [
+    "city",
+    "propertyCity",
+    "location",
+    "nearestCityTown",
+    "locationDetails.mainLocality",
+    "basicDetails.city",
+    "propertyInfo.city",
+    "summary.city",
+  ]) || "N/A";
+
+  const normBank = normalizeBankName(rawBank, record.bankSlug);
+  const normCity = normalizeCityName(rawCity);
+
   return {
     ...record,
     key: record._id || index,
-    bankName:
-      readValue(record, ["bankName", "bank", "bankDetails.bankName"]) || "N/A",
+    bankName: normBank,
     customerName: getDisplayCustomerName(record),
     address: getDisplayAddress(record) || "N/A",
-    city:
-      readValue(record, [
-        "city",
-        "location",
-        "propertyCity",
-        "nearestCityTown",
-        "locationDetails.mainLocality",
-        "basicDetails.city",
-        "propertyInfo.city",
-        "summary.city",
-      ]) || "N/A",
+    city: normCity || "N/A",
     engineer,
     status,
     remark: readValue(record, ["remark", "remarks", "report_remarks"]) || "",
@@ -166,39 +281,44 @@ const getBankStats = (data, user) => {
   const map = {};
   const showCityInSummary =
     user &&
-    (["Bhopal", "Gwalior", "Jabalpur"].includes(user.assignedCity) ||
+    (["Bhopal", "Gwalior", "Jabalpur", "Combined BJG"].includes(user.assignedCity) ||
       ["SuperAdmin", "Admin"].includes(user.role));
 
   data.forEach((item) => {
-    const rawBank = item.bankName || "N/A";
-    const city = item.city && item.city !== "N/A" ? item.city : "";
+    const rawBank = normalizeBankName(item.bankName, item.bankSlug);
+    const normCity = normalizeCityName(item.city);
+    const city = normCity && normCity !== "N/A" ? normCity : "";
     const bank = (showCityInSummary && city) ? `${rawBank} (${city})` : rawBank;
 
     if (!map[bank]) {
       map[bank] = {
         bank,
+        rawBank,
+        city,
         total: 0,
         done: 0,
         pending: 0,
         query: 0,
         working: 0,
+        cancelled: 0,
       };
     }
 
     const s = normalizeStatus(item.status);
 
+    // Cancelled cases should NOT be counted in Pending, Query, Done, or Active Total
+    if (s.includes("cancel")) {
+      map[bank].cancelled++;
+      return;
+    }
+
     map[bank].total++;
 
-    if (s.includes("final") || s.includes("done")) {
+    if (isTotalSubmitted(item)) {
       map[bank].done++;
     } else if (s.includes("query")) {
       map[bank].query++;
-    } else if (
-      s.includes("working") ||
-      s.includes("assigned") ||
-      s.includes("progress") ||
-      (s.includes("submitted") && !s.includes("final"))
-    ) {
+    } else if (isWorkInProgress(item)) {
       map[bank].working++;
       map[bank].pending++;
     } else {
@@ -456,7 +576,11 @@ const Dashboard = () => {
       if (!selectedMonth) return true;
       return (
         isSameMonth(item.createdAt, selectedMonth) ||
-        isSameMonth(item.uploadDate, selectedMonth)
+        isSameMonth(item.dateOfVisit, selectedMonth) ||
+        isSameMonth(item.dateOfReport, selectedMonth) ||
+        isSameMonth(item.uploadDate, selectedMonth) ||
+        isSameMonth(item.createdDate, selectedMonth) ||
+        isSameMonth(item.submissionDate, selectedMonth)
       );
     });
   }, [allCasesData, selectedMonth]);
@@ -472,9 +596,19 @@ const Dashboard = () => {
       const match = selectedBankView.match(/^(.*?)\s*\((.*?)\)$/);
       if (match) {
         const [_, bankName, city] = match;
-        data = data.filter((item) => item.bankName === bankName && item.city === city);
+        const normTargetBank = normalizeBankName(bankName).toLowerCase();
+        const normTargetCity = normalizeCityName(city).toLowerCase();
+        data = data.filter((item) => {
+          const itemBank = normalizeBankName(item.bankName, item.bankSlug).toLowerCase();
+          const itemCity = normalizeCityName(item.city).toLowerCase();
+          return itemBank === normTargetBank && (itemCity === normTargetCity || itemCity.includes(normTargetCity));
+        });
       } else {
-        data = data.filter((item) => item.bankName === selectedBankView);
+        const normTargetBank = normalizeBankName(selectedBankView).toLowerCase();
+        data = data.filter((item) => {
+          const itemBank = normalizeBankName(item.bankName, item.bankSlug).toLowerCase();
+          return itemBank === normTargetBank;
+        });
       }
     }
 
@@ -528,7 +662,8 @@ const Dashboard = () => {
     return {
       pending: filteredCases.filter((item) => {
         const s = normalizeStatus(item.status);
-        return ["pending", "generated", "new", "created", "open"].includes(s);
+        if (s.includes("cancel") || s.includes("query") || isTotalSubmitted(item) || isWorkInProgress(item)) return false;
+        return ["pending", "generated", "new", "created", "open"].includes(s) || !item.assignedTo;
       }).length,
 
       // Cases returned by FO with a decline reason
@@ -537,50 +672,15 @@ const Dashboard = () => {
         return s.includes("pending") && item.approvalStatus === "Declined" && item.declineReason && !isApprovalPending(item);
       }).length,
 
-      working: filteredCases.filter((item) => {
-        if (!item.assignedTo) return false;
-        const s = normalizeStatus(item.status);
-        if (
-          s.includes("final") ||
-          s.includes("done") ||
-          s.includes("approved") ||
-          s.includes("cancel") ||
-          s.includes("complete") ||
-          s.includes("submit") ||
-          s.includes("query")
-        ) {
-          return false;
-        }
-        // Must be an active WIP status - not just "pending" without assignment
-        return (
-          s.includes("work in progress") ||
-          s.includes("working") ||
-          s.includes("assigned") ||
-          s.includes("progress") ||
-          s.includes("visited") ||
-          s.includes("reported") ||
-          s.includes("reviewed") ||
-          s.includes("pending")  // pending + assignedTo = handed to FO
-        );
-      }).length,
+      working: filteredCases.filter(isWorkInProgress).length,
 
       approvalPending: filteredCases.filter(isApprovalPending).length,
 
-      finalSubmitted: filteredCases.filter((item) => {
-        const s = normalizeStatus(item.status);
-        if (s.includes("work in progress") || s.includes("working")) return false;
-        return (
-          s.includes("final") ||
-          s.includes("submit") ||
-          item.isReportSubmitted === true ||
-          s.includes("done") ||
-          s.includes("approved")
-        );
-      }).length,
+      finalSubmitted: filteredCases.filter(isTotalSubmitted).length,
 
       approved: filteredCases.filter((item) => {
         const s = normalizeStatus(item.status);
-        return s.includes("approved");
+        return !s.includes("cancel") && s.includes("approved");
       }).length,
 
       query: filteredCases.filter((item) =>
@@ -1268,9 +1368,10 @@ const Dashboard = () => {
             <Suspense fallback={<div className="p-4 bg-white rounded-xl border"><TableSkeleton rows={5} cols={6} /></div>}>
               {activeComponent==="Pending"         && <Pending selectedMonth={selectedMonth} preloadedCases={filteredCases.filter((item) => {
                 const s = normalizeStatus(item.status);
-                return ["pending", "generated", "new", "created", "open"].includes(s);
+                if (s.includes("cancel") || s.includes("query") || isTotalSubmitted(item) || isWorkInProgress(item)) return false;
+                return ["pending", "generated", "new", "created", "open"].includes(s) || !item.assignedTo;
               })} />}
-              {activeComponent==="Assigned"        && <AssignedCase selectedMonth={selectedMonth} />}
+              {activeComponent==="Assigned"        && <AssignedCase selectedMonth={selectedMonth} preloadedCases={filteredCases.filter(isWorkInProgress)} />}
               {activeComponent==="ApprovalPending" && (
                 <ApprovalPendingCases
                   selectedMonth={selectedMonth}
@@ -1280,22 +1381,18 @@ const Dashboard = () => {
                   preloadedCases={filteredCases.filter(isApprovalPending)}
                 />
               )}
-              {activeComponent==="ApprovedCases"   && <ApprovedCases selectedMonth={selectedMonth} onRefresh={fetchAllCases} />}
+              {activeComponent==="ApprovedCases"   && (
+                <ApprovedCases
+                  selectedMonth={selectedMonth}
+                  onRefresh={fetchAllCases}
+                  preloadedCases={filteredCases.filter((item) => !normalizeStatus(item.status).includes("cancel") && normalizeStatus(item.status).includes("approved"))}
+                />
+              )}
               {activeComponent==="QueryRaised"     && <QueryRaised selectedMonth={selectedMonth} />}
               {activeComponent==="ReportSubmitted" && (
                 <FinalSubmittedCase 
                   selectedMonth={selectedMonth} 
-                  preloadedCases={filteredCases.filter((item) => {
-                    const s = String(item.status || "").toLowerCase().trim();
-                    if (s.includes("work in progress") || s.includes("working")) return false;
-                    return (
-                      s.includes("final") ||
-                      s.includes("submit") ||
-                      item.isReportSubmitted === true ||
-                      s.includes("done") ||
-                      s.includes("approved")
-                    );
-                  })}
+                  preloadedCases={filteredCases.filter(isTotalSubmitted)}
                 />
               )}
               {activeComponent==="CancelCases"     && <CancelledCases selectedMonth={selectedMonth} />}
