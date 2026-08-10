@@ -133,6 +133,31 @@ const Pending = ({ selectedMonth, preloadedCases }) => {
     setCurrentPage(1);
   }, [selectedZone, selectedMonth, selectedBanks, selectedStatuses, debouncedSearch]);
 
+  const bankOptions = useMemo(() => {
+    const source = preloadedCases || pendingCases || [];
+    if (source.length > 0) {
+      const set = new Set();
+      source.forEach((item) => {
+        const bank = item.bankName || item.bankSlug || "";
+        if (bank && bank !== "N/A") set.add(bank);
+      });
+      if (set.size > 0) return Array.from(set).sort();
+    }
+    return pendingFilterOptions?.banks || [];
+  }, [preloadedCases, pendingCases, pendingFilterOptions]);
+
+  const statusOptions = useMemo(() => {
+    const source = preloadedCases || pendingCases || [];
+    if (source.length > 0) {
+      const set = new Set();
+      source.forEach((item) => {
+        if (item.status && item.status !== "N/A") set.add(item.status);
+      });
+      if (set.size > 0) return Array.from(set).sort();
+    }
+    return pendingFilterOptions?.statuses || [];
+  }, [preloadedCases, pendingCases, pendingFilterOptions]);
+
   const monthFilteredPendingCases = useMemo(() => {
     const getSearchableText = (item) => [
       item.customerName, item.visitedPersonName, item.applicantName,
@@ -160,7 +185,7 @@ const Pending = ({ selectedMonth, preloadedCases }) => {
       // Local bank filter
       if (selectedBanks.length > 0) {
         const bank = (item.bankName || item.bankSlug || "").toLowerCase();
-        if (!selectedBanks.some(b => bank.includes(b.toLowerCase()))) return false;
+        if (!selectedBanks.some(b => bank.includes(b.toLowerCase()) || b.toLowerCase().includes(bank))) return false;
       }
       // Local status filter
       if (selectedStatuses.length > 0) {
@@ -558,7 +583,7 @@ const Pending = ({ selectedMonth, preloadedCases }) => {
             allowClear
             maxTagCount={2}
           >
-            {(pendingFilterOptions?.banks || []).map((bank) => (
+            {bankOptions.map((bank) => (
               <Option key={bank} value={bank}>
                 {bank}
               </Option>
@@ -577,7 +602,7 @@ const Pending = ({ selectedMonth, preloadedCases }) => {
             allowClear
             maxTagCount={2}
           >
-            {(pendingFilterOptions?.statuses || []).map((status) => (
+            {statusOptions.map((status) => (
               <Option key={status} value={status}>
                 {status}
               </Option>

@@ -14,12 +14,17 @@ exports.createIciciBank = async (req, res) => {
     delete body._id;
     delete body.id;
 
-    if (req.user?._id) {
-      body.createdBy = req.user._id;
-    }
+    const dateCandidate =
+      req.body.createdAt ||
+      req.body.visitDate ||
+      req.body.dateOfVisit ||
+      req.body.dateOfInspection;
 
-    if (req.user?.role === "FieldOfficer") {
-      body.assignedTo = req.user._id;
+    if (dateCandidate) {
+      const parsed = new Date(dateCandidate);
+      if (!isNaN(parsed.getTime())) {
+        body.createdAt = parsed;
+      }
     }
 
     const newReport = await IciciBank.create(body);
@@ -122,13 +127,16 @@ exports.updateIciciBank = async (req, res) => {
       updateBody.status = "Work in Progress";
     }
 
-    // Transition status to "Work in Progress" on save/update if case has assignment and is currently Pending/New/etc.
-    const hasAssignment = updateBody.assignedTo || (existing && existing.assignedTo);
-    if (hasAssignment) {
-      const currentStatus = updateBody.status || (existing && existing.status) || "Pending";
-      const s = currentStatus.toLowerCase().trim();
-      if (s === "pending" || s === "generated" || s === "new" || s === "created" || s === "open") {
-        updateBody.status = "Work in Progress";
+    const dateCandidate =
+      req.body.createdAt ||
+      req.body.visitDate ||
+      req.body.dateOfVisit ||
+      req.body.dateOfInspection;
+
+    if (dateCandidate) {
+      const parsed = new Date(dateCandidate);
+      if (!isNaN(parsed.getTime())) {
+        updateBody.createdAt = parsed;
       }
     }
 
@@ -174,9 +182,17 @@ exports.submitIciciBank = async (req, res) => {
       updateData.assignedTo = updateData.assignedTo._id;
     }
 
-    const isFO = (req.user?.role || "").toLowerCase().trim() === "fieldofficer";
-    if (isFO && !updateData.assignedTo) {
-      updateData.assignedTo = req.user._id;
+    const dateCandidate =
+      req.body.createdAt ||
+      req.body.visitDate ||
+      req.body.dateOfVisit ||
+      req.body.dateOfInspection;
+
+    if (dateCandidate) {
+      const parsed = new Date(dateCandidate);
+      if (!isNaN(parsed.getTime())) {
+        updateData.createdAt = parsed;
+      }
     }
 
     const updateQuery = { $set: updateData };

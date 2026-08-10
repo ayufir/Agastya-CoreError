@@ -326,6 +326,7 @@ const IciciBank = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const user = useSelector((state) => state.auth.user);
+  const savedCity = useSelector((state) => state.assignedCases.savedCity);
   const isFieldOfficer = user?.role?.toLowerCase() === "fieldofficer";
 
 
@@ -577,7 +578,11 @@ const IciciBank = () => {
   const handleSave = async (cardKey, data) => {
     setSaving(true);
     try {
-      const rawCombined = { ...formData, ...data };
+      const rawCombined = {
+        city: formData.city || savedCity || user?.assignedCity || "",
+        ...formData,
+        ...data,
+      };
       const payloadWithFiles = await prepareFormDataForServer(rawCombined);
       const updated = sanitizeForSave(payloadWithFiles);
       
@@ -606,7 +611,11 @@ const IciciBank = () => {
   const handleSaveAndNext = async (cardKey, data) => {
     setSaving(true);
     try {
-      const rawCombined = { ...formData, ...data };
+      const rawCombined = {
+        city: formData.city || savedCity || user?.assignedCity || "",
+        ...formData,
+        ...data,
+      };
       const payloadWithFiles = await prepareFormDataForServer(rawCombined);
       const updated = sanitizeForSave(payloadWithFiles);
       
@@ -641,6 +650,7 @@ const IciciBank = () => {
   const handleSubmit = async (data) => {
     setSaving(true);
     const submitData = sanitizeForSave({
+      city: formData.city || savedCity || user?.assignedCity || "",
       ...formData,
       ...data,
       bankName: "Icici",
@@ -683,6 +693,7 @@ const IciciBank = () => {
     try {
       const isFO = user?.role === "FieldOfficer";
       const rawCombined = {
+        city: formData.city || savedCity || user?.assignedCity || "",
         ...formData,
         ...data,
         bankName: "Icici",
@@ -724,6 +735,7 @@ const IciciBank = () => {
     setSaving(true);
     try {
       const rawCombined = {
+        city: formData.city || savedCity || user?.assignedCity || "",
         ...formData,
         ...data,
         bankName: "Icici",
@@ -1107,6 +1119,25 @@ const IciciBank = () => {
                           style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
                         />
                       </div>
+                      {!isFieldOfficer && (
+                        <div>
+                          <div style={{ fontSize: "11px", color: "#d97706", fontWeight: "600", marginBottom: "4px" }}>Case Date (Back Date)</div>
+                          <input
+                            type="date"
+                            value={
+                              formData.createdAt
+                                ? new Date(formData.createdAt).toISOString().split("T")[0]
+                                : new Date().toISOString().split("T")[0]
+                            }
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setFormData(prev => ({ ...prev, createdAt: val }));
+                              setEditData(prev => ({ ...prev, createdAt: val }));
+                            }}
+                            style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #f59e0b", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box", backgroundColor: "#fffbe8" }}
+                          />
+                        </div>
+                      )}
                     </div>
 
                     {/* Row 2 */}

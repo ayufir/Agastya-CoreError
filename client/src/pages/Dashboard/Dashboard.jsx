@@ -662,8 +662,13 @@ const Dashboard = () => {
     return {
       pending: filteredCases.filter((item) => {
         const s = normalizeStatus(item.status);
-        if (s.includes("cancel") || s.includes("query") || isTotalSubmitted(item) || isWorkInProgress(item)) return false;
-        return ["pending", "generated", "new", "created", "open"].includes(s) || !item.assignedTo;
+        if (s.includes("cancel") || s.includes("query") || isTotalSubmitted(item)) return false;
+        // Include both Pending statuses AND Work in Progress statuses
+        return (
+          ["pending", "generated", "new", "created", "open"].includes(s) ||
+          isWorkInProgress(item) ||
+          !item.assignedTo
+        );
       }).length,
 
       // Cases returned by FO with a decline reason
@@ -1368,8 +1373,13 @@ const Dashboard = () => {
             <Suspense fallback={<div className="p-4 bg-white rounded-xl border"><TableSkeleton rows={5} cols={6} /></div>}>
               {activeComponent==="Pending"         && <Pending selectedMonth={selectedMonth} preloadedCases={filteredCases.filter((item) => {
                 const s = normalizeStatus(item.status);
-                if (s.includes("cancel") || s.includes("query") || isTotalSubmitted(item) || isWorkInProgress(item)) return false;
-                return ["pending", "generated", "new", "created", "open"].includes(s) || !item.assignedTo;
+                if (s.includes("cancel") || s.includes("query") || isTotalSubmitted(item)) return false;
+                // Include both Pending statuses AND Work in Progress statuses
+                return (
+                  ["pending", "generated", "new", "created", "open"].includes(s) ||
+                  isWorkInProgress(item) ||
+                  !item.assignedTo
+                );
               })} />}
               {activeComponent==="Assigned"        && <AssignedCase selectedMonth={selectedMonth} preloadedCases={filteredCases.filter(isWorkInProgress)} />}
               {activeComponent==="ApprovalPending" && (

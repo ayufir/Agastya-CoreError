@@ -93,6 +93,19 @@ const ApprovedCases = ({ selectedMonth, preloadedCases }) => {
     }
   }, [fetchFinalList, preloadedCases]);
 
+  const bankOptions = useMemo(() => {
+    const source = preloadedCases || final || [];
+    if (source.length > 0) {
+      const set = new Set();
+      source.forEach((item) => {
+        const bank = item.bankName || item.bankSlug || "";
+        if (bank && bank !== "N/A") set.add(bank);
+      });
+      if (set.size > 0) return Array.from(set).sort();
+    }
+    return finalFilterOptions?.banks || [];
+  }, [preloadedCases, final, finalFilterOptions]);
+
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedZone, selectedMonth, selectedBanks, debouncedSearch]);
@@ -218,7 +231,7 @@ const ApprovedCases = ({ selectedMonth, preloadedCases }) => {
           allowClear
           maxTagCount={2}
         >
-          {(finalFilterOptions?.banks || []).map((bank) => (
+          {bankOptions.map((bank) => (
             <Option key={bank} value={bank}>
               {bank}
             </Option>

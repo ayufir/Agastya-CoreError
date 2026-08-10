@@ -205,6 +205,31 @@ const SummaryCard = ({ selectedMonth }) => {
     });
   }, [tableData, selectedMonth]);
 
+  const bankOptions = useMemo(() => {
+    const source = tableData || [];
+    if (source.length > 0) {
+      const set = new Set();
+      source.forEach((item) => {
+        const bank = item.bankName || item.bankSlug || "";
+        if (bank && bank !== "N/A") set.add(bank);
+      });
+      if (set.size > 0) return Array.from(set).sort();
+    }
+    return filterOptions?.banks || [];
+  }, [tableData, filterOptions]);
+
+  const statusOptions = useMemo(() => {
+    const source = tableData || [];
+    if (source.length > 0) {
+      const set = new Set();
+      source.forEach((item) => {
+        if (item.status && item.status !== "N/A") set.add(item.status);
+      });
+      if (set.size > 0) return Array.from(set).sort();
+    }
+    return filterOptions?.statuses || [];
+  }, [tableData, filterOptions]);
+
   return (
     <>
       <div className="flex items-center gap-2 mb-4 flex-wrap">
@@ -220,7 +245,7 @@ const SummaryCard = ({ selectedMonth }) => {
           allowClear
           maxTagCount={2}
         >
-          {(filterOptions?.banks || []).map((bank) => (
+          {bankOptions.map((bank) => (
             <Option key={bank} value={bank}>
               {bank}
             </Option>
@@ -239,7 +264,7 @@ const SummaryCard = ({ selectedMonth }) => {
           allowClear
           maxTagCount={2}
         >
-          {(filterOptions?.statuses || []).map((status) => (
+          {statusOptions.map((status) => (
             <Option key={status} value={status}>
               {status}
             </Option>

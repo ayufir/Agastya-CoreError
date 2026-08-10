@@ -38,6 +38,7 @@ const LNTAssignmentDetails = ({
     typeOfLoan: "OWN PLOT + SECO",
     dateOfReport: null,
     dateOfVisit: null,
+    createdAt: moment(),
     vendorName: "UNIQUE ENGINEERING AND ASSOCIATE",
     clContractNo: "",
     refNo: "N/A",
@@ -235,6 +236,7 @@ const LNTAssignmentDetails = ({
         typeOfLoan: safeVal("typeOfLoan", "OWN PLOT + SECO"),
         dateOfReport: parsedDate,
         dateOfVisit: parsedVisitDate,
+        createdAt: getValidMoment(merged.createdAt) || parsedVisitDate || moment(),
         vendorName: safeVal("vendorName", "UNIQUE ENGINEERING AND ASSOCIATE"),
         clContractNo: safeVal("clContractNo", ""),
         refNo: safeVal("refNo", "N/A"),
@@ -276,7 +278,12 @@ const LNTAssignmentDetails = ({
     }
   }, [user.role]);
 
-  const buildSubmissionData = (values) => ({ ...values });
+  const buildSubmissionData = (values) => ({
+    ...values,
+    createdAt: values.createdAt
+      ? (moment.isMoment(values.createdAt) ? values.createdAt.toDate() : new Date(values.createdAt))
+      : undefined,
+  });
 
   useEffect(() => {
     if (!registerSectionSubmitter || !sectionId) return;
@@ -386,12 +393,24 @@ const LNTAssignmentDetails = ({
                   </div>
                 </div>
 
-                {/* Row 2: Date of Visit & CL Contract No */}
+                {/* Row 2: Date of Visit & Case Date & CL Contract No */}
                 <div style={{ position: "relative", marginTop: "6px" }}>
                   <label style={{ position: "absolute", top: "-8px", left: "10px", background: "#fff", padding: "0 6px", fontSize: "11px", color: "#94a3b8", fontWeight: 500, zIndex: 2 }}>
                     Date of Visit
                   </label>
                   <Form.Item name="dateOfVisit" style={{ margin: 0 }}>
+                    <DatePicker className="w-full" format="DD.MM.YYYY" style={{ height: "40px", borderRadius: "6px", border: "1px solid #d1d5db" }} />
+                  </Form.Item>
+                </div>
+                <div style={{ position: "relative", marginTop: "6px" }}>
+                  <label style={{ position: "absolute", top: "-8px", left: "10px", background: "#fff", padding: "0 6px", fontSize: "11px", color: "#94a3b8", fontWeight: 500, zIndex: 2 }}>
+                    Case Date <span style={{ color: "#f59e0b", fontSize: "10px" }}>●</span>
+                  </label>
+                  <Form.Item
+                    name="createdAt"
+                    style={{ margin: 0 }}
+                    extra={<span style={{ fontSize: "10px", color: "#6b7280" }}>Dashboard month filter ke liye</span>}
+                  >
                     <DatePicker className="w-full" format="DD.MM.YYYY" style={{ height: "40px", borderRadius: "6px", border: "1px solid #d1d5db" }} />
                   </Form.Item>
                 </div>

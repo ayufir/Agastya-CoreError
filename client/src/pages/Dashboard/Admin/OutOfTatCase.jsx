@@ -88,6 +88,31 @@ const OutOfTATCase = ({ selectedMonth, selectedAgent }) => {
     fetchOutOfTatList();
   }, [fetchOutOfTatList]);
 
+  const bankOptions = useMemo(() => {
+    const source = outOfTatCases || [];
+    if (source.length > 0) {
+      const set = new Set();
+      source.forEach((item) => {
+        const bank = item.bankName || item.bankSlug || "";
+        if (bank && bank !== "N/A") set.add(bank);
+      });
+      if (set.size > 0) return Array.from(set).sort();
+    }
+    return outOfTatFilterOptions?.banks || [];
+  }, [outOfTatCases, outOfTatFilterOptions]);
+
+  const statusOptions = useMemo(() => {
+    const source = outOfTatCases || [];
+    if (source.length > 0) {
+      const set = new Set();
+      source.forEach((item) => {
+        if (item.status && item.status !== "N/A") set.add(item.status);
+      });
+      if (set.size > 0) return Array.from(set).sort();
+    }
+    return outOfTatFilterOptions?.statuses || [];
+  }, [outOfTatCases, outOfTatFilterOptions]);
+
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedZone, selectedMonth, selectedBanks, selectedStatuses, debouncedSearch, selectedAgent]);
@@ -184,7 +209,7 @@ const OutOfTATCase = ({ selectedMonth, selectedAgent }) => {
           allowClear
           maxTagCount={2}
         >
-          {(outOfTatFilterOptions?.banks || []).map((bank) => (
+          {bankOptions.map((bank) => (
             <Option key={bank} value={bank}>
               {bank}
             </Option>
@@ -203,7 +228,7 @@ const OutOfTATCase = ({ selectedMonth, selectedAgent }) => {
           allowClear
           maxTagCount={2}
         >
-          {(outOfTatFilterOptions?.statuses || []).map((status) => (
+          {statusOptions.map((status) => (
             <Option key={status} value={status}>
               {status}
             </Option>

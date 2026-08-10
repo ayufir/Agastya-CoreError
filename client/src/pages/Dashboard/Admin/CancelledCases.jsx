@@ -75,6 +75,31 @@ const CancelledCases = ({ selectedMonth }) => {
     fetchCancelledList();
   }, [fetchCancelledList]);
 
+  const bankOptions = useMemo(() => {
+    const source = cancelledCases || [];
+    if (source.length > 0) {
+      const set = new Set();
+      source.forEach((item) => {
+        const bank = item.bankName || item.bankSlug || "";
+        if (bank && bank !== "N/A") set.add(bank);
+      });
+      if (set.size > 0) return Array.from(set).sort();
+    }
+    return cancelledFilterOptions?.banks || [];
+  }, [cancelledCases, cancelledFilterOptions]);
+
+  const statusOptions = useMemo(() => {
+    const source = cancelledCases || [];
+    if (source.length > 0) {
+      const set = new Set();
+      source.forEach((item) => {
+        if (item.status && item.status !== "N/A") set.add(item.status);
+      });
+      if (set.size > 0) return Array.from(set).sort();
+    }
+    return cancelledFilterOptions?.statuses || [];
+  }, [cancelledCases, cancelledFilterOptions]);
+
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedZone, selectedMonth, selectedBanks, selectedStatuses, debouncedSearch]);
@@ -154,7 +179,7 @@ const CancelledCases = ({ selectedMonth }) => {
           allowClear
           maxTagCount={2}
         >
-          {(cancelledFilterOptions?.banks || []).map((bank) => (
+          {bankOptions.map((bank) => (
             <Option key={bank} value={bank}>
               {bank}
             </Option>
@@ -173,7 +198,7 @@ const CancelledCases = ({ selectedMonth }) => {
           allowClear
           maxTagCount={2}
         >
-          {(cancelledFilterOptions?.statuses || []).map((status) => (
+          {statusOptions.map((status) => (
             <Option key={status} value={status}>
               {status}
             </Option>

@@ -41,8 +41,8 @@ export const getDisplayCustomerName = (record) =>
     "contactedPerson",
   ]);
 
-export const getDisplayAddress = (record) =>
-  readRecordValue(record, [
+export const getDisplayAddress = (record) => {
+  const primary = readRecordValue(record, [
     "displayAddress",
     "addressLegal",
     "legalAddress",
@@ -55,7 +55,29 @@ export const getDisplayAddress = (record) =>
     "propertyInfo.addressAtSite",
     "propertyInfo.addressAsPerDocument",
     "summary.propertyAddress",
-  ]);
+  ], "");
+
+  if (primary && primary !== "N/A") return primary;
+
+  if (record && typeof record === "object") {
+    const components = [
+      record.plotNo,
+      record.streetName,
+      record.locality,
+      record.landmark,
+      record.projectSocietyName || record.buildingWingName,
+      record.village || record.taluka,
+      record.city || record.propertyCity,
+      record.pincode,
+    ].filter((c) => c && c !== "N/A" && c !== "undefined" && String(c).trim() !== "");
+
+    if (components.length > 0) {
+      return components.join(", ");
+    }
+  }
+
+  return "N/A";
+};
 
 export const getDisplayContact = (record) =>
   readRecordValue(record, [
@@ -73,13 +95,14 @@ export const getDisplayCity = (record) => {
   const city = readRecordValue(
     record,
     [
-      "propertyCity",
       "city",
+      "propertyCity",
       "nearestCityTown",
       "locationDetails.mainLocality",
       "basicDetails.city",
       "propertyInfo.city",
       "summary.city",
+      "district",
     ],
     ""
   );
@@ -106,7 +129,7 @@ export const getDisplayCity = (record) => {
     if (address.includes(c)) return c.charAt(0).toUpperCase() + c.slice(1);
   }
 
-  return "Other";
+  return "";
 };
 
 export const BJG_CITIES = ["Bhopal", "Jabalpur", "Gwalior"];

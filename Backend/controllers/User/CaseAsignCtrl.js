@@ -1041,11 +1041,13 @@ exports.getPendingCases = async (req, res) => {
     });
 
     const PENDING_STATUSES = ["pending", "generated", "new", "created", "open"];
+    const WIP_STATUSES = ["work in progress", "working", "assigned", "visited", "reported", "reviewed"];
 
     const pendingCases = allCases.filter((c) => {
-      const s = String(c.status || "").toLowerCase().trim();
+      const s = String(c.status || "").toLowerCase().trim().replace(/[\u00a0\u00c2]/g, " ").replace(/\s+/g, " ");
       if (s.includes("cancel")) return false;
-      return PENDING_STATUSES.includes(s);
+      // Include both Pending statuses AND Work in Progress statuses
+      return PENDING_STATUSES.includes(s) || WIP_STATUSES.some((wip) => s.includes(wip));
     });
 
     const filtered = sortCasesNewestFirst(

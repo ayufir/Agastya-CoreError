@@ -98,6 +98,31 @@ const FinalSubmittedCases = ({ selectedMonth, preloadedCases }) => {
     }
   }, [fetchFinalList, preloadedCases]);
 
+  const bankOptions = useMemo(() => {
+    const source = preloadedCases || final || [];
+    if (source.length > 0) {
+      const set = new Set();
+      source.forEach((item) => {
+        const bank = item.bankName || item.bankSlug || "";
+        if (bank && bank !== "N/A") set.add(bank);
+      });
+      if (set.size > 0) return Array.from(set).sort();
+    }
+    return finalFilterOptions?.banks || [];
+  }, [preloadedCases, final, finalFilterOptions]);
+
+  const statusOptions = useMemo(() => {
+    const source = preloadedCases || final || [];
+    if (source.length > 0) {
+      const set = new Set();
+      source.forEach((item) => {
+        if (item.status && item.status !== "N/A") set.add(item.status);
+      });
+      if (set.size > 0) return Array.from(set).sort();
+    }
+    return finalFilterOptions?.statuses || [];
+  }, [preloadedCases, final, finalFilterOptions]);
+
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedZone, selectedMonth, selectedBanks, selectedStatuses, debouncedSearch]);
@@ -272,7 +297,7 @@ const FinalSubmittedCases = ({ selectedMonth, preloadedCases }) => {
           allowClear
           maxTagCount={2}
         >
-          {(finalFilterOptions?.banks || []).map((bank) => (
+          {bankOptions.map((bank) => (
             <Option key={bank} value={bank}>
               {bank}
             </Option>
@@ -291,7 +316,7 @@ const FinalSubmittedCases = ({ selectedMonth, preloadedCases }) => {
           allowClear
           maxTagCount={2}
         >
-          {(finalFilterOptions?.statuses || []).map((status) => (
+          {statusOptions.map((status) => (
             <Option key={status} value={status}>
               {status}
             </Option>

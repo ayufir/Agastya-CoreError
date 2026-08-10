@@ -92,13 +92,15 @@ const GeneratedCasesList = ({ allCases = [], refreshData, fieldOfficers = [] }) 
     },
     {
       title: "Generated Date",
-      dataIndex: "createdAt",
       key: "createdAt",
-      render: (date) => (
-        <span style={{ color: "#64748b", fontSize: "12px" }}>
-          {date ? dayjs(date).format("DD MMM YYYY, hh:mm A") : "N/A"}
-        </span>
-      ),
+      render: (_, record) => {
+        const date = record.createdAt || record.dateOfVisit || record.dateOfReport || record.dateOfInspection || record.visitDate;
+        return (
+          <span style={{ color: "#64748b", fontSize: "12px" }}>
+            {date && dayjs(date).isValid() ? dayjs(date).format("DD MMM YYYY, hh:mm A") : "N/A"}
+          </span>
+        );
+      },
     },
     {
       title: "Status",

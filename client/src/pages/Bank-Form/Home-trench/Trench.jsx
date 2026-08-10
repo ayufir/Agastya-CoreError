@@ -147,6 +147,7 @@ const Trench = () => {
   const initialValues = useMemo(() => ({
     dateOfVisit: TODAY(),
     dateOfReport: TODAY(),
+    createdAt: TODAY(),
     propertyAddress: "",
     visitedPersonName: "",
     contactNumber: "",
@@ -764,6 +765,15 @@ const Trench = () => {
                   <Form.Item label="Date of Report" name="dateOfReport">
                     <DatePicker className="w-full" format="DD/MM/YYYY" />
                   </Form.Item>
+                  {!isFieldOfficer && (
+                    <Form.Item
+                      label="Case Date"
+                      name="createdAt"
+                      extra={<span style={{ fontSize: "11px", color: "#6b7280" }}>Dashboard mein is date se case dikhega</span>}
+                    >
+                      <DatePicker className="w-full" format="DD/MM/YYYY" />
+                    </Form.Item>
+                  )}
                   <Form.Item label="Visitor Name" name="visitedPersonName">
                     <Input />
                   </Form.Item>

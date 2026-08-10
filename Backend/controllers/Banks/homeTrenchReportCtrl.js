@@ -136,24 +136,57 @@ exports.getHomeTrenchReportById = async (req, res) => {
 // Update a Home Trench Report by ID
 exports.updateHomeTrenchReport = async (req, res) => {
   try {
-    const body = { ...req.body };
+    const { imageUrls, timeline, ...otherFields } = req.body;
     const dateCandidate =
-      req.body.createdAt ||
-      req.body.dateOfVisit ||
-      req.body.dateOfReport ||
-      req.body.dateOfInspection ||
-      req.body.visitDate ||
-      req.body.inspectionDate;
+      otherFields.createdAt ||
+      otherFields.dateOfVisit ||
+      otherFields.dateOfReport ||
+      otherFields.dateOfInspection ||
+      otherFields.visitDate ||
+      otherFields.inspectionDate;
 
     if (dateCandidate) {
       const parsed = new Date(dateCandidate);
       if (!isNaN(parsed.getTime())) {
-        body.createdAt = parsed;
+        otherFields.createdAt = parsed;
       }
     }
+
+    const updateQuery = {};
+
+    // Set all fields except imageUrls
+    if (Object.keys(otherFields).length > 0) {
+      updateQuery.$set = otherFields;
+    }
+
+    // Append new images without overwriting existing ones
+    if (Array.isArray(imageUrls) && imageUrls.length > 0) {
+      updateQuery.$addToSet = {
+        imageUrls: { $each: imageUrls },
+      };
+    }
+
+    // Field Officer auto-status update
+    const isFO = (req.user?.role || "").toLowerCase().trim() === "fieldofficer";
+    if (isFO) {
+      if (!updateQuery.$set) updateQuery.$set = {};
+      const isSubmitting = req.body.isReportSubmitted === true || req.body.isSubmit === true;
+      updateQuery.$set["isReportSubmitted"] = isSubmitting;
+      updateQuery.$set["status"] = "Work in Progress";
+      if (isSubmitting) {
+        if (!updateQuery.$push) updateQuery.$push = {};
+        updateQuery.$push["timeline"] = {
+          status: "submitted-by-fo",
+          updatedAt: new Date(),
+          updatedBy: req.user._id,
+          note: "Submitted by field officer",
+        };
+      }
+    }
+
     const report = await HomeTrenchReport.findByIdAndUpdate(
       req.params.id,
-      { $set: body },
+      updateQuery,
       { new: true }
     );
     if (!report) {
