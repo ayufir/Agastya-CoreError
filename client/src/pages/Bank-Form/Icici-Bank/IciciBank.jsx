@@ -32,19 +32,17 @@ import toast from "react-hot-toast";
 import { Download } from "lucide-react";
 
 const formatDateTimeLocal = (dateValue) => {
-  if (!dateValue) {
-    const d = new Date();
-    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-    return d.toISOString().slice(0, 16);
-  }
+  if (!dateValue) return "";
   const d = new Date(dateValue);
-  if (isNaN(d.getTime())) {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    return now.toISOString().slice(0, 16);
-  }
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().slice(0, 16);
+  if (isNaN(d.getTime())) return "";
+
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
 const Icon = ({ children }) => (
@@ -223,6 +221,7 @@ const enrichICICIFormPayload = (dataObj, savedCity, user) => {
   if (name) {
     clean.customerName = name;
     clean.applicantName = name;
+    clean.displayCustomerName = name;
   }
 
   const phone = clean.personContact || clean.contactNumber || clean.customerNo || "";
@@ -231,7 +230,7 @@ const enrichICICIFormPayload = (dataObj, savedCity, user) => {
     clean.contactNumber = phone;
   }
 
-  const computedAddr = [
+  const addrParts = [
     clean.plotNo,
     clean.streetName,
     clean.locality,
@@ -240,10 +239,26 @@ const enrichICICIFormPayload = (dataObj, savedCity, user) => {
     clean.village || clean.taluka,
     clean.city,
     clean.pincode,
-  ].filter((c) => c && String(c).trim() !== "" && String(c).trim() !== "N/A").join(", ");
+  ].filter((c) => c && String(c).trim() !== "" && String(c).trim() !== "N/A");
 
-  if (!clean.propertyAddress || clean.propertyAddress === "N/A") {
-    clean.propertyAddress = computedAddr || "";
+  if (addrParts.length > 0) {
+    const fullAddr = addrParts.join(", ");
+    clean.propertyAddress = fullAddr;
+    clean.address = fullAddr;
+    clean.displayAddress = fullAddr;
+  } else if (clean.propertyAddress && clean.propertyAddress !== "N/A") {
+    clean.address = clean.propertyAddress;
+    clean.displayAddress = clean.propertyAddress;
+  }
+
+  if (clean.createdAt) {
+    const dt = new Date(clean.createdAt);
+    if (!isNaN(dt.getTime())) {
+      clean.createdAt = dt.toISOString();
+      clean.uploadDate = dt.toISOString();
+      clean.dateOfVisit = dt.toISOString();
+      clean.visitDate = dt.toISOString();
+    }
   }
 
   return clean;
@@ -406,7 +421,7 @@ const IciciBank = () => {
       const response = await dispatch(getIciciBankById(id)).unwrap();
       const docName = response.customerName || response.applicantName || getDisplayCustomerName(response);
       const docContact = response.personContact || getDisplayContact(response);
-      const docAddress = response.plotNo || getDisplayAddress(response);
+      const docAddress = getDisplayAddress(response);
       const docCity = response.city || response.propertyCity || getDisplayCity(response);
 
       const enriched = {
@@ -414,15 +429,17 @@ const IciciBank = () => {
         customerName: docName !== "N/A" ? docName : response.customerName,
         applicantName: docName !== "N/A" ? docName : response.applicantName,
         personContact: docContact !== "N/A" ? docContact : response.personContact,
-        plotNo: docAddress !== "N/A" ? docAddress : response.plotNo,
+        propertyAddress: docAddress !== "N/A" ? docAddress : response.propertyAddress,
+        address: docAddress !== "N/A" ? docAddress : response.address,
+        displayAddress: docAddress !== "N/A" ? docAddress : response.displayAddress,
         city: docCity !== "N/A" ? docCity : response.city,
       };
 
       const draft = readDraft(id);
 
-      // ── Never let the draft overwrite file/media fields saved directly in DB ──
-      // These fields are always authoritative from the server response.
+      // ── Never let the draft overwrite file/media or date fields saved directly in DB ──
       const FILE_FIELDS = [
+        "createdAt", "uploadDate", "dateOfVisit", "visitDate",
         "gpsFiles", "fieldFormFiles", "emailFiles", "additionalFiles",
         "sitePhotographs", "imageUrls", "otherImages",
         "siteVisitVideo", "atsDocuments", "AttachDocuments", "atsFiles",
@@ -933,15 +950,29 @@ const IciciBank = () => {
                 </span>
                 <input
                   type="datetime-local"
-                  value={
-                    formData.createdAt
-                      ? formatDateTimeLocal(formData.createdAt)
-                      : formatDateTimeLocal(new Date())
-                  }
-                  onChange={(e) => {
+                  value={formatDateTimeLocal(formData.createdAt || editData?.createdAt || new Date())}
+                  onChange={async (e) => {
                     const val = e.target.value;
-                    setFormData(prev => ({ ...prev, createdAt: val }));
-                    setEditData(prev => ({ ...prev, createdAt: val }));
+                    setFormData((prev) => ({ ...prev, createdAt: val, uploadDate: val, dateOfVisit: val, visitDate: val }));
+                    setEditData((prev) => ({ ...prev, createdAt: val, uploadDate: val, dateOfVisit: val, visitDate: val }));
+                    if (id && val) {
+                      try {
+                        const dt = new Date(val);
+                        if (!isNaN(dt.getTime())) {
+                          const dateIso = dt.toISOString();
+                          const datePayload = {
+                            createdAt: dateIso,
+                            uploadDate: dateIso,
+                            dateOfVisit: dateIso,
+                            visitDate: dateIso,
+                          };
+                          await dispatch(updateIciciBank({ id, formData: datePayload })).unwrap();
+                          await dispatch(finalUpdate({ id, bankName: "Icici", updateData: datePayload })).unwrap();
+                        }
+                      } catch (err) {
+                        console.error("Auto date update error:", err);
+                      }
+                    }
                   }}
                   style={{
                     height: "34px",

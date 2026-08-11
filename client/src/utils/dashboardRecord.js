@@ -42,6 +42,27 @@ export const getDisplayCustomerName = (record) =>
   ]);
 
 export const getDisplayAddress = (record) => {
+  if (record && typeof record === "object") {
+    const components = [
+      record.plotNo,
+      record.streetName,
+      record.locality,
+      record.landmark,
+      record.projectSocietyName || record.buildingWingName,
+      record.village || record.taluka,
+      record.city || record.propertyCity,
+      record.pincode,
+    ].filter((c) => c && c !== "N/A" && c !== "undefined" && String(c).trim() !== "");
+
+    if (components.length > 0) {
+      const fullBuilt = components.join(", ");
+      // If detailed address parts are filled, return the full built address
+      if (record.plotNo || record.streetName || record.locality || record.landmark) {
+        return fullBuilt;
+      }
+    }
+  }
+
   const primary = readRecordValue(record, [
     "displayAddress",
     "addressLegal",
@@ -57,23 +78,24 @@ export const getDisplayAddress = (record) => {
     "summary.propertyAddress",
   ], "");
 
-  if (primary && primary !== "N/A") return primary;
-
-  if (record && typeof record === "object") {
-    const components = [
-      record.plotNo,
-      record.streetName,
-      record.locality,
-      record.landmark,
-      record.projectSocietyName || record.buildingWingName,
-      record.village || record.taluka,
-      record.city || record.propertyCity,
-      record.pincode,
-    ].filter((c) => c && c !== "N/A" && c !== "undefined" && String(c).trim() !== "");
-
-    if (components.length > 0) {
-      return components.join(", ");
+  if (primary && primary !== "N/A") {
+    // If primary address is just equal to city name but we have components, return full components
+    if (record && typeof record === "object") {
+      const components = [
+        record.plotNo,
+        record.streetName,
+        record.locality,
+        record.landmark,
+        record.projectSocietyName || record.buildingWingName,
+        record.village || record.taluka,
+        record.city || record.propertyCity,
+        record.pincode,
+      ].filter((c) => c && c !== "N/A" && c !== "undefined" && String(c).trim() !== "");
+      if (components.length > 1) {
+        return components.join(", ");
+      }
     }
+    return primary;
   }
 
   return "N/A";

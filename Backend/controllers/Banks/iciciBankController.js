@@ -24,6 +24,9 @@ exports.createIciciBank = async (req, res) => {
       const parsed = new Date(dateCandidate);
       if (!isNaN(parsed.getTime())) {
         body.createdAt = parsed;
+        body.uploadDate = parsed;
+        body.dateOfVisit = parsed;
+        body.visitDate = parsed;
       }
     }
 
@@ -161,6 +164,9 @@ exports.updateIciciBank = async (req, res) => {
       const parsed = new Date(dateCandidate);
       if (!isNaN(parsed.getTime())) {
         updateBody.createdAt = parsed;
+        updateBody.uploadDate = parsed;
+        updateBody.dateOfVisit = parsed;
+        updateBody.visitDate = parsed;
       }
     }
 
@@ -216,6 +222,9 @@ exports.submitIciciBank = async (req, res) => {
       const parsed = new Date(dateCandidate);
       if (!isNaN(parsed.getTime())) {
         updateData.createdAt = parsed;
+        updateData.uploadDate = parsed;
+        updateData.dateOfVisit = parsed;
+        updateData.visitDate = parsed;
       }
     }
 

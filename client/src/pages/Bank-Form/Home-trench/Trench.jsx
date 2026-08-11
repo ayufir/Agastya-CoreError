@@ -33,19 +33,17 @@ import CaseWorkflowActions from "../../../components/CaseWorkflowActions";
 const { TextArea } = Input;
 
 const formatDateTimeLocal = (dateValue) => {
-  if (!dateValue) {
-    const d = new Date();
-    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-    return d.toISOString().slice(0, 16);
-  }
+  if (!dateValue) return "";
   const d = dayjs.isDayjs(dateValue) ? dateValue.toDate() : new Date(dateValue);
-  if (isNaN(d.getTime())) {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    return now.toISOString().slice(0, 16);
-  }
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().slice(0, 16);
+  if (isNaN(d.getTime())) return "";
+
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
 const TODAY = () => dayjs().startOf("day");

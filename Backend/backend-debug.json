@@ -1,26 +1,134 @@
 {
-  "timestamp": "2026-08-07T10:38:01.963Z",
+  "timestamp": "2026-08-11T11:07:22.629Z",
   "body": {
-    "_id": "6a75b55b5036989fc05aa9d2",
-    "status": "Work in Progress",
+    "_id": "6a75ce57e93091e0ea106612",
+    "status": "Generated",
     "AttachDocuments": [],
-    "atsDocuments": [],
-    "gpsFiles": [],
-    "emailFiles": [],
-    "fieldFormFiles": [],
+    "atsDocuments": [
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/MP21IGR17402026A100132310_KMQsWVPhc.pdf",
+        "fileId": "6a75ce3f5c7cd75eb8254580",
+        "name": "MP21IGR17402026A100132310_KMQsWVPhc.pdf"
+      }
+    ],
+    "gpsFiles": [
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-07_at_5.45.35_PM__1__AYjL3yYQM.jpeg",
+        "fileId": "6a75cd7c5c7cd75eb8203938",
+        "name": "WhatsApp_Image_2026-08-07_at_5.45.35_PM__1__AYjL3yYQM.jpeg"
+      }
+    ],
+    "emailFiles": [
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/SS_yXM_VJ-V4.png",
+        "fileId": "6a75ce3c5c7cd75eb8253668",
+        "name": "SS_yXM_VJ-V4.png"
+      }
+    ],
+    "fieldFormFiles": [
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-07_at_5.07.14_PM_PCukBoeZ1.jpeg",
+        "fileId": "6a75cd785c7cd75eb8201234",
+        "name": "WhatsApp_Image_2026-08-07_at_5.07.14_PM_PCukBoeZ1.jpeg"
+      }
+    ],
     "additionalFiles": [],
     "siteVisitVideo": [],
-    "createdBy": "683070c765ba61b559c1ecc1",
+    "createdBy": "6a72f8c3ba8305cb326ed654",
     "bankName": "HomeFirst",
-    "city": "",
+    "city": "Jabalpur",
     "approvalStatus": "Pending",
-    "isReportSubmitted": true,
-    "refNo": "462042",
-    "propertyName": "ashu",
-    "customerName": "ankit skyinfo",
-    "customerNo": "9897949596",
-    "addressSite": "king of bhopal",
-    "imageUrls": [],
+    "isReportSubmitted": false,
+    "customerName": "Zakir Husain",
+    "customerNo": "8464664615",
+    "addressSite": "GWALIOR",
+    "imageUrls": [
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-07_at_5.45.29_PM_ClrZITy3H.jpeg",
+        "fileId": "6a75cd745c7cd75eb81fecd4",
+        "name": "WhatsApp_Image_2026-08-07_at_5.45.29_PM_ClrZITy3H.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-07_at_5.45.30_PM__1__Oej58FXkU.jpeg",
+        "fileId": "6a75cd765c7cd75eb8200404",
+        "name": "WhatsApp_Image_2026-08-07_at_5.45.30_PM__1__Oej58FXkU.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-07_at_5.45.30_PM_qwCloyVuz.jpeg",
+        "fileId": "6a75cd785c7cd75eb8201484",
+        "name": "WhatsApp_Image_2026-08-07_at_5.45.30_PM_qwCloyVuz.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-07_at_5.45.31_PM__1__jJP7eZLgP.jpeg",
+        "fileId": "6a75cd7a5c7cd75eb8202b09",
+        "name": "WhatsApp_Image_2026-08-07_at_5.45.31_PM__1__jJP7eZLgP.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-07_at_5.45.31_PM_PUEoCZOzZ.jpeg",
+        "fileId": "6a75cd7c5c7cd75eb8203a0b",
+        "name": "WhatsApp_Image_2026-08-07_at_5.45.31_PM_PUEoCZOzZ.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-07_at_5.45.32_PM__1__OrMI4Rsbk.jpeg",
+        "fileId": "6a75cd7e5c7cd75eb8204aa1",
+        "name": "WhatsApp_Image_2026-08-07_at_5.45.32_PM__1__OrMI4Rsbk.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-07_at_5.45.32_PM__2__lalT4NUC1.jpeg",
+        "fileId": "6a75cd805c7cd75eb8206bd2",
+        "name": "WhatsApp_Image_2026-08-07_at_5.45.32_PM__2__lalT4NUC1.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-07_at_5.45.32_PM_ist1hbPxE.jpeg",
+        "fileId": "6a75cd825c7cd75eb820872f",
+        "name": "WhatsApp_Image_2026-08-07_at_5.45.32_PM_ist1hbPxE.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-07_at_5.45.33_PM__1__UC7h7zzwy.jpeg",
+        "fileId": "6a75cd845c7cd75eb8209994",
+        "name": "WhatsApp_Image_2026-08-07_at_5.45.33_PM__1__UC7h7zzwy.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-07_at_5.45.33_PM__2__epygOZH28.jpeg",
+        "fileId": "6a75cd865c7cd75eb820a64e",
+        "name": "WhatsApp_Image_2026-08-07_at_5.45.33_PM__2__epygOZH28.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-07_at_5.45.33_PM__3__YjIBmf5Yb.jpeg",
+        "fileId": "6a75cd885c7cd75eb820b8b5",
+        "name": "WhatsApp_Image_2026-08-07_at_5.45.33_PM__3__YjIBmf5Yb.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-07_at_5.45.33_PM_V9u00qdm7.jpeg",
+        "fileId": "6a75cd8a5c7cd75eb820c433",
+        "name": "WhatsApp_Image_2026-08-07_at_5.45.33_PM_V9u00qdm7.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-07_at_5.45.34_PM__1__uNxYF1H7U.jpeg",
+        "fileId": "6a75cd8c5c7cd75eb820d345",
+        "name": "WhatsApp_Image_2026-08-07_at_5.45.34_PM__1__uNxYF1H7U.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-07_at_5.45.34_PM__2__SsIeiKKgp.jpeg",
+        "fileId": "6a75cd8e5c7cd75eb820e058",
+        "name": "WhatsApp_Image_2026-08-07_at_5.45.34_PM__2__SsIeiKKgp.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-07_at_5.45.34_PM__3__rlO6L8fo0.jpeg",
+        "fileId": "6a75cd925c7cd75eb820f2b1",
+        "name": "WhatsApp_Image_2026-08-07_at_5.45.34_PM__3__rlO6L8fo0.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-07_at_5.45.34_PM_taULR0ule.jpeg",
+        "fileId": "6a75cd945c7cd75eb8211095",
+        "name": "WhatsApp_Image_2026-08-07_at_5.45.34_PM_taULR0ule.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-07_at_5.45.35_PM_bnMmOs6Uq.jpeg",
+        "fileId": "6a75cd965c7cd75eb8212485",
+        "name": "WhatsApp_Image_2026-08-07_at_5.45.35_PM_bnMmOs6Uq.jpeg"
+      }
+    ],
     "valuationRemarks": [],
     "customCaseId": "",
     "appIdNotes": "",
@@ -28,23 +136,13 @@
     "othersIfAny": "",
     "ratePerKm": 3.5,
     "totalAllowance": 0,
-    "timeline": [
-      {
-        "status": "Work in Progress",
-        "updatedAt": "2026-08-07T10:37:35.070Z",
-        "updatedBy": "683070c765ba61b559c1ecc1",
-        "note": "Assigned to user 6a2a4ed58ddfdbd661279b46",
-        "_id": "6a75b56f5036989fc05aa9f2"
-      }
-    ],
+    "timeline": [],
     "dateOfReport": "2026-08-07",
-    "dateOfVisit": "2026-08-07",
+    "dateOfVisit": "2026-08-09T17:53",
     "documents": [],
-    "createdAt": "2026-08-07T10:37:15.390Z",
-    "updatedAt": "2026-08-07T10:37:15.504Z",
+    "createdAt": "2026-08-09T12:23:00.000Z",
+    "updatedAt": "2026-08-07T12:23:51.209Z",
     "__v": 0,
-    "assignedTo": "6a2a4ed58ddfdbd661279b46",
-    "route": "/bank/home-first/edit/6a75b55b5036989fc05aa9d2",
-    "addressLegal": "king of bhopal"
+    "addressLegal": "GWALIOR"
   }
 }

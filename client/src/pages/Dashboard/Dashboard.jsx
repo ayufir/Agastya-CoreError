@@ -559,6 +559,16 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchAllCases();
+  }, [location.pathname, location.search, fetchAllCases]);
+
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchAllCases();
+    };
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+    };
   }, [fetchAllCases]);
 
   useEffect(() => {
@@ -1296,7 +1306,7 @@ const Dashboard = () => {
                                </Link>
                              </td>
                             <td style={{ whiteSpace:"nowrap", color:"#64748b", fontSize:12 }}>{formatDateTime(rec.createdAt)}</td>
-                            <td style={{ color:"#64748b", fontSize:13, maxWidth:200, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                            <td style={{ color:"#475569", fontSize:12, minWidth:220, maxWidth:350, wordBreak:"break-word", whiteSpace:"normal", lineHeight:1.4 }}>
                               <Tooltip title={rec.address}>
                                 {rec.address}
                               </Tooltip>

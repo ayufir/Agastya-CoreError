@@ -1170,10 +1170,10 @@ exports.finalUpdate = async (req, res) => {
         : (isFO ? false : true),
       approvalStatus: sanitizedUpdateData.approvalStatus 
         ? sanitizedUpdateData.approvalStatus 
-        : (isFO ? "Work in Progress" : "FinalSubmitted"),
+        : (existingCase?.approvalStatus || (isFO ? "Work in Progress" : "Pending")),
       status: sanitizedUpdateData.status 
         ? sanitizedUpdateData.status 
-        : (isFO ? "Work in Progress" : "FinalSubmitted"),
+        : (existingCase?.status || (isFO ? "Work in Progress" : "Pending")),
     };
 
     // Sanitize populated objects — sirf _id chahiye, object nahi
@@ -1206,6 +1206,9 @@ exports.finalUpdate = async (req, res) => {
       const parsed = new Date(dateCandidate);
       if (!isNaN(parsed.getTime())) {
         updateFields.createdAt = parsed;
+        updateFields.uploadDate = parsed;
+        updateFields.dateOfVisit = parsed;
+        updateFields.visitDate = parsed;
       }
     }
 
@@ -1418,7 +1421,7 @@ exports.getSummaryData = async (req, res) => {
         const { key: modelKey, displayName, model: Model } = bankConfig;
         const finalQuery = buildRoleAwareQuery(user, monthFilter);
         const allCases = await Model.find(finalQuery)
-          .select("_id status approvalStatus declineReason createdAt uploadDate customerName visitedPersonName applicantName applicantsName clientName basicDetails.nameOfClient propertyInfo.applicantName summary.applicantName header.contactedPerson addressLegal legalAddress addressSite propertyAddress address locationDetails.propertyAddressAsVisit locationDetails.propertyAddressAsDocs locationDetails.propertyAddressAsTRF propertyInfo.addressAtSite propertyInfo.addressAsPerDocument summary.propertyAddress customerNo contactNumber mobileNo personContactNo personContact contactPerson contactPersonNumber propertyCity city propertyLocation nearestCityTown locationDetails.mainLocality basicDetails.city propertyInfo.city summary.city assignedTo createdBy AttachDocuments atsDocuments route customCaseId appIdNotes displayAddress displayCustomerName personName applicantDetails.applicantName applicantNames contactPersonName contactedPerson isReportSubmitted")
+          .select("_id status approvalStatus declineReason createdAt uploadDate customerName visitedPersonName applicantName applicantsName clientName basicDetails.nameOfClient propertyInfo.applicantName summary.applicantName header.contactedPerson addressLegal legalAddress addressSite propertyAddress address locationDetails.propertyAddressAsVisit locationDetails.propertyAddressAsDocs locationDetails.propertyAddressAsTRF propertyInfo.addressAtSite propertyInfo.addressAsPerDocument summary.propertyAddress plotNo streetName locality landmark projectSocietyName village taluka pincode customerNo contactNumber mobileNo personContactNo personContact contactPerson contactPersonNumber propertyCity city propertyLocation nearestCityTown locationDetails.mainLocality basicDetails.city propertyInfo.city summary.city assignedTo createdBy AttachDocuments atsDocuments route customCaseId appIdNotes displayAddress displayCustomerName personName applicantDetails.applicantName applicantNames contactPersonName contactedPerson isReportSubmitted")
           .populate("assignedTo");
         return {
           modelKey,

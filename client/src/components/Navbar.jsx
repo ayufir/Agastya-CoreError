@@ -12,7 +12,8 @@ import {
   Home,
   HelpCircle,
   Layers,
-  LogOut
+  LogOut,
+  RotateCw
 } from "lucide-react";
 import BellWithNotifications from "./BellWithNotifications";
 
@@ -23,7 +24,14 @@ const Header = () => {
   const [activeTab, setActiveTab] = useState("Home");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const profileRef = useRef(null);
+
+  const handleHardRefresh = () => {
+    setIsRefreshing(true);
+    // Hard refresh page & clear transient cache
+    window.location.reload();
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -122,8 +130,15 @@ const Header = () => {
           <div className='hidden md:flex md:items-center md:space-x-4'>
             <Search className='h-6 w-6 text-gray-500 cursor-pointer hover:text-gray-700' />
             <Globe className='h-6 w-6 text-gray-500 cursor-pointer hover:text-gray-700' />
-            {/* <Bell className='h-6 w-6 text-gray-500 cursor-pointer hover:text-gray-700' /> */}
             <BellWithNotifications />
+            <button
+              onClick={handleHardRefresh}
+              title="Hard Refresh Page & Clear Cache"
+              className="p-2 rounded-full text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-200 focus:outline-none flex items-center justify-center border border-gray-200 shadow-sm"
+              style={{ background: "#f8fafc" }}
+            >
+              <RotateCw className={`h-4 w-4 ${isRefreshing ? "animate-spin text-indigo-600" : ""}`} />
+            </button>
             <div className='relative' ref={profileRef}>
               <User 
                 className='h-6 w-6 text-gray-500 cursor-pointer hover:text-gray-700' 
@@ -201,6 +216,9 @@ const Header = () => {
             <Search className='h-6 w-6 text-gray-500' />
             <Globe className='h-6 w-6 text-gray-500' />
             <Bell className='h-6 w-6 text-gray-500' />
+            <button onClick={handleHardRefresh} title="Hard Refresh" className="p-1.5 rounded-full text-gray-500 hover:text-indigo-600 border border-gray-200">
+              <RotateCw className={`h-5 w-5 ${isRefreshing ? "animate-spin text-indigo-600" : ""}`} />
+            </button>
             <div className='flex items-center gap-2 cursor-pointer' onClick={() => setIsProfileOpen(!isProfileOpen)}>
               <User className='h-6 w-6 text-gray-500' />
               <span className='text-sm font-medium text-gray-700'>{user?.name || "Profile"}</span>

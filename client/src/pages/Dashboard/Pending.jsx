@@ -26,12 +26,12 @@ const { Search } = Input;
 const { Option } = Select;
 
 const getCaseDate = (item) =>
+  item.createdAt ||
   item.dateOfVisit ||
   item.dateOfReport ||
   item.dateOfInspection ||
   item.visitDate ||
   item.inspectionDate ||
-  item.createdAt ||
   item.uploadDate ||
   item.createdDate ||
   item.submissionDate ||
@@ -127,6 +127,14 @@ const Pending = ({ selectedMonth, preloadedCases }) => {
     if (!preloadedCases) {
       fetchPendingList();
     }
+  }, [fetchPendingList, preloadedCases]);
+
+  useEffect(() => {
+    const handleFocus = () => {
+      if (!preloadedCases) fetchPendingList();
+    };
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
   }, [fetchPendingList, preloadedCases]);
 
   useEffect(() => {

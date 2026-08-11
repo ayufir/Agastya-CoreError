@@ -464,9 +464,9 @@ const IciciBankSchema = new mongoose.Schema({
   selectedFloors: { type: [String], default: [] },
   areaData: { type: mongoose.Schema.Types.Mixed },
 
-  // imageFile: { type: String },
   fileName: { type: String },
   uploadDate: { type: Date },
+  createdAt: { type: Date },
 
   // Remarks
   nfsaCheckRequired: { type: String },

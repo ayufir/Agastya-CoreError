@@ -23,19 +23,17 @@ import CaseWorkflowActions from "../../../components/CaseWorkflowActions";
 import { getDisplayCustomerName, getDisplayContact, getDisplayAddress } from "../../../utils/dashboardRecord";
 
 const formatDateTimeLocal = (dateValue) => {
-  if (!dateValue) {
-    const d = new Date();
-    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-    return d.toISOString().slice(0, 16);
-  }
+  if (!dateValue) return "";
   const d = new Date(dateValue);
-  if (isNaN(d.getTime())) {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    return now.toISOString().slice(0, 16);
-  }
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().slice(0, 16);
+  if (isNaN(d.getTime())) return "";
+
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const hours = String(d.getHours()).padStart(2, "0");
+  const minutes = String(d.getMinutes()).padStart(2, "0");
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
 // ─── Sidebar Nav Item ────────────────────────────────────────────────────────
@@ -1515,12 +1513,15 @@ const normalizeQualityOfConstruction = (val) => {
             </span>
             <input
               type="datetime-local"
-              value={formatDateTimeLocal(sectionData?.step1?.createdAt || isEdit?.createdAt || new Date())}
+              value={formatDateTimeLocal(isEdit?.createdAt || new Date())}
               onChange={(e) => {
                 const val = e.target.value;
-                setSectionData(prev => ({
+                setIsEdit((prev) => ({
                   ...prev,
-                  step1: { ...(prev?.step1 || {}), createdAt: val }
+                  createdAt: val,
+                  uploadDate: val,
+                  dateOfVisit: val,
+                  visitDate: val,
                 }));
               }}
               style={{
