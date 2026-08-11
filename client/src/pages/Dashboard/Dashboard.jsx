@@ -690,8 +690,6 @@ const Dashboard = () => {
         return s.includes("pending") && item.approvalStatus === "Declined" && item.declineReason && !isApprovalPending(item);
       }).length,
 
-      working: filteredCases.filter(isWorkInProgress).length,
-
       approvalPending: filteredCases.filter(isApprovalPending).length,
 
       finalSubmitted: filteredCases.filter(isTotalSubmitted).length,
