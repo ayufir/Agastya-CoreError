@@ -669,17 +669,20 @@ const Dashboard = () => {
   ]);
 
   const cardCounts = useMemo(() => {
+    const workingList = filteredCases.filter(isWorkInProgress);
+    const generatedList = filteredCases.filter((item) => {
+      const s = normalizeStatus(item.status);
+      if (s.includes("cancel") || s.includes("query") || isTotalSubmitted(item) || isWorkInProgress(item)) return false;
+      return (
+        ["pending", "generated", "new", "created", "open"].includes(s) ||
+        !item.assignedTo
+      );
+    });
+
     return {
-      pending: filteredCases.filter((item) => {
-        const s = normalizeStatus(item.status);
-        if (s.includes("cancel") || s.includes("query") || isTotalSubmitted(item)) return false;
-        // Include both Pending statuses AND Work in Progress statuses
-        return (
-          ["pending", "generated", "new", "created", "open"].includes(s) ||
-          isWorkInProgress(item) ||
-          !item.assignedTo
-        );
-      }).length,
+      generatedOnly: generatedList.length,
+      working: workingList.length,
+      pending: generatedList.length + workingList.length,
 
       // Cases returned by FO with a decline reason
       declined: filteredCases.filter((item) => {
@@ -747,6 +750,8 @@ const Dashboard = () => {
         total: cardCounts.pending,
         component: "Pending",
         declinedCount: cardCounts.declined,
+        generatedCount: cardCounts.generatedOnly,
+        workingCount: cardCounts.working,
       });
 
       // 2. Work in Progress pending (Assigned)
@@ -1093,6 +1098,25 @@ const Dashboard = () => {
                       <div className="stat-card-value" style={{ color:m.color }}>
                         <CountUp end={Number(r.total)||0} duration={1.2} separator="," />
                       </div>
+                      {/* Show Generated + WIP Breakdown sub-badge on Pending Cases card */}
+                      {r.component === "Pending" && (
+                        <div style={{
+                          marginTop: 6,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4,
+                          background: "#fffbe8",
+                          border: "1px solid #fef08a",
+                          borderRadius: 6,
+                          padding: "2px 7px",
+                          fontSize: 10,
+                          fontWeight: 700,
+                          color: "#b45309",
+                          letterSpacing: "0.3px",
+                        }}>
+                          📁 {r.generatedCount || 0} Generated + ⚙️ {r.workingCount || 0} WIP
+                        </div>
+                      )}
                       {/* Show FO Declined sub-badge on "To Be Assigned" card */}
                       {r.declinedCount > 0 && (
                         <div style={{
