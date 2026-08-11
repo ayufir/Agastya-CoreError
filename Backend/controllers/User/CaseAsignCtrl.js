@@ -1646,7 +1646,13 @@ exports.changeAssign = async (req, res) => {
             console.log(`Found case in model: ${modelKey}`);
             updatedDoc = await Model.findByIdAndUpdate(
               caseId,
-              { $set: { assignedTo: officerId } },
+              { 
+                $set: { 
+                  assignedTo: officerId,
+                  status: "Work in Progress",
+                  approvalStatus: "Work in Progress"
+                } 
+              },
               { new: true }
             );
             foundModel = modelKey;
@@ -1667,7 +1673,13 @@ exports.changeAssign = async (req, res) => {
           console.log(`Trying bankName-derived key: ${bankName}`);
           updatedDoc = await Model.findByIdAndUpdate(
             caseId,
-            { $set: { assignedTo: officerId } },
+            { 
+              $set: { 
+                assignedTo: officerId,
+                status: "Work in Progress",
+                approvalStatus: "Work in Progress"
+              } 
+            },
             { new: true }
           );
           
@@ -1690,7 +1702,13 @@ exports.changeAssign = async (req, res) => {
           console.log(`Trying route-derived key/model`);
           updatedDoc = await Model.findByIdAndUpdate(
             caseId,
-            { $set: { assignedTo: officerId } },
+            { 
+              $set: { 
+                assignedTo: officerId,
+                status: "Work in Progress",
+                approvalStatus: "Work in Progress"
+              } 
+            },
             { new: true }
           );
           
