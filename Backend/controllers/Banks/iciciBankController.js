@@ -27,6 +27,30 @@ exports.createIciciBank = async (req, res) => {
       }
     }
 
+    if (!body.city && req.user?.assignedCity) {
+      body.city = req.user.assignedCity;
+    }
+    const custName = body.customerName || body.applicantName || body.visitedPersonName || "";
+    if (custName) {
+      body.customerName = custName;
+      body.applicantName = custName;
+    }
+    if (!body.propertyAddress || body.propertyAddress === "N/A") {
+      const parts = [
+        body.plotNo,
+        body.streetName,
+        body.locality,
+        body.landmark,
+        body.projectSocietyName || body.buildingWingName,
+        body.village || body.taluka,
+        body.city,
+        body.pincode,
+      ].filter((c) => c && String(c).trim() !== "" && String(c).trim() !== "N/A");
+      if (parts.length > 0) {
+        body.propertyAddress = parts.join(", ");
+      }
+    }
+
     const newReport = await IciciBank.create(body);
     await newReport.save();
     res.status(201).json(newReport);
@@ -192,6 +216,30 @@ exports.submitIciciBank = async (req, res) => {
       const parsed = new Date(dateCandidate);
       if (!isNaN(parsed.getTime())) {
         updateData.createdAt = parsed;
+      }
+    }
+
+    if (!updateData.city && req.user?.assignedCity) {
+      updateData.city = req.user.assignedCity;
+    }
+    const custName2 = updateData.customerName || updateData.applicantName || updateData.visitedPersonName || "";
+    if (custName2) {
+      updateData.customerName = custName2;
+      updateData.applicantName = custName2;
+    }
+    if (!updateData.propertyAddress || updateData.propertyAddress === "N/A") {
+      const parts = [
+        updateData.plotNo,
+        updateData.streetName,
+        updateData.locality,
+        updateData.landmark,
+        updateData.projectSocietyName || updateData.buildingWingName,
+        updateData.village || updateData.taluka,
+        updateData.city,
+        updateData.pincode,
+      ].filter((c) => c && String(c).trim() !== "" && String(c).trim() !== "N/A");
+      if (parts.length > 0) {
+        updateData.propertyAddress = parts.join(", ");
       }
     }
 

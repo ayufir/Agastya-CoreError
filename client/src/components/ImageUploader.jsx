@@ -544,6 +544,7 @@ const ImageUploader = ({
                     originFileObj: file,
                   },
                 ]);
+                handleAutoUpload(file);
                 handleCapture(file);
                 return false;
               }}

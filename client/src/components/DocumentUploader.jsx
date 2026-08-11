@@ -28,8 +28,48 @@ const DocumentUploader = ({
   const [fileList, setFileList] = useState([]);
   const [uploading, setUploading] = useState(false);
 
+  const handleAutoUploadDoc = async (file) => {
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("files", file);
+
+    try {
+      const response = await fetch(`${CPANEL}/api/uploads`, {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+
+      if (!data.success || !data.urls?.length) {
+        throw new Error("Upload failed");
+      }
+
+      const newDocuments = data.urls.map((item) => ({
+        url: item.url,
+        fileId: item.fileId,
+        name: file.name || item.name,
+      }));
+
+      setDocUrls((prev) => [
+        ...(Array.isArray(prev) ? prev : []),
+        ...newDocuments,
+      ]);
+
+      if (caseId && fetchData) {
+        await fetchData();
+      }
+
+      toast.success(`${file.name || "Document"} uploaded successfully`);
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error(`Failed to upload document`);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleBeforeUpload = (file) => {
-    setFileList((prev) => [...prev, file]);
+    handleAutoUploadDoc(file);
     return false;
   };
 

@@ -32,6 +32,22 @@ import CaseWorkflowActions from "../../../components/CaseWorkflowActions";
 
 const { TextArea } = Input;
 
+const formatDateTimeLocal = (dateValue) => {
+  if (!dateValue) {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 16);
+  }
+  const d = dayjs.isDayjs(dateValue) ? dateValue.toDate() : new Date(dateValue);
+  if (isNaN(d.getTime())) {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().slice(0, 16);
+  }
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+};
+
 const TODAY = () => dayjs().startOf("day");
 
 const TrenchNavItem = ({ id, label, active, complete, onClick }) => (
@@ -711,18 +727,47 @@ const Trench = () => {
       </div>
 
       <>
-          <section className="trench-heading">
-        <h1>Revisit One Off</h1>
-        <div className="trench-summary">
-          <strong>Property Details</strong>
-          <span>Applicant</span>
-          <b>{reportData?.visitedPersonName || "Not available"}</b>
-          <i />
-          <span>Loan Code</span>
-          <b>{reportData?.laiNo || "Not available"}</b>
-          <i />
-          <span>Property</span>
-          <b>{reportData?.propertyCode || "Not available"}</b>
+          <section className="trench-heading" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+        <div>
+          <h1>Revisit One Off</h1>
+          <div className="trench-summary">
+            <strong>Property Details</strong>
+            <span>Applicant</span>
+            <b>{reportData?.visitedPersonName || "Not available"}</b>
+            <i />
+            <span>Loan Code</span>
+            <b>{reportData?.laiNo || "Not available"}</b>
+            <i />
+            <span>Property</span>
+            <b>{reportData?.propertyCode || "Not available"}</b>
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#fffbe8", border: "1.5px solid #f59e0b", padding: "6px 14px", borderRadius: "10px", boxShadow: "0 2px 6px rgba(245,158,11,0.15)" }}>
+          <span style={{ fontSize: "12px", fontWeight: "700", color: "#b45309", display: "flex", alignItems: "center", gap: "4px" }}>
+            📅 Case Date & Time (Back Date):
+          </span>
+          <input
+            type="datetime-local"
+            value={formatDateTimeLocal(form.getFieldValue("createdAt") || reportData?.createdAt || new Date())}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val) {
+                form.setFieldsValue({ createdAt: dayjs(val) });
+              }
+            }}
+            style={{
+              height: "32px",
+              borderRadius: "6px",
+              border: "1px solid #d97706",
+              padding: "0 8px",
+              fontSize: "12px",
+              fontWeight: "700",
+              color: "#1f2937",
+              backgroundColor: "#ffffff",
+              cursor: "pointer",
+              outline: "none"
+            }}
+          />
         </div>
       </section>
 
@@ -765,15 +810,13 @@ const Trench = () => {
                   <Form.Item label="Date of Report" name="dateOfReport">
                     <DatePicker className="w-full" format="DD/MM/YYYY" />
                   </Form.Item>
-                  {!isFieldOfficer && (
-                    <Form.Item
-                      label="Case Date"
-                      name="createdAt"
-                      extra={<span style={{ fontSize: "11px", color: "#6b7280" }}>Dashboard mein is date se case dikhega</span>}
-                    >
-                      <DatePicker className="w-full" format="DD/MM/YYYY" />
-                    </Form.Item>
-                  )}
+                  <Form.Item
+                    label="Case Date"
+                    name="createdAt"
+                    extra={<span style={{ fontSize: "11px", color: "#6b7280" }}>Dashboard mein is date se case dikhega</span>}
+                  >
+                    <DatePicker className="w-full" format="DD/MM/YYYY" />
+                  </Form.Item>
                   <Form.Item label="Visitor Name" name="visitedPersonName">
                     <Input />
                   </Form.Item>
@@ -898,7 +941,9 @@ const Trench = () => {
 
             {activeTab === 5 && (
               <ImageUploader
+                caseId={id}
                 deleteId={id}
+                bankName="home-trench-reports"
                 images={images}
                 setImages={setImages}
                 setUploadedUrls={setUploadedUrls}

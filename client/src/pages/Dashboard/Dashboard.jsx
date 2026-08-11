@@ -731,9 +731,9 @@ const Dashboard = () => {
     () => {
       const baseReports = [];
 
-      // 1. Generated case file (Pending)
+      // 1. Generated case file & Work in Progress (Pending)
       baseReports.push({
-        title: "Generated case file",
+        title: "Pending Cases (Generated & WIP)",
         total: cardCounts.pending,
         component: "Pending",
         declinedCount: cardCounts.declined,

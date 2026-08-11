@@ -91,18 +91,20 @@ export const getDisplayContact = (record) =>
     "header.contactedPerson",
   ]);
 
-export const getDisplayCity = (record) => {
+export const getDisplayCity = (record, fallback = "") => {
   const city = readRecordValue(
     record,
     [
       "city",
       "propertyCity",
+      "assignedCity",
       "nearestCityTown",
       "locationDetails.mainLocality",
       "basicDetails.city",
       "propertyInfo.city",
       "summary.city",
       "district",
+      "assignedTo.assignedCity",
     ],
     ""
   );
@@ -129,7 +131,7 @@ export const getDisplayCity = (record) => {
     if (address.includes(c)) return c.charAt(0).toUpperCase() + c.slice(1);
   }
 
-  return "";
+  return fallback || record?.assignedCity || record?.assignedTo?.assignedCity || "N/A";
 };
 
 export const BJG_CITIES = ["Bhopal", "Jabalpur", "Gwalior"];

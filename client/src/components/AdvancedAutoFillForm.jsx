@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 
 const { TextArea } = Input;
+const CPANEL = import.meta.env.VITE_CPANEL_DOMAIN || "";
 
 // ─── Category config ──────────────────────────────────────────────────────────
 const CATEGORY_CONFIG = [
@@ -645,7 +646,7 @@ const AdvancedAutoFillForm = ({
     files.forEach((file) => formData.append("files", file));
 
     try {
-      const uploadRes = await fetch(`${import.meta.env.VITE_API_URL}/api/uploads`, {
+      const uploadRes = await fetch(`${CPANEL}/api/uploads`, {
         method: "POST",
         body: formData,
       });
@@ -691,7 +692,7 @@ const AdvancedAutoFillForm = ({
 
         let lastUpdatedCase = null;
         for (const doc of newDocs) {
-          const res = await fetch(`${import.meta.env.VITE_API_URL}/api/uploads/upload-category-document`, {
+          const res = await fetch(`${CPANEL}/api/uploads/upload-category-document`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ caseId, fieldName, document: doc }),
@@ -797,7 +798,7 @@ const AdvancedAutoFillForm = ({
           }
         }
 
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/uploads/remove-category-document`, {
+        const res = await fetch(`${CPANEL}/api/uploads/remove-category-document`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ caseId, fieldName, document: docToRemove }),
@@ -833,7 +834,7 @@ const AdvancedAutoFillForm = ({
         message.success("File removed successfully!");
       } else {
         if (docToRemove.fileId) {
-          await fetch(`${import.meta.env.VITE_API_URL}/api/remove/delete-file`, {
+          await fetch(`${CPANEL}/api/remove/delete-file`, {
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ filePath: docToRemove.fileId }),
@@ -906,7 +907,7 @@ const AdvancedAutoFillForm = ({
           bankRoute = "bajaj";
         }
 
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/case/remove-image/${caseId}`, {
+        const res = await fetch(`${CPANEL}/api/case/remove-image/${caseId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -938,7 +939,7 @@ const AdvancedAutoFillForm = ({
         await handleDeleteUploadedFile("siteVisitVideo", videoToDelete);
       } else {
         if (videoToDelete.fileId) {
-          await fetch(`${import.meta.env.VITE_API_URL}/api/remove/delete-file`, {
+          await fetch(`${CPANEL}/api/remove/delete-file`, {
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ filePath: videoToDelete.fileId }),
@@ -970,7 +971,7 @@ const AdvancedAutoFillForm = ({
     files.forEach((file) => formData.append("files", file));
 
     try {
-      const uploadRes = await fetch(`${import.meta.env.VITE_API_URL}/api/uploads`, {
+      const uploadRes = await fetch(`${CPANEL}/api/uploads`, {
         method: "POST",
         body: formData,
       });
@@ -992,7 +993,7 @@ const AdvancedAutoFillForm = ({
       if (caseId) {
         let lastUpdatedCase = null;
         for (const doc of newDocs) {
-          const res = await fetch(`${import.meta.env.VITE_API_URL}/api/uploads/upload-ats-document`, {
+          const res = await fetch(`${CPANEL}/api/uploads/upload-ats-document`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ caseId, document: doc }),
@@ -1062,7 +1063,7 @@ const AdvancedAutoFillForm = ({
 
     try {
       if (caseId) {
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/uploads/remove-ats-document`, {
+        const res = await fetch(`${CPANEL}/api/uploads/remove-ats-document`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ caseId, document: docToDelete }),
@@ -1077,7 +1078,7 @@ const AdvancedAutoFillForm = ({
         message.success("Property paper removed successfully!");
       } else {
         if (docToDelete.fileId) {
-          await fetch(`${import.meta.env.VITE_API_URL}/api/remove/delete-file`, {
+          await fetch(`${CPANEL}/api/remove/delete-file`, {
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ filePath: docToDelete.fileId }),

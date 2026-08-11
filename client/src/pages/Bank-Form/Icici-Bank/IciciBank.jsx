@@ -31,6 +31,22 @@ import { getDisplayCustomerName, getDisplayAddress, getDisplayContact, getDispla
 import toast from "react-hot-toast";
 import { Download } from "lucide-react";
 
+const formatDateTimeLocal = (dateValue) => {
+  if (!dateValue) {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 16);
+  }
+  const d = new Date(dateValue);
+  if (isNaN(d.getTime())) {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().slice(0, 16);
+  }
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+};
+
 const Icon = ({ children }) => (
   <svg
     width="52"
@@ -194,6 +210,43 @@ const sanitizeForSave = (value) => {
     if (clean !== undefined) next[key] = clean;
   });
   return next;
+};
+
+const enrichICICIFormPayload = (dataObj, savedCity, user) => {
+  const clean = { ...dataObj };
+
+  const cityVal = clean.city || clean.propertyCity || savedCity || user?.assignedCity || "";
+  clean.city = cityVal;
+  clean.propertyCity = cityVal;
+
+  const name = clean.customerName || clean.applicantName || clean.visitedPersonName || "";
+  if (name) {
+    clean.customerName = name;
+    clean.applicantName = name;
+  }
+
+  const phone = clean.personContact || clean.contactNumber || clean.customerNo || "";
+  if (phone) {
+    clean.personContact = phone;
+    clean.contactNumber = phone;
+  }
+
+  const computedAddr = [
+    clean.plotNo,
+    clean.streetName,
+    clean.locality,
+    clean.landmark,
+    clean.projectSocietyName || clean.buildingWingName,
+    clean.village || clean.taluka,
+    clean.city,
+    clean.pincode,
+  ].filter((c) => c && String(c).trim() !== "" && String(c).trim() !== "N/A").join(", ");
+
+  if (!clean.propertyAddress || clean.propertyAddress === "N/A") {
+    clean.propertyAddress = computedAddr || "";
+  }
+
+  return clean;
 };
 
 const readDraft = (id) => {
@@ -578,11 +631,11 @@ const IciciBank = () => {
   const handleSave = async (cardKey, data) => {
     setSaving(true);
     try {
-      const rawCombined = {
+      const rawCombined = enrichICICIFormPayload({
         city: formData.city || savedCity || user?.assignedCity || "",
         ...formData,
         ...data,
-      };
+      }, savedCity, user);
       const payloadWithFiles = await prepareFormDataForServer(rawCombined);
       const updated = sanitizeForSave(payloadWithFiles);
       
@@ -611,11 +664,11 @@ const IciciBank = () => {
   const handleSaveAndNext = async (cardKey, data) => {
     setSaving(true);
     try {
-      const rawCombined = {
+      const rawCombined = enrichICICIFormPayload({
         city: formData.city || savedCity || user?.assignedCity || "",
         ...formData,
         ...data,
-      };
+      }, savedCity, user);
       const payloadWithFiles = await prepareFormDataForServer(rawCombined);
       const updated = sanitizeForSave(payloadWithFiles);
       
@@ -649,7 +702,7 @@ const IciciBank = () => {
 
   const handleSubmit = async (data) => {
     setSaving(true);
-    const submitData = sanitizeForSave({
+    const submitData = sanitizeForSave(enrichICICIFormPayload({
       city: formData.city || savedCity || user?.assignedCity || "",
       ...formData,
       ...data,
@@ -658,7 +711,7 @@ const IciciBank = () => {
       isReportSubmitted: true,
       approvalStatus: "Submitted",
       status: formData?.status === "FinalSubmitted" ? "FinalSubmitted" : "Submitted",
-    });
+    }, savedCity, user));
 
     try {
       if (id) {
@@ -692,7 +745,7 @@ const IciciBank = () => {
     setSaving(true);
     try {
       const isFO = user?.role === "FieldOfficer";
-      const rawCombined = {
+      const rawCombined = enrichICICIFormPayload({
         city: formData.city || savedCity || user?.assignedCity || "",
         ...formData,
         ...data,
@@ -701,7 +754,7 @@ const IciciBank = () => {
         isReportSubmitted: isFO ? false : true,
         approvalStatus: isFO ? "Work in Progress" : "Submitted",
         status: isFO ? "Work in Progress" : "FinalSubmitted",
-      };
+      }, savedCity, user);
       const payloadWithFiles = await prepareFormDataForServer(rawCombined);
       const finalData = sanitizeForSave(payloadWithFiles);
 
@@ -734,7 +787,7 @@ const IciciBank = () => {
   const handleAdminGenerate = async (data) => {
     setSaving(true);
     try {
-      const rawCombined = {
+      const rawCombined = enrichICICIFormPayload({
         city: formData.city || savedCity || user?.assignedCity || "",
         ...formData,
         ...data,
@@ -743,7 +796,7 @@ const IciciBank = () => {
         isReportSubmitted: false,
         approvalStatus: "Pending",
         status: "Generated",
-      };
+      }, savedCity, user);
       const payloadWithFiles = await prepareFormDataForServer(rawCombined);
       const finalData = sanitizeForSave(payloadWithFiles);
 
@@ -843,7 +896,6 @@ const IciciBank = () => {
 
   return (
     <div className="min-h-screen bg-[#f8fafc]">
-      {!isFieldOfficer && (
       <div className="bg-[#0b1d3a] text-white py-5 shadow-sm">
         <div className="max-w-[1550px] mx-auto px-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -859,7 +911,7 @@ const IciciBank = () => {
               {id ? `Editing Case: #${id}` : "Creating New Valuation Report"}
             </p>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap">
             <span className="text-[11px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full flex items-center gap-1.5 font-medium">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
               Live Sync
@@ -867,14 +919,45 @@ const IciciBank = () => {
           </div>
         </div>
       </div>
-      )}
 
       <div className="max-w-[1550px] mx-auto px-4 mt-6">
         {/* Technical Individual Assignment Tools & Inputs (bottom of the page, hidden on print) */}
         <div className="mb-6 print:hidden">
-            <h1 className="text-xl font-bold text-[#0f172a] mb-4">
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+              <h1 className="text-xl font-bold text-[#0f172a]">
                 Technical Individual Assignment
-            </h1>
+              </h1>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#fffbe8", border: "1.5px solid #f59e0b", padding: "6px 14px", borderRadius: "10px", boxShadow: "0 2px 6px rgba(245,158,11,0.15)" }}>
+                <span style={{ fontSize: "12px", fontWeight: "700", color: "#b45309", display: "flex", alignItems: "center", gap: "4px" }}>
+                  📅 Case Date & Time (Back Date):
+                </span>
+                <input
+                  type="datetime-local"
+                  value={
+                    formData.createdAt
+                      ? formatDateTimeLocal(formData.createdAt)
+                      : formatDateTimeLocal(new Date())
+                  }
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData(prev => ({ ...prev, createdAt: val }));
+                    setEditData(prev => ({ ...prev, createdAt: val }));
+                  }}
+                  style={{
+                    height: "34px",
+                    borderRadius: "6px",
+                    border: "1px solid #d97706",
+                    padding: "0 10px",
+                    fontSize: "13px",
+                    fontWeight: "700",
+                    color: "#1f2937",
+                    backgroundColor: "#ffffff",
+                    cursor: "pointer",
+                    outline: "none"
+                  }}
+                />
+              </div>
+            </div>
             
             {/* AI Advanced Auto Fill Accordion */}
             <div className="mb-4 rounded-lg border border-[#e5e7eb] bg-white overflow-hidden shadow-sm">
@@ -1119,25 +1202,7 @@ const IciciBank = () => {
                           style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
                         />
                       </div>
-                      {!isFieldOfficer && (
-                        <div>
-                          <div style={{ fontSize: "11px", color: "#d97706", fontWeight: "600", marginBottom: "4px" }}>Case Date (Back Date)</div>
-                          <input
-                            type="date"
-                            value={
-                              formData.createdAt
-                                ? new Date(formData.createdAt).toISOString().split("T")[0]
-                                : new Date().toISOString().split("T")[0]
-                            }
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              setFormData(prev => ({ ...prev, createdAt: val }));
-                              setEditData(prev => ({ ...prev, createdAt: val }));
-                            }}
-                            style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #f59e0b", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box", backgroundColor: "#fffbe8" }}
-                          />
-                        </div>
-                      )}
+
                     </div>
 
                     {/* Row 2 */}

@@ -22,6 +22,22 @@ import axiosInstance from "../../../config/axios";
 import CaseWorkflowActions from "../../../components/CaseWorkflowActions";
 import { getDisplayCustomerName, getDisplayContact, getDisplayAddress } from "../../../utils/dashboardRecord";
 
+const formatDateTimeLocal = (dateValue) => {
+  if (!dateValue) {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 16);
+  }
+  const d = new Date(dateValue);
+  if (isNaN(d.getTime())) {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().slice(0, 16);
+  }
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+};
+
 // ─── Sidebar Nav Item ────────────────────────────────────────────────────────
 const SidebarItem = ({ id, label, isActive, onClick }) => (
   <button
@@ -1488,11 +1504,40 @@ const normalizeQualityOfConstruction = (val) => {
         </div>
 
       {/* ── Technical Individual Assignment Title & Collapsible Property Details ── */}
-      {!isFieldOfficer && (
-        <div style={{ maxWidth: 1280, margin: "20px auto 0", padding: "0 16px" }}>
-          <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#0f172a", marginBottom: "16px" }}>
+      <div style={{ maxWidth: 1280, margin: "20px auto 0", padding: "0 16px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px", marginBottom: "16px" }}>
+          <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#0f172a", margin: 0 }}>
             Technical Individual Assignment
           </h1>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#fffbe8", border: "1.5px solid #f59e0b", padding: "6px 14px", borderRadius: "10px", boxShadow: "0 2px 6px rgba(245,158,11,0.15)" }}>
+            <span style={{ fontSize: "12px", fontWeight: "700", color: "#b45309", display: "flex", alignItems: "center", gap: "4px" }}>
+              📅 Case Date & Time (Back Date):
+            </span>
+            <input
+              type="datetime-local"
+              value={formatDateTimeLocal(sectionData?.step1?.createdAt || isEdit?.createdAt || new Date())}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSectionData(prev => ({
+                  ...prev,
+                  step1: { ...(prev?.step1 || {}), createdAt: val }
+                }));
+              }}
+              style={{
+                height: "32px",
+                borderRadius: "6px",
+                border: "1px solid #d97706",
+                padding: "0 10px",
+                fontSize: "13px",
+                fontWeight: "700",
+                color: "#1f2937",
+                backgroundColor: "#ffffff",
+                cursor: "pointer",
+                outline: "none"
+              }}
+            />
+          </div>
+        </div>
 
           {/* Collapsible Property Details Panel */}
           <div style={{

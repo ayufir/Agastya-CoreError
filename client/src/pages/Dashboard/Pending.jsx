@@ -423,14 +423,27 @@ const Pending = ({ selectedMonth, preloadedCases }) => {
       key: "assigned",
       width: 170,
       render: (_, record) => {
-        const assignedFO = fieldOfficers.find(
-          (fieldOfficer) => fieldOfficer._id === record.assignedTo
-        );
+        const assignedFO = typeof record.assignedTo === "object" && record.assignedTo !== null
+          ? record.assignedTo
+          : fieldOfficers.find(
+              (fieldOfficer) => String(fieldOfficer._id) === String(record.assignedTo)
+            );
 
-        return record.status === "Work in Progress" ? (
+        const s = String(record.status || "").toLowerCase().trim();
+        const isWIP =
+          s.includes("work in progress") ||
+          s.includes("working") ||
+          s.includes("assigned") ||
+          s.includes("visited") ||
+          s.includes("reported") ||
+          s.includes("reviewed") ||
+          s.includes("progress") ||
+          !!record.assignedTo;
+
+        return isWIP ? (
           <Tooltip title={
             <div style={{ padding: "4px" }}>
-              <p style={{ margin: 0, fontWeight: "bold" }}>{assignedFO?.name || "Unknown"}</p>
+              <p style={{ margin: 0, fontWeight: "bold" }}>{assignedFO?.name || "Assigned FO"}</p>
               <p style={{ margin: 0, fontSize: "11px", opacity: 0.9 }}>Role: {assignedFO?.role || "FieldOfficer"}</p>
               <p style={{ margin: 0, fontSize: "11px", opacity: 0.9 }}>Email: {assignedFO?.email || "N/A"}</p>
               {assignedFO?.assignedCity && <p style={{ margin: 0, fontSize: "11px", opacity: 0.9 }}>City: {assignedFO.assignedCity}</p>}
@@ -438,7 +451,7 @@ const Pending = ({ selectedMonth, preloadedCases }) => {
           }>
             <div className="flex items-center gap-1.5 text-emerald-700 font-medium bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-1 text-xs cursor-pointer">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>FO: {assignedFO?.name || "Unknown"}</span>
+              <span>FO: {assignedFO?.name || "Assigned"}</span>
             </div>
           </Tooltip>
         ) : (

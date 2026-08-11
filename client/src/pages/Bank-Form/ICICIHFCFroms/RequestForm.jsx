@@ -125,9 +125,9 @@ const RequestForm = ({ extractedData, onDataChange, onNext }) => {
         <div>
           <label className="block text-sm font-medium mb-1">Date of Request</label>
           <input
-            type="text"
+            type="date"
             name="dateOfRequest"
-            value={formData.dateOfRequest}
+            value={formData.dateOfRequest ? formData.dateOfRequest.split(" ")[0] : ""}
             onChange={handleChange}
             className="w-full border rounded px-3 py-2"
           />

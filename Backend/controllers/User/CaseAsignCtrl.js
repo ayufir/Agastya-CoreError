@@ -1040,14 +1040,15 @@ exports.getPendingCases = async (req, res) => {
       populate: "assignedTo createdBy",
     });
 
-    const PENDING_STATUSES = ["pending", "generated", "new", "created", "open"];
-    const WIP_STATUSES = ["work in progress", "working", "assigned", "visited", "reported", "reviewed"];
+    const PENDING_STATUSES = ["pending", "generated", "new", "created", "open", "draft"];
+    const WIP_STATUSES = ["work in progress", "working", "assigned", "visited", "reported", "reviewed", "progress", "in progress"];
 
     const pendingCases = allCases.filter((c) => {
       const s = String(c.status || "").toLowerCase().trim().replace(/[\u00a0\u00c2]/g, " ").replace(/\s+/g, " ");
-      if (s.includes("cancel")) return false;
-      // Include both Pending statuses AND Work in Progress statuses
-      return PENDING_STATUSES.includes(s) || WIP_STATUSES.some((wip) => s.includes(wip));
+      if (s.includes("cancel") || s.includes("query")) return false;
+      const isSubmitted = s.includes("final") || s.includes("submit") || c.isReportSubmitted === true || s.includes("approved");
+      if (isSubmitted) return false;
+      return PENDING_STATUSES.includes(s) || WIP_STATUSES.some((wip) => s.includes(wip)) || !!c.assignedTo;
     });
 
     const filtered = sortCasesNewestFirst(

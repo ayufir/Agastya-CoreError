@@ -159,11 +159,10 @@ exports.updateHomeTrenchReport = async (req, res) => {
       updateQuery.$set = otherFields;
     }
 
-    // Append new images without overwriting existing ones
-    if (Array.isArray(imageUrls) && imageUrls.length > 0) {
-      updateQuery.$addToSet = {
-        imageUrls: { $each: imageUrls },
-      };
+    // Set imageUrls cleanly if provided
+    if (Array.isArray(imageUrls)) {
+      if (!updateQuery.$set) updateQuery.$set = {};
+      updateQuery.$set.imageUrls = imageUrls;
     }
 
     // Field Officer auto-status update
