@@ -1661,6 +1661,8 @@ export default function ManappuramForm() {
                     {autoFilledFields.length > 0 && (
                         <div className="mt-3 text-xs text-slate-600">
                             {autoFilledFields.length} fields auto-filled from uploaded documents.
+                        </div>
+                    )}
                     {isFieldOfficer && (
                         <div className="mt-4">
                             <CaseWorkflowActions

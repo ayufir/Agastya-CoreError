@@ -623,6 +623,7 @@ const Trench = () => {
                 </div>
               )}
             </div>
+          </div>
 
             {/* 
             {isFieldOfficer && (
@@ -776,12 +777,7 @@ const Trench = () => {
                 </div>
               </>
             )}
-          </div>
-        </section>
-      </main>
-    </>
 
-      <>
           <section className="trench-heading" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
         <div>
           <h1>Revisit One Off</h1>
@@ -1045,7 +1041,6 @@ const Trench = () => {
           </div>
         </section>
       </main>
-    </>
 
       <style>{`
         .trench-portal {
