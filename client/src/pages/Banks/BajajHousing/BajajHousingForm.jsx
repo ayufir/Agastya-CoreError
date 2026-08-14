@@ -310,7 +310,7 @@ export default function BajajHousingForm() {
     const [currentStep, setCurrentStep] = useState(1);
     const [extractedData, setExtractedData] = useState({});
 
-    const [showAutoFill, setShowAutoFill] = useState(false);
+    const [showAutoFill, setShowAutoFill] = useState(true);
     const [isPropertyDetailsOpen, setIsPropertyDetailsOpen] = useState(false);
     const [autoFilledFields, setAutoFilledFields] = useState([]);
 

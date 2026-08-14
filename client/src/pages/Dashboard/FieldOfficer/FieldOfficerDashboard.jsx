@@ -413,33 +413,50 @@ const FieldOfficerDashboard = () => {
 
     if (selectedStatus !== "TOTAL_ASSIGNED") {
       if (selectedStatus === "QUERY_RAISED") {
-        // For query-raised, filter notes whose case is in the month-filtered set
+        // For query-raised, filter notes whose case is in the month-filtered set and deduplicate by caseId
         const monthCaseIds = new Set((monthFilteredFoCases || []).map((c) => String(c._id)));
-        return allCase?.filter((c) => {
+        const rawNotes = allCase?.filter((c) => {
           if (c.type === "call_not_attended") return false;
           if (selectedMonth && !monthCaseIds.has(String(c.caseId))) return false;
           const status = getCaseStatus(String(c.caseId));
-          return status === "Query Raised";
+          return String(status || "").toLowerCase().includes("query");
         }) || [];
+
+        const uniqueNotesByCase = [];
+        const seenCaseIds = new Set();
+        const sortedNotes = [...rawNotes].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        for (const note of sortedNotes) {
+          const cId = String(note.caseId);
+          if (!seenCaseIds.has(cId)) {
+            seenCaseIds.add(cId);
+            uniqueNotesByCase.push(note);
+          }
+        }
+        return uniqueNotesByCase;
       }
       if (selectedStatus === "NEW_CASES") {
         filtered = filtered?.filter(
           (caseItem) =>
-            (caseItem.approvalStatus === "Pending" ||
-             caseItem.approvalStatus === "Work in Progress") &&
+            (caseItem.approvalStatus === "Pending" || !caseItem.approvalStatus) &&
+            caseItem.approvalStatus !== "Declined" &&
             !caseItem.isReportSubmitted &&
-            caseItem.status !== "Query Raised"
+            !String(caseItem.status || "").toLowerCase().includes("query")
         );
       } else if (selectedStatus === "PENDING") {
         filtered = filtered?.filter(
           (caseItem) =>
-            caseItem.approvalStatus !== "Pending" &&
-            caseItem.approvalStatus !== "Work in Progress" &&
+            (caseItem.approvalStatus === "Accepted" || caseItem.approvalStatus === "Work in Progress") &&
             !caseItem.isReportSubmitted &&
-            caseItem.status !== "Query Raised"
+            !String(caseItem.status || "").toLowerCase().includes("query")
         );
       } else if (selectedStatus === "COMPLETED") {
-        filtered = filtered?.filter((caseItem) => caseItem.isReportSubmitted === true);
+        filtered = filtered?.filter(
+          (caseItem) =>
+            caseItem.isReportSubmitted === true ||
+            ["finalsubmitted", "submitted", "done", "approved"].includes(
+              String(caseItem.status || "").toLowerCase().trim()
+            )
+        );
       }
     }
 
@@ -502,31 +519,33 @@ const FieldOfficerDashboard = () => {
 
   const summaryCounts = useMemo(() => {
     const items = monthFilteredFoCases || [];
-    const monthCaseIds = new Set(items.map((c) => String(c._id)));
     return {
       TOTAL_ASSIGNED: items.length,
       NEW_CASES: items.filter(
         (c) =>
-          (c.approvalStatus === "Pending" || c.approvalStatus === "Work in Progress") &&
+          (c.approvalStatus === "Pending" || !c.approvalStatus) &&
+          c.approvalStatus !== "Declined" &&
           !c.isReportSubmitted &&
-          c.status !== "Query Raised"
+          !String(c.status || "").toLowerCase().includes("query")
       ).length,
       PENDING: items.filter(
         (c) =>
-          c.approvalStatus !== "Pending" &&
-          c.approvalStatus !== "Work in Progress" &&
+          (c.approvalStatus === "Accepted" || c.approvalStatus === "Work in Progress") &&
           !c.isReportSubmitted &&
-          c.status !== "Query Raised"
+          !String(c.status || "").toLowerCase().includes("query")
       ).length,
-      COMPLETED: items.filter((c) => c.isReportSubmitted === true).length,
-      QUERY_RAISED: allCase?.filter((c) => {
-        if (c.type === "call_not_attended") return false;
-        if (selectedMonth && !monthCaseIds.has(String(c.caseId))) return false;
-        const status = getCaseStatus(String(c.caseId));
-        return status === "Query Raised";
-      }).length || 0,
+      COMPLETED: items.filter(
+        (c) =>
+          c.isReportSubmitted === true ||
+          ["finalsubmitted", "submitted", "done", "approved"].includes(
+            String(c.status || "").toLowerCase().trim()
+          )
+      ).length,
+      QUERY_RAISED: items.filter((c) =>
+        String(c.status || "").toLowerCase().includes("query")
+      ).length,
     };
-  }, [monthFilteredFoCases, allCase, caseMap, selectedMonth]);
+  }, [monthFilteredFoCases]);
 
   const handleResolveAndEdit = async (caseId, caseData) => {
     if (!caseId || !caseData) return;

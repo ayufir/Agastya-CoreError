@@ -1045,7 +1045,7 @@ exports.getPendingCases = async (req, res) => {
 
     const pendingCases = allCases.filter((c) => {
       const s = String(c.status || "").toLowerCase().trim().replace(/[\u00a0\u00c2]/g, " ").replace(/\s+/g, " ");
-      if (s.includes("cancel") || s.includes("query")) return false;
+      if (s.includes("cancel") || s.includes("query") || c.approvalStatus === "Declined") return false;
       const isSubmitted = s.includes("final") || s.includes("submit") || c.isReportSubmitted === true || s.includes("approved");
       if (isSubmitted) return false;
       return PENDING_STATUSES.includes(s) || WIP_STATUSES.some((wip) => s.includes(wip)) || !!c.assignedTo;
@@ -1479,7 +1479,7 @@ exports.getSummaryData = async (req, res) => {
 
     const isWIPCase = (item) => {
       const s = normalizeS(item.status);
-      if (s.includes("cancel") || s.includes("query") || isTotalSubmittedCase(item)) return false;
+      if (s.includes("cancel") || s.includes("query") || item.approvalStatus === "Declined" || isTotalSubmittedCase(item)) return false;
       return (
         s.includes("working") ||
         s.includes("work in progress") ||
@@ -1495,7 +1495,7 @@ exports.getSummaryData = async (req, res) => {
     const PENDING_STATUSES_SET = new Set(["pending", "generated", "new", "created", "open"]);
     const pendingCount = filteredTotalSubmissions.filter((item) => {
       const s = normalizeS(item.status);
-      if (s.includes("cancel") || s.includes("query") || isTotalSubmittedCase(item) || isWIPCase(item)) return false;
+      if (s.includes("cancel") || s.includes("query") || item.approvalStatus === "Declined" || isTotalSubmittedCase(item) || isWIPCase(item)) return false;
       return PENDING_STATUSES_SET.has(s) || !item.assignedTo;
     }).length;
 
@@ -1510,6 +1510,10 @@ exports.getSummaryData = async (req, res) => {
 
     const cancelledCount = filteredTotalSubmissions.filter((item) =>
       normalizeS(item.status).includes("cancel")
+    ).length;
+
+    const declinedCount = filteredTotalSubmissions.filter((item) =>
+      item.approvalStatus === "Declined" && !isApprovalPendingCase(item)
     ).length;
 
     const outOfTatCount = filteredTotalSubmissions.filter((item) => {
@@ -1535,6 +1539,7 @@ exports.getSummaryData = async (req, res) => {
         finalSubmitted: finalSubmittedCount,
         queryRaised: queryRaisedCount,
         cancelled: cancelledCount,
+        declined: declinedCount,
         outOfTat: outOfTatCount,
       },
       pending: [],

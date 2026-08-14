@@ -91,9 +91,11 @@ const PROPERTY_TYPE_OPTIONS = [
 // ─── File chip ────────────────────────────────────────────────────────────────
 const FileChip = ({ file, onRemove, showDelete = true }) => {
   const isPdf = file.name?.toLowerCase().endsWith(".pdf");
-  
+  const isImg = file.name?.toLowerCase().match(/\.(jpg|jpeg|png|webp|gif)$/) || file.url?.match(/\.(jpg|jpeg|png|webp|gif)/i);
+  const fileUrl = file.url || file.thumbUrl;
+
   const formatFileSize = (bytes) => {
-    if (!bytes) return "Done ✓";
+    if (!bytes) return "Uploaded ✓";
     const kb = bytes / 1024;
     if (kb < 1024) return `${kb.toFixed(1)} KB`;
     const mb = kb / 1024;
@@ -103,16 +105,29 @@ const FileChip = ({ file, onRemove, showDelete = true }) => {
   return (
     <div className="flex items-center justify-between gap-3 sm:gap-4 rounded-2xl border border-[#d0e6df]/75 bg-white p-3 sm:p-3.5 shadow-sm hover:border-[#3b6657] hover:shadow-md transition-all duration-250 group">
       <div className="flex items-center gap-3 min-w-0 flex-1">
-        <div className={`p-2 rounded-xl ${isPdf ? "bg-red-50 text-red-500 border-red-100" : "bg-[#f4faf8] text-[#3b6657] border-[#d0e6df]/40"} border shrink-0 flex items-center justify-center`}>
-          <FileText className="w-5 h-5" />
-        </div>
+        {fileUrl && isImg ? (
+          <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 cursor-pointer" title="Click to view full image">
+            <img src={fileUrl} alt={file.name} className="w-10 h-10 rounded-xl object-cover border border-slate-200 hover:scale-105 transition-transform" />
+          </a>
+        ) : (
+          <div className={`p-2 rounded-xl ${isPdf ? "bg-red-50 text-red-500 border-red-100" : "bg-[#f4faf8] text-[#3b6657] border-[#d0e6df]/40"} border shrink-0 flex items-center justify-center`}>
+            <FileText className="w-5 h-5" />
+          </div>
+        )}
         <div className="min-w-0 flex-1">
           <div className="truncate text-[#1c2725] text-xs font-bold leading-none mb-1">{file.name}</div>
-          <div className="flex items-center gap-1.5 mt-0.5">
+          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
             <span className="text-[10px] text-[#7a928e] font-semibold">{formatFileSize(file.size)}</span>
-            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.25 rounded-md text-[9px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-150">
-              Done ✓
-            </span>
+            {fileUrl && (
+              <a
+                href={fileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition-colors cursor-pointer"
+              >
+                <Eye className="w-3 h-3" /> View Document <ExternalLink className="w-2.5 h-2.5" />
+              </a>
+            )}
           </div>
         </div>
       </div>
@@ -1969,7 +1984,7 @@ if (typeof setFormDataDirect === "function") {
       )}
 
       {/* Results panel */}
-      {!isFieldOfficer && (sourceSummary || 
+      {(sourceSummary || 
         auditNotes.length > 0 || 
         uploadedPhotoUrls.length > 0 || 
         uploadedVideoUrls.length > 0 || 

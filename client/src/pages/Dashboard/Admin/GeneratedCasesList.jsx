@@ -15,10 +15,15 @@ const GeneratedCasesList = ({ allCases = [], refreshData, fieldOfficers = [] }) 
   const [selectedOfficer, setSelectedOfficer] = useState(null);
   const [assignLoading, setAssignLoading] = useState(false);
 
-  // Filter cases that are generated
+  // Filter cases that are generated / unassigned pending
   const generatedCases = allCases.filter((item) => {
     const s = String(item.status || "").toLowerCase().trim();
-    return s === "generated";
+    if (s.includes("cancel") || s.includes("query") || item.approvalStatus === "Declined") return false;
+    const isSubmitted = s.includes("final") || s.includes("submit") || item.isReportSubmitted === true || s.includes("done") || s.includes("approved");
+    if (isSubmitted) return false;
+    const isWip = s.includes("work in progress") || s.includes("working") || s.includes("assigned") || s.includes("progress") || s.includes("visited") || s.includes("reported") || s.includes("reviewed") || (s.includes("pending") && !!item.assignedTo);
+    if (isWip) return false;
+    return ["pending", "generated", "new", "created", "open"].includes(s) || !item.assignedTo;
   });
 
   const openAssignModal = (record) => {

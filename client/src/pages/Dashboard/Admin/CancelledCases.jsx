@@ -24,7 +24,7 @@ const isSameMonth = (date, monthValue) => {
   return yyyyMm === monthValue;
 };
 
-const CancelledCases = ({ selectedMonth }) => {
+const CancelledCases = ({ selectedMonth, preloadedCases }) => {
   const dispatch = useDispatch();
   const {
     cancelledCases,
@@ -72,11 +72,13 @@ const CancelledCases = ({ selectedMonth }) => {
   }, [searchText]);
 
   useEffect(() => {
-    fetchCancelledList();
-  }, [fetchCancelledList]);
+    if (!preloadedCases) {
+      fetchCancelledList();
+    }
+  }, [fetchCancelledList, preloadedCases]);
 
   const bankOptions = useMemo(() => {
-    const source = cancelledCases || [];
+    const source = preloadedCases || cancelledCases || [];
     if (source.length > 0) {
       const set = new Set();
       source.forEach((item) => {
@@ -86,10 +88,10 @@ const CancelledCases = ({ selectedMonth }) => {
       if (set.size > 0) return Array.from(set).sort();
     }
     return cancelledFilterOptions?.banks || [];
-  }, [cancelledCases, cancelledFilterOptions]);
+  }, [preloadedCases, cancelledCases, cancelledFilterOptions]);
 
   const statusOptions = useMemo(() => {
-    const source = cancelledCases || [];
+    const source = preloadedCases || cancelledCases || [];
     if (source.length > 0) {
       const set = new Set();
       source.forEach((item) => {
@@ -98,14 +100,16 @@ const CancelledCases = ({ selectedMonth }) => {
       if (set.size > 0) return Array.from(set).sort();
     }
     return cancelledFilterOptions?.statuses || [];
-  }, [cancelledCases, cancelledFilterOptions]);
+  }, [preloadedCases, cancelledCases, cancelledFilterOptions]);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedZone, selectedMonth, selectedBanks, selectedStatuses, debouncedSearch]);
 
   const monthFilteredCancelledCases = useMemo(() => {
-    return (cancelledCases || []).filter((item) =>
+    const list = preloadedCases || cancelledCases || [];
+    if (preloadedCases) return list;
+    return list.filter((item) =>
       isSameMonth(
         item.createdAt ||
           item.createdDate ||
@@ -117,7 +121,7 @@ const CancelledCases = ({ selectedMonth }) => {
         selectedMonth
       )
     );
-  }, [cancelledCases, selectedMonth]);
+  }, [preloadedCases, cancelledCases, selectedMonth]);
 
   const columns = [
     {

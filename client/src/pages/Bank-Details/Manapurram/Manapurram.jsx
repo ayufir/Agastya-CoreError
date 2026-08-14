@@ -23,6 +23,7 @@ import axiosInstance from "../../../config/axios";
 import JSZip from "jszip";
 import AutoFillForm from "../../AutoFillForm";
 import AdvancedAutoFillForm from "../../../components/AdvancedAutoFillForm";
+import CaseWorkflowActions from "../../../components/CaseWorkflowActions";
 import { MANAPPURAM_MAPPING } from "../../../config/Bankfieldmappings";
 import {
     applyMappedFields,
@@ -1660,10 +1661,29 @@ export default function ManappuramForm() {
                     {autoFilledFields.length > 0 && (
                         <div className="mt-3 text-xs text-slate-600">
                             {autoFilledFields.length} fields auto-filled from uploaded documents.
+                    {isFieldOfficer && (
+                        <div className="mt-4">
+                            <CaseWorkflowActions
+                                caseId={id}
+                                bankName="Manappuram"
+                                onSave={handleSave}
+                                onSubmit={(status) => {
+                                    if (status === "Generated") {
+                                        return handleAdminGenerate();
+                                    } else {
+                                        return handleSubmit();
+                                    }
+                                }}
+                                loading={saving}
+                                isReportSubmitted={form?.isReportSubmitted}
+                                status={form?.status}
+                            />
                         </div>
                     )}
                 </div>
 
+                {!isFieldOfficer && (
+                <>
                 <div className="border-2 border-black flex items-start p-2">
                     <div className="w-full text-center py-2">
                         <img
@@ -2723,6 +2743,8 @@ export default function ManappuramForm() {
                         📄 Download PDF
                     </button>
                 </div>
+                </>
+                )}
             </div>
         </div>
     );

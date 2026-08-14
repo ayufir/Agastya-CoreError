@@ -53,7 +53,7 @@ const isTotalSubmitted = (item) => {
 
 const isWorkInProgress = (item) => {
   const s = normalizeStatus(item.status);
-  if (s.includes("cancel") || s.includes("query") || isTotalSubmitted(item)) return false;
+  if (s.includes("cancel") || s.includes("query") || item.approvalStatus === "Declined" || isTotalSubmitted(item)) return false;
   return (
     s.includes("work in progress") ||
     s.includes("working") ||
@@ -64,6 +64,41 @@ const isWorkInProgress = (item) => {
     s.includes("reviewed") ||
     (s.includes("pending") && !!item.assignedTo)
   );
+};
+
+const isGeneratedOnly = (item) => {
+  const s = normalizeStatus(item.status);
+  if (s.includes("cancel") || s.includes("query") || item.approvalStatus === "Declined" || isTotalSubmitted(item) || isWorkInProgress(item)) return false;
+  return (
+    ["pending", "generated", "new", "created", "open"].includes(s) ||
+    !item.assignedTo
+  );
+};
+
+const isOutOfTat = (item) => {
+  const s = normalizeStatus(item.status);
+  if (
+    s.includes("working") ||
+    s.includes("assigned") ||
+    s.includes("progress") ||
+    s.includes("visited") ||
+    s.includes("reported") ||
+    s.includes("reviewed") ||
+    s.includes("final") ||
+    s.includes("submitted") ||
+    s.includes("done") ||
+    s.includes("cancel")
+  ) {
+    return false;
+  }
+  const dateStr = item.createdAt || item.uploadDate || item.createdDate;
+  if (!dateStr) return false;
+
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return false;
+
+  const hours = (new Date() - d) / (1000 * 60 * 60);
+  return hours > 48;
 };
 
 const getCurrentMonthValue = () => {
@@ -393,6 +428,7 @@ const Dashboard = () => {
       case "myworklist":
         import("./MyWorklist");
         break;
+      case "GeneratedOnly":
       case "generated":
         import("./Admin/GeneratedCasesList");
         break;
@@ -672,7 +708,7 @@ const Dashboard = () => {
     const workingList = filteredCases.filter(isWorkInProgress);
     const generatedList = filteredCases.filter((item) => {
       const s = normalizeStatus(item.status);
-      if (s.includes("cancel") || s.includes("query") || isTotalSubmitted(item) || isWorkInProgress(item)) return false;
+      if (s.includes("cancel") || s.includes("query") || item.approvalStatus === "Declined" || isTotalSubmitted(item) || isWorkInProgress(item)) return false;
       return (
         ["pending", "generated", "new", "created", "open"].includes(s) ||
         !item.assignedTo
@@ -686,8 +722,7 @@ const Dashboard = () => {
 
       // Cases returned by FO with a decline reason
       declined: filteredCases.filter((item) => {
-        const s = normalizeStatus(item.status);
-        return s.includes("pending") && item.approvalStatus === "Declined" && item.declineReason && !isApprovalPending(item);
+        return item.approvalStatus === "Declined" && !isApprovalPending(item);
       }).length,
 
       approvalPending: filteredCases.filter(isApprovalPending).length,
@@ -752,7 +787,15 @@ const Dashboard = () => {
         workingCount: cardCounts.working,
       });
 
-      // 2. Work in Progress pending (Assigned)
+      // 2. Generated Cases Only (Unassigned)
+      baseReports.push({
+        title: "Generated Cases (Unassigned)",
+        total: cardCounts.generatedOnly,
+        component: "GeneratedOnly",
+        declinedCount: cardCounts.declined,
+      });
+
+      // 3. Work in Progress pending (Assigned)
       baseReports.push({
         title: "Work in Progress pending",
         total: cardCounts.working,
@@ -891,6 +934,7 @@ const Dashboard = () => {
   /* ── icon map for stat cards ── */
   const CARD_META_MAP = {
     Pending: { icon: "📂", color: "#f59e0b", bg: "#fffbeb", border: "#fde68a" },
+    GeneratedOnly: { icon: "📁", color: "#0284c7", bg: "#f0f9ff", border: "#bae6fd" },
     Assigned: { icon: "⚙️", color: "#6366f1", bg: "#eef2ff", border: "#c7d2fe" },
     ApprovalPending: { icon: "⏳", color: "#ec4899", bg: "#fdf2f8", border: "#fbcfe8" },
     ApprovedCases: { icon: "⭐", color: "#16a34a", bg: "#f0fdf4", border: "#bbf7d0" },
@@ -1054,11 +1098,51 @@ const Dashboard = () => {
               <div className="filter-bar" style={{ marginBottom:14 }}>
                 {/* Row 1: Month + Total Cases (side by side always) */}
                 <div style={{ display:"flex", alignItems:"flex-end", gap:10, marginBottom:10 }}>
-                  <div style={{ flex:"0 0 auto" }}>
-                    <div className="filter-label">Month</div>
-                    <input type="month" value={selectedMonth}
-                      onChange={e => { setSelectedMonth(e.target.value); setActiveComponent(""); clearBankView(); }}
-                      className="filter-input" style={{ width:150 }} />
+                  <div style={{ flex:"0 0 auto", display:"flex", alignItems:"flex-end", gap:6 }}>
+                    <div>
+                      <div className="filter-label">Month</div>
+                      <input type="month" value={selectedMonth}
+                        onChange={e => { setSelectedMonth(e.target.value); setActiveComponent(""); clearBankView(); }}
+                        className="filter-input" style={{ width:150 }} />
+                    </div>
+                    {selectedMonth ? (
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedMonth(""); setActiveComponent(""); clearBankView(); }}
+                        style={{
+                          height: 36,
+                          padding: "0 12px",
+                          borderRadius: 9,
+                          border: "1.5px solid #cbd5e1",
+                          background: "#f1f5f9",
+                          color: "#334155",
+                          fontSize: 12,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          transition: "all 0.2s ease"
+                        }}
+                        title="Show cases from all months"
+                      >
+                        🌐 All Months
+                      </button>
+                    ) : (
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          height: 36,
+                          padding: "0 10px",
+                          borderRadius: 9,
+                          background: "#e0f2fe",
+                          color: "#0369a1",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          border: "1px solid #bae6fd"
+                        }}
+                      >
+                        Showing All Months
+                      </span>
+                    )}
                   </div>
                   {/* Total Cases — always on same line as Month */}
                   <div style={{ marginLeft:"auto", textAlign:"right", flex:"0 0 auto" }}>
@@ -1405,14 +1489,20 @@ const Dashboard = () => {
             <Suspense fallback={<div className="p-4 bg-white rounded-xl border"><TableSkeleton rows={5} cols={6} /></div>}>
               {activeComponent==="Pending"         && <Pending selectedMonth={selectedMonth} preloadedCases={filteredCases.filter((item) => {
                 const s = normalizeStatus(item.status);
-                if (s.includes("cancel") || s.includes("query") || isTotalSubmitted(item)) return false;
-                // Include both Pending statuses AND Work in Progress statuses
+                if (s.includes("cancel") || s.includes("query") || item.approvalStatus === "Declined" || isTotalSubmitted(item)) return false;
                 return (
                   ["pending", "generated", "new", "created", "open"].includes(s) ||
                   isWorkInProgress(item) ||
                   !item.assignedTo
                 );
               })} />}
+              {activeComponent==="GeneratedOnly"   && (
+                <GeneratedCasesList
+                  allCases={filteredCases.filter(isGeneratedOnly)}
+                  refreshData={fetchAllCases}
+                  fieldOfficers={fieldOfficers}
+                />
+              )}
               {activeComponent==="Assigned"        && <AssignedCase selectedMonth={selectedMonth} preloadedCases={filteredCases.filter(isWorkInProgress)} />}
               {activeComponent==="ApprovalPending" && (
                 <ApprovalPendingCases
@@ -1430,16 +1520,16 @@ const Dashboard = () => {
                   preloadedCases={filteredCases.filter((item) => !normalizeStatus(item.status).includes("cancel") && normalizeStatus(item.status).includes("approved"))}
                 />
               )}
-              {activeComponent==="QueryRaised"     && <QueryRaised selectedMonth={selectedMonth} />}
+              {activeComponent==="QueryRaised"     && <QueryRaised selectedMonth={selectedMonth} preloadedCases={filteredCases.filter((item) => normalizeStatus(item.status).includes("query"))} />}
               {activeComponent==="ReportSubmitted" && (
                 <FinalSubmittedCase 
                   selectedMonth={selectedMonth} 
                   preloadedCases={filteredCases.filter(isTotalSubmitted)}
                 />
               )}
-              {activeComponent==="CancelCases"     && <CancelledCases selectedMonth={selectedMonth} />}
-              {activeComponent==="Out_Tat_Cases"   && <OutOfTATCase selectedMonth={selectedMonth} selectedAgent={selectedAgent} />}
-              {activeComponent==="Summary"         && <SummaryCard selectedMonth={selectedMonth} />}
+              {activeComponent==="CancelCases"     && <CancelledCases selectedMonth={selectedMonth} preloadedCases={filteredCases.filter((item) => normalizeStatus(item.status).includes("cancel"))} />}
+              {activeComponent==="Out_Tat_Cases"   && <OutOfTATCase selectedMonth={selectedMonth} selectedAgent={selectedAgent} preloadedCases={filteredCases.filter(isOutOfTat)} />}
+              {activeComponent==="Summary"         && <SummaryCard selectedMonth={selectedMonth} preloadedCases={filteredCases} />}
             </Suspense>
           </>
         )}

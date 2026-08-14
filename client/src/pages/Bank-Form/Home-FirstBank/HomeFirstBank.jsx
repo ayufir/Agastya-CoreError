@@ -1326,6 +1326,7 @@ const normalizeQualityOfConstruction = (val) => {
     }
   };
 
+  const [showFullBankForm, setShowFullBankForm] = useState(false);
   const activeSectionLabel = activeContent?.label || "";
 
   return (
@@ -1501,53 +1502,45 @@ const normalizeQualityOfConstruction = (val) => {
           </div>
         </div>
 
-      {/* ── Technical Individual Assignment Title & Collapsible Property Details ── */}
-      <div style={{ maxWidth: 1280, margin: "20px auto 0", padding: "0 16px" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px", marginBottom: "16px" }}>
-          <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#0f172a", margin: 0 }}>
-            Technical Individual Assignment
-          </h1>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#fffbe8", border: "1.5px solid #f59e0b", padding: "6px 14px", borderRadius: "10px", boxShadow: "0 2px 6px rgba(245,158,11,0.15)" }}>
-            <span style={{ fontSize: "12px", fontWeight: "700", color: "#b45309", display: "flex", alignItems: "center", gap: "4px" }}>
-              📅 Case Date & Time (Back Date):
-            </span>
-            <input
-              type="datetime-local"
-              value={formatDateTimeLocal(isEdit?.createdAt || new Date())}
-              onChange={(e) => {
-                const val = e.target.value;
-                setIsEdit((prev) => ({
-                  ...prev,
-                  createdAt: val,
-                  uploadDate: val,
-                  dateOfVisit: val,
-                  visitDate: val,
-                }));
-              }}
+        {/* 
+        {isFieldOfficer && (
+          <div style={{ display: "flex", justifyContent: "center", margin: "20px 0" }}>
+            <button
+              type="button"
+              onClick={() => setShowFullBankForm(!showFullBankForm)}
               style={{
-                height: "32px",
-                borderRadius: "6px",
-                border: "1px solid #d97706",
-                padding: "0 10px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "10px 24px",
+                background: showFullBankForm ? "#f8fafc" : "#eff6ff",
+                border: "1.5px solid #3b82f6",
+                borderRadius: "10px",
+                color: "#1d4ed8",
+                fontWeight: 700,
                 fontSize: "13px",
-                fontWeight: "700",
-                color: "#1f2937",
-                backgroundColor: "#ffffff",
                 cursor: "pointer",
-                outline: "none"
+                boxShadow: "0 2px 6px rgba(59,130,246,0.15)",
+                transition: "all 0.2s ease",
               }}
-            />
+            >
+              <span>{showFullBankForm ? "🙈 Hide Bank Valuation Form" : "📋 View / Edit Detailed Bank Valuation Form"}</span>
+            </button>
           </div>
-        </div>
+        )}
+        */}
 
-          {/* Collapsible Property Details Panel */}
-          <div style={{
-            background: "#ffffff",
-            borderRadius: 12,
-            border: "1px solid #e5e7eb",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-            overflow: "hidden"
-          }}>
+        {(!isFieldOfficer || showFullBankForm) && (
+          <>
+            {/* Collapsible Property Details Panel */}
+            <div style={{ maxWidth: 1280, margin: "20px auto 0", padding: "0 16px" }}>
+              <div style={{
+                background: "#ffffff",
+                borderRadius: 12,
+                border: "1px solid #e5e7eb",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                overflow: "hidden"
+              }}>
             {/* Accordion Header Row */}
             <div 
               onClick={() => setIsPropertyDetailsOpen(!isPropertyDetailsOpen)}
@@ -1692,14 +1685,9 @@ const normalizeQualityOfConstruction = (val) => {
             )}
           </div>
         </div>
-      )}
-
-
-
 
       {/* ── Body: Sidebar + Content ── */}
 
-      {!isFieldOfficer && (
         <div
           className="form-container-flex"
           style={{
@@ -1882,7 +1870,8 @@ const normalizeQualityOfConstruction = (val) => {
           )}
         </main>
       </div>
-      )}
+    </>
+  )}
 
       {/* ── JSON Modal Output ── */}
       {showJsonModal && (

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Table, Input, Select } from "antd";
 import { useSelector } from "react-redux";
+import dayjs from "dayjs";
 
 import axiosInstance from "../../../config/axios";
 
@@ -26,64 +27,87 @@ const readValue = (record, paths) => {
   return "N/A";
 };
 
+const formatDate = (val) => {
+  if (!val || val === "N/A") return "N/A";
+  const d = dayjs(val);
+  if (!d.isValid()) return val;
+  return d.format("DD/MM/YYYY");
+};
+
 const isSameMonth = (date, monthValue) => {
-  if (!date || !monthValue) return true;
+  if (!date || date === "N/A" || !monthValue) return true;
 
   const d = new Date(date);
-  if (isNaN(d.getTime())) return false;
+  if (isNaN(d.getTime())) return true;
 
   const yyyyMm = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   return yyyyMm === monthValue;
 };
 
-const normalizeSummaryRecord = (record, index) => ({
-  ...record,
-  key: record._id || index,
-  customerName: readValue(record, [
-    "customerName",
-    "visitedPersonName",
-    "applicantName",
-    "basicDetails.nameOfClient",
-    "propertyInfo.applicantName",
-    "summary.applicantName",
-    "header.contactedPerson",
-  ]),
-  propertyAddress: readValue(record, [
-    "addressLegal",
-    "legalAddress",
-    "addressSite",
-    "propertyAddress",
-    "address",
-    "locationDetails.propertyAddressAsVisit",
-    "locationDetails.propertyAddressAsDocs",
-    "propertyInfo.addressAtSite",
-    "propertyInfo.addressAsPerDocument",
-    "summary.propertyAddress",
-  ]),
-  constructionStage: readValue(record, [
-    "constructionStage",
-    "constructionStatus",
-    "propertyStatus",
-    "percentCompleted",
-    "technicalDetails.percentCompletion",
-    "valuationDetails.percentageCompletion",
-  ]),
-  dateOfVisit: readValue(record, [
+const normalizeSummaryRecord = (record, index) => {
+  const rawVisitDate = readValue(record, [
     "dateOfVisit",
     "dateOfReport",
     "basicDetails.visitDate",
+    "basicDetails.visit_date",
+    "property.basic_details.visit_date",
     "header.dateOfVisit",
-  ]),
-  createdAt: readValue(record, [
     "createdAt",
+    "uploadDate",
     "createdDate",
-    "submissionDate",
-    "dateOfVisit",
-    "dateOfReport",
-    "basicDetails.createdAt",
-    "header.createdAt",
-  ]),
-});
+  ]);
+
+  return {
+    ...record,
+    key: record._id || index,
+    _rawDate: record.createdAt || record.uploadDate || record.dateOfVisit || record.submissionDate,
+    customerName: readValue(record, [
+      "customerName",
+      "visitedPersonName",
+      "applicantName",
+      "basicDetails.nameOfClient",
+      "propertyInfo.applicantName",
+      "summary.applicantName",
+      "header.contactedPerson",
+    ]),
+    propertyAddress: readValue(record, [
+      "addressLegal",
+      "legalAddress",
+      "addressSite",
+      "propertyAddress",
+      "address",
+      "locationDetails.propertyAddressAsVisit",
+      "locationDetails.propertyAddressAsDocs",
+      "propertyInfo.addressAtSite",
+      "propertyInfo.addressAsPerDocument",
+      "summary.propertyAddress",
+    ]),
+    constructionStage: readValue(record, [
+      "constructionStage",
+      "constructionStatus",
+      "propertyStatus",
+      "percentCompleted",
+      "percentageCompletion",
+      "completionPercentage",
+      "technicalDetails.percentCompletion",
+      "valuationDetails.percentageCompletion",
+      "valuation_details.completion_percentage",
+      "property.valuation_details.completion_percentage",
+      "accommodation_details.quality_of_construction",
+      "property.accommodation_details.quality_of_construction",
+    ]),
+    dateOfVisit: formatDate(rawVisitDate),
+    createdAt: readValue(record, [
+      "createdAt",
+      "createdDate",
+      "submissionDate",
+      "dateOfVisit",
+      "dateOfReport",
+      "basicDetails.createdAt",
+      "header.createdAt",
+    ]),
+  };
+};
 
 const columns = [
   {
@@ -118,7 +142,7 @@ const columns = [
   },
 ];
 
-const SummaryCard = ({ selectedMonth }) => {
+const SummaryCard = ({ selectedMonth, preloadedCases }) => {
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState("");
@@ -141,6 +165,7 @@ const SummaryCard = ({ selectedMonth }) => {
   );
 
   const fetchSummaryTable = useCallback(async () => {
+    if (preloadedCases && preloadedCases.length > 0) return;
     try {
       setLoading(true);
 
@@ -171,7 +196,7 @@ const SummaryCard = ({ selectedMonth }) => {
     } finally {
       setLoading(false);
     }
-  }, [bankFilter, debouncedSearch, selectedZone, statusFilter, selectedMonth]);
+  }, [bankFilter, debouncedSearch, selectedZone, statusFilter, selectedMonth, preloadedCases]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -182,28 +207,29 @@ const SummaryCard = ({ selectedMonth }) => {
   }, [searchText]);
 
   useEffect(() => {
-    fetchSummaryTable();
-  }, [fetchSummaryTable]);
+    if (preloadedCases && preloadedCases.length > 0) {
+      setTableData(preloadedCases.map((rec, idx) => normalizeSummaryRecord(rec, idx)));
+    } else {
+      fetchSummaryTable();
+    }
+  }, [preloadedCases, fetchSummaryTable]);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedZone, selectedMonth, selectedBanks, selectedStatuses, debouncedSearch]);
 
   const monthFilteredData = useMemo(() => {
+    if (preloadedCases) return tableData;
     return tableData.filter((item) => {
       const caseDate =
-        item.dateOfVisit ||
-        item.dateOfReport ||
-        item.dateOfInspection ||
-        item.visitDate ||
-        item.inspectionDate ||
+        item._rawDate ||
         item.createdAt ||
         item.uploadDate ||
         item.createdDate ||
         item.submissionDate;
       return isSameMonth(caseDate, selectedMonth);
     });
-  }, [tableData, selectedMonth]);
+  }, [tableData, selectedMonth, preloadedCases]);
 
   const bankOptions = useMemo(() => {
     const source = tableData || [];

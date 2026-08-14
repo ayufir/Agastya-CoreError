@@ -84,6 +84,7 @@ const Trench = () => {
 
   const [showAutoFill, setShowAutoFill] = useState(true);
   const [isPropertyDetailsOpen, setIsPropertyDetailsOpen] = useState(false);
+  const [showFullBankForm, setShowFullBankForm] = useState(false);
   const isFieldOfficer = user?.role?.toLowerCase() === "fieldofficer";
 
   const watchedVisitedPersonName = Form.useWatch("visitedPersonName", form);
@@ -599,130 +600,186 @@ const Trench = () => {
                     fetchData={fetchReport}
                     isSubmitted={reportData?.isReportSubmitted}
                   />
+
+                  {isFieldOfficer && (
+                    <div style={{ marginTop: 24 }}>
+                      <CaseWorkflowActions
+                        caseId={id}
+                        bankName="Home First Tranche"
+                        onSave={handleFOSave}
+                        onSubmit={(status) => {
+                          if (status === "Generated") {
+                            return handleAdminGenerate();
+                          } else {
+                            return handleFOSubmit();
+                          }
+                        }}
+                        loading={loading}
+                        isReportSubmitted={reportData?.isReportSubmitted}
+                        status={reportData?.status}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-            <div style={{
-              background: "#ffffff",
-              borderRadius: 12,
-              border: "1px solid #e5e7eb",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-              overflow: "hidden"
-            }}>
-              {/* Accordion Header Row */}
-              <div 
-                onClick={() => setIsPropertyDetailsOpen(!isPropertyDetailsOpen)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "16px 24px",
+
+            {/* 
+            {isFieldOfficer && (
+              <div style={{ display: "flex", justifyContent: "center", margin: "20px 0" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowFullBankForm(!showFullBankForm)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    padding: "10px 24px",
+                    background: showFullBankForm ? "#f8fafc" : "#eff6ff",
+                    border: "1.5px solid #3b82f6",
+                    borderRadius: "10px",
+                    color: "#1d4ed8",
+                    fontWeight: 700,
+                    fontSize: "13px",
+                    cursor: "pointer",
+                    boxShadow: "0 2px 6px rgba(59,130,246,0.15)",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  <span>{showFullBankForm ? "🙈 Hide Bank Valuation Form" : "📋 View / Edit Detailed Bank Valuation Form"}</span>
+                </button>
+              </div>
+            )}
+            */}
+
+            {(!isFieldOfficer || showFullBankForm) && (
+              <>
+                <div style={{
                   background: "#ffffff",
-                  borderBottom: isPropertyDetailsOpen ? "1px solid #e5e7eb" : "none",
-                  cursor: "pointer",
-                  userSelect: "none"
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
-                  <span style={{ fontSize: "14px", fontWeight: 600, color: "#1e293b" }}>🏠 Property Details</span>
-                  {(watchedVisitedPersonName || watchedLaiNo || watchedPropertyCode) && (
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "12px", color: "#64748b", fontWeight: 500 }}>
-                  {watchedVisitedPersonName && (
-                    <>
-                      <span style={{ color: "#cbd5e1" }}>|</span>
-                      <span>Applicant <strong style={{ color: "#0f172a", fontWeight: 600 }}>{watchedVisitedPersonName}</strong></span>
-                    </>
-                  )}
-                  {watchedLaiNo && (
-                    <>
-                      <span style={{ color: "#cbd5e1" }}>|</span>
-                      <span>Loan Code <strong style={{ color: "#0f172a", fontWeight: 600 }}>{watchedLaiNo}</strong></span>
-                    </>
-                  )}
-                  {watchedPropertyCode && (
-                    <>
-                      <span style={{ color: "#cbd5e1" }}>|</span>
-                      <span>Property <strong style={{ color: "#0f172a", fontWeight: 600 }}>{watchedPropertyCode}</strong></span>
-                    </>
+                  borderRadius: 12,
+                  border: "1px solid #e5e7eb",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+                  overflow: "hidden"
+                }}>
+                  {/* Accordion Header Row */}
+                  <div 
+                    onClick={() => setIsPropertyDetailsOpen(!isPropertyDetailsOpen)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "16px 24px",
+                      background: "#ffffff",
+                      borderBottom: isPropertyDetailsOpen ? "1px solid #e5e7eb" : "none",
+                      cursor: "pointer",
+                      userSelect: "none"
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+                      <span style={{ fontSize: "14px", fontWeight: 600, color: "#1e293b" }}>🏠 Property Details</span>
+                      {(watchedVisitedPersonName || watchedLaiNo || watchedPropertyCode) && (
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "12px", color: "#64748b", fontWeight: 500 }}>
+                          {watchedVisitedPersonName && (
+                            <>
+                              <span style={{ color: "#cbd5e1" }}>|</span>
+                              <span>Applicant <strong style={{ color: "#0f172a", fontWeight: 600 }}>{watchedVisitedPersonName}</strong></span>
+                            </>
+                          )}
+                          {watchedLaiNo && (
+                            <>
+                              <span style={{ color: "#cbd5e1" }}>|</span>
+                              <span>Loan Code <strong style={{ color: "#0f172a", fontWeight: 600 }}>{watchedLaiNo}</strong></span>
+                            </>
+                          )}
+                          {watchedPropertyCode && (
+                            <>
+                              <span style={{ color: "#cbd5e1" }}>|</span>
+                              <span>Property <strong style={{ color: "#0f172a", fontWeight: 600 }}>{watchedPropertyCode}</strong></span>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      style={{
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        padding: 0,
+                        transform: isPropertyDetailsOpen ? "rotate(180deg)" : "rotate(0deg)",
+                        transition: "transform 0.2s ease"
+                      }}
+                    >
+                      <svg width="14" height="14" fill="none" stroke="#64748b" strokeWidth="2.5" viewBox="0 0 24 24" style={{ transform: isPropertyDetailsOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* Accordion Content Panel */}
+                  {isPropertyDetailsOpen && (
+                    <div style={{ padding: "20px 24px" }}>
+                      {/* Row 1 */}
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px", marginBottom: "16px" }}>
+                        <div>
+                          <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Visited Person Name</div>
+                          <input
+                            value={watchedVisitedPersonName || ""}
+                            onChange={(e) => form.setFieldsValue({ visitedPersonName: e.target.value })}
+                            disabled={isFieldOfficer && reportData?.isReportSubmitted}
+                            style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                          />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Loan Code</div>
+                          <input
+                            value={watchedLaiNo || ""}
+                            onChange={(e) => form.setFieldsValue({ laiNo: e.target.value })}
+                            disabled={isFieldOfficer && reportData?.isReportSubmitted}
+                            style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                          />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Property Code</div>
+                          <input
+                            value={watchedPropertyCode || ""}
+                            onChange={(e) => form.setFieldsValue({ propertyCode: e.target.value })}
+                            disabled={isFieldOfficer && reportData?.isReportSubmitted}
+                            style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                          />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Contact No.</div>
+                          <input
+                            value={watchedContactNumber || ""}
+                            onChange={(e) => form.setFieldsValue({ contactNumber: e.target.value })}
+                            disabled={isFieldOfficer && reportData?.isReportSubmitted}
+                            style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Row 2 */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "20px" }}>
+                        <div>
+                          <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Property Address</div>
+                          <textarea
+                            value={watchedPropertyAddress || ""}
+                            onChange={(e) => form.setFieldsValue({ propertyAddress: e.target.value })}
+                            disabled={isFieldOfficer && reportData?.isReportSubmitted}
+                            style={{ width: "100%", minHeight: "64px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "8px 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box", resize: "vertical" }}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
-            <button
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: 0,
-                transform: isPropertyDetailsOpen ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "transform 0.2s ease"
-              }}
-            >
-              <svg width="14" height="14" fill="none" stroke="#64748b" strokeWidth="2.5" viewBox="0 0 24 24" style={{ transform: isPropertyDetailsOpen ? "rotate(180deg)" : "rotate(0deg)" }}>
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </button>
+              </>
+            )}
           </div>
-
-          {/* Accordion Content Panel */}
-          {isPropertyDetailsOpen && (
-            <div style={{ padding: "20px 24px" }}>
-              {/* Row 1 */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px", marginBottom: "16px" }}>
-                <div>
-                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Visited Person Name</div>
-                  <input
-                    value={watchedVisitedPersonName || ""}
-                    onChange={(e) => form.setFieldsValue({ visitedPersonName: e.target.value })}
-                    disabled={isFieldOfficer && reportData?.isReportSubmitted}
-                    style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
-                  />
-                </div>
-                <div>
-                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Loan Code</div>
-                  <input
-                    value={watchedLaiNo || ""}
-                    onChange={(e) => form.setFieldsValue({ laiNo: e.target.value })}
-                    disabled={isFieldOfficer && reportData?.isReportSubmitted}
-                    style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
-                  />
-                </div>
-                <div>
-                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Property Code</div>
-                  <input
-                    value={watchedPropertyCode || ""}
-                    onChange={(e) => form.setFieldsValue({ propertyCode: e.target.value })}
-                    disabled={isFieldOfficer && reportData?.isReportSubmitted}
-                    style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
-                  />
-                </div>
-                <div>
-                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Contact No.</div>
-                  <input
-                    value={watchedContactNumber || ""}
-                    onChange={(e) => form.setFieldsValue({ contactNumber: e.target.value })}
-                    disabled={isFieldOfficer && reportData?.isReportSubmitted}
-                    style={{ width: "100%", height: "32px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "0 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box" }}
-                  />
-                </div>
-              </div>
-
-              {/* Row 2 */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "20px" }}>
-                <div>
-                  <div style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>Property Address</div>
-                  <textarea
-                    value={watchedPropertyAddress || ""}
-                    onChange={(e) => form.setFieldsValue({ propertyAddress: e.target.value })}
-                    disabled={isFieldOfficer && reportData?.isReportSubmitted}
-                    style={{ width: "100%", minHeight: "64px", borderRadius: "6px", border: "1px solid #d1d5db", padding: "8px 10px", fontSize: "13px", fontWeight: "600", color: "#1f2937", outline: "none", boxSizing: "border-box", resize: "vertical" }}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+        </section>
+      </main>
+    </>
 
       <>
           <section className="trench-heading" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>

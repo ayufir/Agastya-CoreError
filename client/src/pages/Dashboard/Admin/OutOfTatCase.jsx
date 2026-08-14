@@ -36,7 +36,7 @@ const isSameMonth = (date, monthValue) => {
   );
 };
 
-const OutOfTATCase = ({ selectedMonth, selectedAgent }) => {
+const OutOfTATCase = ({ selectedMonth, selectedAgent, preloadedCases }) => {
   const dispatch = useDispatch();
 
   const {
@@ -85,11 +85,13 @@ const OutOfTATCase = ({ selectedMonth, selectedAgent }) => {
   }, [searchText]);
 
   useEffect(() => {
-    fetchOutOfTatList();
-  }, [fetchOutOfTatList]);
+    if (!preloadedCases) {
+      fetchOutOfTatList();
+    }
+  }, [fetchOutOfTatList, preloadedCases]);
 
   const bankOptions = useMemo(() => {
-    const source = outOfTatCases || [];
+    const source = preloadedCases || outOfTatCases || [];
     if (source.length > 0) {
       const set = new Set();
       source.forEach((item) => {
@@ -99,10 +101,10 @@ const OutOfTATCase = ({ selectedMonth, selectedAgent }) => {
       if (set.size > 0) return Array.from(set).sort();
     }
     return outOfTatFilterOptions?.banks || [];
-  }, [outOfTatCases, outOfTatFilterOptions]);
+  }, [preloadedCases, outOfTatCases, outOfTatFilterOptions]);
 
   const statusOptions = useMemo(() => {
-    const source = outOfTatCases || [];
+    const source = preloadedCases || outOfTatCases || [];
     if (source.length > 0) {
       const set = new Set();
       source.forEach((item) => {
@@ -111,16 +113,17 @@ const OutOfTATCase = ({ selectedMonth, selectedAgent }) => {
       if (set.size > 0) return Array.from(set).sort();
     }
     return outOfTatFilterOptions?.statuses || [];
-  }, [outOfTatCases, outOfTatFilterOptions]);
+  }, [preloadedCases, outOfTatCases, outOfTatFilterOptions]);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedZone, selectedMonth, selectedBanks, selectedStatuses, debouncedSearch, selectedAgent]);
 
   const monthFilteredOutOfTatCases = useMemo(() => {
-    let list = (outOfTatCases || []).filter((item) =>
-      isSameMonth(getCaseDate(item), selectedMonth)
-    );
+    let list = preloadedCases || outOfTatCases || [];
+    if (!preloadedCases) {
+      list = list.filter((item) => isSameMonth(getCaseDate(item), selectedMonth));
+    }
 
     if (selectedAgent && selectedAgent !== "All Agents") {
       list = list.filter((item) => {
