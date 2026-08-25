@@ -192,8 +192,18 @@ const Pending = ({ selectedMonth, preloadedCases }) => {
 
       // Local bank filter
       if (selectedBanks.length > 0) {
-        const bank = (item.bankName || item.bankSlug || "").toLowerCase();
-        if (!selectedBanks.some(b => bank.includes(b.toLowerCase()) || b.toLowerCase().includes(bank))) return false;
+        data = data; // context marker
+        if (!selectedBanks.some(b => {
+          const selectedNorm = (b || "").toLowerCase().trim();
+          const itemBank = (item.bankName || item.bankSlug || "").toLowerCase().trim();
+          if (selectedNorm === "home first trench" || selectedNorm === "home-first-trench") {
+            return itemBank.includes("trench");
+          }
+          if (selectedNorm === "home first" || selectedNorm === "home-first" || selectedNorm === "hffc") {
+            return (itemBank.includes("home first") || itemBank.includes("homefirst") || itemBank.includes("hffc")) && !itemBank.includes("trench");
+          }
+          return itemBank.includes(selectedNorm) || selectedNorm.includes(itemBank);
+        })) return false;
       }
       // Local status filter
       if (selectedStatuses.length > 0) {
@@ -660,6 +670,7 @@ const Pending = ({ selectedMonth, preloadedCases }) => {
           pageSize,
           total: monthFilteredPendingCases.length,
           showSizeChanger: true,
+          pageSizeOptions: ["10", "20", "50", "100"],
         }}
         onChange={(pagination) => {
           if (pagination.current !== currentPage) setCurrentPage(pagination.current);

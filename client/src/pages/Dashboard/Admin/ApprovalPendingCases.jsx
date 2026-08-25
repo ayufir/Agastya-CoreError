@@ -479,6 +479,7 @@ const ApprovalPendingCases = ({ selectedMonth, onRefresh, onCaseApproved, onCase
             pageSize,
             total: filteredCasesList.length,
             showSizeChanger: true,
+            pageSizeOptions: ["10", "20", "50", "100"],
           }}
           onChange={(pagination) => {
             if (pagination.current !== currentPage) {

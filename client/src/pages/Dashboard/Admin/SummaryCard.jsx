@@ -323,6 +323,7 @@ const SummaryCard = ({ selectedMonth, preloadedCases }) => {
           pageSize: pageSize,
           total: monthFilteredData.length,
           showSizeChanger: true,
+          pageSizeOptions: ["10", "20", "50", "100"],
         }}
         onChange={(tablePagination) => {
           if (tablePagination.current !== currentPage) {

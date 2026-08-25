@@ -54,6 +54,8 @@ const HomeTrench = () => {
   const CPANEL = import.meta.env.VITE_API_URL
 
   const reportData = useSelector((state) => state?.homeTrenchReport?.report);
+  const user = useSelector((state) => state.auth?.user);
+  const isFieldOfficer = (user?.role || "").toLowerCase().replace(/[\s_]+/g, "") === "fieldofficer";
 
   useEffect(() => {
     if (id) {
@@ -204,7 +206,7 @@ const HomeTrench = () => {
       type: "array",
     });
     const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
-    saveAs(blob, "Baja_Ameriya_Report.xlsx");
+    saveAs(blob, "Home_Trench_Report.xlsx");
   };
 
   const handleExportCSV = () => {
@@ -212,7 +214,7 @@ const HomeTrench = () => {
     const worksheet = XLSX.utils.table_to_sheet(table);
     const csv = XLSX.utils.sheet_to_csv(worksheet);
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    saveAs(blob, "Baja_Ameriya_Report.csv");
+    saveAs(blob, "Home_Trench_Report.csv");
   };
 
   const handleExportJSON = () => {
@@ -220,7 +222,7 @@ const HomeTrench = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
     const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", `Baja_Ameriya_Report_${id || "details"}.json`);
+    downloadAnchorNode.setAttribute("download", `Home_Trench_Report_${id || "details"}.json`);
     document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
@@ -229,34 +231,36 @@ const HomeTrench = () => {
   return (
     <div className='w-full border p-3'>
       {/* Wrapper for the entire content */}
-      <div className='mb-3'>
-        <div className='mb-2.5 text-right'>
-          <button
-            onClick={handleExportPDF}
-            className='mr-2.5 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
-          >
-            Download PDF
-          </button>
-          <button
-            onClick={handleExportExcel}
-            className='mr-2.5 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded'
-          >
-            Download Excel
-          </button>
-          <button
-            onClick={handleExportCSV}
-            className='mr-2.5 bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded'
-          >
-            Download CSV
-          </button>
-          <button
-            onClick={handleExportJSON}
-            className='bg-amber-600 hover:bg-amber-800 text-white font-bold py-2 px-4 rounded'
-          >
-            Download JSON
-          </button>
+      {!isFieldOfficer && (
+        <div className='mb-3'>
+          <div className='mb-2.5 text-right'>
+            <button
+              onClick={handleExportPDF}
+              className='mr-2.5 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
+            >
+              Download PDF
+            </button>
+            <button
+              onClick={handleExportExcel}
+              className='mr-2.5 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded'
+            >
+              Download Excel
+            </button>
+            <button
+              onClick={handleExportCSV}
+              className='mr-2.5 bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded'
+            >
+              Download CSV
+            </button>
+            <button
+              onClick={handleExportJSON}
+              className='bg-amber-600 hover:bg-amber-800 text-white font-bold py-2 px-4 rounded'
+            >
+              Download JSON
+            </button>
+          </div>
         </div>
-      </div>
+      )}
       <div id='reportContent'>
         {/* Header Section */}
         <div className='flex items-center border-b pb-3'>

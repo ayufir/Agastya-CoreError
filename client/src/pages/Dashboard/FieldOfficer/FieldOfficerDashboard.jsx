@@ -148,6 +148,8 @@ const FieldOfficerDashboard = () => {
   const [selectedBank, setSelectedBank] = useState(null);
   const [selectedCaseDocs, setSelectedCaseDocs] = useState([]);
   const [isDocsModalOpen, setIsDocsModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   // Month filter — default to current month, clear to see all months
   const getCurrentMonthValue = () => {
@@ -1384,11 +1386,22 @@ const FieldOfficerDashboard = () => {
               }}
               scroll={{ x: "max-content" }}
               pagination={{
-                pageSize: 20,
+                current: currentPage,
+                pageSize: pageSize,
+                total: sortedCases.length,
                 showSizeChanger: true,
-                pageSizeOptions: ["10", "20", "50"],
+                pageSizeOptions: ["10", "20", "50", "100"],
                 showTotal: (total, range) =>
                   `${range[0]}-${range[1]} of ${total} cases`,
+              }}
+              onChange={(pagination) => {
+                if (pagination.current !== currentPage) {
+                  setCurrentPage(pagination.current);
+                }
+                if (pagination.pageSize !== pageSize) {
+                  setPageSize(pagination.pageSize);
+                  setCurrentPage(1);
+                }
               }}
             />
           </div>

@@ -154,13 +154,31 @@ const GeneratedCasesList = ({ allCases = [], refreshData, fieldOfficers = [] }) 
     },
   ];
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   return (
     <div style={{ width: "100%", overflowX: "auto" }}>
       <Table
         dataSource={generatedCases}
         columns={columns}
         rowKey="_id"
-        pagination={{ pageSize: 10, showSizeChanger: true }}
+        pagination={{
+          current: currentPage,
+          pageSize: pageSize,
+          total: generatedCases.length,
+          showSizeChanger: true,
+          pageSizeOptions: ["10", "20", "50", "100"],
+        }}
+        onChange={(pagination) => {
+          if (pagination.current !== currentPage) {
+            setCurrentPage(pagination.current);
+          }
+          if (pagination.pageSize !== pageSize) {
+            setPageSize(pagination.pageSize);
+            setCurrentPage(1);
+          }
+        }}
         locale={{ emptyText: "No generated cases found." }}
         className="custom-premium-table"
       />

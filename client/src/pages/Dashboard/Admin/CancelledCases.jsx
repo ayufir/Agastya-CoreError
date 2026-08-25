@@ -236,6 +236,7 @@ const CancelledCases = ({ selectedMonth, preloadedCases }) => {
             pageSize,
             total: monthFilteredCancelledCases.length,
             showSizeChanger: true,
+            pageSizeOptions: ["10", "20", "50", "100"],
           }}
           onChange={(pagination) => {
             if (pagination.current !== currentPage) {

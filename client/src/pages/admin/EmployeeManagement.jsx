@@ -213,6 +213,9 @@ function EmployeeManagement() {
     )
   ];
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   return (
     <div style={{ padding: 24 }}>
       <h2>Employee Management</h2>
@@ -223,7 +226,27 @@ function EmployeeManagement() {
       >
         + Add Employee
       </Button>
-      <Table dataSource={employees} columns={columns} rowKey='_id' />
+      <Table
+        dataSource={employees}
+        columns={columns}
+        rowKey='_id'
+        pagination={{
+          current: currentPage,
+          pageSize: pageSize,
+          total: employees ? employees.length : 0,
+          showSizeChanger: true,
+          pageSizeOptions: ["10", "20", "50", "100"],
+        }}
+        onChange={(pagination) => {
+          if (pagination.current !== currentPage) {
+            setCurrentPage(pagination.current);
+          }
+          if (pagination.pageSize !== pageSize) {
+            setPageSize(pagination.pageSize);
+            setCurrentPage(1);
+          }
+        }}
+      />
 
       <Modal
         title={editingEmployee ? "Edit Employee" : "Add Employee"}

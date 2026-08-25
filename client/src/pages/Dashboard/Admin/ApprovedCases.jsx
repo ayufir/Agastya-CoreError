@@ -263,6 +263,7 @@ const ApprovedCases = ({ selectedMonth, preloadedCases }) => {
             pageSize,
             total: monthFilteredApproved.length,
             showSizeChanger: true,
+            pageSizeOptions: ["10", "20", "50", "100"],
           }}
           onChange={(pagination) => {
             if (pagination.current !== currentPage) {

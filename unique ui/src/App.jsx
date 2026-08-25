@@ -3436,6 +3436,13 @@ const getCurrentBillMonth = () => {
   return `${months[d.getMonth()]}-${String(d.getFullYear()).slice(-2)}`;
 };
 
+const getLastBillMonth = () => {
+  const d = new Date();
+  d.setMonth(d.getMonth() - 1);
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return `${months[d.getMonth()]}-${String(d.getFullYear()).slice(-2)}`;
+};
+
 const getFiscalYear = () => {
   const d = new Date();
   const year = d.getFullYear();
@@ -3481,7 +3488,7 @@ function InvoiceModal({ cases, onClose, isBulk, existingInvoice }) {
   const [invoiceMeta, setInvoiceMeta] = useState((existingInvoice && existingInvoice.meta) ? existingInvoice.meta.invoice : {
     invoiceNo: getDynamicInvoiceNo(bankName),
     invoiceDate: getTodayDate(),
-    billMonth: getCurrentBillMonth(),
+    billMonth: (new Date()).getDate() <= 20 ? getLastBillMonth() : getCurrentBillMonth(),
     receiverName: defaults.receiverName,
     receiverAddress: defaults.receiverAddress,
     receiverGSTIN: defaults.receiverGSTIN,

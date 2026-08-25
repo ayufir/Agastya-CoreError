@@ -85,6 +85,7 @@ const HFBankDetails = () => {
   const handleImageClick = (imageUrl) => setSelectedImage(imageUrl);
   const closeModal = () => setSelectedImage(null);
   const canFinalSubmit = user?.role === "Admin" || user?.role === "SuperAdmin";
+  const isFieldOfficer = (user?.role || "").toLowerCase().replace(/[\s_]+/g, "") === "fieldofficer";
 
   // Helper: show value or fallback
   const val = (v, fallback = "—") =>
@@ -327,7 +328,7 @@ const HFBankDetails = () => {
         </div>
       </div>
 
-      <FileDownload data={reportData} tableId="reportTable" />
+      {!isFieldOfficer && <FileDownload data={reportData} tableId="reportTable" />}
 
       <div id="report" ref={reportRef} className="valuation-report">
         <div className="p-3 bg-white shadow border" id="reportTable">
@@ -646,7 +647,16 @@ const HFBankDetails = () => {
                       Nearest City/Town
                     </td>
                     <td className="border text-center" colSpan="1">
-                      {val(reportData?.nearestCityTown)}
+                      {val(
+                        reportData?.nearestCityTown ||
+                        reportData?.city ||
+                        reportData?.propertyCity ||
+                        reportData?.district ||
+                        reportData?.assignedCity ||
+                        reportData?.assignedTo?.assignedCity ||
+                        reportData?.locationDetails?.mainLocality ||
+                        reportData?.basicDetails?.city
+                      )}
                     </td>
                     <td className="border font-bold" colSpan="2">
                       Location Category{" "}
