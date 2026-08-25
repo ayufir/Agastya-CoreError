@@ -1,10 +1,10 @@
 import React from "react";
-import InvoiceApp from "../../../unique ui/src/App";
+import InvoicePortalApp from "./InvoicePortalApp";
 
 const InvoicePage = () => {
   return (
     <div style={{ width: "100%", minHeight: "100vh" }}>
-      <InvoiceApp />
+      <InvoicePortalApp />
     </div>
   );
 };
