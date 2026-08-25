@@ -4384,6 +4384,28 @@ export default function App() {
     return <LoginPage onLogin={handleLogin} error={loginError} loading={loginLoading} />;
   }
 
+  const handleMetricCardClick = (card) => {
+    setStatusFilter(card.statusKey);
+    setPage(1);
+
+    const savedStatusSelect = document.getElementById("savedStatusFilter");
+    if (savedStatusSelect) {
+      savedStatusSelect.value = card.invoiceStatusKey;
+    }
+    const bank = document.getElementById("savedBankFilter")?.value || "All";
+    const month = document.getElementById("savedMonthFilter")?.value || "All";
+    const year = document.getElementById("savedYearFilter")?.value || "All";
+    const status = card.invoiceStatusKey === "All" ? "" : card.invoiceStatusKey;
+
+    fetch(`${INVOICE_API_URL}?bank=${bank === "All" ? "" : bank}&month=${month === "All" ? "" : month}&year=${year === "All" ? "" : year}&status=${status}`, {
+      headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` },
+      credentials: "include"
+    })
+      .then(r => r.json())
+      .then(data => data.success && setSavedInvoices(data.data))
+      .catch(err => console.error("Error updating saved invoices on card click:", err));
+  };
+
   return (
     <div style={{
       width: "100%",
@@ -4431,58 +4453,86 @@ export default function App() {
             Manage valuation case billing, generate invoices & view saved database invoices
           </p>
 
-          {/* RESPONSIVE TABS CONTAINER */}
+          {/* ULTRA PREMIUM GLASS TABS CONTAINER */}
           <div style={{
-            display: "flex",
+            display: isMobileScreen ? "flex" : "inline-flex",
             flexDirection: isMobileScreen ? "column" : "row",
-            gap: 6,
-            background: "rgba(255, 255, 255, 0.08)",
+            gap: 4,
+            background: "rgba(10, 14, 35, 0.65)",
             padding: 5,
-            borderRadius: 14,
-            backdropFilter: "blur(12px)",
-            border: "1px solid rgba(255, 255, 255, 0.15)",
-            width: isMobileScreen ? "100%" : "auto"
+            borderRadius: 18,
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            border: "1px solid rgba(255, 255, 255, 0.14)",
+            boxShadow: "0 10px 28px rgba(0, 0, 0, 0.35)",
+            width: isMobileScreen ? "100%" : "fit-content",
+            boxSizing: "border-box"
           }}>
             <button
               onClick={() => setActiveTab("Dashboard")}
               style={{
                 padding: isMobileScreen ? "10px 14px" : "10px 22px",
-                borderRadius: 10,
-                fontSize: 12,
-                fontWeight: 700,
-                border: "none",
+                borderRadius: 14,
+                fontSize: isMobileScreen ? 12 : 13,
+                fontWeight: activeTab === "Dashboard" ? 800 : 600,
+                border: activeTab === "Dashboard" ? "1px solid rgba(255, 255, 255, 0.9)" : "1px solid transparent",
                 cursor: "pointer",
-                transition: "all 0.25s ease",
-                background: activeTab === "Dashboard" ? "#ffffff" : "transparent",
-                color: activeTab === "Dashboard" ? "#4f46e5" : "#ffffff",
-                boxShadow: activeTab === "Dashboard" ? "0 4px 14px rgba(0,0,0,0.15)" : "none",
+                transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                background: activeTab === "Dashboard" ? "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)" : "transparent",
+                color: activeTab === "Dashboard" ? "#4f46e5" : "rgba(255, 255, 255, 0.8)",
+                boxShadow: activeTab === "Dashboard" ? "0 6px 20px rgba(79, 70, 229, 0.3), 0 2px 6px rgba(0,0,0,0.12)" : "none",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 gap: 8,
                 width: isMobileScreen ? "100%" : "auto"
               }}
+              onMouseEnter={e => {
+                if (activeTab !== "Dashboard") {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
+                  e.currentTarget.style.color = "#ffffff";
+                }
+              }}
+              onMouseLeave={e => {
+                if (activeTab !== "Dashboard") {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = "rgba(255, 255, 255, 0.8)";
+                }
+              }}
             >
               📊 Saved Invoices & Summary
             </button>
+
             <button
               onClick={() => setActiveTab("Invoice")}
               style={{
                 padding: isMobileScreen ? "10px 14px" : "10px 22px",
-                borderRadius: 10,
-                fontSize: 12,
-                fontWeight: 600,
-                border: "1px solid rgba(255, 255, 255, 0.25)",
+                borderRadius: 14,
+                fontSize: isMobileScreen ? 12 : 13,
+                fontWeight: activeTab === "Invoice" ? 800 : 600,
+                border: activeTab === "Invoice" ? "1px solid rgba(255, 255, 255, 0.9)" : "1px solid transparent",
                 cursor: "pointer",
-                transition: "all 0.25s ease",
-                background: activeTab === "Invoice" ? "#ffffff" : "transparent",
-                color: activeTab === "Invoice" ? "#4f46e5" : "#ffffff",
-                boxShadow: activeTab === "Invoice" ? "0 4px 14px rgba(0,0,0,0.15)" : "none",
+                transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+                background: activeTab === "Invoice" ? "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)" : "transparent",
+                color: activeTab === "Invoice" ? "#4f46e5" : "rgba(255, 255, 255, 0.8)",
+                boxShadow: activeTab === "Invoice" ? "0 6px 20px rgba(79, 70, 229, 0.3), 0 2px 6px rgba(0,0,0,0.12)" : "none",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 gap: 8,
                 width: isMobileScreen ? "100%" : "auto"
+              }}
+              onMouseEnter={e => {
+                if (activeTab !== "Invoice") {
+                  e.currentTarget.style.background = "rgba(255, 255, 255, 0.08)";
+                  e.currentTarget.style.color = "#ffffff";
+                }
+              }}
+              onMouseLeave={e => {
+                if (activeTab !== "Invoice") {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = "rgba(255, 255, 255, 0.8)";
+                }
               }}
             >
               📋 Case Management & Invoice Generator
@@ -4507,7 +4557,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* 5 RESPONSIVE METRIC CARDS */}
+      {/* 5 CLICKABLE RESPONSIVE METRIC CARDS */}
       <div style={{
         display: "grid",
         gridTemplateColumns: isMobileScreen ? "repeat(auto-fit, minmax(135px, 1fr))" : (isTabletScreen ? "repeat(auto-fit, minmax(160px, 1fr))" : "repeat(auto-fit, minmax(180px, 1fr))"),
@@ -4515,55 +4565,65 @@ export default function App() {
         width: "100%"
       }}>
         {[
-          { label: "TOTAL CASES", val: stats.total, sub: "All Time", stroke: "#6366f1", iconBg: "#f0f2fe", iconColor: "#6366f1", icon: "grid", path: "M0 20 Q 25 5, 50 18 T 100 10 T 150 22 T 200 8" },
-          { label: "PENDING", val: stats.pending, sub: "Awaiting Action", stroke: "#f59e0b", iconBg: "#fff7ed", iconColor: "#f59e0b", icon: "bell", path: "M0 22 Q 25 15, 50 20 T 100 12 T 150 18 T 200 6" },
-          { label: "IN PROGRESS", val: stats.wip, sub: "Under Review", stroke: "#3b82f6", iconBg: "#eff6ff", iconColor: "#3b82f6", icon: "work", path: "M0 18 Q 25 22, 50 10 T 100 20 T 150 8 T 200 16" },
-          { label: "SUBMITTED", val: stats.submitted, sub: "Successfully Submitted", stroke: "#10b981", iconBg: "#f0fdf4", iconColor: "#10b981", icon: "check", path: "M0 24 Q 25 10, 50 22 T 100 14 T 150 20 T 200 4" },
-          { label: "CANCELLED", val: stats.cancelled, sub: "Cancelled Cases", stroke: "#ef4444", iconBg: "#fef2f2", iconColor: "#ef4444", icon: "x", path: "M0 16 Q 25 18, 50 12 T 100 24 T 150 10 T 200 20" },
-        ].map(s => (
-          <div key={s.label} style={{
-            background: "#ffffff",
-            borderRadius: isMobileScreen ? 14 : 20,
-            padding: isMobileScreen ? "14px 12px 10px 12px" : "20px 22px 14px 22px",
-            border: "1px solid #f1f5f9",
-            boxShadow: "0 6px 20px rgba(0,0,0,0.02)",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            transition: "transform 0.2s ease, box-shadow 0.2s ease",
-            cursor: "pointer",
-            minWidth: 0
-          }}
-          onMouseEnter={e => {
-            if (!isMobileScreen) {
-              e.currentTarget.style.transform = "translateY(-4px)";
-              e.currentTarget.style.boxShadow = "0 12px 28px rgba(0,0,0,0.06)";
-            }
-          }}
-          onMouseLeave={e => {
-            if (!isMobileScreen) {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.02)";
-            }
-          }}
-          >
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
-                <span style={{ fontSize: isMobileScreen ? 10 : 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.label}</span>
-                <div style={{ width: isMobileScreen ? 32 : 40, height: isMobileScreen ? 32 : 40, borderRadius: 10, background: s.iconBg, color: s.iconColor, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Icon type={s.icon} size={isMobileScreen ? 16 : 20} />
+          { label: "TOTAL CASES", val: stats.total, sub: "All Time", stroke: "#6366f1", iconBg: "#f0f2fe", iconColor: "#6366f1", icon: "grid", path: "M0 20 Q 25 5, 50 18 T 100 10 T 150 22 T 200 8", statusKey: "All", invoiceStatusKey: "All" },
+          { label: "PENDING", val: stats.pending, sub: "Awaiting Action", stroke: "#f59e0b", iconBg: "#fff7ed", iconColor: "#f59e0b", icon: "bell", path: "M0 22 Q 25 15, 50 20 T 100 12 T 150 18 T 200 6", statusKey: "Pending", invoiceStatusKey: "Submitted" },
+          { label: "IN PROGRESS", val: stats.wip, sub: "Under Review", stroke: "#3b82f6", iconBg: "#eff6ff", iconColor: "#3b82f6", icon: "work", path: "M0 18 Q 25 22, 50 10 T 100 20 T 150 8 T 200 16", statusKey: "Work in Progress", invoiceStatusKey: "Submitted" },
+          { label: "SUBMITTED", val: stats.submitted, sub: "Successfully Submitted", stroke: "#10b981", iconBg: "#f0fdf4", iconColor: "#10b981", icon: "check", path: "M0 24 Q 25 10, 50 22 T 100 14 T 150 20 T 200 4", statusKey: "FinalSubmitted", invoiceStatusKey: "Paid" },
+          { label: "CANCELLED", val: stats.cancelled, sub: "Cancelled Cases", stroke: "#ef4444", iconBg: "#fef2f2", iconColor: "#ef4444", icon: "x", path: "M0 16 Q 25 18, 50 12 T 100 24 T 150 10 T 200 20", statusKey: "Cancelled", invoiceStatusKey: "Cancelled" },
+        ].map(s => {
+          const isActiveCard = statusFilter === s.statusKey;
+          return (
+            <div
+              key={s.label}
+              onClick={() => handleMetricCardClick(s)}
+              title={`Click to filter by ${s.label}`}
+              style={{
+                background: "#ffffff",
+                borderRadius: isMobileScreen ? 14 : 20,
+                padding: isMobileScreen ? "14px 12px 10px 12px" : "20px 22px 14px 22px",
+                border: isActiveCard ? `2.5px solid ${s.stroke}` : "1px solid #f1f5f9",
+                boxShadow: isActiveCard ? `0 8px 24px ${s.stroke}25` : "0 6px 20px rgba(0,0,0,0.02)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "space-between",
+                transition: "all 0.2s ease",
+                cursor: "pointer",
+                minWidth: 0,
+                transform: isActiveCard ? "translateY(-2px)" : "none"
+              }}
+              onMouseEnter={e => {
+                if (!isMobileScreen && !isActiveCard) {
+                  e.currentTarget.style.transform = "translateY(-4px)";
+                  e.currentTarget.style.boxShadow = `0 12px 28px ${s.stroke}20`;
+                }
+              }}
+              onMouseLeave={e => {
+                if (!isMobileScreen && !isActiveCard) {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.02)";
+                }
+              }}
+            >
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                  <span style={{ fontSize: isMobileScreen ? 10 : 11, fontWeight: 800, color: isActiveCard ? s.stroke : "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.label}</span>
+                  <div style={{ width: isMobileScreen ? 32 : 40, height: isMobileScreen ? 32 : 40, borderRadius: 10, background: s.iconBg, color: s.iconColor, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Icon type={s.icon} size={isMobileScreen ? 16 : 20} />
+                  </div>
                 </div>
+                <p style={{ margin: 0, fontSize: isMobileScreen ? 24 : 32, fontWeight: 900, color: "#0f172a", lineHeight: 1.1 }}>{s.val}</p>
+                <p style={{ margin: "4px 0 8px 0", fontSize: 10, fontWeight: 600, color: isActiveCard ? s.stroke : "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {isActiveCard ? "⚡ Active Filter" : s.sub}
+                </p>
               </div>
-              <p style={{ margin: 0, fontSize: isMobileScreen ? 24 : 32, fontWeight: 900, color: "#0f172a", lineHeight: 1.1 }}>{s.val}</p>
-              <p style={{ margin: "4px 0 8px 0", fontSize: 10, fontWeight: 500, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.sub}</p>
-            </div>
 
-            {/* SVG SPARKLINE WAVE */}
-            <svg width="100%" height={isMobileScreen ? 20 : 28} viewBox="0 0 200 30" style={{ overflow: "visible" }}>
-              <path d={s.path} fill="none" stroke={s.stroke} strokeWidth="2.5" strokeLinecap="round" />
-            </svg>
-          </div>
-        ))}
+              {/* SVG SPARKLINE WAVE */}
+              <svg width="100%" height={isMobileScreen ? 20 : 28} viewBox="0 0 200 30" style={{ overflow: "visible" }}>
+                <path d={s.path} fill="none" stroke={s.stroke} strokeWidth={isActiveCard ? "3.5" : "2.5"} strokeLinecap="round" />
+              </svg>
+            </div>
+          );
+        })}
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 24, width: "100%", minWidth: 0 }}>
