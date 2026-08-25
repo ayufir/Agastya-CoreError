@@ -2818,11 +2818,10 @@
 
 
 import { useState, useEffect, useMemo, useRef } from "react";
-import { loginService, logoutService } from "./services/loginService";
 import * as XLSX from 'xlsx';
-import ExcelJS from 'exceljs';
 
-const API_URL = "https://banker-backend-8ttk.onrender.com/api/case/summary-data";
+const API_URL = "https://agastya-coreerror-api.onrender.com/api/case/summary-data";
+const INVOICE_API_URL = "https://agastya-coreerror-api.onrender.com/api/invoices";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 function getCustomerName(c) {
@@ -3642,7 +3641,7 @@ function InvoiceModal({ cases, onClose, isBulk, existingInvoice }) {
         }
       };
 
-      const response = await fetch("https://banker-backend-8ttk.onrender.com/api/invoices/save", {
+      const response = await fetch(`${INVOICE_API_URL}/save`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -4103,7 +4102,18 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const isMobile = useMediaQuery("(max-width: 1024px)");
+  const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1200);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const isMobileScreen = windowWidth < 768;
+  const isTabletScreen = windowWidth >= 768 && windowWidth < 1024;
+  const isDesktopScreen = windowWidth >= 1024;
+  const isMobile = isMobileScreen || isTabletScreen;
 
   const [search, setSearch] = useState("");
   const [bankFilter, setBankFilter] = useState("All");
@@ -4121,8 +4131,7 @@ export default function App() {
   // Check for existing session on mount
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const user = localStorage.getItem("user");
-    if (token && user) {
+    if (token) {
       setIsLoggedIn(true);
     }
   }, []);
@@ -4320,6 +4329,53 @@ export default function App() {
     }
   };
 
+  const handleDeleteSavedInvoice = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this saved invoice?")) return;
+    try {
+      const res = await fetch(`${INVOICE_API_URL}/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        credentials: "include"
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSavedInvoices(prev => prev.filter(inv => inv._id !== id));
+      } else {
+        alert(data.message || "Failed to delete invoice");
+      }
+    } catch (err) {
+      console.error("Delete invoice error:", err);
+      alert("Error deleting invoice: " + err.message);
+    }
+  };
+
+  const handleDeleteCase = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this case? This cannot be undone.")) return;
+    try {
+      const caseDeleteUrl = window.location.hostname === "localhost"
+        ? `http://localhost:5000/api/case/${id}`
+        : `https://agastya-coreerror-api.onrender.com/api/case/${id}`;
+      const res = await fetch(caseDeleteUrl, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("token")}`
+        },
+        credentials: "include"
+      });
+      const data = await res.json();
+      if (data.success) {
+        setCases(prev => prev.filter(c => c._id !== id));
+      } else {
+        alert(data.message || "Failed to delete case");
+      }
+    } catch (err) {
+      console.error("Delete case error:", err);
+      alert("Error deleting case: " + err.message);
+    }
+  };
+
   const mainML = !isMobile && sidebarOpen ? 256 : 0;
   const canBulkInvoice = bankFilter !== "All" && filtered.length > 0;
 
@@ -4329,387 +4385,664 @@ export default function App() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--color-background-tertiary)", fontFamily: "var(--font-sans)" }}>
+    <div style={{
+      width: "100%",
+      maxWidth: "100%",
+      padding: isMobileScreen ? "10px 10px 32px 10px" : (isTabletScreen ? "14px 16px 40px 16px" : "16px 20px 48px 20px"),
+      display: "flex",
+      flexDirection: "column",
+      gap: isMobileScreen ? 16 : 24,
+      minHeight: "100vh",
+      fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+      background: "#f8fafc",
+      boxSizing: "border-box",
+      overflowX: "hidden"
+    }}>
 
+      {/* RESPONSIVE HERO BANNER */}
+      <div style={{
+        background: "linear-gradient(135deg, #090a19 0%, #151838 40%, #1f1b5c 75%, #0b0d1e 100%)",
+        borderRadius: isMobileScreen ? 16 : 24,
+        padding: isMobileScreen ? "20px 16px" : (isTabletScreen ? "24px 28px" : "32px 36px"),
+        display: "flex",
+        flexDirection: isMobileScreen ? "column" : "row",
+        justifyContent: "space-between",
+        alignItems: isMobileScreen ? "stretch" : "center",
+        flexWrap: "wrap",
+        gap: isMobileScreen ? 16 : 24,
+        boxShadow: "0 14px 36px rgba(11, 13, 30, 0.35)",
+        position: "relative",
+        overflow: "hidden",
+        border: "1px solid rgba(255, 255, 255, 0.08)",
+        width: "100%",
+        boxSizing: "border-box"
+      }}>
+        <div style={{ zIndex: 2, maxWidth: isMobileScreen ? "100%" : 620, width: "100%" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+            <span style={{ background: "rgba(255,255,255,0.08)", color: "#ffffff", border: "1px solid rgba(255,255,255,0.18)", fontSize: 10, fontWeight: 700, padding: "3px 10px", borderRadius: 20, textTransform: "uppercase", letterSpacing: "0.08em", backdropFilter: "blur(6px)" }}>
+              ⚡ VALUATION BILLING & INVOICING ENGINE
+            </span>
+          </div>
 
-      {isMobile && sidebarOpen && (
-        <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", zIndex: 20 }} />
-      )}
+          <h2 style={{ margin: 0, fontSize: isMobileScreen ? 22 : (isTabletScreen ? 26 : 30), fontWeight: 900, color: "#ffffff", letterSpacing: "-0.02em" }}>
+            Invoice & Billing Portal
+          </h2>
+          <p style={{ margin: "6px 0 20px 0", fontSize: isMobileScreen ? 12 : 13, color: "#cbd5e1", lineHeight: 1.5 }}>
+            Manage valuation case billing, generate invoices & view saved database invoices
+          </p>
 
-      {/* SIDEBAR */}
-      <aside style={{ position: "fixed", top: 0, left: 0, height: "100%", width: 256, zIndex: 30, background: "var(--color-background-primary)", borderRight: "0.5px solid var(--color-border-tertiary)", display: "flex", flexDirection: "column", transition: "transform 0.25s", transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)" }}>
-        <div style={{ height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 8, background: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: 13 }}>U</div>
+          {/* RESPONSIVE TABS CONTAINER */}
+          <div style={{
+            display: "flex",
+            flexDirection: isMobileScreen ? "column" : "row",
+            gap: 6,
+            background: "rgba(255, 255, 255, 0.08)",
+            padding: 5,
+            borderRadius: 14,
+            backdropFilter: "blur(12px)",
+            border: "1px solid rgba(255, 255, 255, 0.15)",
+            width: isMobileScreen ? "100%" : "auto"
+          }}>
+            <button
+              onClick={() => setActiveTab("Dashboard")}
+              style={{
+                padding: isMobileScreen ? "10px 14px" : "10px 22px",
+                borderRadius: 10,
+                fontSize: 12,
+                fontWeight: 700,
+                border: "none",
+                cursor: "pointer",
+                transition: "all 0.25s ease",
+                background: activeTab === "Dashboard" ? "#ffffff" : "transparent",
+                color: activeTab === "Dashboard" ? "#4f46e5" : "#ffffff",
+                boxShadow: activeTab === "Dashboard" ? "0 4px 14px rgba(0,0,0,0.15)" : "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                width: isMobileScreen ? "100%" : "auto"
+              }}
+            >
+              📊 Saved Invoices & Summary
+            </button>
+            <button
+              onClick={() => setActiveTab("Invoice")}
+              style={{
+                padding: isMobileScreen ? "10px 14px" : "10px 22px",
+                borderRadius: 10,
+                fontSize: 12,
+                fontWeight: 600,
+                border: "1px solid rgba(255, 255, 255, 0.25)",
+                cursor: "pointer",
+                transition: "all 0.25s ease",
+                background: activeTab === "Invoice" ? "#ffffff" : "transparent",
+                color: activeTab === "Invoice" ? "#4f46e5" : "#ffffff",
+                boxShadow: activeTab === "Invoice" ? "0 4px 14px rgba(0,0,0,0.15)" : "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                width: isMobileScreen ? "100%" : "auto"
+              }}
+            >
+              📋 Case Management & Invoice Generator
+            </button>
+          </div>
+        </div>
+
+        {/* RIGHT SIDE 3D HERO ILLUSTRATION */}
+        <div style={{ zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center", alignSelf: isMobileScreen ? "center" : "auto", width: isMobileScreen ? "100%" : "auto" }}>
+          <img
+            src="/hero_invoice_3d_v2.jpg"
+            alt="3D Fintech Hero Pedestal"
+            style={{
+              maxHeight: isMobileScreen ? 130 : (isTabletScreen ? 165 : 195),
+              width: isMobileScreen ? "100%" : "auto",
+              borderRadius: 16,
+              objectFit: "cover",
+              boxShadow: "0 14px 36px rgba(0, 0, 0, 0.4)",
+              border: "1px solid rgba(255, 255, 255, 0.15)"
+            }}
+          />
+        </div>
+      </div>
+
+      {/* 5 RESPONSIVE METRIC CARDS */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: isMobileScreen ? "repeat(auto-fit, minmax(135px, 1fr))" : (isTabletScreen ? "repeat(auto-fit, minmax(160px, 1fr))" : "repeat(auto-fit, minmax(180px, 1fr))"),
+        gap: isMobileScreen ? 10 : 16,
+        width: "100%"
+      }}>
+        {[
+          { label: "TOTAL CASES", val: stats.total, sub: "All Time", stroke: "#6366f1", iconBg: "#f0f2fe", iconColor: "#6366f1", icon: "grid", path: "M0 20 Q 25 5, 50 18 T 100 10 T 150 22 T 200 8" },
+          { label: "PENDING", val: stats.pending, sub: "Awaiting Action", stroke: "#f59e0b", iconBg: "#fff7ed", iconColor: "#f59e0b", icon: "bell", path: "M0 22 Q 25 15, 50 20 T 100 12 T 150 18 T 200 6" },
+          { label: "IN PROGRESS", val: stats.wip, sub: "Under Review", stroke: "#3b82f6", iconBg: "#eff6ff", iconColor: "#3b82f6", icon: "work", path: "M0 18 Q 25 22, 50 10 T 100 20 T 150 8 T 200 16" },
+          { label: "SUBMITTED", val: stats.submitted, sub: "Successfully Submitted", stroke: "#10b981", iconBg: "#f0fdf4", iconColor: "#10b981", icon: "check", path: "M0 24 Q 25 10, 50 22 T 100 14 T 150 20 T 200 4" },
+          { label: "CANCELLED", val: stats.cancelled, sub: "Cancelled Cases", stroke: "#ef4444", iconBg: "#fef2f2", iconColor: "#ef4444", icon: "x", path: "M0 16 Q 25 18, 50 12 T 100 24 T 150 10 T 200 20" },
+        ].map(s => (
+          <div key={s.label} style={{
+            background: "#ffffff",
+            borderRadius: isMobileScreen ? 14 : 20,
+            padding: isMobileScreen ? "14px 12px 10px 12px" : "20px 22px 14px 22px",
+            border: "1px solid #f1f5f9",
+            boxShadow: "0 6px 20px rgba(0,0,0,0.02)",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+            transition: "transform 0.2s ease, box-shadow 0.2s ease",
+            cursor: "pointer",
+            minWidth: 0
+          }}
+          onMouseEnter={e => {
+            if (!isMobileScreen) {
+              e.currentTarget.style.transform = "translateY(-4px)";
+              e.currentTarget.style.boxShadow = "0 12px 28px rgba(0,0,0,0.06)";
+            }
+          }}
+          onMouseLeave={e => {
+            if (!isMobileScreen) {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.02)";
+            }
+          }}
+          >
             <div>
-              <p style={{ margin: 0, fontSize: 14, fontWeight: 500, color: "var(--color-text-primary)" }}>Unique</p>
-              <p style={{ margin: 0, fontSize: 11, color: "var(--color-text-secondary)" }}>Valuation Portal</p>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                <span style={{ fontSize: isMobileScreen ? 10 : 11, fontWeight: 800, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.label}</span>
+                <div style={{ width: isMobileScreen ? 32 : 40, height: isMobileScreen ? 32 : 40, borderRadius: 10, background: s.iconBg, color: s.iconColor, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <Icon type={s.icon} size={isMobileScreen ? 16 : 20} />
+                </div>
+              </div>
+              <p style={{ margin: 0, fontSize: isMobileScreen ? 24 : 32, fontWeight: 900, color: "#0f172a", lineHeight: 1.1 }}>{s.val}</p>
+              <p style={{ margin: "4px 0 8px 0", fontSize: 10, fontWeight: 500, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.sub}</p>
             </div>
-          </div>
-          {isMobile && (<button onClick={() => setSidebarOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text-secondary)" }}><Icon type="x" /></button>)}
-        </div>
-        <nav style={{ flex: 1, padding: "16px 12px" }}>
-          <p style={{ fontSize: 10, fontWeight: 500, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.08em", padding: "0 12px", marginBottom: 8 }}>Main menu</p>
-          <button
-            onClick={() => setActiveTab("Dashboard")}
-            style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: "var(--border-radius-md)", border: "none", cursor: "pointer", background: activeTab === "Dashboard" ? "#2563eb" : "transparent", color: activeTab === "Dashboard" ? "#fff" : "var(--color-text-secondary)", fontSize: 13, fontWeight: 500, marginBottom: 2 }}>
-            <Icon type="grid" /> Dashboard
-          </button>
-          <button
-            onClick={() => setActiveTab("Invoice")}
-            style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderRadius: "var(--border-radius-md)", border: "none", cursor: "pointer", background: activeTab === "Invoice" ? "#2563eb" : "transparent", color: activeTab === "Invoice" ? "#fff" : "var(--color-text-secondary)", fontSize: 13, fontWeight: 500, marginBottom: 2 }}>
-            <Icon type="invoice" /> Invoice
-          </button>
-        </nav>
-        <div style={{ padding: 16, borderTop: "0.5px solid var(--color-border-tertiary)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#dbeafe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 500, color: "#1e40af" }}>AV</div>
-            <div>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)" }}>Admin User</p>
-              <p style={{ margin: 0, fontSize: 11, color: "var(--color-text-secondary)" }}>Valuer</p>
-            </div>
-          </div>
-        </div>
-      </aside>
 
-      {/* HEADER */}
-      <header style={{ position: "fixed", top: 0, right: 0, left: mainML, height: 64, zIndex: 10, background: "var(--color-background-primary)", borderBottom: "0.5px solid var(--color-border-tertiary)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", transition: "left 0.25s" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--color-text-secondary)", padding: 6 }}><Icon type="menu" /></button>
-          <div>
-            <p style={{ margin: 0, fontSize: 15, fontWeight: 500, color: "var(--color-text-primary)" }}>{activeTab}</p>
-            <p style={{ margin: 0, fontSize: 11, color: "var(--color-text-secondary)" }}>{activeTab === "Dashboard" ? "Overview" : "Case Management"}</p>
+            {/* SVG SPARKLINE WAVE */}
+            <svg width="100%" height={isMobileScreen ? 20 : 28} viewBox="0 0 200 30" style={{ overflow: "visible" }}>
+              <path d={s.path} fill="none" stroke={s.stroke} strokeWidth="2.5" strokeLinecap="round" />
+            </svg>
           </div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <button onClick={handleLogout} style={{ background: "#ef4444", color: "#fff", border: "none", borderRadius: 6, padding: "6px 12px", cursor: "pointer", fontSize: 12, fontWeight: 500 }}>
-            Logout
-          </button>
-          <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 11, fontWeight: 500 }}>AV</div>
-        </div>
-      </header>
+        ))}
+      </div>
 
-      {/* MAIN */}
-      <main style={{ marginLeft: mainML, paddingTop: 64, minHeight: "100vh", transition: "margin-left 0.25s" }}>
-        <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--color-text-secondary)" }}>
-            <span style={{ color: "#2563eb", cursor: "pointer" }} onClick={() => setActiveTab("Dashboard")}>Home</span>
-            <span>/</span>
-            <span style={{ color: "var(--color-text-primary)", fontWeight: 500 }}>{activeTab}</span>
-          </div>
-          {activeTab === "Dashboard" && (
-            <>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 }}>
-                {[
-                  { label: "Total cases", val: stats.total },
-                  { label: "Pending", val: stats.pending },
-                  { label: "In progress", val: stats.wip },
-                  { label: "Submitted", val: stats.submitted },
-                  { label: "Cancelled", val: stats.cancelled },
-                ].map(s => (
-                  <div key={s.label} style={{ background: "var(--color-background-secondary)", borderRadius: "var(--border-radius-md)", padding: "14px 16px" }}>
-                    <p style={{ margin: 0, fontSize: 11, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>{s.label}</p>
-                    <p style={{ margin: 0, fontSize: 26, fontWeight: 500, color: "var(--color-text-primary)" }}>{s.val}</p>
-                  </div>
-                ))}
+      <div style={{ display: "flex", flexDirection: "column", gap: 24, width: "100%", minWidth: 0 }}>
+        {activeTab === "Dashboard" && (
+          <div style={{ background: "#ffffff", borderRadius: isMobileScreen ? 16 : 20, border: "1px solid #f1f5f9", boxShadow: "0 6px 24px rgba(0,0,0,0.02)", overflow: "hidden", width: "100%", boxSizing: "border-box" }}>
+            <div style={{ padding: isMobileScreen ? "16px 14px 14px 14px" : "22px 28px 18px 28px", borderBottom: "1px solid #f1f5f9", display: "flex", flexDirection: isMobileScreen ? "column" : "row", justifyContent: "space-between", alignItems: isMobileScreen ? "stretch" : "center", gap: 14 }}>
+              <div>
+                <p style={{ margin: 0, fontSize: isMobileScreen ? 15 : 17, fontWeight: 800, color: "#0f172a" }}>Saved Invoices (Database)</p>
+                <p style={{ margin: 0, fontSize: 12, color: "#64748b", marginTop: 3 }}>Retrieve and view invoices already saved to the database</p>
               </div>
 
-              {/* SAVED INVOICES SECTION (Moved back to Dashboard) */}
-              <div style={{ background: "var(--color-background-primary)", borderRadius: "var(--border-radius-lg)", border: "0.5px solid var(--color-border-tertiary)", overflow: "hidden", marginTop: 24 }}>
-                <div style={{ padding: "16px 20px", borderBottom: "0.5px solid var(--color-border-tertiary)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div>
-                    <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: "var(--color-text-primary)" }}>Saved Invoices (Database)</p>
-                    <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-secondary)", marginTop: 2 }}>Retrieve and view invoices already saved to the database</p>
-                  </div>
-                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-                    <button
-                      onClick={exportSavedInvoicesToExcel}
-                      style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 6, padding: "6px 12px", fontSize: 12, fontWeight: 500, cursor: "pointer", color: "var(--color-text-primary)" }}
+              {/* RESPONSIVE TOOLBAR FILTERS */}
+              <div style={{ display: "flex", gap: isMobileScreen ? 8 : 12, flexWrap: "wrap", alignItems: "center", width: isMobileScreen ? "100%" : "auto" }}>
+                <button
+                  onClick={exportSavedInvoicesToExcel}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 10, padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", color: "#0f172a", boxShadow: "0 2px 6px rgba(0,0,0,0.03)", width: isMobileScreen ? "100%" : "auto" }}
+                >
+                  <Icon type="excel" size={15} /> Export Excel
+                </button>
+
+                <div style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "repeat(2, 1fr)" : "repeat(4, auto)", gap: 8, width: isMobileScreen ? "100%" : "auto" }}>
+                  {/* Bank Filter Dropdown */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: "#64748b" }}>Bank</span>
+                    <select
+                      id="savedBankFilter"
+                      onChange={e => {
+                        const bank = e.target.value;
+                        const month = document.getElementById("savedMonthFilter").value;
+                        const year = document.getElementById("savedYearFilter").value;
+                        const status = document.getElementById("savedStatusFilter")?.value || "All";
+                        fetch(`${INVOICE_API_URL}?bank=${bank === "All" ? "" : bank}&month=${month === "All" ? "" : month}&year=${year === "All" ? "" : year}&status=${status === "All" ? "" : status}`, {
+                          headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` },
+                          credentials: "include"
+                        })
+                          .then(r => r.json())
+                          .then(data => data.success && setSavedInvoices(data.data));
+                      }}
+                      style={{ fontSize: 12, borderRadius: 10, padding: "7px 10px", border: "1px solid #e2e8f0", background: "#ffffff", color: "#0f172a", cursor: "pointer", fontWeight: 600, width: "100%" }}
                     >
-                      <Icon type="excel" size={14} /> Export Excel
-                    </button>
-                    {/* Bank Filter for Saved Invoices */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>Bank:</span>
-                      <select
-                        id="savedBankFilter"
-                        onChange={e => {
-                          const bank = e.target.value;
-                          const month = document.getElementById("savedMonthFilter").value;
-                          const year = document.getElementById("savedYearFilter").value;
-                          const status = document.getElementById("savedStatusFilter")?.value || "All";
-                          fetch(`https://banker-backend-8ttk.onrender.com/api/invoices?bank=${bank === "All" ? "" : bank}&month=${month === "All" ? "" : month}&year=${year === "All" ? "" : year}&status=${status === "All" ? "" : status}`, {
-                            headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` },
-                            credentials: "include"
-                          })
-                            .then(r => r.json())
-                            .then(data => data.success && setSavedInvoices(data.data));
-                        }}
-                        style={{ fontSize: 12, borderRadius: 6, padding: "5px 10px", border: "0.5px solid var(--color-border-tertiary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)" }}
-                      >
-                        {banks.map(b => <option key={b} value={b}>{b}</option>)}
-                      </select>
-                    </div>
-
-                    {/* Month Filter for Saved Invoices */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>Month:</span>
-                      <select
-                        id="savedMonthFilter"
-                        onChange={e => {
-                          const month = e.target.value;
-                          const bank = document.getElementById("savedBankFilter").value;
-                          const year = document.getElementById("savedYearFilter").value;
-                          const status = document.getElementById("savedStatusFilter")?.value || "All";
-                          fetch(`https://banker-backend-8ttk.onrender.com/api/invoices?bank=${bank === "All" ? "" : bank}&month=${month === "All" ? "" : month}&year=${year === "All" ? "" : year}&status=${status === "All" ? "" : status}`, {
-                            headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` },
-                            credentials: "include"
-                          })
-                            .then(r => r.json())
-                            .then(data => data.success && setSavedInvoices(data.data));
-                        }}
-                        style={{ fontSize: 12, borderRadius: 6, padding: "5px 10px", border: "0.5px solid var(--color-border-tertiary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)" }}
-                      >
-                        <option value="All">All Months</option>
-                        {["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((m, idx) => (
-                          <option key={m} value={idx}>{m}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Year Filter for Saved Invoices */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>Year:</span>
-                      <select
-                        id="savedYearFilter"
-                        onChange={e => {
-                          const year = e.target.value;
-                          const bank = document.getElementById("savedBankFilter").value;
-                          const month = document.getElementById("savedMonthFilter").value;
-                          const status = document.getElementById("savedStatusFilter")?.value || "All";
-                          fetch(`https://banker-backend-8ttk.onrender.com/api/invoices?bank=${bank === "All" ? "" : bank}&month=${month === "All" ? "" : month}&year=${year === "All" ? "" : year}&status=${status === "All" ? "" : status}`, {
-                            headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` },
-                            credentials: "include"
-                          })
-                            .then(r => r.json())
-                            .then(data => data.success && setSavedInvoices(data.data));
-                        }}
-                        style={{ fontSize: 12, borderRadius: 6, padding: "5px 10px", border: "0.5px solid var(--color-border-tertiary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)" }}
-                      >
-                        <option value="All">All Years</option>
-                        {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
-                      </select>
-                    </div>
-
-                    {/* Status Filter for Saved Invoices */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>Status:</span>
-                      <select
-                        id="savedStatusFilter"
-                        onChange={e => {
-                          const status = e.target.value;
-                          const bank = document.getElementById("savedBankFilter").value;
-                          const month = document.getElementById("savedMonthFilter").value;
-                          const year = document.getElementById("savedYearFilter").value;
-                          fetch(`https://banker-backend-8ttk.onrender.com/api/invoices?bank=${bank === "All" ? "" : bank}&month=${month === "All" ? "" : month}&year=${year === "All" ? "" : year}&status=${status === "All" ? "" : status}`, {
-                            headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` },
-                            credentials: "include"
-                          })
-                            .then(r => r.json())
-                            .then(data => data.success && setSavedInvoices(data.data));
-                        }}
-                        style={{ fontSize: 12, borderRadius: 6, padding: "5px 10px", border: "0.5px solid var(--color-border-tertiary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)" }}
-                      >
-                        <option value="All">All Status</option>
-                        <option value="Submitted">Submitted</option>
-                        <option value="Paid">Paid</option>
-                        <option value="Cancelled">Cancelled</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-                <div style={{ overflowX: "auto" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                    <thead>
-                      <tr style={{ background: "var(--color-background-secondary)" }}>
-                        {["Invoice No", "Bank Name", "Bill Month", "Date", "Amount", "Status", "Action"].map(h => (
-                          <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 11, fontWeight: 500, color: "var(--color-text-secondary)", textTransform: "uppercase", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {loadingInvoices ? (
-                        <tr><td colSpan={6} style={{ padding: 30, textAlign: "center", color: "var(--color-text-secondary)" }}>Loading saved data...</td></tr>
-                      ) : savedInvoices.length === 0 ? (
-                        <tr><td colSpan={6} style={{ padding: 30, textAlign: "center", color: "var(--color-text-secondary)" }}>No saved invoices in database.</td></tr>
-                      ) : savedInvoices.map((inv, idx) => (
-                        <tr key={inv._id} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-                          <td style={{ padding: "12px 16px", fontSize: 13, fontWeight: 600, color: "#2563eb" }}>{inv.invoiceNo}</td>
-                          <td style={{ padding: "12px 16px", fontSize: 12 }}>{inv.bankName}</td>
-                          <td style={{ padding: "12px 16px", fontSize: 12 }}>{inv.billMonth}</td>
-                          <td style={{ padding: "12px 16px", fontSize: 12 }}>{formatDate(inv.invoiceDate)}</td>
-                          <td style={{ padding: "12px 16px", fontSize: 13, fontWeight: 500 }}>₹{inv.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                          <td style={{ padding: "12px 16px" }}>
-                            <span style={{
-                              padding: "4px 8px",
-                              borderRadius: 4,
-                              fontSize: 10,
-                              fontWeight: 600,
-                              background: inv.status === "Paid" ? "#dcfce7" : (inv.status === "Cancelled" ? "#fee2e2" : "#fef9c3"),
-                              color: inv.status === "Paid" ? "#166534" : (inv.status === "Cancelled" ? "#991b1b" : "#854d0e")
-                            }}>
-                              {inv.status || "Submitted"}
-                            </span>
-                          </td>
-                          <td style={{ padding: "12px 16px" }}>
-                            <button
-                              onClick={() => setInvoiceModal({ existingInvoice: inv })}
-                              style={{ background: "#eff6ff", color: "#1d4ed8", border: "0.5px solid #bfdbfe", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 500, cursor: "pointer" }}
-                            >
-                              View & Print
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* INVOICE TAB - Show only cases table */}
-          {activeTab === "Invoice" && (
-            <div style={{ background: "var(--color-background-primary)", borderRadius: "var(--border-radius-lg)", border: "0.5px solid var(--color-border-tertiary)", overflow: "hidden" }}>
-
-
-              <div style={{ padding: "16px 20px", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                  <div>
-                    <p style={{ margin: 0, fontSize: 15, fontWeight: 500, color: "var(--color-text-primary)" }}>All cases</p>
-                    <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-secondary)", marginTop: 2 }}>
-                      {loading ? "Loading…" : `${filtered.length} of ${cases.length} cases`}
-                    </p>
-                  </div>
-                  <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-                    {canBulkInvoice && !loading && (
-                      <button
-                        onClick={() => setInvoiceModal({ cases: filtered, isBulk: true })}
-                        style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "#fff", background: "#1a3a6b", border: "none", borderRadius: "var(--border-radius-md)", padding: "7px 14px", cursor: "pointer", fontWeight: 500 }}
-                      >
-                        <Icon type="bulkInvoice" size={14} /> Create Invoice ({filtered.length})
-                      </button>
-                    )}
-                    {hasFilters && (
-                      <button onClick={clearFilters} style={{ fontSize: 12, color: "#2563eb", background: "#eff6ff", border: "0.5px solid #bfdbfe", borderRadius: "var(--border-radius-md)", padding: "5px 12px", cursor: "pointer", fontWeight: 500 }}>
-                        Clear filters
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 14 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--color-background-secondary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", padding: "7px 12px", minWidth: 200, flex: "1 1 200px" }}>
-                    <Icon type="search" />
-                    <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search customer name…" style={{ background: "none", border: "none", outline: "none", fontSize: 13, color: "var(--color-text-primary)", width: "100%" }} />
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <Icon type="filter" />
-                    <select value={bankFilter} onChange={e => { setBankFilter(e.target.value); setPage(1); }}
-                      style={{ fontSize: 13, borderRadius: "var(--border-radius-md)", padding: "7px 12px", border: "0.5px solid var(--color-border-tertiary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", cursor: "pointer", minWidth: 160 }}>
                       {banks.map(b => <option key={b} value={b}>{b}</option>)}
                     </select>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <Icon type="calendar" size={16} />
-                    <select value={monthFilter} onChange={e => { setMonthFilter(e.target.value); setPage(1); }}
-                      style={{ fontSize: 13, borderRadius: "var(--border-radius-md)", padding: "7px 12px", border: "0.5px solid var(--color-border-tertiary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", cursor: "pointer", minWidth: 130 }}>
-                      <option value="All">All Months (Created)</option>
-                      {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map((m, idx) => (
+
+                  {/* Month Filter Dropdown */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: "#64748b" }}>Month</span>
+                    <select
+                      id="savedMonthFilter"
+                      onChange={e => {
+                        const month = e.target.value;
+                        const bank = document.getElementById("savedBankFilter").value;
+                        const year = document.getElementById("savedYearFilter").value;
+                        const status = document.getElementById("savedStatusFilter")?.value || "All";
+                        fetch(`${INVOICE_API_URL}?bank=${bank === "All" ? "" : bank}&month=${month === "All" ? "" : month}&year=${year === "All" ? "" : year}&status=${status === "All" ? "" : status}`, {
+                          headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` },
+                          credentials: "include"
+                        })
+                          .then(r => r.json())
+                          .then(data => data.success && setSavedInvoices(data.data));
+                      }}
+                      style={{ fontSize: 12, borderRadius: 10, padding: "7px 10px", border: "1px solid #e2e8f0", background: "#ffffff", color: "#0f172a", cursor: "pointer", fontWeight: 600, width: "100%" }}
+                    >
+                      <option value="Jun">Jun</option>
+                      <option value="All">All Months</option>
+                      {["Jan", "Feb", "Mar", "Apr", "May", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((m, idx) => (
                         <option key={m} value={idx}>{m}</option>
                       ))}
                     </select>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <select value={yearFilter} onChange={e => { setYearFilter(e.target.value); setPage(1); }}
-                      style={{ fontSize: 13, borderRadius: "var(--border-radius-md)", padding: "7px 12px", border: "0.5px solid var(--color-border-tertiary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", cursor: "pointer", minWidth: 100 }}>
+
+                  {/* Year Filter Dropdown */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: "#64748b" }}>Year</span>
+                    <select
+                      id="savedYearFilter"
+                      onChange={e => {
+                        const year = e.target.value;
+                        const bank = document.getElementById("savedBankFilter").value;
+                        const month = document.getElementById("savedMonthFilter").value;
+                        const status = document.getElementById("savedStatusFilter")?.value || "All";
+                        fetch(`${INVOICE_API_URL}?bank=${bank === "All" ? "" : bank}&month=${month === "All" ? "" : month}&year=${year === "All" ? "" : year}&status=${status === "All" ? "" : status}`, {
+                          headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` },
+                          credentials: "include"
+                        })
+                          .then(r => r.json())
+                          .then(data => data.success && setSavedInvoices(data.data));
+                      }}
+                      style={{ fontSize: 12, borderRadius: 10, padding: "7px 10px", border: "1px solid #e2e8f0", background: "#ffffff", color: "#0f172a", cursor: "pointer", fontWeight: 600, width: "100%" }}
+                    >
                       <option value="All">All Years</option>
-                      {Array.from({ length: 5 }, (_, i) => 2024 + i).map(y => (
-                        <option key={y} value={y}>{y}</option>
-                      ))}
+                      {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
                     </select>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
-                      style={{ fontSize: 13, borderRadius: "var(--border-radius-md)", padding: "7px 12px", border: "0.5px solid var(--color-border-tertiary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", cursor: "pointer", minWidth: 100 }}>
+
+                  {/* Status Filter Dropdown */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: "#64748b" }}>Status</span>
+                    <select
+                      id="savedStatusFilter"
+                      onChange={e => {
+                        const status = e.target.value;
+                        const bank = document.getElementById("savedBankFilter").value;
+                        const month = document.getElementById("savedMonthFilter").value;
+                        const year = document.getElementById("savedYearFilter").value;
+                        fetch(`${INVOICE_API_URL}?bank=${bank === "All" ? "" : bank}&month=${month === "All" ? "" : month}&year=${year === "All" ? "" : year}&status=${status === "All" ? "" : status}`, {
+                          headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` },
+                          credentials: "include"
+                        })
+                          .then(r => r.json())
+                          .then(data => data.success && setSavedInvoices(data.data));
+                      }}
+                      style={{ fontSize: 12, borderRadius: 10, padding: "7px 10px", border: "1px solid #e2e8f0", background: "#ffffff", color: "#0f172a", cursor: "pointer", fontWeight: 600, width: "100%" }}
+                    >
                       <option value="All">All Status</option>
-                      <option value="Pending">Pending</option>
-                      <option value="Work in Progress">In Progress</option>
-                      <option value="FinalSubmitted">Submitted</option>
-                      <option value="Query Raised">Query Raised</option>
+                      <option value="Submitted">Submitted</option>
+                      <option value="Paid">Paid</option>
                       <option value="Cancelled">Cancelled</option>
                     </select>
                   </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>Visit date:</span>
-                    <input type="date" value={fromDate} onChange={e => { setFromDate(e.target.value); setPage(1); }} style={{ fontSize: 12, borderRadius: "var(--border-radius-md)", padding: "7px 10px", border: "0.5px solid var(--color-border-tertiary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", cursor: "pointer" }} />
-                    <span style={{ fontSize: 12, color: "var(--color-text-secondary)" }}>to</span>
-                    <input type="date" value={toDate} onChange={e => { setToDate(e.target.value); setPage(1); }} style={{ fontSize: 12, borderRadius: "var(--border-radius-md)", padding: "7px 10px", border: "0.5px solid var(--color-border-tertiary)", background: "var(--color-background-secondary)", color: "var(--color-text-primary)", cursor: "pointer" }} />
+                </div>
+              </div>
+            </div>
+
+            {/* RESPONSIVE SAVED INVOICES CONTENT */}
+            {isMobileScreen ? (
+              /* MOBILE CARDS VIEW */
+              <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 12 }}>
+                {loadingInvoices ? (
+                  <div style={{ padding: 30, textAlign: "center", color: "#64748b" }}>Loading saved data...</div>
+                ) : savedInvoices.length === 0 ? (
+                  <div style={{ padding: 30, textAlign: "center", color: "#64748b" }}>No saved invoices in database.</div>
+                ) : savedInvoices.map((inv) => (
+                  <div key={inv._id} style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 14, padding: 14, display: "flex", flexDirection: "column", gap: 10, boxShadow: "0 2px 8px rgba(0,0,0,0.02)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div>
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "#4f46e5" }}>{inv.invoiceNo}</p>
+                        <p style={{ margin: "2px 0 0 0", fontSize: 10, color: "#94a3b8" }}>#INV-2026-001</p>
+                      </div>
+                      <span style={{
+                        padding: "4px 10px",
+                        borderRadius: 20,
+                        fontSize: 10,
+                        fontWeight: 700,
+                        background: inv.status === "Paid" ? "#dcfce7" : (inv.status === "Cancelled" ? "#fee2e2" : "#e6f4ea"),
+                        color: inv.status === "Paid" ? "#166534" : (inv.status === "Cancelled" ? "#991b1b" : "#137333"),
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 4
+                      }}>
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: inv.status === "Paid" ? "#166534" : (inv.status === "Cancelled" ? "#991b1b" : "#137333") }}></span>
+                        {inv.status || "Submitted"}
+                      </span>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#f8fafc", padding: 8, borderRadius: 10 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#f0f2fe", color: "#4f46e5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, flexShrink: 0 }}>
+                        🏛️
+                      </div>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{inv.bankName}</p>
+                        <p style={{ margin: "1px 0 0 0", fontSize: 10, color: "#94a3b8" }}>HDFC BANK LTD.</p>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: 11 }}>
+                      <div style={{ background: "#f8fafc", padding: "6px 10px", borderRadius: 8 }}>
+                        <span style={{ color: "#94a3b8", display: "block", fontSize: 9, fontWeight: 700, textTransform: "uppercase" }}>Bill Month</span>
+                        <span style={{ fontWeight: 700, color: "#4f46e5" }}>{inv.billMonth}</span>
+                      </div>
+                      <div style={{ background: "#f8fafc", padding: "6px 10px", borderRadius: 8 }}>
+                        <span style={{ color: "#94a3b8", display: "block", fontSize: 9, fontWeight: 700, textTransform: "uppercase" }}>Amount</span>
+                        <span style={{ fontWeight: 800, color: "#0f172a" }}>₹{inv.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                      <button
+                        onClick={() => setInvoiceModal({ existingInvoice: inv })}
+                        style={{ flex: 1, background: "#ffffff", color: "#4f46e5", border: "1.5px solid #c7d2fe", borderRadius: 8, padding: "8px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}
+                      >
+                        <Icon type="invoice" size={13} /> View & Print
+                      </button>
+                      <button
+                        onClick={() => handleDeleteSavedInvoice(inv._id)}
+                        style={{ background: "#fff1f1", color: "#ef4444", border: "1px solid #ffcccc", borderRadius: 8, padding: "8px 12px", fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
+                      >
+                        <Icon type="x" size={13} /> Delete
+                      </button>
+                    </div>
                   </div>
+                ))}
+              </div>
+            ) : (
+              /* DESKTOP & TABLET TABLE VIEW */
+              <div style={{ overflowX: "auto", width: "100%" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ background: "#080a19" }}>
+                    {["INVOICE NO", "BANK NAME", "BILL MONTH", "DATE", "AMOUNT", "STATUS", "ACTION"].map(h => (
+                      <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#ffffff", textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {loadingInvoices ? (
+                    <tr><td colSpan={7} style={{ padding: 24, textAlign: "center", color: "#64748b" }}>Loading saved data...</td></tr>
+                  ) : savedInvoices.length === 0 ? (
+                    <tr><td colSpan={7} style={{ padding: 24, textAlign: "center", color: "#64748b" }}>No saved invoices in database.</td></tr>
+                  ) : savedInvoices.map((inv) => (
+                    <tr key={inv._id} style={{ borderBottom: "1px solid #f1f5f9", transition: "background 0.15s ease" }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
+                      onMouseLeave={e => e.currentTarget.style.background = ""}
+                    >
+                      <td style={{ padding: "10px 12px" }}>
+                        <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "#4f46e5", whiteSpace: "nowrap" }}>{inv.invoiceNo}</p>
+                        <p style={{ margin: "1px 0 0 0", fontSize: 10, color: "#94a3b8" }}>#INV-2026-001</p>
+                      </td>
+
+                      <td style={{ padding: "10px 12px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          <div style={{ width: 30, height: 30, borderRadius: "50%", background: "#f0f2fe", color: "#4f46e5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, flexShrink: 0 }}>
+                            🏛️
+                          </div>
+                          <div>
+                            <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap" }}>{inv.bankName}</p>
+                            <p style={{ margin: "1px 0 0 0", fontSize: 10, color: "#94a3b8" }}>HDFC BANK LTD.</p>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td style={{ padding: "10px 12px" }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, background: "#f0f2fe", color: "#4f46e5", borderRadius: 14, padding: "4px 10px", whiteSpace: "nowrap" }}>
+                          {inv.billMonth}
+                        </span>
+                      </td>
+
+                      <td style={{ padding: "10px 12px", whiteSpace: "nowrap" }}>
+                        <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#0f172a" }}>{formatDate(inv.invoiceDate)}</p>
+                        <p style={{ margin: "1px 0 0 0", fontSize: 10, color: "#94a3b8" }}>10:30 AM</p>
+                      </td>
+
+                      <td style={{ padding: "10px 12px", whiteSpace: "nowrap" }}>
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "#0f172a" }}>₹{inv.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                        <p style={{ margin: "1px 0 0 0", fontSize: 10, color: "#94a3b8" }}>GST Included</p>
+                      </td>
+
+                      <td style={{ padding: "10px 12px", whiteSpace: "nowrap" }}>
+                        <span style={{
+                          padding: "4px 10px",
+                          borderRadius: 16,
+                          fontSize: 10,
+                          fontWeight: 700,
+                          background: inv.status === "Paid" ? "#dcfce7" : (inv.status === "Cancelled" ? "#fee2e2" : "#e6f4ea"),
+                          color: inv.status === "Paid" ? "#166534" : (inv.status === "Cancelled" ? "#991b1b" : "#137333"),
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 5
+                        }}>
+                          <span style={{ width: 5, height: 5, borderRadius: "50%", background: inv.status === "Paid" ? "#166534" : (inv.status === "Cancelled" ? "#991b1b" : "#137333") }}></span>
+                          {inv.status || "Submitted"}
+                        </span>
+                      </td>
+
+                      <td style={{ padding: "10px 12px", whiteSpace: "nowrap" }}>
+                        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                          <button
+                            onClick={() => setInvoiceModal({ existingInvoice: inv })}
+                            style={{ background: "#ffffff", color: "#4f46e5", border: "1.5px solid #c7d2fe", borderRadius: 8, padding: "5px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 5, boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}
+                          >
+                            <Icon type="invoice" size={13} /> View & Print
+                          </button>
+                          <button
+                            onClick={() => handleDeleteSavedInvoice(inv._id)}
+                            style={{ background: "#fff1f1", color: "#ef4444", border: "1px solid #ffcccc", borderRadius: 8, padding: "5px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
+                          >
+                            <Icon type="x" size={13} /> Delete
+                          </button>
+                          <span style={{ fontSize: 14, color: "#94a3b8", cursor: "pointer", marginLeft: 2 }}>⋮</span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            )}
+
+            {/* TABLE FOOTER / PAGINATION */}
+            <div style={{ padding: isMobileScreen ? "14px 16px" : "16px 28px", borderTop: "1px solid #f1f5f9", display: "flex", flexDirection: isMobileScreen ? "column" : "row", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+              <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
+                Showing 1 to {savedInvoices.length} of {savedInvoices.length} entries
+              </p>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button style={{ width: 32, height: 32, borderRadius: 8, border: "1px solid #e2e8f0", background: "#ffffff", cursor: "pointer", color: "#64748b" }}>‹</button>
+                <button style={{ width: 32, height: 32, borderRadius: 8, border: "none", background: "#4f46e5", color: "#ffffff", fontWeight: 700, cursor: "pointer" }}>1</button>
+                <button style={{ width: 32, height: 32, borderRadius: 8, border: "1px solid #e2e8f0", background: "#ffffff", cursor: "pointer", color: "#64748b" }}>›</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* INVOICE TAB - Case Management & Generator */}
+        {activeTab === "Invoice" && (
+          <div style={{ background: "#ffffff", borderRadius: isMobileScreen ? 16 : 20, border: "1px solid #f1f5f9", boxShadow: "0 6px 24px rgba(0,0,0,0.02)", overflow: "hidden", width: "100%", boxSizing: "border-box" }}>
+            <div style={{ padding: isMobileScreen ? "16px 14px" : "20px 24px", borderBottom: "1px solid #f1f5f9" }}>
+              <div style={{ display: "flex", flexDirection: isMobileScreen ? "column" : "row", alignItems: isMobileScreen ? "stretch" : "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                <div>
+                  <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: "#0f172a" }}>All Valuation Cases</p>
+                  <p style={{ margin: 0, fontSize: 12, color: "#64748b", marginTop: 2 }}>
+                    {loading ? "Loading…" : `${filtered.length} of ${cases.length} cases`}
+                  </p>
+                </div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                  {canBulkInvoice && !loading && (
+                    <button
+                      onClick={() => setInvoiceModal({ cases: filtered, isBulk: true })}
+                      style={{ width: isMobileScreen ? "100%" : "auto", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, fontSize: 12, color: "#fff", background: "linear-gradient(135deg, #4f46e5, #3730a3)", border: "none", borderRadius: 10, padding: "8px 16px", cursor: "pointer", fontWeight: 700, boxShadow: "0 4px 12px rgba(79,70,229,0.25)" }}
+                    >
+                      <Icon type="bulkInvoice" size={14} /> Create Invoice ({filtered.length})
+                    </button>
+                  )}
+                  {hasFilters && (
+                    <button onClick={clearFilters} style={{ fontSize: 12, color: "#2563eb", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontWeight: 600 }}>
+                      Clear filters
+                    </button>
+                  )}
                 </div>
               </div>
 
-              <div style={{ overflowX: "auto" }}>
+              {/* SEARCH & FILTERS BAR */}
+              <div style={{ display: "grid", gridTemplateColumns: isMobileScreen ? "1fr" : "repeat(auto-fit, minmax(160px, 1fr))", gap: 10, marginTop: 14 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, padding: "8px 12px" }}>
+                  <Icon type="search" />
+                  <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search customer name…" style={{ background: "none", border: "none", outline: "none", fontSize: 13, color: "#0f172a", width: "100%" }} />
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <select value={bankFilter} onChange={e => { setBankFilter(e.target.value); setPage(1); }}
+                    style={{ fontSize: 12, borderRadius: 10, padding: "8px 12px", border: "1px solid #e2e8f0", background: "#ffffff", color: "#0f172a", cursor: "pointer", width: "100%", fontWeight: 600 }}>
+                    {banks.map(b => <option key={b} value={b}>{b}</option>)}
+                  </select>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <select value={monthFilter} onChange={e => { setMonthFilter(e.target.value); setPage(1); }}
+                    style={{ fontSize: 12, borderRadius: 10, padding: "8px 12px", border: "1px solid #e2e8f0", background: "#ffffff", color: "#0f172a", cursor: "pointer", width: "100%", fontWeight: 600 }}>
+                    <option value="All">All Months (Created)</option>
+                    {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map((m, idx) => (
+                      <option key={m} value={idx}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <select value={yearFilter} onChange={e => { setYearFilter(e.target.value); setPage(1); }}
+                    style={{ fontSize: 12, borderRadius: 10, padding: "8px 12px", border: "1px solid #e2e8f0", background: "#ffffff", color: "#0f172a", cursor: "pointer", width: "100%", fontWeight: 600 }}>
+                    <option value="All">All Years</option>
+                    {Array.from({ length: 5 }, (_, i) => 2024 + i).map(y => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <select value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
+                    style={{ fontSize: 12, borderRadius: 10, padding: "8px 12px", border: "1px solid #e2e8f0", background: "#ffffff", color: "#0f172a", cursor: "pointer", width: "100%", fontWeight: 600 }}>
+                    <option value="All">All Status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Work in Progress">In Progress</option>
+                    <option value="FinalSubmitted">Submitted</option>
+                    <option value="Query Raised">Query Raised</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* CASES CONTENT */}
+            {isMobileScreen ? (
+              /* MOBILE CASES CARDS VIEW */
+              <div style={{ padding: 12, display: "flex", flexDirection: "column", gap: 12 }}>
                 {loading ? (
-                  <div style={{ padding: 48, textAlign: "center", color: "var(--color-text-secondary)", fontSize: 14 }}>Loading cases from API…</div>
+                  <div style={{ padding: 30, textAlign: "center", color: "#64748b" }}>Loading cases...</div>
+                ) : paginated.length === 0 ? (
+                  <div style={{ padding: 30, textAlign: "center", color: "#64748b" }}>No cases match current filters.</div>
+                ) : paginated.map((c, i) => (
+                  <div key={c._id} style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: 14, padding: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg, #3b82f6, #6366f1)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700 }}>
+                          {c.customerName !== "—" ? c.customerName.trim().split(/\s+/).map(n => n[0]).slice(0, 2).join("").toUpperCase() : "—"}
+                        </div>
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{c.customerName}</p>
+                      </div>
+                      <StatusBadge status={c.status} />
+                    </div>
+
+                    <div style={{ fontSize: 11, color: "#64748b", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                      <div><b>Bank:</b> <span style={{ color: "#3730a3", fontWeight: 700 }}>{c.bankName}</span></div>
+                      <div><b>Ref No:</b> {c.refNo}</div>
+                      <div><b>Created:</b> {c.createdDateFormatted}</div>
+                      <div><b>Visit:</b> {c.dateOfVisitFormatted}</div>
+                    </div>
+
+                    <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                      <button
+                        onClick={() => setInvoiceModal({ cases: [c], isBulk: false })}
+                        style={{ flex: 1, background: "linear-gradient(135deg, #3b82f6, #2563eb)", color: "#ffffff", border: "none", borderRadius: 8, padding: "8px", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}
+                      >
+                        <Icon type="invoice" size={13} /> Invoice
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCase(c._id)}
+                        style={{ background: "linear-gradient(135deg, #ef4444, #dc2626)", color: "#ffffff", border: "none", borderRadius: 8, padding: "8px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}
+                      >
+                        <Icon type="x" size={13} /> Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              /* DESKTOP & TABLET TABLE VIEW */
+              <div style={{ overflowX: "auto", width: "100%" }}>
+                {loading ? (
+                  <div style={{ padding: 32, textAlign: "center", color: "#64748b", fontSize: 13 }}>Loading cases from API…</div>
                 ) : error ? (
-                  <div style={{ padding: 48, textAlign: "center" }}>
+                  <div style={{ padding: 32, textAlign: "center" }}>
                     <p style={{ color: "#dc2626", fontSize: 13, margin: 0 }}>{error}</p>
-                    <p style={{ color: "var(--color-text-secondary)", fontSize: 12, marginTop: 8 }}>Make sure your local server is running at localhost:5000</p>
                   </div>
                 ) : (
-                  <table style={{ width: "100%", minWidth: 900, borderCollapse: "collapse" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead>
-                      <tr style={{ background: "var(--color-background-secondary)" }}>
-                        {["#", "Bank name", "Customer name", "Ref no.", "Address", "Created Date", "Date of visit", "Status", "Invoice"].map(h => (
-                          <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 11, fontWeight: 500, color: "var(--color-text-secondary)", textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>{h}</th>
+                      <tr style={{ background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)", color: "#ffffff" }}>
+                        {["#", "Bank name", "Customer name", "Ref no.", "Address", "Created Date", "Date of visit", "Status", "Action"].map(h => (
+                          <th key={h} style={{ padding: "10px 12px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#f8fafc", textTransform: "uppercase", letterSpacing: "0.06em", whiteSpace: "nowrap" }}>{h}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {paginated.length === 0 ? (
-                        <tr><td colSpan={9} style={{ padding: 40, textAlign: "center", fontSize: 13, color: "var(--color-text-secondary)" }}>No cases match the current filters.</td></tr>
+                        <tr><td colSpan={9} style={{ padding: 30, textAlign: "center", fontSize: 13, color: "#64748b" }}>No cases match the current filters.</td></tr>
                       ) : paginated.map((c, i) => (
-                        <tr key={c._id} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}
-                          onMouseEnter={e => e.currentTarget.style.background = "var(--color-background-secondary)"}
+                        <tr key={c._id} style={{ borderBottom: "1px solid #f1f5f9", transition: "background 0.15s ease" }}
+                          onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
                           onMouseLeave={e => e.currentTarget.style.background = ""}>
-                          <td style={{ padding: "12px 16px", fontSize: 12, color: "var(--color-text-secondary)" }}>{(page - 1) * PAGE_SIZE + i + 1}</td>
-                          <td style={{ padding: "12px 16px", whiteSpace: "nowrap" }}>
-                            <span style={{ fontSize: 12, fontWeight: 500, background: "#eff6ff", color: "#1d4ed8", border: "0.5px solid #bfdbfe", borderRadius: "var(--border-radius-md)", padding: "3px 10px" }}>{c.bankName}</span>
+                          <td style={{ padding: "8px 12px", fontSize: 12, fontWeight: 600, color: "#64748b", whiteSpace: "nowrap" }}>{(page - 1) * PAGE_SIZE + i + 1}</td>
+                          <td style={{ padding: "8px 12px", whiteSpace: "nowrap" }}>
+                            <span style={{ fontSize: 11, fontWeight: 700, background: "#e0e7ff", color: "#3730a3", borderRadius: 16, padding: "3px 10px", border: "1px solid #c7d2fe" }}>{c.bankName}</span>
                           </td>
-                          <td style={{ padding: "12px 16px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                              <div style={{ width: 32, height: 32, borderRadius: "50%", background: "var(--color-background-secondary)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 500, color: "var(--color-text-secondary)", flexShrink: 0 }}>
+                          <td style={{ padding: "8px 12px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg, #3b82f6, #6366f1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "#ffffff", flexShrink: 0, boxShadow: "0 2px 6px rgba(59,130,246,0.2)" }}>
                                 {c.customerName !== "—" ? c.customerName.trim().split(/\s+/).map(n => n[0]).slice(0, 2).join("").toUpperCase() : "—"}
                               </div>
-                              <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)", whiteSpace: "nowrap" }}>{c.customerName}</p>
+                              <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: "#0f172a", whiteSpace: "nowrap" }}>{c.customerName}</p>
                             </div>
                           </td>
-                          <td style={{ padding: "12px 16px", fontSize: 12, color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>{c.refNo}</td>
-                          <td style={{ padding: "12px 16px", maxWidth: 260 }}>
-                            <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={c.address}>{c.address}</p>
+                          <td style={{ padding: "8px 12px", fontSize: 12, fontWeight: 600, color: "#475569", whiteSpace: "nowrap" }}>{c.refNo}</td>
+                          <td style={{ padding: "8px 12px", maxWidth: 200 }}>
+                            <p style={{ margin: 0, fontSize: 11, color: "#64748b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={c.address}>{c.address}</p>
                           </td>
-                          <td style={{ padding: "12px 16px", fontSize: 12, color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>{c.createdDateFormatted}</td>
-                          <td style={{ padding: "12px 16px", fontSize: 12, color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>{c.dateOfVisitFormatted}</td>
-                          <td style={{ padding: "12px 16px" }}><StatusBadge status={c.status} /></td>
-                          <td style={{ padding: "12px 16px" }}>
-                            <button
-                              onClick={() => setInvoiceModal({ cases: [c], isBulk: false })}
-                              title="Open Invoice"
-                              style={{ display: "flex", alignItems: "center", gap: 5, background: "#eff6ff", color: "#1d4ed8", border: "0.5px solid #bfdbfe", borderRadius: 8, padding: "5px 10px", cursor: "pointer", fontSize: 11, fontWeight: 500, whiteSpace: "nowrap" }}
-                            >
-                              <Icon type="invoice" size={13} /> Invoice
-                            </button>
+                          <td style={{ padding: "8px 12px", fontSize: 11, color: "#64748b", whiteSpace: "nowrap" }}>{c.createdDateFormatted}</td>
+                          <td style={{ padding: "8px 12px", fontSize: 11, color: "#64748b", whiteSpace: "nowrap" }}>{c.dateOfVisitFormatted}</td>
+                          <td style={{ padding: "8px 12px", whiteSpace: "nowrap" }}><StatusBadge status={c.status} /></td>
+                          <td style={{ padding: "8px 12px", whiteSpace: "nowrap" }}>
+                            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                              <button
+                                onClick={() => setInvoiceModal({ cases: [c], isBulk: false })}
+                                title="Open Invoice"
+                                style={{ display: "flex", alignItems: "center", gap: 4, background: "linear-gradient(135deg, #3b82f6, #2563eb)", color: "#ffffff", border: "none", borderRadius: 6, padding: "5px 10px", cursor: "pointer", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", boxShadow: "0 2px 6px rgba(37,99,235,0.2)" }}
+                              >
+                                <Icon type="invoice" size={12} /> Invoice
+                              </button>
+                              <button
+                                onClick={() => handleDeleteCase(c._id)}
+                                title="Delete Case"
+                                style={{ display: "flex", alignItems: "center", gap: 4, background: "linear-gradient(135deg, #ef4444, #dc2626)", color: "#ffffff", border: "none", borderRadius: 6, padding: "5px 10px", cursor: "pointer", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap", boxShadow: "0 2px 6px rgba(239,68,68,0.2)" }}
+                              >
+                                <Icon type="x" size={12} /> Delete
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -4717,30 +5050,30 @@ export default function App() {
                   </table>
                 )}
               </div>
+            )}
 
-              {/* PAGINATION */}
-              {!loading && !error && (
-                <div style={{ padding: "12px 20px", borderTop: "0.5px solid var(--color-border-tertiary)", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
-                  <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-secondary)" }}>
-                    Page <strong style={{ color: "var(--color-text-primary)" }}>{page}</strong> of <strong style={{ color: "var(--color-text-primary)" }}>{totalPages}</strong>{" · "}{filtered.length} result{filtered.length !== 1 ? "s" : ""}
-                  </p>
-                  <div style={{ display: "flex", gap: 4 }}>
-                    <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ width: 32, height: 32, border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", background: "none", cursor: page === 1 ? "default" : "pointer", opacity: page === 1 ? 0.4 : 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-text-secondary)" }}><Icon type="chevL" /></button>
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let p = i + 1;
-                      if (totalPages > 5) { const start = Math.max(1, Math.min(page - 2, totalPages - 4)); p = start + i; }
-                      return (
-                        <button key={p} onClick={() => setPage(p)} style={{ width: 32, height: 32, border: p === page ? "none" : "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", background: p === page ? "#2563eb" : "none", color: p === page ? "#fff" : "var(--color-text-secondary)", cursor: "pointer", fontSize: 12, fontWeight: p === page ? 500 : 400 }}>{p}</button>
-                      );
-                    })}
-                    <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ width: 32, height: 32, border: "0.5px solid var(--color-border-tertiary)", borderRadius: "var(--border-radius-md)", background: "none", cursor: page === totalPages ? "default" : "pointer", opacity: page === totalPages ? 0.4 : 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-text-secondary)" }}><Icon type="chevR" /></button>
-                  </div>
+            {/* CASES PAGINATION */}
+            {!loading && !error && (
+              <div style={{ padding: isMobileScreen ? "12px 14px" : "12px 20px", borderTop: "1px solid #f1f5f9", display: "flex", flexDirection: isMobileScreen ? "column" : "row", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+                <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
+                  Page <strong>{page}</strong> of <strong>{totalPages}</strong>{" · "}{filtered.length} result{filtered.length !== 1 ? "s" : ""}
+                </p>
+                <div style={{ display: "flex", gap: 4 }}>
+                  <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ width: 32, height: 32, border: "1px solid #e2e8f0", borderRadius: 8, background: "#fff", cursor: page === 1 ? "default" : "pointer", opacity: page === 1 ? 0.4 : 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}><Icon type="chevL" /></button>
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let p = i + 1;
+                    if (totalPages > 5) { const start = Math.max(1, Math.min(page - 2, totalPages - 4)); p = start + i; }
+                    return (
+                      <button key={p} onClick={() => setPage(p)} style={{ width: 32, height: 32, border: p === page ? "none" : "1px solid #e2e8f0", borderRadius: 8, background: p === page ? "#2563eb" : "#fff", color: p === page ? "#fff" : "#64748b", cursor: "pointer", fontSize: 12, fontWeight: p === page ? 700 : 400 }}>{p}</button>
+                    );
+                  })}
+                  <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} style={{ width: 32, height: 32, border: "1px solid #e2e8f0", borderRadius: 8, background: "#fff", cursor: page === totalPages ? "default" : "pointer", opacity: page === totalPages ? 0.4 : 1, display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}><Icon type="chevR" /></button>
                 </div>
-              )}
-            </div>
-          )}
-        </div>
-      </main>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {invoiceModal && (
         <InvoiceModal
