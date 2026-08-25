@@ -138,6 +138,12 @@ const FieldOfficerDashboard = () => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const { cases, loading } = useSelector((state) => state.case) || {};
+
+  useEffect(() => {
+    if (user && ["Admin", "SuperAdmin"].includes(user.role)) {
+      navigate("/", { replace: true });
+    }
+  }, [user, navigate]);
   const foCases = cases;
   const { allCase } = useSelector((state) => state?.notes || {});
 

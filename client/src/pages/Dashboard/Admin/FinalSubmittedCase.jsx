@@ -280,8 +280,8 @@ const FinalSubmittedCases = ({ selectedMonth, preloadedCases }) => {
 
   return (
     <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">
-        Final Submitted Cases ({(final || []).length})
+      <h2 className="text-xl font-bold mb-4 text-slate-800">
+        Final Submitted Cases ({monthFilteredFinal.length})
       </h2>
 
       <div className="flex flex-wrap gap-4 mb-4">

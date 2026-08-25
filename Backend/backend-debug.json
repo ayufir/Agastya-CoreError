@@ -1,155 +1,102 @@
 {
-  "timestamp": "2026-08-14T12:34:11.916Z",
+  "timestamp": "2026-08-25T09:58:47.284Z",
   "body": {
-    "directions": {
-      "North": {
-        "document": "Seller's Land",
-        "actual": "Plot of Seller",
-        "plan": "Seller's Land"
-      },
-      "South": {
-        "document": "20 Feet Road",
-        "actual": "Road",
-        "plan": "20 Feet Road"
-      },
-      "East": {
-        "document": "Seller's Land",
-        "actual": "Plot of Ravi Sahu",
-        "plan": "Seller's Land"
-      },
-      "West": {
-        "document": "Seller's Land",
-        "actual": "Plot of Other",
-        "plan": "Seller's Land"
-      }
-    },
-    "_id": "6a7ae9910720480ed00a4117",
-    "status": "Work in Progress",
-    "AttachDocuments": [
-      {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/Sale_deed_jitendra__1__ZWirPnWpk.pdf",
-        "fileId": "6a7ae95c5c7cd75eb80ea225",
-        "name": "Sale_deed_jitendra__1__ZWirPnWpk.pdf"
-      }
-    ],
+    "_id": "6a79af13075cc5f6dc383393",
+    "status": "FinalSubmitted",
+    "AttachDocuments": [],
     "atsDocuments": [
       {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/Sale_deed_jitendra__1__ZWirPnWpk.pdf",
-        "fileId": "6a7ae95c5c7cd75eb80ea225",
-        "name": "Sale_deed_jitendra__1__ZWirPnWpk.pdf"
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/AGREEMENT__1__5yfGLWw9g.pdf",
+        "fileId": "6a79aef95c7cd75eb8a1d712",
+        "name": "AGREEMENT__1__5yfGLWw9g.pdf"
       }
     ],
     "gpsFiles": [
       {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-11_at_12.57.56_PM__2__mLEAeU9eg.jpeg",
-        "fileId": "6a7ae8ef5c7cd75eb80cd873",
-        "name": "WhatsApp_Image_2026-08-11_at_12.57.56_PM__2__mLEAeU9eg.jpeg"
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-10_at_3.12.04_PM__2__veXf5YMH0.jpeg",
+        "fileId": "6a79ae835c7cd75eb89f9867",
+        "name": "WhatsApp_Image_2026-08-10_at_3.12.04_PM__2__veXf5YMH0.jpeg"
       }
     ],
     "emailFiles": [
       {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/SSSS_LIHNR8zqO.png",
-        "fileId": "6a7ae95e5c7cd75eb80eb471",
-        "name": "SSSS_LIHNR8zqO.png"
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/SSS_4eyhU6cj4.png",
+        "fileId": "6a79aefe5c7cd75eb8a1e638",
+        "name": "SSS_4eyhU6cj4.png"
       }
     ],
     "fieldFormFiles": [
       {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-11_at_1.43.11_PM_imojeCs-5.jpeg",
-        "fileId": "6a7ae8f55c7cd75eb80cea67",
-        "name": "WhatsApp_Image_2026-08-11_at_1.43.11_PM_imojeCs-5.jpeg"
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-10_at_3.21.01_PM_71aJNLTgl.jpeg",
+        "fileId": "6a79ae7d5c7cd75eb89f86cc",
+        "name": "WhatsApp_Image_2026-08-10_at_3.21.01_PM_71aJNLTgl.jpeg"
+      },
+      {
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-10_at_3.24.29_PM_VI8TC3VJQ.jpeg",
+        "fileId": "6a79ae7f5c7cd75eb89f8d61",
+        "name": "WhatsApp_Image_2026-08-10_at_3.24.29_PM_VI8TC3VJQ.jpeg"
       }
     ],
     "additionalFiles": [],
     "siteVisitVideo": [],
     "createdBy": "6a72f8c3ba8305cb326ed654",
     "bankName": "HomeFirst",
-    "city": "Jabalpur",
-    "approvalStatus": "Accepted",
+    "city": "Bhopal",
+    "approvalStatus": "FinalSubmitted",
     "isReportSubmitted": true,
-    "customerName": "Jitendra S/o Suresh Sahu",
-    "customerNo": "7415614819",
-    "addressSite": "Khasra No. 383, Ward No. 29, Village Sirohi, Tehsil Dabra, District Gwalior, Madhya Pradesh, 475110",
+    "customerName": " Gajendra Singh Dashrath Singh",
+    "customerNo": "8464568848",
+    "addressSite": "GWALIOR",
     "imageUrls": [
       {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-11_at_12.57.47_PM_JinbN8X_k.jpeg",
-        "fileId": "6a7ae8ea5c7cd75eb80cc405",
-        "name": "WhatsApp_Image_2026-08-11_at_12.57.47_PM_JinbN8X_k.jpeg"
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-10_at_3.12.00_PM_elvsh2Tc8.jpeg",
+        "fileId": "6a79ae775c7cd75eb89f753d",
+        "name": "WhatsApp_Image_2026-08-10_at_3.12.00_PM_elvsh2Tc8.jpeg"
       },
       {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-11_at_12.57.48_PM_4bLsf_9hT.jpeg",
-        "fileId": "6a7ae8ed5c7cd75eb80cd1f3",
-        "name": "WhatsApp_Image_2026-08-11_at_12.57.48_PM_4bLsf_9hT.jpeg"
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-10_at_3.12.01_PM__1__oMpNWR1yg.jpeg",
+        "fileId": "6a79ae7a5c7cd75eb89f7c2c",
+        "name": "WhatsApp_Image_2026-08-10_at_3.12.01_PM__1__oMpNWR1yg.jpeg"
       },
       {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-11_at_12.57.49_PM_I1FYLNaEb.jpeg",
-        "fileId": "6a7ae8ef5c7cd75eb80cd8df",
-        "name": "WhatsApp_Image_2026-08-11_at_12.57.49_PM_I1FYLNaEb.jpeg"
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-10_at_3.12.01_PM_Tf2kLKU6u.jpeg",
+        "fileId": "6a79ae7d5c7cd75eb89f8649",
+        "name": "WhatsApp_Image_2026-08-10_at_3.12.01_PM_Tf2kLKU6u.jpeg"
       },
       {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-11_at_12.57.50_PM__2BN0XoLS.jpeg",
-        "fileId": "6a7ae8f25c7cd75eb80ce120",
-        "name": "WhatsApp_Image_2026-08-11_at_12.57.50_PM__2BN0XoLS.jpeg"
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-10_at_3.12.02_PM__1__t0LfMTaL8.jpeg",
+        "fileId": "6a79ae7f5c7cd75eb89f8c25",
+        "name": "WhatsApp_Image_2026-08-10_at_3.12.02_PM__1__t0LfMTaL8.jpeg"
       },
       {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-11_at_12.57.51_PM_m2bCbql6z.jpeg",
-        "fileId": "6a7ae8f45c7cd75eb80ce8a1",
-        "name": "WhatsApp_Image_2026-08-11_at_12.57.51_PM_m2bCbql6z.jpeg"
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-10_at_3.12.02_PM__2__kc-FHB-dA.jpeg",
+        "fileId": "6a79ae815c7cd75eb89f940a",
+        "name": "WhatsApp_Image_2026-08-10_at_3.12.02_PM__2__kc-FHB-dA.jpeg"
       },
       {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-11_at_12.57.52_PM_6bouebEV-.jpeg",
-        "fileId": "6a7ae8f65c7cd75eb80cf0d2",
-        "name": "WhatsApp_Image_2026-08-11_at_12.57.52_PM_6bouebEV-.jpeg"
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-10_at_3.12.02_PM_HPQdIDGDg.jpeg",
+        "fileId": "6a79ae835c7cd75eb89f9a7c",
+        "name": "WhatsApp_Image_2026-08-10_at_3.12.02_PM_HPQdIDGDg.jpeg"
       },
       {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-11_at_12.57.53_PM_cqYFyaaNV.jpeg",
-        "fileId": "6a7ae8f95c7cd75eb80cf8c9",
-        "name": "WhatsApp_Image_2026-08-11_at_12.57.53_PM_cqYFyaaNV.jpeg"
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-10_at_3.12.03_PM__1__cyYde5J2f.jpeg",
+        "fileId": "6a79ae875c7cd75eb89fb541",
+        "name": "WhatsApp_Image_2026-08-10_at_3.12.03_PM__1__cyYde5J2f.jpeg"
       },
       {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-11_at_12.57.54_PM__1__lelXmAjLB.jpeg",
-        "fileId": "6a7ae8fb5c7cd75eb80d01c3",
-        "name": "WhatsApp_Image_2026-08-11_at_12.57.54_PM__1__lelXmAjLB.jpeg"
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-10_at_3.12.03_PM_wOWMKmWnc.jpeg",
+        "fileId": "6a79ae8a5c7cd75eb89fc913",
+        "name": "WhatsApp_Image_2026-08-10_at_3.12.03_PM_wOWMKmWnc.jpeg"
       },
       {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-11_at_12.57.54_PM__2__DBag-U-lP.jpeg",
-        "fileId": "6a7ae8fe5c7cd75eb80d0ed5",
-        "name": "WhatsApp_Image_2026-08-11_at_12.57.54_PM__2__DBag-U-lP.jpeg"
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-10_at_3.12.04_PM__1__aOk3ZI--A.jpeg",
+        "fileId": "6a79ae8c5c7cd75eb89fd805",
+        "name": "WhatsApp_Image_2026-08-10_at_3.12.04_PM__1__aOk3ZI--A.jpeg"
       },
       {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-11_at_12.57.54_PM_BB24sT_SM.jpeg",
-        "fileId": "6a7ae9005c7cd75eb80d146e",
-        "name": "WhatsApp_Image_2026-08-11_at_12.57.54_PM_BB24sT_SM.jpeg"
-      },
-      {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-11_at_12.57.55_PM__1__hTOuAT8bz.jpeg",
-        "fileId": "6a7ae9025c7cd75eb80d1e65",
-        "name": "WhatsApp_Image_2026-08-11_at_12.57.55_PM__1__hTOuAT8bz.jpeg"
-      },
-      {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-11_at_12.57.55_PM__2__h1rir6R5o.jpeg",
-        "fileId": "6a7ae9045c7cd75eb80d291c",
-        "name": "WhatsApp_Image_2026-08-11_at_12.57.55_PM__2__h1rir6R5o.jpeg"
-      },
-      {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-11_at_12.57.55_PM__3__sG2FlBDHN.jpeg",
-        "fileId": "6a7ae9065c7cd75eb80d3781",
-        "name": "WhatsApp_Image_2026-08-11_at_12.57.55_PM__3__sG2FlBDHN.jpeg"
-      },
-      {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-11_at_12.57.55_PM_BedV-BWrW.jpeg",
-        "fileId": "6a7ae9085c7cd75eb80d4250",
-        "name": "WhatsApp_Image_2026-08-11_at_12.57.55_PM_BedV-BWrW.jpeg"
-      },
-      {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-11_at_12.57.56_PM__1__-uw_pvslR.jpeg",
-        "fileId": "6a7ae90a5c7cd75eb80d4e51",
-        "name": "WhatsApp_Image_2026-08-11_at_12.57.56_PM__1__-uw_pvslR.jpeg"
-      },
-      {
-        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-11_at_12.57.56_PM_8EDB4vKYt.jpeg",
-        "fileId": "6a7ae90c5c7cd75eb80d5afb",
-        "name": "WhatsApp_Image_2026-08-11_at_12.57.56_PM_8EDB4vKYt.jpeg"
+        "url": "https://ik.imagekit.io/54awj0ru5/uploads/WhatsApp_Image_2026-08-10_at_3.12.04_PM_-9T8N8lHI.jpeg",
+        "fileId": "6a79ae8e5c7cd75eb89fea2e",
+        "name": "WhatsApp_Image_2026-08-10_at_3.12.04_PM_-9T8N8lHI.jpeg"
       }
     ],
     "valuationRemarks": [],
@@ -162,149 +109,20 @@
     "timeline": [
       {
         "status": "Work in Progress",
-        "updatedAt": "2026-08-12T01:14:34.882Z",
+        "updatedAt": "2026-08-11T08:44:35.053Z",
         "updatedBy": "6a72f8c3ba8305cb326ed654",
         "note": "Assigned to user 6a2a4ed58ddfdbd661279b46",
-        "_id": "6a7bc8fa8d9b06b657b98451"
-      },
-      {
-        "status": "Accepted",
-        "updatedAt": "2026-08-12T01:15:42.204Z",
-        "updatedBy": "6a2a4ed58ddfdbd661279b46",
-        "note": "Accepted by Field Officer",
-        "_id": "6a7bc93e8d9b06b657b9852a"
+        "_id": "6a7ae0f30720480ed00a3ce8"
       }
     ],
-    "dateOfReport": "11/08/2026",
-    "dateOfVisit": "11/08/2026",
-    "documents": [
-      {
-        "key": "1",
-        "type": "NA Converted",
-        "approvingAuthority": "NA",
-        "approvalDate": "",
-        "approvalDetails": "",
-        "_id": "6a7bcbea8d9b06b657b98741"
-      },
-      {
-        "key": "2",
-        "type": "Layout Plan",
-        "approvingAuthority": "MUNICIPAL",
-        "approvalDate": "",
-        "approvalDetails": "No",
-        "_id": "6a7bcbea8d9b06b657b98742"
-      },
-      {
-        "key": "3",
-        "type": "Building Plan",
-        "approvingAuthority": "MUNICIPAL",
-        "approvalDate": "",
-        "approvalDetails": "No",
-        "_id": "6a7bcbea8d9b06b657b98743"
-      },
-      {
-        "key": "4",
-        "type": "Commencement Certificate",
-        "approvingAuthority": "MUNICIPAL",
-        "approvalDate": "",
-        "approvalDetails": "No",
-        "_id": "6a7bcbea8d9b06b657b98744"
-      },
-      {
-        "key": "5",
-        "type": "Occupancy / Completion / Building Usage Certificate",
-        "approvingAuthority": "NA",
-        "approvalDate": "",
-        "approvalDetails": "",
-        "_id": "6a7bcbea8d9b06b657b98745"
-      },
-      {
-        "key": "6",
-        "type": "Sub Plotting Plan",
-        "approvingAuthority": "NA",
-        "approvalDate": "",
-        "approvalDetails": "",
-        "_id": "6a7bcbea8d9b06b657b98746"
-      }
-    ],
-    "createdAt": "2026-08-11T09:21:21.024Z",
-    "updatedAt": "2026-08-11T09:21:21.025Z",
+    "dateOfReport": "2026-08-10",
+    "dateOfVisit": "2026-08-10",
+    "documents": [],
+    "createdAt": "2026-08-10T10:59:31.971Z",
+    "updatedAt": "2026-08-10T10:59:31.974Z",
     "__v": 0,
+    "addressLegal": "GWALIOR",
     "assignedTo": "6a2a4ed58ddfdbd661279b46",
-    "route": "/bank/home-first/edit/6a7ae9910720480ed00a4117",
-    "addressLegal": "Khasra No. 383, Ward No. 29, Village Sirohi, Tehsil Dabra, District Gwalior, Madhya Pradesh, 475110",
-    "approachRoadType": "SOIL ROAD",
-    "approachRoadWidth": "20 feet",
-    "approxAgeOfProperty": "0",
-    "boundariesMatching": "PARTIAL",
-    "boundaryRemarks": "",
-    "constructionStage": "Vacant Plot / Not Constructed",
-    "constructionStatus": "Vacant Plot / Not Constructed",
-    "crZone": "NO",
-    "cycloneZone": "NO",
-    "demolitionRisk": "NO",
-    "demolitionRiskDetails": "NA",
-    "distanceFromBusStand": "",
-    "distanceFromCityCentre": "",
-    "distanceFromHospital": "",
-    "distanceFromRailwayStation": "",
-    "drainageAvailability": "YES",
-    "electricityAvailability": "YES",
-    "eraApplicable": "Nagar Palika Dabra",
-    "floodZone": "NO",
-    "followsNDMAGuidelines": "YES",
-    "habitationPercentage": "MEDIUM",
-    "howFoundOwnerName": "SALE DEED",
-    "landArea": "660 sq.ft.",
-    "landDocumentArea": "660 sq.ft.",
-    "landPlanArea": "660 sq.ft.",
-    "landSiteArea": "660 sq.ft.",
-    "landslideProneZone": "NO",
-    "latitude": "25.876694",
-    "liftAvailable": "No",
-    "linearDimension": "15 ft x 44 ft",
-    "localityDevelopment": "MEDIUM",
-    "locationCategory": "OTHER",
-    "longitude": "78.308859",
-    "marketability": "AVERAGE",
-    "nallahRiverHighTension": "Muddy/unpaved approach road",
-    "nameOnDoor": "NA",
-    "nameOnSocietyBoard": "",
-    "nearbyLandmark": "Behind Govt. Warehouse (MP Warehousing & Logistics Corporation)",
-    "nearestCityTown": "GWALIOR",
-    "noOfFloorsActual": "0",
-    "noOfFloorsPermissible": "NA",
-    "noOfUnitFlatOnEachFloor": "NA",
-    "occupancyPercentage": "50%",
-    "occupiedBy": "OWNER",
-    "personContactNo": "7415614819",
-    "personMetDuringVisit": "Jitendra Sahu",
-    "plotArea": "660 sq.ft.",
-    "plotNo": "",
-    "populationCensus2011": "10000",
-    "projectName": "",
-    "projectPinCode": "475110",
-    "propertyAreaLimits": "GP",
-    "propertyCategory": "INDIVIDUAL",
-    "propertyDemarcated": "YES",
-    "propertyEasilyIdentifiable": "YES",
-    "propertyLocation": "VILLAGE",
-    "propertyName": "Ward Colony - Gram Sirohi, Sirohi, Dabra, Gwalior",
-    "propertyOwnerName": "Jitendra S/o Suresh Sahu",
-    "qualityOfConstruction": "Average",
-    "realizableValue": "",
-    "refNo": "MP21IGR17392025A100674572",
-    "relationshipOfPersonMet": "SELF",
-    "residualAge": "0",
-    "ruralUrban": "RURAL",
-    "seismicZone": "II",
-    "statusOfOccupancy": "OCCUPIED",
-    "typeOfLoan": "OWN PLOT + SECO",
-    "typeOfRoof": "RCC",
-    "typeOfStructure": "RCC",
-    "unitType": "Open Plot",
-    "usageOfProperty": "RESIDENTIAL",
-    "waterAvailability": "YES",
-    "zone": "RESIDENTIAL"
+    "route": "/bank/home-first/edit/6a79af13075cc5f6dc383393"
   }
 }

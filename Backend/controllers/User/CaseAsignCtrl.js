@@ -1167,13 +1167,13 @@ exports.finalUpdate = async (req, res) => {
       route: sanitizedUpdateData.route || getBankMeta(modelKey).route,
       isReportSubmitted: sanitizedUpdateData.isReportSubmitted !== undefined 
         ? sanitizedUpdateData.isReportSubmitted 
-        : (isFO ? false : true),
+        : true,
       approvalStatus: sanitizedUpdateData.approvalStatus 
         ? sanitizedUpdateData.approvalStatus 
-        : (existingCase?.approvalStatus || (isFO ? "Work in Progress" : "Pending")),
+        : (isFO ? "Submitted" : "FinalSubmitted"),
       status: sanitizedUpdateData.status 
         ? sanitizedUpdateData.status 
-        : (existingCase?.status || (isFO ? "Work in Progress" : "Pending")),
+        : (isFO ? "Submitted" : "FinalSubmitted"),
     };
 
     // Sanitize populated objects — sirf _id chahiye, object nahi

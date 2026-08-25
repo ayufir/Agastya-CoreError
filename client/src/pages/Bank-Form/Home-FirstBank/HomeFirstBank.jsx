@@ -1083,7 +1083,7 @@ const normalizeQualityOfConstruction = (val) => {
       } else {
         await dispatch(createHFBanks(payload)).unwrap();
       }
-      navigate("/field/dashboard");
+      navigate(user?.role?.toLowerCase() === "fieldofficer" ? "/field/dashboard" : "/");
     } catch (error) {
       console.error(error);
       throw error;
@@ -1193,7 +1193,13 @@ const normalizeQualityOfConstruction = (val) => {
         ? new Date(finalData.createdAt)
         : (visitDate ? new Date(visitDate) : undefined);
 
-      let finalPayload = { ...finalData, city: savedCity };
+      let finalPayload = { 
+        ...finalData, 
+        city: savedCity,
+        status: "FinalSubmitted",
+        approvalStatus: "FinalSubmitted",
+        isReportSubmitted: true
+      };
       if (targetCreatedAt && !isNaN(targetCreatedAt.getTime())) {
         finalPayload.createdAt = targetCreatedAt;
       }
@@ -1493,6 +1499,8 @@ const normalizeQualityOfConstruction = (val) => {
                       onSubmit={(status) => {
                         if (status === "Generated") {
                           return handleAdminGenerate();
+                        } else if (status === "FinalSubmitted" || !isFieldOfficer) {
+                          return handleFinalSubmit();
                         } else {
                           return handleFOSubmit();
                         }
@@ -1821,6 +1829,8 @@ const normalizeQualityOfConstruction = (val) => {
                 onSubmit={(status) => {
                   if (status === "Generated") {
                     return handleAdminGenerate();
+                  } else if (status === "FinalSubmitted" || !isFieldOfficer) {
+                    return handleFinalSubmit();
                   } else {
                     return handleFOSubmit();
                   }

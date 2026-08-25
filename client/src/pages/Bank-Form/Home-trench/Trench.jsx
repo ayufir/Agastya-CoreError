@@ -357,7 +357,7 @@ const Trench = () => {
         await dispatch(updateHomeTrenchReport({ id, fullData: payload })).unwrap();
         await dispatch(finalUpdate({ id, bankName: "Home First Trench", updateData: { isReportSubmitted: false, status: "Work in Progress" } })).unwrap();
       }
-      navigate("/field/dashboard");
+      navigate(isFieldOfficer ? "/field/dashboard" : "/");
     } catch (error) {
       throw error;
     } finally {
@@ -459,7 +459,13 @@ const Trench = () => {
 
     setLoading(true);
     try {
-      const finalData = await buildPayload();
+      const rawData = await buildPayload();
+      const finalData = {
+        ...rawData,
+        status: "FinalSubmitted",
+        approvalStatus: "FinalSubmitted",
+        isReportSubmitted: true
+      };
       await dispatch(updateHomeTrenchReport({ id, fullData: finalData })).unwrap();
       await dispatch(
         finalUpdate({
@@ -615,6 +621,8 @@ const Trench = () => {
                         onSubmit={(status) => {
                           if (status === "Generated") {
                             return handleAdminGenerate();
+                          } else if (status === "FinalSubmitted" || !isFieldOfficer) {
+                            return handleFinalSubmit();
                           } else {
                             return handleFOSubmit();
                           }
@@ -1036,6 +1044,8 @@ const Trench = () => {
                 onSubmit={(status) => {
                   if (status === "Generated") {
                     return handleAdminGenerate();
+                  } else if (status === "FinalSubmitted" || !isFieldOfficer) {
+                    return handleFinalSubmit();
                   } else {
                     return handleFOSubmit();
                   }

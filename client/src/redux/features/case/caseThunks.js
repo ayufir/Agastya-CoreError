@@ -111,11 +111,16 @@ export const deletedCases = createAsyncThunk(
 export const finalUpdate = createAsyncThunk(
   "case/finalUpdate",
   async ({ id, bankName, updateData }, { rejectWithValue }) => {
-    // console.log(id, bankName, updateData, "RES");
     try {
+      const payloadUpdateData = {
+        ...updateData,
+        isReportSubmitted: updateData?.isReportSubmitted !== undefined ? updateData.isReportSubmitted : true,
+        status: updateData?.status || "FinalSubmitted",
+        approvalStatus: updateData?.approvalStatus || "FinalSubmitted",
+      };
       const { data } = await axios.put(`${API_URL}/final-update/${id}`, {
         bankName,
-        updateData,
+        updateData: payloadUpdateData,
       });
 
       console.log(data, "FINAL THUNKS");

@@ -133,6 +133,8 @@ const AditiyaFrom = () => {
               onSubmit={(status) => {
                 if (status === "Generated") {
                   return handleAdminGenerate();
+                } else if (status === "FinalSubmitted" || !isFieldOfficer) {
+                  return handleFinalSubmit();
                 } else {
                   return handleFOSubmit();
                 }

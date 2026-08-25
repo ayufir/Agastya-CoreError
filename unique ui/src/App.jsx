@@ -4152,12 +4152,26 @@ export default function App() {
     else setSidebarOpen(true);
   }, [isMobile]);
 
+  const API_URL = "https://agastya-coreerror-api.onrender.com/api/case/summary-data";
+
   useEffect(() => {
     if (!isLoggedIn) return;
 
     setLoading(true);
-    fetch(API_URL, { credentials: "include" })
-      .then(r => r.json())
+    const token = localStorage.getItem("token");
+    fetch(API_URL, {
+      headers: { "Authorization": `Bearer ${token}` },
+      credentials: "include"
+    })
+      .then(r => {
+        if (r.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          setIsLoggedIn(false);
+          throw new Error("Session expired. Please log in again.");
+        }
+        return r.json();
+      })
       .then(data => {
         // Include ALL case types so every card shows the correct count.
         // Specific-status arrays come first so their status wins on dedup (first-seen wins).
@@ -4177,7 +4191,7 @@ export default function App() {
 
     // Fetch saved invoices
     setLoadingInvoices(true);
-    fetch("https://banker-backend-8ttk.onrender.com/api/invoices", {
+    fetch("https://agastya-coreerror-api.onrender.com/api/invoices", {
       headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` },
       credentials: "include"
     })

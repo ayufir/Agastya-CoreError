@@ -688,6 +688,8 @@ const RemarksForm = ({
           onSubmit={(status) => {
             if (status === "Generated") {
               return onAdminGenerate(form);
+            } else if (status === "FinalSubmitted") {
+              return onFinalSubmit ? onFinalSubmit(form) : onSubmit(form);
             } else {
               return onSubmit(form);
             }

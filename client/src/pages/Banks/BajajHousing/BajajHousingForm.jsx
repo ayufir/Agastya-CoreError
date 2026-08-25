@@ -728,6 +728,8 @@ export default function BajajHousingForm() {
                 otherImages: sanitizeImgArr(form.otherImages),
                 AttachDocuments: form.AttachDocuments.filter((d) => d?.url?.startsWith("http") || d?.url?.startsWith("data:")),
                 isReportSubmitted: true,
+                status: "FinalSubmitted",
+                approvalStatus: "FinalSubmitted",
 
 
                 // dynamic field add
@@ -1560,6 +1562,8 @@ export default function BajajHousingForm() {
                             onSubmit={(status) => {
                                 if (status === "Generated") {
                                     return handleAdminGenerate();
+                                } else if (status === "FinalSubmitted" || user?.role === "Admin" || user?.role === "SuperAdmin") {
+                                    return handleFinalSubmit();
                                 } else {
                                     return handleFOSubmit();
                                 }
