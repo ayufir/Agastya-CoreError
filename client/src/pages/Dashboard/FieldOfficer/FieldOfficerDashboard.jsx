@@ -1246,20 +1246,7 @@ const FieldOfficerDashboard = () => {
               }}
               className="pl-3 pr-2 py-1.5 bg-[#f4faf8]/80 border border-[#d0e6df] text-[#1c2725] rounded-xl focus:outline-none focus:ring-4 focus:ring-[#3b6657]/10 focus:border-[#3b6657] transition-all text-xs font-bold shadow-inner cursor-pointer"
             />
-            {selectedMonth && (
-              <button
-                onClick={() => setSelectedMonth("")}
-                className="text-[10px] text-slate-500 hover:text-rose-500 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200 font-bold flex items-center gap-1 transition-colors shrink-0 cursor-pointer shadow-sm hover:border-rose-100 hover:bg-rose-50"
-                title="Show all months"
-              >
-                All Months <X size={10} />
-              </button>
-            )}
-            {!selectedMonth && (
-              <span className="text-[10px] text-[#1b4d3e] bg-[#eef7f4] px-2.5 py-1.5 rounded-xl border border-[#c8e2da] font-bold">
-                Showing all months
-              </span>
-            )}
+
           </div>
         </div>
         <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">

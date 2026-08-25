@@ -85,7 +85,8 @@ const Trench = () => {
   const [showAutoFill, setShowAutoFill] = useState(true);
   const [isPropertyDetailsOpen, setIsPropertyDetailsOpen] = useState(false);
   const [showFullBankForm, setShowFullBankForm] = useState(false);
-  const isFieldOfficer = user?.role?.toLowerCase() === "fieldofficer";
+  const roleNormalized = (user?.role || "").toLowerCase().replace(/[\s_]+/g, "");
+  const isFieldOfficer = roleNormalized === "fieldofficer";
 
   const watchedVisitedPersonName = Form.useWatch("visitedPersonName", form);
   const watchedContactNumber = Form.useWatch("contactNumber", form);
@@ -261,11 +262,11 @@ const Trench = () => {
   }, [fetchReport, form, id, initialValues, isFieldOfficer, navigate]);
 
   useEffect(() => {
-    if (user?.role !== "FieldOfficer" || id) return;
+    if (!isFieldOfficer || id) return;
 
     const timeout = setTimeout(() => geoRef.current?.getLocation(), 150);
     return () => clearTimeout(timeout);
-  }, [id, user?.role]);
+  }, [id, isFieldOfficer]);
 
   const handleLocationChange = (latitude, longitude) => {
     form.setFieldsValue({ latitude, longitude });
@@ -349,10 +350,12 @@ const Trench = () => {
         imageUrls: uploadedUrls,
         atsDocuments: atsDocuments,
         city: savedCity,
-        isReportSubmitted: true
+        isReportSubmitted: false,
+        status: "Work in Progress"
       };
       if (id) {
         await dispatch(updateHomeTrenchReport({ id, fullData: payload })).unwrap();
+        await dispatch(finalUpdate({ id, bankName: "Home First Trench", updateData: { isReportSubmitted: false, status: "Work in Progress" } })).unwrap();
       }
       navigate("/field/dashboard");
     } catch (error) {
@@ -546,25 +549,27 @@ const Trench = () => {
               )}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }} onClick={(e) => e.stopPropagation()}>
-              <button
-                onClick={handleDownloadAll}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  background: "#f8fafc",
-                  border: "1px solid #e2e8f0",
-                  padding: "6px 12px",
-                  borderRadius: "8px",
-                  fontSize: "12px",
-                      fontWeight: 600,
-                      color: "#475569",
-                      cursor: "pointer",
-                      transition: "all 0.2s"
-                    }}
-                  >
-                    <Download size={14} /> Download All (ZIP)
-                  </button>
+                  {!isFieldOfficer && (
+                    <button
+                      onClick={handleDownloadAll}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        background: "#f8fafc",
+                        border: "1px solid #e2e8f0",
+                        padding: "6px 12px",
+                        borderRadius: "8px",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        color: "#475569",
+                        cursor: "pointer",
+                        transition: "all 0.2s"
+                      }}
+                    >
+                      <Download size={14} /> Download All (ZIP)
+                    </button>
+                  )}
                   <button
                     onClick={() => setShowAutoFill(!showAutoFill)}
                     style={{
@@ -653,7 +658,7 @@ const Trench = () => {
             )}
             */}
 
-            {(!isFieldOfficer || showFullBankForm) && (
+            {!isFieldOfficer && (
               <>
                 <div style={{
                   background: "#ffffff",
@@ -793,33 +798,35 @@ const Trench = () => {
             <b>{reportData?.propertyCode || "Not available"}</b>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#fffbe8", border: "1.5px solid #f59e0b", padding: "6px 14px", borderRadius: "10px", boxShadow: "0 2px 6px rgba(245,158,11,0.15)" }}>
-          <span style={{ fontSize: "12px", fontWeight: "700", color: "#b45309", display: "flex", alignItems: "center", gap: "4px" }}>
-            📅 Case Date & Time (Back Date):
-          </span>
-          <input
-            type="datetime-local"
-            value={formatDateTimeLocal(form.getFieldValue("createdAt") || reportData?.createdAt || new Date())}
-            onChange={(e) => {
-              const val = e.target.value;
-              if (val) {
-                form.setFieldsValue({ createdAt: dayjs(val) });
-              }
-            }}
-            style={{
-              height: "32px",
-              borderRadius: "6px",
-              border: "1px solid #d97706",
-              padding: "0 8px",
-              fontSize: "12px",
-              fontWeight: "700",
-              color: "#1f2937",
-              backgroundColor: "#ffffff",
-              cursor: "pointer",
-              outline: "none"
-            }}
-          />
-        </div>
+        {!isFieldOfficer && (
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#fffbe8", border: "1.5px solid #f59e0b", padding: "6px 14px", borderRadius: "10px", boxShadow: "0 2px 6px rgba(245,158,11,0.15)" }}>
+            <span style={{ fontSize: "12px", fontWeight: "700", color: "#b45309", display: "flex", alignItems: "center", gap: "4px" }}>
+              📅 Case Date & Time (Back Date):
+            </span>
+            <input
+              type="datetime-local"
+              value={formatDateTimeLocal(form.getFieldValue("createdAt") || reportData?.createdAt || new Date())}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val) {
+                  form.setFieldsValue({ createdAt: dayjs(val) });
+                }
+              }}
+              style={{
+                height: "32px",
+                borderRadius: "6px",
+                border: "1px solid #d97706",
+                padding: "0 8px",
+                fontSize: "12px",
+                color: "#78350f",
+                fontWeight: "600",
+                background: "#ffffff",
+                cursor: "pointer",
+                outline: "none"
+              }}
+            />
+          </div>
+        )}
       </section>
 
       <main className="trench-shell">

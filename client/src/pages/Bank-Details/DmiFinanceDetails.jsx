@@ -115,6 +115,17 @@ const DmiFinanceDetails = () => {
   if (loading || !d)
     return <Spin className='flex justify-center mt-10' size='large' />;
 
+  const handleExportJSON = () => {
+    const exportData = d || {};
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `DMI_Formatted_Report_${id || "details"}.json`);
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  };
+
   return (
     <div className='p-6 space-y-6 bg-gray-100 ' id='print-section'>
       <Title level={3} className='text-center'>
@@ -140,6 +151,13 @@ const DmiFinanceDetails = () => {
           className='bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600'
         >
           Export to CSV
+        </button>
+
+        <button
+          onClick={handleExportJSON}
+          className='bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700'
+        >
+          Export to JSON
         </button>
       </div>
       {/* <FileDownload data={d} tableId='reportTable' name={"DMI"} /> */}

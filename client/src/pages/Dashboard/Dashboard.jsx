@@ -779,7 +779,7 @@ const Dashboard = () => {
 
       // 1. Generated case file & Work in Progress (Pending)
       baseReports.push({
-        title: "Pending Cases (Generated & WIP)",
+        title: "Pending Cases",
         total: cardCounts.pending,
         component: "Pending",
         declinedCount: cardCounts.declined,
@@ -1105,44 +1105,7 @@ const Dashboard = () => {
                         onChange={e => { setSelectedMonth(e.target.value); setActiveComponent(""); clearBankView(); }}
                         className="filter-input" style={{ width:150 }} />
                     </div>
-                    {selectedMonth ? (
-                      <button
-                        type="button"
-                        onClick={() => { setSelectedMonth(""); setActiveComponent(""); clearBankView(); }}
-                        style={{
-                          height: 36,
-                          padding: "0 12px",
-                          borderRadius: 9,
-                          border: "1.5px solid #cbd5e1",
-                          background: "#f1f5f9",
-                          color: "#334155",
-                          fontSize: 12,
-                          fontWeight: 700,
-                          cursor: "pointer",
-                          transition: "all 0.2s ease"
-                        }}
-                        title="Show cases from all months"
-                      >
-                        🌐 All Months
-                      </button>
-                    ) : (
-                      <span
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          height: 36,
-                          padding: "0 10px",
-                          borderRadius: 9,
-                          background: "#e0f2fe",
-                          color: "#0369a1",
-                          fontSize: 11,
-                          fontWeight: 700,
-                          border: "1px solid #bae6fd"
-                        }}
-                      >
-                        Showing All Months
-                      </span>
-                    )}
+
                   </div>
                   {/* Total Cases — always on same line as Month */}
                   <div style={{ marginLeft:"auto", textAlign:"right", flex:"0 0 auto" }}>
@@ -1180,8 +1143,8 @@ const Dashboard = () => {
                       <div className="stat-card-value" style={{ color:m.color }}>
                         <CountUp end={Number(r.total)||0} duration={1.2} separator="," />
                       </div>
-                      {/* Show Generated + WIP Breakdown sub-badge on Pending Cases card */}
-                      {r.component === "Pending" && (
+                      {/* Generated + WIP Breakdown sub-badge on Pending Cases card (hidden for now) */}
+                      {/* {r.component === "Pending" && (
                         <div style={{
                           marginTop: 6,
                           display: "inline-flex",
@@ -1198,7 +1161,7 @@ const Dashboard = () => {
                         }}>
                           📁 {r.generatedCount || 0} Generated + ⚙️ {r.workingCount || 0} WIP
                         </div>
-                      )}
+                      )} */}
                       {/* Show FO Declined sub-badge on "To Be Assigned" card */}
                       {r.declinedCount > 0 && (
                         <div style={{

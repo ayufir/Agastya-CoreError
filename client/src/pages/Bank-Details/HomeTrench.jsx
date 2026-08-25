@@ -215,6 +215,17 @@ const HomeTrench = () => {
     saveAs(blob, "Baja_Ameriya_Report.csv");
   };
 
+  const handleExportJSON = () => {
+    const exportData = reportData || {};
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `Baja_Ameriya_Report_${id || "details"}.json`);
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  };
+
   return (
     <div className='w-full border p-3'>
       {/* Wrapper for the entire content */}
@@ -234,9 +245,15 @@ const HomeTrench = () => {
           </button>
           <button
             onClick={handleExportCSV}
-            className='bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded'
+            className='mr-2.5 bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded'
           >
             Download CSV
+          </button>
+          <button
+            onClick={handleExportJSON}
+            className='bg-amber-600 hover:bg-amber-800 text-white font-bold py-2 px-4 rounded'
+          >
+            Download JSON
           </button>
         </div>
       </div>

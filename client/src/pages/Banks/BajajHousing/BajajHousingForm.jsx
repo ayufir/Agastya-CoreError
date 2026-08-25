@@ -657,14 +657,19 @@ export default function BajajHousingForm() {
                 selfieImages: sanitizeImgArr(form.selfieImages),
                 otherImages: sanitizeImgArr(form.otherImages),
                 AttachDocuments: form.AttachDocuments.filter((d) => d?.url?.startsWith("http") || d?.url?.startsWith("data:")),
-                isReportSubmitted: true,
+                isReportSubmitted: false,
+                status: "Work in Progress",
             };
             if (id) {
                 await dispatch(updateBajajHousingDetails({ id, ...payload })).unwrap();
+                await dispatch(finalUpdate({ id, bankName: "bajaj-housing", updateData: { isReportSubmitted: false, status: "Work in Progress" } })).unwrap();
             } else {
-                await dispatch(createBajajHousing(payload)).unwrap();
+                const res = await dispatch(createBajajHousing(payload)).unwrap();
+                if (res?._id) {
+                    await dispatch(finalUpdate({ id: res._id, bankName: "bajaj-housing", updateData: { isReportSubmitted: false, status: "Work in Progress" } })).unwrap();
+                }
             }
-            navigate("/");
+            navigate("/field/dashboard");
         } catch (err) {
             console.error(err);
             throw err;

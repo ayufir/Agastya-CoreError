@@ -75,6 +75,17 @@ const ProfectusDetails = () => {
     saveAs(blob, "Profectus_Technical_Report.csv");
   };
 
+  const handleExportJSON = () => {
+    const exportData = data || {};
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `Profectus_Technical_Report_${id || "details"}.json`);
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  };
+
   return (
     <div className='p-2'>
       <div className='mb-5 text-right'>
@@ -84,7 +95,10 @@ const ProfectusDetails = () => {
         <Button onClick={handleExportExcel} className='mr-2'>
           Download Excel
         </Button>
-        <Button onClick={handleExportCSV}>Download CSV</Button>
+        <Button onClick={handleExportCSV} className='mr-2'>
+          Download CSV
+        </Button>
+        <Button onClick={handleExportJSON}>Download JSON</Button>
       </div>
 
       <div id='radio' className='w-full h-full'>

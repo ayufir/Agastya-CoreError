@@ -693,7 +693,8 @@ export default function AdityaBirlaForm() {
     const BD = form.boundaryDetails;
     const E = form.engineerDetails;
 
-    const isFieldOfficer = user?.role?.toLowerCase() === "fieldofficer";
+    const roleNormalized = (user?.role || "").toLowerCase().replace(/[\s_]+/g, "");
+    const isFieldOfficer = roleNormalized === "fieldofficer";
 
     if (isFieldOfficer) {
         return (
@@ -929,16 +930,18 @@ export default function AdityaBirlaForm() {
                 </button>
             </div>
 
-            <div className="no-print w-full flex justify-end">
-                <div className="bg-[#fff4f4] border border-[#B5121B] px-3 py-1.5 rounded-lg shadow-sm">
-                    <input
-                        className="outline-none bg-transparent text-xs text-[#B5121B] font-medium text-right"
-                        type="datetime-local"
-                        value={B?.createdAt || ""}
-                        onChange={e => set("basicDetails", "createdAt", e.target.value)}
-                    />
-                </div>
-            </div>
+            {!isFieldOfficer && (
+              <div className="no-print w-full flex justify-end">
+                  <div className="bg-[#fff4f4] border border-[#B5121B] px-3 py-1.5 rounded-lg shadow-sm">
+                      <input
+                          className="outline-none bg-transparent text-xs text-[#B5121B] font-medium text-right"
+                          type="datetime-local"
+                          value={B?.createdAt || ""}
+                          onChange={e => set("basicDetails", "createdAt", e.target.value)}
+                      />
+                  </div>
+              </div>
+            )}
 
             {/* Report Content */}
             <div className="p-4 print:p-0">

@@ -107,6 +107,17 @@ export const AgriwiseDetails = () => {
     saveAs(blob, "Agriwise_Finance_Report.csv");
   };
 
+  const handleExportJSON = () => {
+    const exportData = reportData || {};
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `Agriwise_Finance_Report_${id || "details"}.json`);
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  };
+
   return (
     <div className='p-4'>
       <div className='mb-4 text-right'>
@@ -124,9 +135,15 @@ export const AgriwiseDetails = () => {
         </button>
         <button
           onClick={handleExportCSV}
-          className='bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded'
+          className='mr-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded'
         >
           Download CSV
+        </button>
+        <button
+          onClick={handleExportJSON}
+          className='bg-purple-600 hover:bg-purple-800 text-white font-bold py-2 px-4 rounded'
+        >
+          Download JSON
         </button>
       </div>
 

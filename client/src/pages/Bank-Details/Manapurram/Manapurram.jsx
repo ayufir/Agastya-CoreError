@@ -1561,6 +1561,16 @@ export default function ManappuramForm() {
         </div>
     );
 
+    const handleDownloadJson = () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(form, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", `manappuram_report_${id || "data"}.json`);
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    };
+
     return (
         <div
             id="print-section"
@@ -1622,6 +1632,12 @@ export default function ManappuramForm() {
                     className="bg-blue-700 hover:bg-blue-800 text-white px-3 py-1.5 rounded text-xs font-medium"
                 >
                     📄 Download PDF
+                </button>
+                <button
+                    onClick={handleDownloadJson}
+                    className="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded text-xs font-medium"
+                >
+                    📋 Download JSON
                 </button>
             </div>
 

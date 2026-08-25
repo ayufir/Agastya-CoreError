@@ -395,7 +395,8 @@ const IciciBank = () => {
   const { id } = useParams();
   const user = useSelector((state) => state.auth.user);
   const savedCity = useSelector((state) => state.assignedCases.savedCity);
-  const isFieldOfficer = user?.role?.toLowerCase() === "fieldofficer";
+  const roleNormalized = (user?.role || "").toLowerCase().replace(/[\s_]+/g, "");
+  const isFieldOfficer = roleNormalized === "fieldofficer";
 
 
   useEffect(() => {
@@ -944,50 +945,52 @@ const IciciBank = () => {
               <h1 className="text-xl font-bold text-[#0f172a]">
                 Technical Individual Assignment
               </h1>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#fffbe8", border: "1.5px solid #f59e0b", padding: "6px 14px", borderRadius: "10px", boxShadow: "0 2px 6px rgba(245,158,11,0.15)" }}>
-                <span style={{ fontSize: "12px", fontWeight: "700", color: "#b45309", display: "flex", alignItems: "center", gap: "4px" }}>
-                  📅 Case Date & Time (Back Date):
-                </span>
-                <input
-                  type="datetime-local"
-                  value={formatDateTimeLocal(formData.createdAt || editData?.createdAt || new Date())}
-                  onChange={async (e) => {
-                    const val = e.target.value;
-                    setFormData((prev) => ({ ...prev, createdAt: val, uploadDate: val, dateOfVisit: val, visitDate: val }));
-                    setEditData((prev) => ({ ...prev, createdAt: val, uploadDate: val, dateOfVisit: val, visitDate: val }));
-                    if (id && val) {
-                      try {
-                        const dt = new Date(val);
-                        if (!isNaN(dt.getTime())) {
-                          const dateIso = dt.toISOString();
-                          const datePayload = {
-                            createdAt: dateIso,
-                            uploadDate: dateIso,
-                            dateOfVisit: dateIso,
-                            visitDate: dateIso,
-                          };
-                          await dispatch(updateIciciBank({ id, formData: datePayload })).unwrap();
-                          await dispatch(finalUpdate({ id, bankName: "Icici", updateData: datePayload })).unwrap();
+                  {!isFieldOfficer && (
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#fffbe8", border: "1.5px solid #f59e0b", padding: "6px 14px", borderRadius: "10px", boxShadow: "0 2px 6px rgba(245,158,11,0.15)" }}>
+                  <span style={{ fontSize: "12px", fontWeight: "700", color: "#b45309", display: "flex", alignItems: "center", gap: "4px" }}>
+                    📅 Case Date & Time (Back Date):
+                  </span>
+                  <input
+                    type="datetime-local"
+                    value={formatDateTimeLocal(formData.createdAt || editData?.createdAt || new Date())}
+                    onChange={async (e) => {
+                      const val = e.target.value;
+                      setFormData((prev) => ({ ...prev, createdAt: val, uploadDate: val, dateOfVisit: val, visitDate: val }));
+                      setEditData((prev) => ({ ...prev, createdAt: val, uploadDate: val, dateOfVisit: val, visitDate: val }));
+                      if (id && val) {
+                        try {
+                          const dt = new Date(val);
+                          if (!isNaN(dt.getTime())) {
+                            const dateIso = dt.toISOString();
+                            const datePayload = {
+                              createdAt: dateIso,
+                              uploadDate: dateIso,
+                              dateOfVisit: dateIso,
+                              visitDate: dateIso,
+                            };
+                            await dispatch(updateIciciBank({ id, formData: datePayload })).unwrap();
+                            await dispatch(finalUpdate({ id, bankName: "Icici", updateData: datePayload })).unwrap();
+                          }
+                        } catch (err) {
+                          console.error("Auto date update error:", err);
                         }
-                      } catch (err) {
-                        console.error("Auto date update error:", err);
                       }
-                    }
-                  }}
-                  style={{
-                    height: "34px",
-                    borderRadius: "6px",
-                    border: "1px solid #d97706",
-                    padding: "0 10px",
-                    fontSize: "13px",
-                    fontWeight: "700",
-                    color: "#1f2937",
-                    backgroundColor: "#ffffff",
-                    cursor: "pointer",
-                    outline: "none"
-                  }}
-                />
-              </div>
+                    }}
+                    style={{
+                      height: "32px",
+                      borderRadius: "6px",
+                      border: "1px solid #d97706",
+                      padding: "0 8px",
+                      fontSize: "12px",
+                      fontWeight: "700",
+                      color: "#1f2937",
+                      backgroundColor: "#ffffff",
+                      cursor: "pointer",
+                      outline: "none"
+                    }}
+                  />
+                </div>
+              )}
             </div>
             
             {/* AI Advanced Auto Fill Accordion */}
@@ -1024,39 +1027,41 @@ const IciciBank = () => {
                     }}>AI Powered</span>
 
                     {/* Download All ZIP Button */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDownloadAll();
-                      }}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 6,
-                        marginLeft: 12,
-                        padding: "6px 12px",
-                        background: "linear-gradient(135deg, #10b981, #059669)",
-                        color: "#ffffff",
-                        border: "none",
-                        borderRadius: 8,
-                        fontSize: 11,
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        boxShadow: "0 2px 6px rgba(16, 185, 129, 0.25)",
-                        transition: "all 0.15s ease",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = "translateY(-1px)";
-                        e.currentTarget.style.boxShadow = "0 4px 10px rgba(16, 185, 129, 0.35)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = "translateY(0)";
-                        e.currentTarget.style.boxShadow = "0 2px 6px rgba(16, 185, 129, 0.25)";
-                      }}
-                    >
-                      <Download size={12} /> Download All (ZIP)
-                    </button>
+                    {!isFieldOfficer && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDownloadAll();
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                          marginLeft: 12,
+                          padding: "6px 12px",
+                          background: "linear-gradient(135deg, #10b981, #059669)",
+                          color: "#ffffff",
+                          border: "none",
+                          borderRadius: 8,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                          boxShadow: "0 2px 6px rgba(16, 185, 129, 0.25)",
+                          transition: "all 0.15s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = "translateY(-1px)";
+                          e.currentTarget.style.boxShadow = "0 4px 10px rgba(16, 185, 129, 0.35)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = "translateY(0)";
+                          e.currentTarget.style.boxShadow = "0 2px 6px rgba(16, 185, 129, 0.25)";
+                        }}
+                      >
+                        <Download size={12} /> Download All (ZIP)
+                      </button>
+                    )}
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{

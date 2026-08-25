@@ -83,6 +83,17 @@ const IdfcBank = () => {
     saveAs(blob, "IDFC_Technical_Report.csv");
   };
 
+  const handleExportJSON = () => {
+    const exportData = data || {};
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `IDFC_Technical_Report_${id || "details"}.json`);
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  };
+
   return (
     <div className='p-2'>
       <div className='mb-5 text-right'>
@@ -100,9 +111,15 @@ const IdfcBank = () => {
         </button>
         <button
           onClick={handleExportCSV}
-          className='bg-purple-500 text-white px-4 py-2 rounded'
+          className='bg-purple-500 text-white px-4 py-2 rounded mr-2'
         >
           Download CSV
+        </button>
+        <button
+          onClick={handleExportJSON}
+          className='bg-amber-600 text-white px-4 py-2 rounded'
+        >
+          Download JSON
         </button>
       </div>
 

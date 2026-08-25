@@ -75,6 +75,17 @@ const SamstaFln = () => {
     saveAs(blob, 'Samasta_Technical_Report.csv');
   };
 
+  const handleExportJSON = () => {
+    const exportData = reportData || {};
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `Samasta_Technical_Report_${id || "details"}.json`);
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  };
+
   // Format date from YYYY-MM-DD to DD.MM.YYYY
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -99,9 +110,15 @@ const SamstaFln = () => {
         </button>
         <button
           onClick={handleExportCSV}
-          className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+          className="mr-2.5 px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
         >
           Download CSV
+        </button>
+        <button
+          onClick={handleExportJSON}
+          className="px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700"
+        >
+          Download JSON
         </button>
       </div>
       <div id="radio" className="w-full h-full">

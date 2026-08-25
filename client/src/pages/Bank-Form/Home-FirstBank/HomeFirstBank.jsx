@@ -86,7 +86,8 @@ const HomeFirstBank = () => {
   const { loading: apiLoading, error } = useSelector((state) => state.hfBanks);
   const [loading, setLoading] = useState(false);
   const user = useSelector((state) => state.auth.user);
-  const isFieldOfficer = user?.role?.toLowerCase() === "fieldofficer";
+  const roleNormalized = (user?.role || "").toLowerCase().replace(/[\s_]+/g, "");
+  const isFieldOfficer = roleNormalized === "fieldofficer";
   const savedCity = useSelector((state) => state.assignedCases.savedCity);
   const navigate = useNavigate();
   const { id } = useParams();
@@ -1075,13 +1076,14 @@ const normalizeQualityOfConstruction = (val) => {
   const handleFOSubmit = async () => {
     setLoading(true);
     try {
-      const payload = { ...isEdit, ...extractedData, city: savedCity, isReportSubmitted: true };
+      const payload = { ...isEdit, ...extractedData, city: savedCity, isReportSubmitted: false, status: "Work in Progress" };
       if (id) {
         await dispatch(updateDetails({ id, ...payload })).unwrap();
+        await dispatch(finalUpdate({ id, bankName: "home-first", updateData: { isReportSubmitted: false, status: "Work in Progress" } })).unwrap();
       } else {
         await dispatch(createHFBanks(payload)).unwrap();
       }
-      navigate("/");
+      navigate("/field/dashboard");
     } catch (error) {
       console.error(error);
       throw error;
@@ -1344,21 +1346,23 @@ const normalizeQualityOfConstruction = (val) => {
         </div>
 
         {/* Date picker */}
-        <div className="form-sub-header-date-container">
-          <input
-            type="datetime-local"
-            onChange={(e) => setCreatedDate(e.target.value)}
-            style={{
-              outline: "none",
-              background: "transparent",
-              fontSize: 11,
-              color: "#B5121B",
-              fontWeight: 600,
-              border: "none",
-              width: "100%",
-            }}
-          />
-        </div>
+        {!isFieldOfficer && (
+          <div className="form-sub-header-date-container">
+            <input
+              type="datetime-local"
+              onChange={(e) => setCreatedDate(e.target.value)}
+              style={{
+                outline: "none",
+                background: "transparent",
+                fontSize: 11,
+                color: "#B5121B",
+                fontWeight: 600,
+                border: "none",
+                width: "100%",
+              }}
+            />
+          </div>
+        )}
       </header>
 
       {/* ── AI Advanced Auto Fill (Admin/SuperAdmin only) ── */}
@@ -1402,38 +1406,40 @@ const normalizeQualityOfConstruction = (val) => {
                 }}>AI Powered</span>
 
                 {/* Download All ZIP Button next to the title */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDownloadAll();
-                  }}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    marginLeft: 12,
-                    padding: "6px 12px",
-                    background: "linear-gradient(135deg, #10b981, #059669)",
-                    color: "#ffffff",
-                    border: "none",
-                    borderRadius: 8,
-                    fontSize: 11,
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    boxShadow: "0 2px 6px rgba(16, 185, 129, 0.25)",
-                    transition: "all 0.15s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-1px)";
-                    e.currentTarget.style.boxShadow = "0 4px 10px rgba(16, 185, 129, 0.35)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 2px 6px rgba(16, 185, 129, 0.25)";
-                  }}
-                >
-                  <Download size={12} /> Download All (ZIP)
-                </button>
+                {!isFieldOfficer && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDownloadAll();
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      marginLeft: 12,
+                      padding: "6px 12px",
+                      background: "linear-gradient(135deg, #10b981, #059669)",
+                      color: "#ffffff",
+                      border: "none",
+                      borderRadius: 8,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      cursor: "pointer",
+                      boxShadow: "0 2px 6px rgba(16, 185, 129, 0.25)",
+                      transition: "all 0.15s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-1px)";
+                      e.currentTarget.style.boxShadow = "0 4px 10px rgba(16, 185, 129, 0.35)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow = "0 2px 6px rgba(16, 185, 129, 0.25)";
+                    }}
+                  >
+                    <Download size={12} /> Download All (ZIP)
+                  </button>
+                )}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <span style={{
@@ -1530,7 +1536,7 @@ const normalizeQualityOfConstruction = (val) => {
         )}
         */}
 
-        {(!isFieldOfficer || showFullBankForm) && (
+        {!isFieldOfficer && (
           <>
             {/* Collapsible Property Details Panel */}
             <div style={{ maxWidth: 1280, margin: "20px auto 0", padding: "0 16px" }}>

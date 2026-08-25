@@ -13,7 +13,8 @@ const CaseWorkflowActions = ({
   status = "",   // Case status from DB
 }) => {
   const user = useSelector((state) => state.auth.user);
-  const isFieldOfficer = user?.role?.toLowerCase() === "fieldofficer";
+  const roleNormalized = (user?.role || "").toLowerCase().replace(/[\s_]+/g, "");
+  const isFieldOfficer = roleNormalized === "fieldofficer";
 
   const handleGenerateCase = async () => {
     if (onSubmit) {

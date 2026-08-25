@@ -499,7 +499,8 @@ const AdvancedAutoFillForm = ({
   isSubmitted = false
 }) => {
   const user = useSelector((state) => state.auth.user);
-  const isFieldOfficer = user?.role?.toLowerCase() === "fieldofficer";
+  const roleNormalized = (user?.role || "").toLowerCase().replace(/[\s_]+/g, "");
+  const isFieldOfficer = roleNormalized === "fieldofficer";
   const { id: caseId } = useParams();
 
   const [atsDocsList, setAtsDocsList] = useState([]);
@@ -1984,7 +1985,7 @@ if (typeof setFormDataDirect === "function") {
       )}
 
       {/* Results panel */}
-      {(sourceSummary || 
+      {!isFieldOfficer && (sourceSummary || 
         auditNotes.length > 0 || 
         uploadedPhotoUrls.length > 0 || 
         uploadedVideoUrls.length > 0 || 

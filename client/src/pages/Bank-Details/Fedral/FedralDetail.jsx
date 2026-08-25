@@ -71,6 +71,17 @@ export const Fed = () => {
     saveAs(blob, 'Technical_Report.csv');
   };
 
+  const handleExportJSON = () => {
+    const exportData = data || {};
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `Federal_Technical_Report_${id || "details"}.json`);
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  };
+
   return (
     <div style={{ padding: 20 }}>
       {/* Export Buttons */}
@@ -89,9 +100,15 @@ export const Fed = () => {
         </button>
         <button 
           onClick={handleExportCSV}
-          style={{ padding: '8px 16px', cursor: 'pointer' }}
+          style={{ marginRight: 10, padding: '8px 16px', cursor: 'pointer' }}
         >
           Download CSV
+        </button>
+        <button 
+          onClick={handleExportJSON}
+          style={{ padding: '8px 16px', cursor: 'pointer' }}
+        >
+          Download JSON
         </button>
       </div>
 

@@ -383,6 +383,22 @@ const FileDownload = ({ data, name, tableId }) => {
     URL.revokeObjectURL(url); // Clean up
   };
 
+  const handleStructureExportJSON = () => {
+    const exportData = data || {};
+    const dataStr =
+      "data:text/json;charset=utf-8," +
+      encodeURIComponent(JSON.stringify(exportData, null, 2));
+    const downloadAnchorNode = document.createElement("a");
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute(
+      "download",
+      `${name || "report"}_${data?.applicantName || data?.clientName || data?._id || "details"}.json`
+    );
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  };
+
   return (
     <div>
       <div className='flex justify-end gap-4 my-4 px-4'>
@@ -403,6 +419,12 @@ const FileDownload = ({ data, name, tableId }) => {
           className='bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600'
         >
           Export to CSV
+        </button>
+        <button
+          onClick={handleStructureExportJSON}
+          className='bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700'
+        >
+          Export to JSON
         </button>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { Upload, Button, Spin, Modal } from "antd";
 import LazyImage from "./LazyImage";
 import {
@@ -42,6 +43,9 @@ const ImageUploader = ({
   const [previewVisible, setPreviewVisible] = useState(false);
   const [stagedUploads, setStagedUploads] = useState([]);
   const { id } = useParams();
+  const user = useSelector((state) => state.auth?.user);
+  const roleNormalized = (user?.role || "").toLowerCase().replace(/[\s_]+/g, "");
+  const isFieldOfficer = roleNormalized === "fieldofficer";
 
   const currentImages = Array.isArray(images) ? images : internalImages;
   const updateImages =
@@ -589,14 +593,16 @@ const ImageUploader = ({
             </Upload>
 
             <div className="flex flex-row md:flex-col gap-2 self-start mt-2 md:mt-0">
-              <Button
-                icon={<DownloadOutlined />}
-                onClick={handleDownloadAll}
-                type="dashed"
-                block
-              >
-                Download All
-              </Button>
+              {!isFieldOfficer && (
+                <Button
+                  icon={<DownloadOutlined />}
+                  onClick={handleDownloadAll}
+                  type="dashed"
+                  block
+                >
+                  Download All
+                </Button>
+              )}
               <Button
                 icon={<CloudUploadOutlined />}
                 onClick={handleUploadToServer}

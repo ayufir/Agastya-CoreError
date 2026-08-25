@@ -734,6 +734,20 @@ Please review this letter, sign it, and upload it back within 5 working days to 
     toast.success("Excel report exported successfully!");
   };
 
+  const handleExportJSON = () => {
+    const data = getFilteredReportData();
+    if (data.length === 0) return toast.error("No records found for current filter configuration");
+
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+    const downloadAnchorNode = document.createElement("a");
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `HRMS_${reportConfig.type}_Report.json`);
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+    toast.success("JSON report exported successfully!");
+  };
+
   const handleExportPDF = () => {
     const data = getFilteredReportData();
     if (data.length === 0) return toast.error("No records found for current filter configuration");
@@ -2211,6 +2225,12 @@ Please review this letter, sign it, and upload it back within 5 working days to 
                           className={`flex-1 py-2.5 rounded-xl bg-gradient-to-r ${tp.btnGradient} font-bold text-xs text-white flex items-center justify-center gap-2 hover:opacity-90 transition shadow-lg`}
                         >
                           <FileSpreadsheet size={14} /> Export to PDF
+                        </button>
+                        <button
+                          onClick={handleExportJSON}
+                          className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 font-bold text-xs text-white flex items-center justify-center gap-2 hover:opacity-90 transition shadow-md"
+                        >
+                          <Download size={14} /> Export to JSON
                         </button>
                       </div>
                     </div>

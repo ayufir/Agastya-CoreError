@@ -77,6 +77,17 @@ const ProtiumDeatil = () => {
     );
   }
 
+  const handleExportJSON = () => {
+    const exportData = data || {};
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `Protium_Technical_Report_${id || "details"}.json`);
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  };
+
   return (
     <>
       <div className='p-2'>
@@ -95,9 +106,15 @@ const ProtiumDeatil = () => {
           </button>
           <button
             onClick={handleExportCSV}
-            className='bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded'
+            className='bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded mr-2'
           >
             Download CSV
+          </button>
+          <button
+            onClick={handleExportJSON}
+            className='bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded'
+          >
+            Download JSON
           </button>
         </div>
 

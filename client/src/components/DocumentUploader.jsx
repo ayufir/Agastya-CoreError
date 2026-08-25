@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useSelector } from "react-redux";
 import { Upload, Button, Spin, List, Typography } from "antd";
 import {
   UploadOutlined,
@@ -27,6 +28,9 @@ const DocumentUploader = ({
 }) => {
   const [fileList, setFileList] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const user = useSelector((state) => state.auth?.user);
+  const roleNormalized = (user?.role || "").toLowerCase().replace(/[\s_]+/g, "");
+  const isFieldOfficer = roleNormalized === "fieldofficer";
 
   const handleAutoUploadDoc = async (file) => {
     setUploading(true);
@@ -225,9 +229,11 @@ const DocumentUploader = ({
         <div className="mt-6">
           <div className="flex justify-between items-center mb-2">
             <span className="font-medium">Uploaded Documents</span>
-            <Button size="small" onClick={handleDownloadAll}>
-              Download All
-            </Button>
+            {!isFieldOfficer && (
+              <Button size="small" onClick={handleDownloadAll}>
+                Download All
+              </Button>
+            )}
           </div>
           <List
             size="small"
