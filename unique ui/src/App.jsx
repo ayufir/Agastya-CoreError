@@ -4152,7 +4152,15 @@ export default function App() {
     else setSidebarOpen(true);
   }, [isMobile]);
 
-  const API_URL = "https://agastya-coreerror-api.onrender.com/api/case/summary-data";
+  const [apiCounts, setApiCounts] = useState(null);
+
+  const API_URL = window.location.hostname === "localhost"
+    ? "http://localhost:5000/api/case/summary-data"
+    : "https://agastya-coreerror-api.onrender.com/api/case/summary-data";
+
+  const INVOICE_API_URL = window.location.hostname === "localhost"
+    ? "http://localhost:5000/api/invoices"
+    : "https://agastya-coreerror-api.onrender.com/api/invoices";
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -4173,15 +4181,16 @@ export default function App() {
         return r.json();
       })
       .then(data => {
+        if (data?.counts) setApiCounts(data.counts);
+
         // Include ALL case types so every card shows the correct count.
-        // Specific-status arrays come first so their status wins on dedup (first-seen wins).
         const all = [
+          ...(data.totalSubmissions || []).map(c => normalizeCase(c, c.status || "Submitted")),
           ...(data.pending || []).map(c => normalizeCase(c, "Pending")),
           ...(data.working || []).map(c => normalizeCase(c, "Work in Progress")),
           ...(data.queryRaised || []).map(c => normalizeCase(c, "Query Raised")),
           ...(data.cancelled || []).map(c => normalizeCase(c, "cancelled")),
           ...(data.finalSubmitted || []).map(c => normalizeCase(c, "FinalSubmitted")),
-          ...(data.totalSubmissions || []).map(c => normalizeCase(c, c.status || "Submitted")),
         ];
         const seen = new Set();
         setCases(all.filter(c => { if (seen.has(String(c._id))) return false; seen.add(String(c._id)); return true; }));
@@ -4191,7 +4200,7 @@ export default function App() {
 
     // Fetch saved invoices
     setLoadingInvoices(true);
-    fetch("https://agastya-coreerror-api.onrender.com/api/invoices", {
+    fetch(INVOICE_API_URL, {
       headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` },
       credentials: "include"
     })
@@ -4209,12 +4218,12 @@ export default function App() {
   }, [cases]);
 
   const stats = useMemo(() => ({
-    total: cases.length,
-    pending: cases.filter(c => c.status === "Pending").length,
-    wip: cases.filter(c => c.status === "Work in Progress").length,
-    submitted: cases.filter(c => c.status === "FinalSubmitted").length,
-    cancelled: cases.filter(c => c.status === "cancelled").length,
-  }), [cases]);
+    total: apiCounts?.allCases ?? cases.length,
+    pending: apiCounts?.pending ?? cases.filter(c => c.status === "Pending").length,
+    wip: apiCounts?.working ?? cases.filter(c => c.status === "Work in Progress").length,
+    submitted: apiCounts?.finalSubmitted ?? cases.filter(c => c.status === "FinalSubmitted").length,
+    cancelled: apiCounts?.cancelled ?? cases.filter(c => c.status === "cancelled").length,
+  }), [cases, apiCounts]);
 
   useEffect(() => {
     setPage(1);

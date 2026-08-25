@@ -5,6 +5,7 @@ import { lazy } from "react";
 
 export const routesConfig = [
   { path: "/", element: lazy(() => import("../pages/Dashboard/Dashboard")) },
+  { path: "/invoice", element: lazy(() => import("../pages/Invoice/InvoicePage")) },
   {
     path: "/bank-logo",
     element: lazy(() => import("../pages/1Bank-Home/BankHomePage")),      

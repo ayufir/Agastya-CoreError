@@ -91,8 +91,9 @@ const MenuItems = () => {
     },
     {
       name: "Invoice All",
-      action: openInvoice,
+      path: "/invoice",
       icon: <List size={iconSize} />,
+      isActive: currentPath === "/invoice",
     },
     ...(user?.role === "SuperAdmin"
       ? [
