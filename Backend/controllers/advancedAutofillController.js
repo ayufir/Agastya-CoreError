@@ -1127,9 +1127,8 @@ const getClaudeModelCandidates = () => {
   const configuredModel = process.env.CLAUDE_MODEL || process.env.ANTHROPIC_MODEL;
   return [
     configuredModel,
-    "claude-sonnet-4-20250514",
-    "claude-3-7-sonnet-20250219",
     "claude-3-5-sonnet-20241022",
+    "claude-3-7-sonnet-20250219",
     "claude-3-5-haiku-20241022",
   ].filter(Boolean);
 };
@@ -1212,8 +1211,13 @@ const callClaudeAPI = async (system, messagesPrompt, mediaBlocks = []) => {
         } catch (error) {
           lastClaudeError = error;
           const status = error.response?.status;
-          console.warn(`[Claude API] Model ${model} failed:`, error.response?.data?.error?.message || error.message);
-          if (status && status !== 404) break;
+          console.warn(`[Claude API] Model ${model} failed (status ${status}):`, error.response?.data?.error?.message || error.message);
+          
+          if (status === 401 || status === 403) {
+            // Authentication failure — stop trying other models
+            break;
+          }
+          // For other errors (like 400 or 429), we continue to try next candidates
         }
       }
 

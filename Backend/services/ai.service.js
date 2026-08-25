@@ -677,28 +677,44 @@ const callClaudeAPI = async (system, messagesPrompt, mediaBlocks = []) => {
     headers["anthropic-beta"] = "pdfs-2024-09-25";
   }
 
-  const requestBody = {
-    model: "claude-3-5-sonnet-20241022",
-    max_tokens: 8192,
-    system: system,
-    messages: [
-      {
-        role: "user",
-        content: [
-          ...mediaBlocks,
+  const models = [
+    process.env.CLAUDE_MODEL,
+    "claude-3-5-sonnet-20241022",
+    "claude-3-7-sonnet-20250219",
+    "claude-3-5-haiku-20241022",
+  ].filter(Boolean);
+
+  let lastError = null;
+  for (const model of models) {
+    try {
+      const requestBody = {
+        model,
+        max_tokens: 8192,
+        system: system,
+        messages: [
           {
-            type: "text",
-            text: messagesPrompt,
+            role: "user",
+            content: [
+              ...mediaBlocks,
+              {
+                type: "text",
+                text: messagesPrompt,
+              },
+            ],
           },
         ],
-      },
-    ],
-  };
+      };
 
-  console.log(`[Claude API] Requesting extraction (${hasPdf ? "with PDF" : "standard"})...`);
-  const response = await axios.post("https://api.anthropic.com/v1/messages", requestBody, { headers });
-  
-  return response.data?.content?.[0]?.text || "";
+      console.log(`[Claude API] Requesting extraction with ${model} (${hasPdf ? "with PDF" : "standard"})...`);
+      const response = await axios.post("https://api.anthropic.com/v1/messages", requestBody, { headers });
+      return response.data?.content?.[0]?.text || "";
+    } catch (err) {
+      lastError = err;
+      console.warn(`[Claude API] Model ${model} failed:`, err.response?.data?.error?.message || err.message);
+    }
+  }
+
+  throw lastError || new Error("All Claude models failed.");
 };
 
 const parseClaudeResponse = (rawText) => {
